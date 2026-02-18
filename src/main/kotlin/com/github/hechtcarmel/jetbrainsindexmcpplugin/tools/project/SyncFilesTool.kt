@@ -4,6 +4,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ToolNames
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.AbstractMcpTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.SyncFilesResult
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -56,13 +57,17 @@ class SyncFilesTool : AbstractMcpTool() {
 
         val requestedPaths = arguments["paths"]?.jsonArray?.map { it.jsonPrimitive.content }
 
+        // Determine the effective root: if project_path was a workspace sub-project,
+        // use that sub-project root instead of the workspace basePath
+        val projectPathArg = arguments["project_path"]?.jsonPrimitive?.content
+        val effectiveRoot = resolveEffectiveRoot(project, projectPathArg) ?: basePath
+
         val syncedPaths: List<String>
         val syncedAll: Boolean
 
         if (requestedPaths != null && requestedPaths.isNotEmpty()) {
             val resolvedFiles = requestedPaths.mapNotNull { relativePath ->
-                val fullPath = if (relativePath.startsWith("/")) relativePath else "$basePath/$relativePath"
-                LocalFileSystem.getInstance().refreshAndFindFileByPath(fullPath)?.let { relativePath to it }
+                resolveFile(project, relativePath)?.let { relativePath to it }
             }
             if (resolvedFiles.isNotEmpty()) {
                 VfsUtil.markDirtyAndRefresh(false, true, true, *resolvedFiles.map { it.second }.toTypedArray())
@@ -70,11 +75,11 @@ class SyncFilesTool : AbstractMcpTool() {
             syncedPaths = resolvedFiles.map { it.first }
             syncedAll = false
         } else {
-            val projectDir = LocalFileSystem.getInstance().findFileByPath(basePath)
+            val projectDir = LocalFileSystem.getInstance().findFileByPath(effectiveRoot)
             if (projectDir != null) {
                 VfsUtil.markDirtyAndRefresh(false, true, true, projectDir)
             }
-            syncedPaths = listOf(basePath)
+            syncedPaths = listOf(effectiveRoot)
             syncedAll = true
         }
 
@@ -95,5 +100,14 @@ class SyncFilesTool : AbstractMcpTool() {
             syncedAll = syncedAll,
             message = message
         ))
+    }
+
+    private fun resolveEffectiveRoot(project: Project, projectPathArg: String?): String? {
+        if (projectPathArg == null) return project.basePath
+        val normalized = projectPathArg.trimEnd('/', '\\')
+        if (normalized == project.basePath) return project.basePath
+        return ProjectUtils.getModuleContentRoots(project)
+            .firstOrNull { it == normalized }
+            ?: project.basePath
     }
 }

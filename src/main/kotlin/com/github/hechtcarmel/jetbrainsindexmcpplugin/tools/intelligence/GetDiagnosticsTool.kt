@@ -15,7 +15,6 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
@@ -108,7 +107,7 @@ class GetDiagnosticsTool : AbstractMcpTool() {
         requireSmartMode(project)
         
         // Resolve the virtual file
-        val virtualFile = resolveVirtualFile(project, filePath)
+        val virtualFile = resolveFile(project, filePath)
             ?: return createErrorResult("File not found: $filePath")
 
         // Ensure file is open for daemon analysis
@@ -129,12 +128,6 @@ class GetDiagnosticsTool : AbstractMcpTool() {
     }
 
     // ========== File Management ==========
-
-    private fun resolveVirtualFile(project: Project, filePath: String): VirtualFile? {
-        val basePath = project.basePath ?: return null
-        val fullPath = if (filePath.startsWith("/")) filePath else "$basePath/$filePath"
-        return LocalFileSystem.getInstance().refreshAndFindFileByPath(fullPath)
-    }
 
     private suspend fun openFileForAnalysis(fileEditorManager: FileEditorManager, virtualFile: VirtualFile) {
         withContext(Dispatchers.EDT) {
