@@ -31,7 +31,7 @@ class FindImplementationsTool : AbstractMcpTool() {
 
         Languages: Java, Kotlin, Python, JavaScript, TypeScript, PHP, Rust.
 
-        Returns: list of implementing classes/methods with file paths, line numbers, and kind (class/method).
+        Returns: list of implementing classes/methods with file paths, line/column numbers, and kind (class/method).
 
         Parameters: file + line + column (required).
 
@@ -99,6 +99,7 @@ class FindImplementationsTool : AbstractMcpTool() {
                     name = impl.name,
                     file = impl.file,
                     line = impl.line,
+                    column = impl.column,
                     kind = impl.kind,
                     language = impl.language
                 )

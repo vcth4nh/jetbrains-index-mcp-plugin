@@ -358,18 +358,21 @@ Analyzes method call relationships to find callers or callees.
   "element": {
     "name": "UserService.validateUser(String)",
     "file": "src/main/java/com/example/UserService.java",
-    "line": 20
+    "line": 20,
+    "column": 17
   },
   "calls": [
     {
       "name": "UserController.createUser(UserRequest)",
       "file": "src/main/java/com/example/UserController.java",
-      "line": 45
+      "line": 45,
+      "column": 17
     },
     {
       "name": "UserController.updateUser(String, UserRequest)",
       "file": "src/main/java/com/example/UserController.java",
-      "line": 62
+      "line": 62,
+      "column": 17
     }
   ]
 }
@@ -419,12 +422,14 @@ Finds all concrete implementations of an interface, abstract class, or abstract 
       "name": "com.example.JpaUserRepository",
       "file": "src/main/java/com/example/JpaUserRepository.java",
       "line": 12,
+      "column": 14,
       "kind": "CLASS"
     },
     {
       "name": "com.example.InMemoryUserRepository",
       "file": "src/main/java/com/example/InMemoryUserRepository.java",
       "line": 8,
+      "column": 14,
       "kind": "CLASS"
     }
   ],
@@ -497,6 +502,7 @@ Searches for code symbols (classes, interfaces, methods, fields) by name using t
       "kind": "INTERFACE",
       "file": "src/main/java/com/example/service/UserService.java",
       "line": 12,
+      "column": 18,
       "containerName": null
     },
     {
@@ -505,6 +511,7 @@ Searches for code symbols (classes, interfaces, methods, fields) by name using t
       "kind": "CLASS",
       "file": "src/main/java/com/example/service/UserServiceImpl.java",
       "line": 15,
+      "column": 14,
       "containerName": null
     },
     {
@@ -513,6 +520,7 @@ Searches for code symbols (classes, interfaces, methods, fields) by name using t
       "kind": "METHOD",
       "file": "src/main/java/com/example/service/UserService.java",
       "line": 18,
+      "column": 10,
       "containerName": "UserService"
     }
   ],
@@ -578,7 +586,8 @@ Finds the complete inheritance hierarchy for a method - all parent methods it ov
     "signature": "findUser(String id): User",
     "containingClass": "com.example.UserServiceImpl",
     "file": "src/main/java/com/example/UserServiceImpl.java",
-    "line": 25
+    "line": 25,
+    "column": 17
   },
   "hierarchy": [
     {
@@ -588,6 +597,7 @@ Finds the complete inheritance hierarchy for a method - all parent methods it ov
       "containingClassKind": "ABSTRACT_CLASS",
       "file": "src/main/java/com/example/AbstractUserService.java",
       "line": 18,
+      "column": 17,
       "isInterface": false,
       "depth": 1
     },
@@ -598,6 +608,7 @@ Finds the complete inheritance hierarchy for a method - all parent methods it ov
       "containingClassKind": "INTERFACE",
       "file": "src/main/java/com/example/UserService.java",
       "line": 12,
+      "column": 10,
       "isInterface": true,
       "depth": 2
     }

@@ -77,6 +77,7 @@ data class CallElement(
     val name: String,
     val file: String,
     val line: Int,
+    val column: Int,
     val language: String? = null,
     val children: List<CallElement>? = null
 )
@@ -93,6 +94,7 @@ data class ImplementationLocation(
     val name: String,
     val file: String,
     val line: Int,
+    val column: Int,
     val kind: String,
     val language: String? = null
 )
@@ -165,6 +167,7 @@ data class SymbolMatch(
     val kind: String,
     val file: String,
     val line: Int,
+    val column: Int,
     val containerName: String?,
     val language: String? = null
 )
@@ -184,6 +187,7 @@ data class MethodInfo(
     val containingClass: String,
     val file: String,
     val line: Int,
+    val column: Int,
     val language: String? = null
 )
 
@@ -195,6 +199,7 @@ data class SuperMethodInfo(
     val containingClassKind: String,
     val file: String?,
     val line: Int?,
+    val column: Int?,
     val isInterface: Boolean,
     val depth: Int,
     val language: String? = null

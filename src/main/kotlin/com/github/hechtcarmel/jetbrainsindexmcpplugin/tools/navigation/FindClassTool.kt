@@ -108,7 +108,7 @@ class FindClassTool : AbstractMcpTool() {
             val classes = searchClasses(project, query, scope, limit, matcher)
 
             val sortedClasses = classes
-                .distinctBy { "${it.file}:${it.line}:${it.name}" }
+                .distinctBy { "${it.file}:${it.line}:${it.column}:${it.name}" }
                 .sortedByDescending { matcher.matchingDegree(it.name) }
                 .take(limit)
 
@@ -185,7 +185,7 @@ class FindClassTool : AbstractMcpTool() {
 
                         val symbolMatch = convertToSymbolMatch(item, project)
                         if (symbolMatch != null) {
-                            val key = "${symbolMatch.file}:${symbolMatch.line}:${symbolMatch.name}"
+                            val key = "${symbolMatch.file}:${symbolMatch.line}:${symbolMatch.column}:${symbolMatch.name}"
                             if (key !in seen) {
                                 seen.add(key)
                                 results.add(symbolMatch)
@@ -210,7 +210,7 @@ class FindClassTool : AbstractMcpTool() {
 
                     val symbolMatch = convertToSymbolMatch(item, project)
                     if (symbolMatch != null) {
-                        val key = "${symbolMatch.file}:${symbolMatch.line}:${symbolMatch.name}"
+                        val key = "${symbolMatch.file}:${symbolMatch.line}:${symbolMatch.column}:${symbolMatch.name}"
                         if (key !in seen) {
                             seen.add(key)
                             results.add(symbolMatch)
@@ -268,6 +268,7 @@ class FindClassTool : AbstractMcpTool() {
             kind = kind,
             file = relativePath,
             line = line,
+            column = getColumnNumber(project, targetElement) ?: 1,
             containerName = null,
             language = language
         )
@@ -277,6 +278,13 @@ class FindClassTool : AbstractMcpTool() {
         val psiFile = element.containingFile ?: return null
         val document = PsiDocumentManager.getInstance(project).getDocument(psiFile) ?: return null
         return document.getLineNumber(element.textOffset) + 1
+    }
+
+    private fun getColumnNumber(project: Project, element: PsiElement): Int? {
+        val psiFile = element.containingFile ?: return null
+        val document = PsiDocumentManager.getInstance(project).getDocument(psiFile) ?: return null
+        val lineNumber = document.getLineNumber(element.textOffset)
+        return element.textOffset - document.getLineStartOffset(lineNumber) + 1
     }
 
     private fun determineKind(element: PsiElement): String {

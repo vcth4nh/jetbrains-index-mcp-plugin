@@ -114,6 +114,13 @@ abstract class BasePythonHandler<T> : LanguageHandler<T> {
         return document.getLineNumber(element.textOffset) + 1
     }
 
+    protected fun getColumnNumber(project: Project, element: PsiElement): Int? {
+        val psiFile = element.containingFile ?: return null
+        val document = PsiDocumentManager.getInstance(project).getDocument(psiFile) ?: return null
+        val lineNumber = document.getLineNumber(element.textOffset)
+        return element.textOffset - document.getLineStartOffset(lineNumber) + 1
+    }
+
     /**
      * Checks if element is a PyClass using reflection.
      */
@@ -335,6 +342,7 @@ class PythonImplementationsHandler : BasePythonHandler<List<ImplementationData>>
                         name = if (className.isNotEmpty()) "$className.$methodName" else methodName,
                         file = getRelativePath(project, file),
                         line = getLineNumber(project, overridingMethod) ?: 0,
+                        column = getColumnNumber(project, overridingMethod) ?: 0,
                         kind = "METHOD",
                         language = "Python"
                     )
@@ -361,6 +369,7 @@ class PythonImplementationsHandler : BasePythonHandler<List<ImplementationData>>
                         name = getQualifiedName(inheritor) ?: getName(inheritor) ?: "unknown",
                         file = getRelativePath(project, file),
                         line = getLineNumber(project, inheritor) ?: 0,
+                        column = getColumnNumber(project, inheritor) ?: 0,
                         kind = "CLASS",
                         language = "Python"
                     )
@@ -576,6 +585,7 @@ class PythonCallHierarchyHandler : BasePythonHandler<CallHierarchyData>(), CallH
             name = name,
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, pyFunction) ?: 0,
+            column = getColumnNumber(project, pyFunction) ?: 0,
             language = "Python",
             children = children?.takeIf { it.isNotEmpty() }
         )
@@ -643,6 +653,7 @@ class PythonSuperMethodsHandler : BasePythonHandler<SuperMethodsData>(), SuperMe
             containingClass = getQualifiedName(containingClass) ?: getName(containingClass) ?: "unknown",
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, pyFunction) ?: 0,
+            column = getColumnNumber(project, pyFunction) ?: 0,
             language = "Python"
         )
 
@@ -686,6 +697,7 @@ class PythonSuperMethodsHandler : BasePythonHandler<SuperMethodsData>(), SuperMe
                         containingClassKind = "CLASS",
                         file = file?.let { getRelativePath(project, it) },
                         line = getLineNumber(project, superMethod),
+                        column = getColumnNumber(project, superMethod),
                         isInterface = false,
                         depth = depth,
                         language = "Python"

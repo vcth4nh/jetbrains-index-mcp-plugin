@@ -58,7 +58,7 @@ object OptimizedSymbolSearch {
         LOG.debug("Searching for symbols matching '$pattern' (limit=$limit, filter=$languageFilter)")
 
         val results = mutableListOf<SymbolData>()
-        val seen = mutableSetOf<String>() // Deduplication key: file:line:name
+        val seen = mutableSetOf<String>() // Deduplication key: file:line:column:name
         val matcher = createMatcher(pattern)
 
         // Strategy 1: Use ChooseByNameContributor extension points (most reliable)
@@ -143,7 +143,7 @@ object OptimizedSymbolSearch {
 
                         val symbolData = convertToSymbolData(item, project, languageFilter)
                         if (symbolData != null) {
-                            val key = "${symbolData.file}:${symbolData.line}:${symbolData.name}"
+                            val key = "${symbolData.file}:${symbolData.line}:${symbolData.column}:${symbolData.name}"
                             if (key !in seen) {
                                 seen.add(key)
                                 results.add(symbolData)
@@ -168,7 +168,7 @@ object OptimizedSymbolSearch {
 
                     val symbolData = convertToSymbolData(item, project, languageFilter)
                     if (symbolData != null) {
-                        val key = "${symbolData.file}:${symbolData.line}:${symbolData.name}"
+                        val key = "${symbolData.file}:${symbolData.line}:${symbolData.column}:${symbolData.name}"
                         if (key !in seen) {
                             seen.add(key)
                             results.add(symbolData)
@@ -241,6 +241,7 @@ object OptimizedSymbolSearch {
             kind = kind,
             file = relativePath,
             line = line,
+            column = getColumnNumber(project, targetElement) ?: 1,
             containerName = containerName,
             language = language
         )
@@ -264,6 +265,13 @@ object OptimizedSymbolSearch {
         val psiFile = element.containingFile ?: return null
         val document = PsiDocumentManager.getInstance(project).getDocument(psiFile) ?: return null
         return document.getLineNumber(element.textOffset) + 1
+    }
+
+    private fun getColumnNumber(project: Project, element: PsiElement): Int? {
+        val psiFile = element.containingFile ?: return null
+        val document = PsiDocumentManager.getInstance(project).getDocument(psiFile) ?: return null
+        val lineNumber = document.getLineNumber(element.textOffset)
+        return element.textOffset - document.getLineStartOffset(lineNumber) + 1
     }
 
     private fun determineKind(element: PsiElement): String {

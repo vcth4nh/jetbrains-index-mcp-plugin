@@ -186,6 +186,7 @@ data class ImplementationData(
     val name: String,
     val file: String,
     val line: Int,
+    val column: Int,
     val kind: String,
     val language: String
 )
@@ -205,6 +206,7 @@ data class CallElementData(
     val name: String,
     val file: String,
     val line: Int,
+    val column: Int,
     val language: String,
     val children: List<CallElementData>? = null
 )
@@ -218,6 +220,7 @@ data class SymbolData(
     val kind: String,
     val file: String,
     val line: Int,
+    val column: Int,
     val containerName: String?,
     val language: String
 )
@@ -239,6 +242,7 @@ data class MethodData(
     val containingClass: String,
     val file: String,
     val line: Int,
+    val column: Int,
     val language: String
 )
 
@@ -252,6 +256,7 @@ data class SuperMethodData(
     val containingClassKind: String,
     val file: String?,
     val line: Int?,
+    val column: Int?,
     val isInterface: Boolean,
     val depth: Int,
     val language: String

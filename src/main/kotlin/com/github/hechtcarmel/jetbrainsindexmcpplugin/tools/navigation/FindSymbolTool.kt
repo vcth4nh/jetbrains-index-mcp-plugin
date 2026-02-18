@@ -42,7 +42,7 @@ class FindSymbolTool : AbstractMcpTool() {
 
         Matching: substring ("Service" → "UserService") and camelCase ("USvc" → "UserService").
 
-        Returns: matching symbols with qualified names, file paths, line numbers, and kind.
+        Returns: matching symbols with qualified names, file paths, line/column numbers, and kind.
 
         Parameters: query (required), includeLibraries (optional, default: false), limit (optional, default: 25, max: 100).
 
@@ -108,6 +108,7 @@ class FindSymbolTool : AbstractMcpTool() {
                         kind = symbolData.kind,
                         file = symbolData.file,
                         line = symbolData.line,
+                        column = symbolData.column,
                         containerName = symbolData.containerName,
                         language = symbolData.language
                     )
@@ -115,7 +116,7 @@ class FindSymbolTool : AbstractMcpTool() {
             }
 
             val sortedMatches = allMatches
-                .distinctBy { "${it.file}:${it.line}:${it.name}" }
+                .distinctBy { "${it.file}:${it.line}:${it.column}:${it.name}" }
                 .take(limit)
 
             createJsonResult(FindSymbolResult(

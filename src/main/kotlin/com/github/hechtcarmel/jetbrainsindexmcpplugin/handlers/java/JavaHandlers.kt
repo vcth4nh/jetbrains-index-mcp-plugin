@@ -114,6 +114,13 @@ abstract class BaseJavaHandler<T> : LanguageHandler<T> {
         return document.getLineNumber(element.textOffset) + 1
     }
 
+    protected fun getColumnNumber(project: Project, element: PsiElement): Int? {
+        val psiFile = element.containingFile ?: return null
+        val document = PsiDocumentManager.getInstance(project).getDocument(psiFile) ?: return null
+        val lineNumber = document.getLineNumber(element.textOffset)
+        return element.textOffset - document.getLineStartOffset(lineNumber) + 1
+    }
+
     protected fun getClassKind(psiClass: PsiClass): String {
         return when {
             psiClass.isInterface -> "INTERFACE"
@@ -480,6 +487,7 @@ class JavaImplementationsHandler : BaseJavaHandler<List<ImplementationData>>(), 
                         name = "${overridingMethod.containingClass?.name}.${overridingMethod.name}",
                         file = getRelativePath(project, file),
                         line = getLineNumber(project, overridingMethod) ?: 0,
+                        column = getColumnNumber(project, overridingMethod) ?: 0,
                         kind = "METHOD",
                         language = if (overridingMethod.language.id == "kotlin") "Kotlin" else "Java"
                     ))
@@ -502,6 +510,7 @@ class JavaImplementationsHandler : BaseJavaHandler<List<ImplementationData>>(), 
                         name = inheritor.qualifiedName ?: inheritor.name ?: "unknown",
                         file = getRelativePath(project, file),
                         line = getLineNumber(project, inheritor) ?: 0,
+                        column = getColumnNumber(project, inheritor) ?: 0,
                         kind = getClassKind(inheritor),
                         language = if (inheritor.language.id == "kotlin") "Kotlin" else "Java"
                     ))
@@ -635,6 +644,7 @@ class JavaCallHierarchyHandler : BaseJavaHandler<CallHierarchyData>(), CallHiera
                                 name = "$callText(...) [unresolved]",
                                 file = "unknown",
                                 line = 0,
+                                column = 0,
                                 language = "Java",
                                 children = null
                             )
@@ -673,6 +683,7 @@ class JavaCallHierarchyHandler : BaseJavaHandler<CallHierarchyData>(), CallHiera
             name = methodName,
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, method) ?: 0,
+            column = getColumnNumber(project, method) ?: 0,
             language = if (method.language.id == "kotlin") "Kotlin" else "Java",
             children = children?.takeIf { it.isNotEmpty() }
         )
@@ -745,6 +756,7 @@ class JavaSuperMethodsHandler : BaseJavaHandler<SuperMethodsData>(), SuperMethod
             containingClass = containingClass.qualifiedName ?: containingClass.name ?: "unknown",
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, method) ?: 0,
+            column = getColumnNumber(project, method) ?: 0,
             language = if (method.language.id == "kotlin") "Kotlin" else "Java"
         )
 
@@ -779,6 +791,7 @@ class JavaSuperMethodsHandler : BaseJavaHandler<SuperMethodsData>(), SuperMethod
                 containingClassKind = containingClass?.let { getClassKind(it) } ?: "UNKNOWN",
                 file = file?.let { getRelativePath(project, it) },
                 line = getLineNumber(project, superMethod),
+                column = getColumnNumber(project, superMethod),
                 isInterface = containingClass?.isInterface == true,
                 depth = depth,
                 language = if (superMethod.language.id == "kotlin") "Kotlin" else "Java"

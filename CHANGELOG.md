@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+## [3.6.0] - 2026-02-18
+
+### Added
+- **Column numbers in navigation results for better inter-tool flows integration** - `ide_find_implementations`, `ide_call_hierarchy`, `ide_find_symbol`, and `ide_find_super_methods` now include 1-based `column` numbers in their output, matching the existing behavior of `ide_find_references`, `ide_find_definition`, `ide_diagnostics`, and `ide_search_text`
+
 ## [3.5.0] - 2026-02-18
 
 ### Added

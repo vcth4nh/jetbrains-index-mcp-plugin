@@ -169,10 +169,10 @@ class ToolModelsUnitTest : TestCase() {
 
     fun testCallHierarchyResultSerialization() {
         val result = CallHierarchyResult(
-            element = CallElement("processData", "src/Processor.kt", 50),
+            element = CallElement("processData", "src/Processor.kt", 50, 1),
             calls = listOf(
-                CallElement("validateInput", "src/Validator.kt", 30),
-                CallElement("saveResult", "src/Repository.kt", 100)
+                CallElement("validateInput", "src/Validator.kt", 30, 1),
+                CallElement("saveResult", "src/Repository.kt", 100, 1)
             )
         )
 
@@ -190,11 +190,12 @@ class ToolModelsUnitTest : TestCase() {
             name = "main",
             file = "Main.kt",
             line = 5,
+            column = 1,
             children = listOf(
-                CallElement("init", "Init.kt", 10, children = listOf(
-                    CallElement("loadConfig", "Config.kt", 15)
+                CallElement("init", "Init.kt", 10, 1, children = listOf(
+                    CallElement("loadConfig", "Config.kt", 15, 1)
                 )),
-                CallElement("run", "Runner.kt", 20)
+                CallElement("run", "Runner.kt", 20, 1)
             )
         )
 
@@ -212,8 +213,8 @@ class ToolModelsUnitTest : TestCase() {
     fun testImplementationResultSerialization() {
         val result = ImplementationResult(
             implementations = listOf(
-                ImplementationLocation("UserRepositoryImpl", "src/impl/UserRepositoryImpl.kt", 15, "CLASS"),
-                ImplementationLocation("MockUserRepository", "src/test/MockUserRepository.kt", 8, "CLASS")
+                ImplementationLocation("UserRepositoryImpl", "src/impl/UserRepositoryImpl.kt", 15, 1, "CLASS"),
+                ImplementationLocation("MockUserRepository", "src/test/MockUserRepository.kt", 8, 1, "CLASS")
             ),
             totalCount = 2
         )
@@ -233,6 +234,7 @@ class ToolModelsUnitTest : TestCase() {
             name = "ServiceImpl",
             file = "src/ServiceImpl.java",
             line = 10,
+            column = 5,
             kind = "CLASS"
         )
 
@@ -242,6 +244,7 @@ class ToolModelsUnitTest : TestCase() {
         assertEquals("ServiceImpl", deserialized.name)
         assertEquals("src/ServiceImpl.java", deserialized.file)
         assertEquals(10, deserialized.line)
+        assertEquals(5, deserialized.column)
         assertEquals("CLASS", deserialized.kind)
     }
 
@@ -401,8 +404,8 @@ class ToolModelsUnitTest : TestCase() {
     fun testFindSymbolResultSerialization() {
         val result = FindSymbolResult(
             symbols = listOf(
-                SymbolMatch("UserService", "com.example.UserService", "CLASS", "src/UserService.kt", 10, null),
-                SymbolMatch("findById", "com.example.UserRepository.findById", "METHOD", "src/UserRepository.kt", 25, "UserRepository")
+                SymbolMatch("UserService", "com.example.UserService", "CLASS", "src/UserService.kt", 10, 1, null),
+                SymbolMatch("findById", "com.example.UserRepository.findById", "METHOD", "src/UserRepository.kt", 25, 1, "UserRepository")
             ),
             totalCount = 2,
             query = "User"
@@ -436,6 +439,7 @@ class ToolModelsUnitTest : TestCase() {
             kind = "INTERFACE",
             file = "src/main/java/com/example/service/UserService.java",
             line = 12,
+            column = 8,
             containerName = null
         )
 
@@ -447,6 +451,7 @@ class ToolModelsUnitTest : TestCase() {
         assertEquals("INTERFACE", deserialized.kind)
         assertEquals("src/main/java/com/example/service/UserService.java", deserialized.file)
         assertEquals(12, deserialized.line)
+        assertEquals(8, deserialized.column)
         assertNull(deserialized.containerName)
     }
 
@@ -457,6 +462,7 @@ class ToolModelsUnitTest : TestCase() {
             kind = "METHOD",
             file = "src/UserRepository.kt",
             line = 25,
+            column = 1,
             containerName = "UserRepository"
         )
 
@@ -471,7 +477,7 @@ class ToolModelsUnitTest : TestCase() {
         val kinds = listOf("CLASS", "INTERFACE", "ENUM", "ANNOTATION", "RECORD", "ABSTRACT_CLASS", "METHOD", "FIELD")
 
         kinds.forEach { kind ->
-            val match = SymbolMatch("Test", "com.Test", kind, "file.kt", 1, null)
+            val match = SymbolMatch("Test", "com.Test", kind, "file.kt", 1, 1, null)
             val serialized = json.encodeToString(match)
             val deserialized = json.decodeFromString<SymbolMatch>(serialized)
             assertEquals(kind, deserialized.kind)
@@ -487,7 +493,8 @@ class ToolModelsUnitTest : TestCase() {
                 signature = "findUser(String id): User",
                 containingClass = "com.example.UserServiceImpl",
                 file = "src/UserServiceImpl.kt",
-                line = 25
+                line = 25,
+                column = 5
             ),
             hierarchy = listOf(
                 SuperMethodInfo(
@@ -497,6 +504,7 @@ class ToolModelsUnitTest : TestCase() {
                     containingClassKind = "INTERFACE",
                     file = "src/UserService.kt",
                     line = 15,
+                    column = 5,
                     isInterface = true,
                     depth = 1
                 )
@@ -515,7 +523,7 @@ class ToolModelsUnitTest : TestCase() {
 
     fun testSuperMethodsResultEmpty() {
         val result = SuperMethodsResult(
-            method = MethodInfo("helperMethod", "helperMethod(): void", "com.example.Service", "file.kt", 50),
+            method = MethodInfo("helperMethod", "helperMethod(): void", "com.example.Service", "file.kt", 50, 1),
             hierarchy = emptyList(),
             totalCount = 0
         )
@@ -535,7 +543,8 @@ class ToolModelsUnitTest : TestCase() {
             signature = "processData(List<String> data): Result",
             containingClass = "com.example.DataProcessor",
             file = "src/DataProcessor.kt",
-            line = 100
+            line = 100,
+            column = 12
         )
 
         val serialized = json.encodeToString(info)
@@ -546,6 +555,7 @@ class ToolModelsUnitTest : TestCase() {
         assertEquals("com.example.DataProcessor", deserialized.containingClass)
         assertEquals("src/DataProcessor.kt", deserialized.file)
         assertEquals(100, deserialized.line)
+        assertEquals(12, deserialized.column)
     }
 
     // SuperMethodInfo tests
@@ -558,6 +568,7 @@ class ToolModelsUnitTest : TestCase() {
             containingClassKind = "INTERFACE",
             file = "src/Repository.kt",
             line = 8,
+            column = 5,
             isInterface = true,
             depth = 3
         )
@@ -567,6 +578,7 @@ class ToolModelsUnitTest : TestCase() {
 
         assertEquals("save", deserialized.name)
         assertEquals("INTERFACE", deserialized.containingClassKind)
+        assertEquals(5, deserialized.column)
         assertTrue(deserialized.isInterface)
         assertEquals(3, deserialized.depth)
     }
@@ -579,6 +591,7 @@ class ToolModelsUnitTest : TestCase() {
             containingClassKind = "CLASS",
             file = null,
             line = null,
+            column = null,
             isInterface = false,
             depth = 2
         )
@@ -589,18 +602,19 @@ class ToolModelsUnitTest : TestCase() {
         assertEquals("toString", deserialized.name)
         assertNull(deserialized.file)
         assertNull(deserialized.line)
+        assertNull(deserialized.column)
         assertFalse(deserialized.isInterface)
     }
 
     fun testSuperMethodInfoMultiLevelHierarchy() {
         val hierarchy = listOf(
-            SuperMethodInfo("save", "save(E e): void", "AbstractRepo", "ABSTRACT_CLASS", "file1.kt", 20, false, 1),
-            SuperMethodInfo("save", "save(E e): void", "BaseRepo", "ABSTRACT_CLASS", "file2.kt", 15, false, 2),
-            SuperMethodInfo("save", "save(E e): void", "Repository", "INTERFACE", "file3.kt", 8, true, 3)
+            SuperMethodInfo("save", "save(E e): void", "AbstractRepo", "ABSTRACT_CLASS", "file1.kt", 20, 1, false, 1),
+            SuperMethodInfo("save", "save(E e): void", "BaseRepo", "ABSTRACT_CLASS", "file2.kt", 15, 1, false, 2),
+            SuperMethodInfo("save", "save(E e): void", "Repository", "INTERFACE", "file3.kt", 8, 1, true, 3)
         )
 
         val result = SuperMethodsResult(
-            method = MethodInfo("save", "save(User u): void", "UserRepo", "file0.kt", 30),
+            method = MethodInfo("save", "save(User u): void", "UserRepo", "file0.kt", 30, 1),
             hierarchy = hierarchy,
             totalCount = 3
         )
@@ -621,8 +635,8 @@ class ToolModelsUnitTest : TestCase() {
     fun testFindClassResultSerialization() {
         val result = FindClassResult(
             classes = listOf(
-                SymbolMatch("UserService", "com.example.UserService", "CLASS", "src/UserService.kt", 10, null, "Kotlin"),
-                SymbolMatch("UserRepository", "com.example.UserRepository", "INTERFACE", "src/UserRepository.kt", 15, null, "Kotlin")
+                SymbolMatch("UserService", "com.example.UserService", "CLASS", "src/UserService.kt", 10, 1, null, "Kotlin"),
+                SymbolMatch("UserRepository", "com.example.UserRepository", "INTERFACE", "src/UserRepository.kt", 15, 1, null, "Kotlin")
             ),
             totalCount = 2,
             query = "User"

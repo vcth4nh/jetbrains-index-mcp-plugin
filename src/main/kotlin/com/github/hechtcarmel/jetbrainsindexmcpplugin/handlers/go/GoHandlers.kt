@@ -194,6 +194,13 @@ abstract class BaseGoHandler<T> : LanguageHandler<T> {
         return document.getLineNumber(element.textOffset) + 1
     }
 
+    protected fun getColumnNumber(project: Project, element: PsiElement): Int? {
+        val psiFile = element.containingFile ?: return null
+        val document = PsiDocumentManager.getInstance(project).getDocument(psiFile) ?: return null
+        val lineNumber = document.getLineNumber(element.textOffset)
+        return element.textOffset - document.getLineStartOffset(lineNumber) + 1
+    }
+
     /**
      * Checks if element is a GoTypeSpec using reflection.
      */
@@ -593,6 +600,7 @@ class GoImplementationsHandler : BaseGoHandler<List<ImplementationData>>(), Impl
                             name = getName(definition) ?: "unknown",
                             file = getRelativePath(project, file),
                             line = getLineNumber(project, definition) ?: 0,
+                            column = getColumnNumber(project, definition) ?: 0,
                             kind = kind,
                             language = "Go"
                         ))
@@ -623,6 +631,7 @@ class GoImplementationsHandler : BaseGoHandler<List<ImplementationData>>(), Impl
                             name = getQualifiedName(definition) ?: getName(definition) ?: "unknown",
                             file = getRelativePath(project, file),
                             line = getLineNumber(project, definition) ?: 0,
+                            column = getColumnNumber(project, definition) ?: 0,
                             kind = determineTypeKind(definition),
                             language = "Go"
                         ))
@@ -805,6 +814,7 @@ class GoCallHierarchyHandler : BaseGoHandler<CallHierarchyData>(), CallHierarchy
             name = name,
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, goFunction) ?: 0,
+            column = getColumnNumber(project, goFunction) ?: 0,
             language = "Go",
             children = children?.takeIf { it.isNotEmpty() }
         )
@@ -896,6 +906,7 @@ class GoSuperMethodsHandler : BaseGoHandler<SuperMethodsData>(), SuperMethodsHan
             containingClass = receiverTypeName ?: "unknown",
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, goFunction) ?: 0,
+            column = getColumnNumber(project, goFunction) ?: 0,
             language = "Go"
         )
 
@@ -973,6 +984,7 @@ class GoSuperMethodsHandler : BaseGoHandler<SuperMethodsData>(), SuperMethodsHan
                                         containingClassKind = determineTypeKind(embeddedType),
                                         file = file?.let { getRelativePath(project, it) },
                                         line = getLineNumber(project, embeddedMethod),
+                                        column = getColumnNumber(project, embeddedMethod),
                                         isInterface = false,
                                         depth = depth,
                                         language = "Go"

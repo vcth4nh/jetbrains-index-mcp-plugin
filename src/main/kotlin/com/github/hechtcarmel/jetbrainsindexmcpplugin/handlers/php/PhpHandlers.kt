@@ -214,6 +214,13 @@ abstract class BasePhpHandler<T> : LanguageHandler<T> {
         return document.getLineNumber(element.textOffset) + 1
     }
 
+    protected fun getColumnNumber(project: Project, element: PsiElement): Int? {
+        val psiFile = element.containingFile ?: return null
+        val document = PsiDocumentManager.getInstance(project).getDocument(psiFile) ?: return null
+        val lineNumber = document.getLineNumber(element.textOffset)
+        return element.textOffset - document.getLineStartOffset(lineNumber) + 1
+    }
+
     /**
      * Checks if element is a PhpClass using reflection.
      */
@@ -640,6 +647,7 @@ class PhpImplementationsHandler : BasePhpHandler<List<ImplementationData>>(), Im
                             name = if (className.isNotEmpty()) "$className::$methodName" else methodName,
                             file = getRelativePath(project, file),
                             line = getLineNumber(project, overridingMethod) ?: 0,
+                            column = getColumnNumber(project, overridingMethod) ?: 0,
                             kind = "METHOD",
                             language = "PHP"
                         ))
@@ -670,6 +678,7 @@ class PhpImplementationsHandler : BasePhpHandler<List<ImplementationData>>(), Im
                         name = getFQN(subclass) ?: getName(subclass) ?: "unknown",
                         file = getRelativePath(project, file),
                         line = getLineNumber(project, subclass) ?: 0,
+                        column = getColumnNumber(project, subclass) ?: 0,
                         kind = determineClassKind(subclass),
                         language = "PHP"
                     ))
@@ -920,6 +929,7 @@ class PhpCallHierarchyHandler : BasePhpHandler<CallHierarchyData>(), CallHierarc
             name = name,
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, callable) ?: 0,
+            column = getColumnNumber(project, callable) ?: 0,
             language = "PHP",
             children = children?.takeIf { it.isNotEmpty() }
         )
@@ -993,6 +1003,7 @@ class PhpSuperMethodsHandler : BasePhpHandler<SuperMethodsData>(), SuperMethodsH
             containingClass = getFQN(containingClass) ?: getName(containingClass) ?: "unknown",
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, method) ?: 0,
+            column = getColumnNumber(project, method) ?: 0,
             language = "PHP"
         )
 
@@ -1036,6 +1047,7 @@ class PhpSuperMethodsHandler : BasePhpHandler<SuperMethodsData>(), SuperMethodsH
                             containingClassKind = determineClassKind(superClass),
                             file = file?.let { getRelativePath(project, it) },
                             line = getLineNumber(project, superMethod),
+                            column = getColumnNumber(project, superMethod),
                             isInterface = isInterface(superClass),
                             depth = depth,
                             language = "PHP"
@@ -1065,6 +1077,7 @@ class PhpSuperMethodsHandler : BasePhpHandler<SuperMethodsData>(), SuperMethodsH
                             containingClassKind = "INTERFACE",
                             file = file?.let { getRelativePath(project, it) },
                             line = getLineNumber(project, ifaceMethod),
+                            column = getColumnNumber(project, ifaceMethod),
                             isInterface = true,
                             depth = depth,
                             language = "PHP"

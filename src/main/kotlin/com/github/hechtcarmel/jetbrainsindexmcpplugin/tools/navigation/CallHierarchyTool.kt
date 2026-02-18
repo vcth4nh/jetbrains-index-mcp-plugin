@@ -35,7 +35,7 @@ class CallHierarchyTool : AbstractMcpTool() {
 
         Rust note: "callers" direction works well; "callees" direction may have limited results due to Rust plugin PSI resolution constraints.
 
-        Returns: recursive tree with method signatures, file locations, and nested call relationships.
+        Returns: recursive tree with method signatures, file locations (line/column), and nested call relationships.
 
         Parameters: file + line + column + direction (required). direction: "callers" or "callees". depth (optional, default: 3, max: 5).
 
@@ -142,6 +142,7 @@ class CallHierarchyTool : AbstractMcpTool() {
             name = data.name,
             file = data.file,
             line = data.line,
+            column = data.column,
             language = data.language,
             children = data.children?.map { convertToCallElement(it) }
         )

@@ -168,6 +168,13 @@ abstract class BaseJavaScriptHandler<T> : LanguageHandler<T> {
         return document.getLineNumber(element.textOffset) + 1
     }
 
+    protected fun getColumnNumber(project: Project, element: PsiElement): Int? {
+        val psiFile = element.containingFile ?: return null
+        val document = PsiDocumentManager.getInstance(project).getDocument(psiFile) ?: return null
+        val lineNumber = document.getLineNumber(element.textOffset)
+        return element.textOffset - document.getLineStartOffset(lineNumber) + 1
+    }
+
     /**
      * Detects the language name from element.
      */
@@ -574,6 +581,7 @@ class JavaScriptImplementationsHandler : BaseJavaScriptHandler<List<Implementati
                         name = if (className.isNotEmpty()) "$className.$methodName" else methodName,
                         file = getRelativePath(project, file),
                         line = getLineNumber(project, overridingMethod) ?: 0,
+                        column = getColumnNumber(project, overridingMethod) ?: 0,
                         kind = "METHOD",
                         language = getLanguageName(overridingMethod)
                     ))
@@ -627,6 +635,7 @@ class JavaScriptImplementationsHandler : BaseJavaScriptHandler<List<Implementati
                         name = getQualifiedName(inheritor) ?: getName(inheritor) ?: "unknown",
                         file = getRelativePath(project, file),
                         line = getLineNumber(project, inheritor) ?: 0,
+                        column = getColumnNumber(project, inheritor) ?: 0,
                         kind = getClassKind(inheritor),
                         language = getLanguageName(inheritor)
                     ))
@@ -655,6 +664,7 @@ class JavaScriptImplementationsHandler : BaseJavaScriptHandler<List<Implementati
                         name = getQualifiedName(definition) ?: getName(definition) ?: "unknown",
                         file = getRelativePath(project, file),
                         line = getLineNumber(project, definition) ?: 0,
+                        column = getColumnNumber(project, definition) ?: 0,
                         kind = kind,
                         language = getLanguageName(definition)
                     ))
@@ -874,6 +884,7 @@ class JavaScriptCallHierarchyHandler : BaseJavaScriptHandler<CallHierarchyData>(
             name = name,
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, jsFunction) ?: 0,
+            column = getColumnNumber(project, jsFunction) ?: 0,
             language = getLanguageName(jsFunction),
             children = children?.takeIf { it.isNotEmpty() }
         )
@@ -943,6 +954,7 @@ class JavaScriptSuperMethodsHandler : BaseJavaScriptHandler<SuperMethodsData>(),
             containingClass = getQualifiedName(containingClass) ?: getName(containingClass) ?: "unknown",
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, jsFunction) ?: 0,
+            column = getColumnNumber(project, jsFunction) ?: 0,
             language = getLanguageName(jsFunction)
         )
 
@@ -986,6 +998,7 @@ class JavaScriptSuperMethodsHandler : BaseJavaScriptHandler<SuperMethodsData>(),
                         containingClassKind = getClassKind(superClass),
                         file = file?.let { getRelativePath(project, it) },
                         line = getLineNumber(project, superMethod),
+                        column = getColumnNumber(project, superMethod),
                         isInterface = getClassKind(superClass) == "INTERFACE",
                         depth = depth,
                         language = getLanguageName(superMethod)
@@ -1014,6 +1027,7 @@ class JavaScriptSuperMethodsHandler : BaseJavaScriptHandler<SuperMethodsData>(),
                         containingClassKind = "INTERFACE",
                         file = file?.let { getRelativePath(project, it) },
                         line = getLineNumber(project, superMethod),
+                        column = getColumnNumber(project, superMethod),
                         isInterface = true,
                         depth = depth,
                         language = getLanguageName(superMethod)

@@ -37,7 +37,7 @@ class FindSuperMethodsTool : AbstractMcpTool() {
 
         NOT supported for Rust: Rust uses trait implementations rather than classical inheritance, so there are no "super methods" in the traditional sense. Use ide_find_definition or ide_type_hierarchy instead.
 
-        Returns: full hierarchy chain from immediate parent (depth=1) to root, with file locations and containing class info.
+        Returns: full hierarchy chain from immediate parent (depth=1) to root, with file locations (line/column) and containing class info.
 
         Parameters: file + line + column (required). Position can be anywhere within the method body.
 
@@ -109,6 +109,7 @@ class FindSuperMethodsTool : AbstractMcpTool() {
                     containingClass = superMethodsData.method.containingClass,
                     file = superMethodsData.method.file,
                     line = superMethodsData.method.line,
+                    column = superMethodsData.method.column,
                     language = superMethodsData.method.language
                 ),
                 hierarchy = superMethodsData.hierarchy.map { superMethod ->
@@ -119,6 +120,7 @@ class FindSuperMethodsTool : AbstractMcpTool() {
                         containingClassKind = superMethod.containingClassKind,
                         file = superMethod.file,
                         line = superMethod.line,
+                        column = superMethod.column,
                         isInterface = superMethod.isInterface,
                         depth = superMethod.depth,
                         language = superMethod.language

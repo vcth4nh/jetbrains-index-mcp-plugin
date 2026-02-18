@@ -332,6 +332,13 @@ abstract class BaseRustHandler<T> : LanguageHandler<T> {
         return document.getLineNumber(element.textOffset) + 1
     }
 
+    protected fun getColumnNumber(project: Project, element: PsiElement): Int? {
+        val psiFile = element.containingFile ?: return null
+        val document = PsiDocumentManager.getInstance(project).getDocument(psiFile) ?: return null
+        val lineNumber = document.getLineNumber(element.textOffset)
+        return element.textOffset - document.getLineStartOffset(lineNumber) + 1
+    }
+
     protected fun determineElementKind(element: PsiElement): String {
         return when {
             isRsTrait(element) -> "TRAIT"
@@ -731,6 +738,7 @@ class RustImplementationsHandler : BaseRustHandler<List<ImplementationData>>(), 
                             name = "impl $traitName for $typeName",
                             file = getRelativePath(project, file),
                             line = getLineNumber(project, definition) ?: 0,
+                            column = getColumnNumber(project, definition) ?: 0,
                             kind = "IMPL",
                             language = "Rust"
                         ))
@@ -776,6 +784,7 @@ class RustImplementationsHandler : BaseRustHandler<List<ImplementationData>>(), 
                             name = displayName,
                             file = getRelativePath(project, file),
                             line = getLineNumber(project, definition) ?: 0,
+                            column = getColumnNumber(project, definition) ?: 0,
                             kind = "METHOD",
                             language = "Rust"
                         ))
@@ -1008,6 +1017,7 @@ class RustCallHierarchyHandler : BaseRustHandler<CallHierarchyData>(), CallHiera
             name = name,
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, function) ?: 0,
+            column = getColumnNumber(project, function) ?: 0,
             language = "Rust",
             children = children?.takeIf { it.isNotEmpty() }
         )
@@ -1131,6 +1141,7 @@ class RustSuperMethodsHandler : BaseRustHandler<SuperMethodsData>(), SuperMethod
             containingClass = typeName,
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, function) ?: 0,
+            column = getColumnNumber(project, function) ?: 0,
             language = "Rust"
         )
 
@@ -1158,6 +1169,7 @@ class RustSuperMethodsHandler : BaseRustHandler<SuperMethodsData>(), SuperMethod
             containingClass = traitName,
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, function) ?: 0,
+            column = getColumnNumber(project, function) ?: 0,
             language = "Rust"
         )
 
@@ -1202,6 +1214,7 @@ class RustSuperMethodsHandler : BaseRustHandler<SuperMethodsData>(), SuperMethod
                 containingClassKind = "TRAIT",
                 file = file?.let { getRelativePath(project, it) },
                 line = getLineNumber(project, traitMethod),
+                column = getColumnNumber(project, traitMethod),
                 isInterface = true,  // Traits are like interfaces
                 depth = depth,
                 language = "Rust"
