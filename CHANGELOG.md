@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+## [3.4.0] - 2026-02-18
+
+### Added
+- **New tool: `ide_sync_files`** - Force the IDE to synchronize its virtual file system and PSI cache with external file changes on-demand
+  - Use when files were created, modified, or deleted outside the IDE and other tools report stale results
+  - Lightweight alternative to the global "Sync external file changes" setting
+  - Optional `paths` parameter to sync specific files/directories instead of the entire project
+
 ## [3.3.4] - 2026-02-05
 
 ### Added

@@ -20,6 +20,7 @@ object ToolNames {
 
     // Project tools
     const val INDEX_STATUS = "ide_index_status"
+    const val SYNC_FILES = "ide_sync_files"
 
     // Refactoring tools
     const val REFACTOR_RENAME = "ide_refactor_rename"

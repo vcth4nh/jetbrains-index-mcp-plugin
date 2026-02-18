@@ -16,6 +16,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindUsage
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.SearchTextTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.TypeHierarchyTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.GetIndexStatusTool
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.SyncFilesTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.refactoring.RenameSymbolTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.refactoring.SafeDeleteTool
 import junit.framework.TestCase
@@ -30,6 +31,34 @@ class ToolsUnitTest : TestCase() {
         assertEquals(ToolNames.INDEX_STATUS, tool.name)
         assertNotNull(tool.description)
         assertNotNull(tool.inputSchema)
+    }
+
+    fun testSyncFilesToolSchema() {
+        val tool = SyncFilesTool()
+
+        assertEquals(ToolNames.SYNC_FILES, tool.name)
+        assertNotNull(tool.description)
+
+        val schema = tool.inputSchema
+        assertEquals(SchemaConstants.TYPE_OBJECT, schema[SchemaConstants.TYPE]?.jsonPrimitive?.content)
+
+        val properties = schema[SchemaConstants.PROPERTIES]?.jsonObject
+        assertNotNull(properties)
+
+        assertNotNull("Should have project_path property", properties?.get(ParamNames.PROJECT_PATH))
+        assertNotNull("Should have paths property", properties?.get("paths"))
+
+        val required = schema[SchemaConstants.REQUIRED]
+        assertNotNull("Should have required array", required)
+    }
+
+    fun testSyncFilesToolIsRegistered() {
+        val registry = ToolRegistry()
+        registry.registerBuiltInTools()
+
+        val tool = registry.getTool(ToolNames.SYNC_FILES)
+        assertNotNull("ide_sync_files should be registered", tool)
+        assertEquals(ToolNames.SYNC_FILES, tool?.name)
     }
 
     fun testFindUsagesToolSchema() {
@@ -159,7 +188,8 @@ class ToolsUnitTest : TestCase() {
             ToolNames.FIND_REFERENCES,
             ToolNames.FIND_DEFINITION,
             ToolNames.DIAGNOSTICS,
-            ToolNames.INDEX_STATUS
+            ToolNames.INDEX_STATUS,
+            ToolNames.SYNC_FILES
         )
 
         // Universal tools should always be registered
@@ -168,7 +198,7 @@ class ToolsUnitTest : TestCase() {
             assertNotNull("Universal tool $toolName should be registered", tool)
         }
 
-        assertTrue("Should have at least 4 universal tools", registry.getAllTools().size >= 4)
+        assertTrue("Should have at least 5 universal tools", registry.getAllTools().size >= 5)
     }
 
     /**

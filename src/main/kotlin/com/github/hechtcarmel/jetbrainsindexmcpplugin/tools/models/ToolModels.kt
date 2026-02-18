@@ -142,6 +142,14 @@ data class IndexStatusResult(
     val indexingProgress: Double?
 )
 
+// ide_sync_files output
+@Serializable
+data class SyncFilesResult(
+    val syncedPaths: List<String>,
+    val syncedAll: Boolean,
+    val message: String
+)
+
 // ide_find_symbol output
 @Serializable
 data class FindSymbolResult(

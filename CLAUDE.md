@@ -311,6 +311,7 @@ Tools are organized by IDE availability.
 - `ide_find_definition` - Find symbol definition location
 - `ide_diagnostics` - Analyze file for problems and available intentions
 - `ide_index_status` - Check indexing status (dumb/smart mode)
+- `ide_sync_files` - Force sync IDE's virtual file system and PSI cache with external file changes
 - `ide_refactor_rename` - Rename a symbol across the project with automatic related element renaming (getters/setters, overriding methods). Fully headless, works for ALL languages.
 
 **Extended Navigation Tools (Language-Aware):**
@@ -351,7 +352,7 @@ The plugin uses a language handler pattern for multi-IDE support:
 
 **Registration Flow:**
 1. `LanguageHandlerRegistry.registerHandlers()` - Registers handlers for available language plugins
-2. `ToolRegistry.registerUniversalTools()` - Registers universal tools including `ide_refactor_rename`
+2. `ToolRegistry.registerUniversalTools()` - Registers universal tools including `ide_refactor_rename`, `ide_sync_files`
 3. `ToolRegistry.registerLanguageNavigationTools()` - Registers tools if any language handlers available
 4. `ToolRegistry.registerJavaRefactoringTools()` - Registers `ide_refactor_safe_delete` if Java plugin available
 
