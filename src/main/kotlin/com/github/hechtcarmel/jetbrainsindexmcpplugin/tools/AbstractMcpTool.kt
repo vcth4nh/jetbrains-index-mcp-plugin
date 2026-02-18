@@ -6,6 +6,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResu
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.settings.McpSettings
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.JavaPluginDetector
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PhpPluginDetector
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PsiUtils
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.ReadAction
@@ -143,10 +144,19 @@ abstract class AbstractMcpTool : McpTool {
      */
     private suspend fun ensurePsiUpToDate(project: Project) {
         // 1. Force VFS to see external changes (async refresh)
+        // Refresh all content roots (includes workspace sub-project directories)
+        val dirsToRefresh = mutableListOf<VirtualFile>()
         val projectDir = project.basePath?.let { LocalFileSystem.getInstance().findFileByPath(it) }
         if (projectDir != null) {
-            // Async refresh - doesn't block, the PSI commit below will pick up changes
-            VfsUtil.markDirtyAndRefresh(true, true, true, projectDir)
+            dirsToRefresh.add(projectDir)
+        }
+        for (rootPath in ProjectUtils.getModuleContentRoots(project)) {
+            if (rootPath != project.basePath) {
+                LocalFileSystem.getInstance().findFileByPath(rootPath)?.let { dirsToRefresh.add(it) }
+            }
+        }
+        if (dirsToRefresh.isNotEmpty()) {
+            VfsUtil.markDirtyAndRefresh(true, true, true, *dirsToRefresh.toTypedArray())
         }
 
         // 2. Commit Documents using suspend function (non-blocking)
@@ -287,16 +297,34 @@ abstract class AbstractMcpTool : McpTool {
     /**
      * Resolves a file path to a [VirtualFile].
      * Uses refreshAndFindFileByPath to ensure externally created files are visible.
+     * Supports workspace projects by trying module content roots when basePath resolution fails.
      *
      * @param project The project context
      * @param relativePath Path relative to project root, or absolute path
      * @return The VirtualFile, or null if not found
      */
     protected fun resolveFile(project: Project, relativePath: String): VirtualFile? {
-        val basePath = project.basePath ?: return null
-        val fullPath = if (relativePath.startsWith("/")) relativePath else "$basePath/$relativePath"
-        // Use refreshAndFindFileByPath to handle externally created files
-        return LocalFileSystem.getInstance().refreshAndFindFileByPath(fullPath)
+        // Absolute paths are resolved directly
+        if (relativePath.startsWith("/") || relativePath.startsWith("\\")) {
+            return LocalFileSystem.getInstance().refreshAndFindFileByPath(relativePath)
+        }
+
+        // Try project basePath first
+        val basePath = project.basePath
+        if (basePath != null) {
+            val file = LocalFileSystem.getInstance().refreshAndFindFileByPath("$basePath/$relativePath")
+            if (file != null) return file
+        }
+
+        // Try module content roots (workspace sub-project support)
+        for (rootPath in ProjectUtils.getModuleContentRoots(project)) {
+            if (rootPath != basePath) {
+                val file = LocalFileSystem.getInstance().refreshAndFindFileByPath("$rootPath/$relativePath")
+                if (file != null) return file
+            }
+        }
+
+        return null
     }
 
     /**
@@ -371,14 +399,14 @@ abstract class AbstractMcpTool : McpTool {
 
     /**
      * Converts an absolute file path to a project-relative path.
+     * Supports workspace projects by checking module content roots.
      *
      * @param project The project context
      * @param virtualFile The file
-     * @return The relative path, or absolute path if not under project root
+     * @return The relative path, or absolute path if not under project root or any content root
      */
     protected fun getRelativePath(project: Project, virtualFile: VirtualFile): String {
-        val basePath = project.basePath ?: return virtualFile.path
-        return virtualFile.path.removePrefix(basePath).removePrefix("/")
+        return ProjectUtils.getRelativePath(project, virtualFile)
     }
 
     /**

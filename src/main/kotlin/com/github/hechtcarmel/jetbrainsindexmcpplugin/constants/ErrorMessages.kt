@@ -25,7 +25,7 @@ object ErrorMessages {
     // Project resolution messages
     const val MSG_NO_PROJECT_OPEN = "No project is currently open in the IDE."
     fun msgProjectNotFound(path: String) = "No open project matches the specified path: $path"
-    const val MSG_MULTIPLE_PROJECTS = "Multiple projects are open. Please specify 'project_path' parameter with one of the available project paths."
+    const val MSG_MULTIPLE_PROJECTS = "Multiple projects are open. Please specify 'project_path' parameter with one of the available project paths. For workspace projects, use the sub-project path."
 
     // Index errors
     const val INDEX_NOT_READY = "IDE is in dumb mode, indexes not available"
