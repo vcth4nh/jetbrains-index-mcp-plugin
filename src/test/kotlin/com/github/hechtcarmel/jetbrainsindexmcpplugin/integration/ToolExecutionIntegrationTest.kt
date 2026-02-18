@@ -306,6 +306,7 @@ class ToolExecutionIntegrationTest : BasePlatformTestCase() {
             ToolNames.DIAGNOSTICS,
             // Project tools
             ToolNames.INDEX_STATUS,
+            ToolNames.SYNC_FILES,
             // Refactoring tools
             ToolNames.REFACTOR_RENAME,
             ToolNames.REFACTOR_SAFE_DELETE
