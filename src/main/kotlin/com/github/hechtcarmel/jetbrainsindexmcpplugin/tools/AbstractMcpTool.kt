@@ -8,6 +8,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.JavaPluginDetector
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PhpPluginDetector
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PsiUtils
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.readAction as platformReadAction
@@ -132,6 +133,20 @@ abstract class AbstractMcpTool : McpTool {
     protected open val requiresPsiSync: Boolean = true
 
     /**
+     * Executes an action on the EDT, reusing the current thread if already on EDT.
+     *
+     * This avoids deadlocks when called from `runBlocking` on EDT in tests
+     * or other scenarios where the EDT is already the current thread.
+     */
+    protected suspend fun <T> edtAction(action: () -> T): T {
+        return if (ApplicationManager.getApplication().isDispatchThread) {
+            action()
+        } else {
+            withContext(Dispatchers.EDT) { action() }
+        }
+    }
+
+    /**
      * Ensures all document changes are committed to PSI before proceeding.
      *
      * This is necessary because external tools (like Claude Code's write tool)
@@ -160,7 +175,7 @@ abstract class AbstractMcpTool : McpTool {
         }
 
         // 2. Commit Documents using suspend function (non-blocking)
-        withContext(Dispatchers.EDT) {
+        edtAction {
             PsiDocumentManager.getInstance(project).commitAllDocuments()
         }
     }
@@ -289,7 +304,7 @@ abstract class AbstractMcpTool : McpTool {
         commandName: String,
         action: () -> Unit
     ) {
-        withContext(Dispatchers.EDT) {
+        edtAction {
             WriteCommandAction.runWriteCommandAction(project, commandName, null, { action() })
         }
     }

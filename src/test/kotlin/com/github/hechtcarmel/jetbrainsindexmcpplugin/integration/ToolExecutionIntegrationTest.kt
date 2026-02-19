@@ -309,7 +309,10 @@ class ToolExecutionIntegrationTest : BasePlatformTestCase() {
             ToolNames.SYNC_FILES,
             // Refactoring tools
             ToolNames.REFACTOR_RENAME,
-            ToolNames.REFACTOR_SAFE_DELETE
+            ToolNames.REFACTOR_SAFE_DELETE,
+            // Editor tools
+            ToolNames.GET_ACTIVE_FILE,
+            ToolNames.OPEN_FILE
         )
 
         assertEquals("Should have correct number of tools", expectedTools.size, registry.getAllTools().size)

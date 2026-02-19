@@ -5,12 +5,9 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResu
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.AbstractMcpTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.ActiveFileInfo
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.GetActiveFileResult
-import com.intellij.openapi.application.EDT
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -45,7 +42,7 @@ class GetActiveFileTool : AbstractMcpTool() {
     }
 
     override suspend fun doExecute(project: Project, arguments: JsonObject): ToolCallResult {
-        val activeFiles = withContext(Dispatchers.EDT) {
+        val activeFiles = edtAction {
             val editorManager = FileEditorManager.getInstance(project)
             val selectedEditors = editorManager.selectedEditors
 

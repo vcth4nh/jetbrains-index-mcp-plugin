@@ -4,12 +4,9 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ToolNames
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.AbstractMcpTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.OpenFileResult
-import com.intellij.openapi.application.EDT
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -82,7 +79,7 @@ class OpenFileTool : AbstractMcpTool() {
 
         val relativePath = getRelativePath(project, virtualFile)
 
-        withContext(Dispatchers.EDT) {
+        edtAction {
             if (line != null) {
                 val lineIndex = line - 1
                 val columnIndex = if (column != null) column - 1 else 0
