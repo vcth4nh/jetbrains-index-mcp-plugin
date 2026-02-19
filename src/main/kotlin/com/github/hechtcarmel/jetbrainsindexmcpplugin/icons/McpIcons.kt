@@ -15,4 +15,7 @@ object McpIcons {
 
     @JvmField
     val StatusError: Icon = IconLoader.getIcon("/icons/status-error.svg", McpIcons::class.java)
+
+    @JvmField
+    val DebuggerMcp: Icon = IconLoader.getIcon("/icons/debugger-mcp.svg", McpIcons::class.java)
 }
