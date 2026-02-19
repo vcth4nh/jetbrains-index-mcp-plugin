@@ -81,9 +81,9 @@ class McpServerService : Disposable {
         toolRegistry.registerBuiltInTools()
 
         val port = McpSettings.getInstance().serverPort
+        isInitialized = true
         startServer(port)
 
-        isInitialized = true
         LOG.info("MCP Server Service initialized with Ktor CIO server")
     }
 
