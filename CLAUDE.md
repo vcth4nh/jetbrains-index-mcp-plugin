@@ -46,33 +46,47 @@ src/
 │   ├── kotlin/com/github/hechtcarmel/jetbrainsindexmcpplugin/
 │   │   ├── MyBundle.kt                 # Resource bundle accessor
 │   │   ├── handlers/                   # Language-specific handlers
-│   │   │   ├── LanguageHandler.kt      # Handler interfaces
-│   │   │   ├── LanguageHandlerRegistry.kt # Handler registry
-│   │   │   ├── OptimizedSymbolSearch.kt # Optimized symbol search using platform APIs
+│   │   │   ├── LanguageHandler.kt      # Handler interfaces & data classes
+│   │   │   ├── LanguageHandlerRegistry.kt # Data-driven handler registry
+│   │   │   ├── OptimizedSymbolSearch.kt # Symbol search using platform APIs
 │   │   │   ├── java/JavaHandlers.kt    # Java/Kotlin handlers
 │   │   │   ├── python/PythonHandlers.kt # Python handlers (reflection)
 │   │   │   ├── javascript/JavaScriptHandlers.kt # JS/TS handlers (reflection)
 │   │   │   ├── go/GoHandlers.kt        # Go handlers (reflection)
 │   │   │   ├── php/PhpHandlers.kt      # PHP handlers (reflection)
 │   │   │   └── rust/RustHandlers.kt    # Rust handlers (reflection)
-│   │   ├── services/                   # Application/project services
+│   │   ├── server/                     # MCP server infrastructure
+│   │   │   ├── McpServerService.kt     # App-level service managing server lifecycle
+│   │   │   ├── JsonRpcHandler.kt       # JSON-RPC 2.0 request routing
+│   │   │   ├── ProjectResolver.kt      # Multi-project resolution with workspace support
+│   │   │   ├── models/                 # Protocol models (JsonRpc, MCP)
+│   │   │   └── transport/              # HTTP+SSE transport layer
+│   │   │       ├── KtorMcpServer.kt    # Embedded Ktor CIO server
+│   │   │       └── KtorSseSessionManager.kt # SSE session management
 │   │   ├── startup/                    # Startup activities
 │   │   ├── tools/                      # MCP tool implementations
-│   │   │   ├── editor/                 # Editor interaction tools
-│   │   │   ├── navigation/             # Navigation tools (multi-language)
-│   │   │   ├── refactoring/            # Refactoring tools (Java only)
-│   │   │   └── utils/                  # Plugin detectors
-│   │   └── toolWindow/                 # Tool window UI
+│   │   │   ├── McpTool.kt             # Tool interface
+│   │   │   ├── AbstractMcpTool.kt     # Base class (PSI sync, threading, helpers)
+│   │   │   ├── ToolRegistry.kt        # Data-driven tool registry
+│   │   │   ├── schema/                # Tool schema utilities
+│   │   │   │   └── SchemaBuilder.kt   # Fluent builder for input schemas
+│   │   │   ├── editor/                # Editor interaction tools
+│   │   │   ├── navigation/            # Navigation tools (multi-language)
+│   │   │   ├── intelligence/          # Code analysis tools
+│   │   │   ├── project/               # Project status tools
+│   │   │   └── refactoring/           # Refactoring tools
+│   │   ├── util/                      # Utilities
+│   │   │   ├── PluginDetector.kt      # Generic plugin availability detector
+│   │   │   ├── PluginDetectors.kt     # Registry of all language detectors
+│   │   │   ├── ClassResolver.kt       # Class lookup by FQN (Java, PHP)
+│   │   │   ├── ProjectUtils.kt        # Project/workspace helpers
+│   │   │   ├── PsiUtils.kt            # PSI navigation helpers
+│   │   │   └── ThreadingUtils.kt      # Threading utilities
+│   │   └── ui/                        # Tool window UI
 │   └── resources/
 │       ├── META-INF/
 │       │   ├── plugin.xml              # Plugin configuration
-│       │   ├── java-features.xml       # Java-specific extensions
-│       │   ├── kotlin-features.xml     # Kotlin-specific extensions
-│       │   ├── python-features.xml     # Python-specific extensions
-│       │   ├── javascript-features.xml # JS/TS-specific extensions
-│       │   ├── go-features.xml         # Go-specific extensions
-│       │   ├── php-features.xml        # PHP-specific extensions
-│       │   └── rust-features.xml       # Rust-specific extensions
+│       │   └── *-features.xml          # Optional language-specific extensions
 │       └── messages/MyBundle.properties # i18n messages
 └── test/
     ├── kotlin/                         # Test sources
