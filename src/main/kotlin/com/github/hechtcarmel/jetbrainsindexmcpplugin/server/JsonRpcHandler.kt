@@ -10,16 +10,13 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.history.CommandStatus
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.*
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.ToolRegistry
 import com.intellij.openapi.diagnostic.logger
-import com.intellij.openapi.module.ModuleManager
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.ProjectManager
-import com.intellij.openapi.roots.ModuleRootManager
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 
 class JsonRpcHandler(
     private val toolRegistry: ToolRegistry
 ) {
+    private val projectResolver = ProjectResolver()
     private val json = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
@@ -103,7 +100,7 @@ class JsonRpcHandler(
         // Extract optional project_path from arguments
         val projectPath = arguments[ParamNames.PROJECT_PATH]?.jsonPrimitive?.contentOrNull
 
-        val projectResult = resolveProject(projectPath)
+        val projectResult = projectResolver.resolve(projectPath)
         if (projectResult.isError) {
             return JsonRpcResponse(
                 id = request.id,
@@ -177,161 +174,6 @@ class JsonRpcHandler(
             id = request.id,
             result = JsonObject(emptyMap())
         )
-    }
-
-    private data class ProjectResolutionResult(
-        val project: Project? = null,
-        val errorResult: ToolCallResult? = null,
-        val isError: Boolean = false
-    )
-
-    private fun resolveProject(projectPath: String?): ProjectResolutionResult {
-        val openProjects = ProjectManager.getInstance().openProjects
-            .filter { !it.isDefault }
-
-        // No projects open
-        if (openProjects.isEmpty()) {
-            return ProjectResolutionResult(
-                isError = true,
-                errorResult = ToolCallResult(
-                    content = listOf(ContentBlock.Text(
-                        text = json.encodeToString(buildJsonObject {
-                            put("error", ErrorMessages.ERROR_NO_PROJECT_OPEN)
-                            put("message", ErrorMessages.MSG_NO_PROJECT_OPEN)
-                        })
-                    )),
-                    isError = true
-                )
-            )
-        }
-
-        // If project_path is provided, find matching project
-        if (projectPath != null) {
-            val normalizedPath = normalizePath(projectPath)
-
-            // 1. Exact basePath match
-            val exactMatch = openProjects.find { normalizePath(it.basePath ?: "") == normalizedPath }
-            if (exactMatch != null) {
-                return ProjectResolutionResult(project = exactMatch)
-            }
-
-            // 2. Match against module content roots (workspace support)
-            val moduleMatch = findProjectByModuleContentRoot(openProjects, normalizedPath)
-            if (moduleMatch != null) {
-                return ProjectResolutionResult(project = moduleMatch)
-            }
-
-            // 3. Match if the given path is a subdirectory of an open project
-            val parentMatch = openProjects.find { proj ->
-                val basePath = normalizePath(proj.basePath ?: "")
-                basePath.isNotEmpty() && normalizedPath.startsWith("$basePath/")
-            }
-            if (parentMatch != null) {
-                return ProjectResolutionResult(project = parentMatch)
-            }
-
-            return ProjectResolutionResult(
-                isError = true,
-                errorResult = ToolCallResult(
-                    content = listOf(ContentBlock.Text(
-                        text = json.encodeToString(buildJsonObject {
-                            put("error", ErrorMessages.ERROR_PROJECT_NOT_FOUND)
-                            put("message", ErrorMessages.msgProjectNotFound(projectPath))
-                            put("available_projects", buildAvailableProjectsArray(openProjects))
-                        })
-                    )),
-                    isError = true
-                )
-            )
-        }
-
-        // Only one project open - use it
-        if (openProjects.size == 1) {
-            return ProjectResolutionResult(project = openProjects.first())
-        }
-
-        // Multiple projects open, no path specified - return error with list
-        return ProjectResolutionResult(
-            isError = true,
-            errorResult = ToolCallResult(
-                content = listOf(ContentBlock.Text(
-                    text = json.encodeToString(buildJsonObject {
-                        put("error", ErrorMessages.ERROR_MULTIPLE_PROJECTS)
-                        put("message", ErrorMessages.MSG_MULTIPLE_PROJECTS)
-                        put("available_projects", buildAvailableProjectsArray(openProjects))
-                    })
-                )),
-                isError = true
-            )
-        )
-    }
-
-    /**
-     * Finds a project by checking if any of its module content roots match the given path.
-     * This supports workspace projects where sub-projects are represented as modules
-     * with content roots in different directories.
-     */
-    private fun findProjectByModuleContentRoot(projects: List<Project>, normalizedPath: String): Project? {
-        for (project in projects) {
-            try {
-                val modules = ModuleManager.getInstance(project).modules
-                for (module in modules) {
-                    val contentRoots = ModuleRootManager.getInstance(module).contentRoots
-                    for (root in contentRoots) {
-                        if (normalizePath(root.path) == normalizedPath) {
-                            return project
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                LOG.debug("Failed to check module content roots for project ${project.name}", e)
-            }
-        }
-        return null
-    }
-
-    /**
-     * Builds the available_projects JSON array including workspace sub-project paths.
-     * For workspace projects, lists each module's content root as a separate entry
-     * so AI agents can discover the correct paths to use.
-     */
-    private fun buildAvailableProjectsArray(openProjects: List<Project>): JsonArray {
-        return buildJsonArray {
-            for (proj in openProjects) {
-                add(buildJsonObject {
-                    put("name", proj.name)
-                    put("path", proj.basePath ?: "")
-                })
-
-                // Include workspace sub-projects (module content roots)
-                try {
-                    val modules = ModuleManager.getInstance(proj).modules
-                    for (module in modules) {
-                        val contentRoots = ModuleRootManager.getInstance(module).contentRoots
-                        for (root in contentRoots) {
-                            val rootPath = root.path
-                            if (rootPath != proj.basePath) {
-                                add(buildJsonObject {
-                                    put("name", module.name)
-                                    put("path", rootPath)
-                                    put("workspace", proj.name)
-                                })
-                            }
-                        }
-                    }
-                } catch (e: Exception) {
-                    LOG.debug("Failed to list module content roots for project ${proj.name}", e)
-                }
-            }
-        }
-    }
-
-    /**
-     * Normalizes a file path for comparison: removes trailing slashes and
-     * normalizes backslashes to forward slashes for cross-platform compatibility.
-     */
-    private fun normalizePath(path: String): String {
-        return path.trimEnd('/', '\\').replace('\\', '/')
     }
 
     private fun createParseErrorResponse(): JsonRpcResponse {
