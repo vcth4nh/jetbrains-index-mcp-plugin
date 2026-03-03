@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+## [3.12.1] - 2026-03-03
+
+### Fixed
+- **Server stuck on "Initializing..." if `postStartupActivity` doesn't fire** — The MCP server now self-initializes asynchronously from its service constructor instead of depending solely on `postStartupActivity`. This fixes environments where the startup activity silently fails (e.g., due to plugin conflicts or class-loading errors), leaving the server permanently in "Initializing..." state ([#73](https://github.com/hechtcarmel/jetbrains-index-mcp-plugin/issues/73))
+
 ## [3.12.0] - 2026-03-01
 
 ### Added

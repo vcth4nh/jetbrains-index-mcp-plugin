@@ -24,6 +24,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 /**
  * Application-level service managing the MCP server infrastructure.
@@ -78,6 +79,10 @@ class McpServerService : Disposable {
     init {
         LOG.info("Initializing MCP Server Service (Protocol: ${McpConstants.MCP_PROTOCOL_VERSION})")
         jsonRpcHandler = JsonRpcHandler(toolRegistry)
+        // Self-initialize asynchronously so the server starts even if postStartupActivity
+        // doesn't fire (see issue #73). initialize() is idempotent (@Synchronized + isInitialized
+        // guard), so the redundant call from McpServerStartupActivity is a safe no-op.
+        coroutineScope.launch { initialize() }
     }
 
     @Synchronized
