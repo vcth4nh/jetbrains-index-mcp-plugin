@@ -7,7 +7,7 @@
 ## [3.14.0]
 
 ### Added
-- **Streamable HTTP transport (MCP 2025-03-26)** — New primary transport at `/index-mcp/streamable-http` with full session management via `Mcp-Session-Id` header. Supports `POST` for JSON-RPC requests, `DELETE` for session termination, and `GET` returning 405. Protocol version updated to `2025-03-26`.
+- **Streamable HTTP transport (MCP 2025-03-26)** — New primary transport at `/index-mcp/streamable-http`.
 - **Updated client configurations** — Claude Code now uses `--transport http`, all client configs point to the Streamable HTTP endpoint as primary
 - **Generic config section** — "Streamable HTTP" (recommended) and "SSE (Legacy)" options replace the old "Standard SSE" and "mcp-remote" options
 
