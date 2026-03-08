@@ -6,12 +6,6 @@
 
 ### Breaking
 - **Primary transport changed** — Default server URL now points to Streamable HTTP endpoint (`/index-mcp/streamable-http`). Existing client configurations using the SSE URL continue to work but should be updated.
-- **Primary protocol moved to 2025-03-26** — Streamable HTTP now negotiates MCP `2025-03-26` while the legacy SSE transport continues to negotiate `2024-11-05` for older clients.
-
-### Added
-- **Streamable HTTP transport (MCP 2025-03-26)** — New primary transport at `/index-mcp/streamable-http` with `Mcp-Session-Id` session management, `DELETE` for session termination, and `202 Accepted` for notifications.
-- **Updated client configurations** — Claude Code now uses `--transport http`, Codex CLI uses native `--url`, and all client configs point to the Streamable HTTP endpoint as primary
-- **Generic config section** — "Streamable HTTP" (recommended) and "SSE (Legacy)" options replace the old "Standard SSE" and "mcp-remote" options
 
 ### Changed
 - **`getServerUrl()` returns Streamable HTTP URL** — `McpServerService.getServerUrl()` now returns the Streamable HTTP endpoint. Use `getLegacySseUrl()` for the legacy SSE endpoint.
