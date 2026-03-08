@@ -16,24 +16,34 @@ import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.routing.delete
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.net.BindException
 
 /**
  * Embedded Ktor CIO server for MCP protocol.
  *
- * Provides HTTP+SSE transport for MCP clients with configurable port.
+ * Provides multiple transport modes for MCP clients with configurable port.
  *
- * Supports two transport modes:
- * 1. SSE Transport (2024-11-05 spec):
+ * Supports three transport modes:
+ * 1. Streamable HTTP Transport (2025-03-26 spec) — PRIMARY:
+ *    - POST /index-mcp/streamable-http → JSON-RPC with Mcp-Session-Id header
+ *    - GET  /index-mcp/streamable-http → 405 Method Not Allowed
+ *    - DELETE /index-mcp/streamable-http → Session termination
+ *
+ * 2. Legacy SSE Transport (2024-11-05 spec):
  *    - GET /index-mcp/sse → Opens SSE stream, sends `endpoint` event with POST URL
  *    - POST /index-mcp?sessionId=xxx → JSON-RPC messages, response sent via SSE
  *
- * 2. Streamable HTTP Transport (for clients like Claude Code):
+ * 3. Stateless HTTP (convenience):
  *    - POST /index-mcp (no sessionId) → JSON-RPC messages, immediate JSON response
  */
 class KtorMcpServer(
@@ -41,6 +51,7 @@ class KtorMcpServer(
     private val host: String = McpConstants.DEFAULT_SERVER_HOST,
     private val jsonRpcHandler: JsonRpcHandler,
     private val sseSessionManager: KtorSseSessionManager,
+    private val streamableHttpSessionManager: StreamableHttpSessionManager,
     private val coroutineScope: CoroutineScope
 ) : Disposable {
 
@@ -108,25 +119,41 @@ class KtorMcpServer(
             anyHost()
             allowMethod(HttpMethod.Get)
             allowMethod(HttpMethod.Post)
+            allowMethod(HttpMethod.Delete)
             allowMethod(HttpMethod.Options)
             allowHeader(HttpHeaders.ContentType)
             allowHeader(HttpHeaders.Accept)
+            allowHeader(McpConstants.MCP_SESSION_ID_HEADER)
+            exposeHeader(McpConstants.MCP_SESSION_ID_HEADER)
         }
     }
 
     private fun Application.configureRouting() {
         routing {
-            // GET /index-mcp/sse → Open SSE stream
+            // === Streamable HTTP Transport (2025-03-26 spec) ===
+
+            post(McpConstants.STREAMABLE_HTTP_ENDPOINT_PATH) {
+                handleStreamableHttpPostRequest(call)
+            }
+
+            get(McpConstants.STREAMABLE_HTTP_ENDPOINT_PATH) {
+                call.respond(HttpStatusCode.MethodNotAllowed)
+            }
+
+            delete(McpConstants.STREAMABLE_HTTP_ENDPOINT_PATH) {
+                handleStreamableHttpDeleteRequest(call)
+            }
+
+            // === Legacy SSE Transport (2024-11-05 spec) ===
+
             get(McpConstants.SSE_ENDPOINT_PATH) {
                 handleSseRequest(call)
             }
 
-            // POST /index-mcp → JSON-RPC (Streamable HTTP or with sessionId for SSE)
             post(McpConstants.MCP_ENDPOINT_PATH) {
                 handlePostRequest(call)
             }
 
-            // POST /index-mcp/sse → JSON-RPC (some clients POST to SSE endpoint)
             post(McpConstants.SSE_ENDPOINT_PATH) {
                 handlePostRequest(call)
             }
@@ -191,6 +218,138 @@ class KtorMcpServer(
             // SSE transport mode - response via SSE stream
             handleSsePostRequest(call, sessionId, body)
         }
+    }
+
+    /**
+     * Handles POST /index-mcp/streamable-http — Streamable HTTP transport (MCP 2025-03-26).
+     *
+     * - initialize request: creates session, returns Mcp-Session-Id header
+     * - notifications (no id): validates session, returns 202 Accepted
+     * - requests (has id): validates session, returns JSON response
+     */
+    private suspend fun handleStreamableHttpPostRequest(call: ApplicationCall) {
+        val body = call.receiveText()
+
+        if (body.isBlank()) {
+            call.respondText(
+                createJsonRpcError(null as JsonElement?, -32700, "Empty request body"),
+                ContentType.Application.Json,
+                HttpStatusCode.BadRequest
+            )
+            return
+        }
+
+        // Parse to check if this is an initialize request
+        val isInitialize = try {
+            val parsed = json.parseToJsonElement(body).jsonObject
+            parsed["method"]?.jsonPrimitive?.contentOrNull == "initialize"
+        } catch (e: Exception) {
+            false
+        }
+
+        if (isInitialize) {
+            handleStreamableHttpInitialize(call, body)
+            return
+        }
+
+        // All non-initialize requests require a valid session
+        val sessionId = call.request.headers[McpConstants.MCP_SESSION_ID_HEADER]
+        if (sessionId.isNullOrBlank()) {
+            call.respondText(
+                createJsonRpcError(null as JsonElement?, -32600, "Missing ${McpConstants.MCP_SESSION_ID_HEADER} header"),
+                ContentType.Application.Json,
+                HttpStatusCode.BadRequest
+            )
+            return
+        }
+
+        if (streamableHttpSessionManager.getSession(sessionId) == null) {
+            call.respond(HttpStatusCode.NotFound, "Session not found or expired")
+            return
+        }
+
+        // Check if this is a notification (no id field) or a request (has id)
+        val isNotification = try {
+            val parsed = json.parseToJsonElement(body).jsonObject
+            !parsed.containsKey("id") || parsed["id"] == JsonNull
+        } catch (e: Exception) {
+            false
+        }
+
+        if (isNotification) {
+            try {
+                withContext(ModalityState.any().asContextElement()) {
+                    jsonRpcHandler.handleRequest(body)
+                }
+            } catch (e: Exception) {
+                LOG.debug("Error processing notification: ${e.message}")
+            }
+            call.respond(HttpStatusCode.Accepted)
+            return
+        }
+
+        // Regular request: process and return JSON response
+        try {
+            val response = withContext(ModalityState.any().asContextElement()) {
+                jsonRpcHandler.handleRequest(body)
+            }
+            if (response != null) {
+                call.respondText(response, ContentType.Application.Json)
+            } else {
+                call.respond(HttpStatusCode.Accepted)
+            }
+        } catch (e: Exception) {
+            LOG.error("Error processing MCP request (Streamable HTTP)", e)
+            call.respondText(
+                createJsonRpcError(null as JsonElement?, -32603, e.message ?: "Internal error"),
+                ContentType.Application.Json
+            )
+        }
+    }
+
+    /**
+     * Handles initialize request for Streamable HTTP transport.
+     * Creates a session and returns Mcp-Session-Id header on the response.
+     */
+    private suspend fun handleStreamableHttpInitialize(call: ApplicationCall, body: String) {
+        try {
+            val response = withContext(ModalityState.any().asContextElement()) {
+                jsonRpcHandler.handleRequest(body)
+            }
+            if (response != null) {
+                val sessionId = streamableHttpSessionManager.createSession()
+                call.response.header(McpConstants.MCP_SESSION_ID_HEADER, sessionId)
+                call.respondText(response, ContentType.Application.Json)
+            } else {
+                call.respond(HttpStatusCode.InternalServerError)
+            }
+        } catch (e: Exception) {
+            LOG.error("Error processing initialize (Streamable HTTP)", e)
+            call.respondText(
+                createJsonRpcError(null as JsonElement?, -32603, e.message ?: "Internal error"),
+                ContentType.Application.Json
+            )
+        }
+    }
+
+    /**
+     * Handles DELETE /index-mcp/streamable-http — Session termination.
+     */
+    private suspend fun handleStreamableHttpDeleteRequest(call: ApplicationCall) {
+        val sessionId = call.request.headers[McpConstants.MCP_SESSION_ID_HEADER]
+
+        if (sessionId.isNullOrBlank()) {
+            call.respond(HttpStatusCode.BadRequest, "Missing ${McpConstants.MCP_SESSION_ID_HEADER} header")
+            return
+        }
+
+        if (streamableHttpSessionManager.getSession(sessionId) == null) {
+            call.respond(HttpStatusCode.NotFound, "Session not found")
+            return
+        }
+
+        streamableHttpSessionManager.removeSession(sessionId)
+        call.respond(HttpStatusCode.OK)
     }
 
     /**
