@@ -2,12 +2,26 @@
 
 # IDE Index MCP Server Changelog
 
-## [4.0.0]
+## [4.0.0] - 2026-03-08
+
+### Breaking
+- **Primary transport changed** — Default server URL now points to Streamable HTTP endpoint (`/index-mcp/streamable-http`). Existing client configurations using the SSE URL continue to work but should be updated.
+- **Protocol version bumped to 2025-03-26** — `InitializeResult.protocolVersion` now returns `"2025-03-26"` for all transports.
 
 ### Added
-- **Streamable HTTP transport (MCP 2025-03-26)** — New primary transport at `/index-mcp/streamable-http`.
+- **Streamable HTTP transport (MCP 2025-03-26)** — New primary transport at `/index-mcp/streamable-http` with `Mcp-Session-Id` session management, `DELETE` for session termination, and `202 Accepted` for notifications.
 - **Updated client configurations** — Claude Code now uses `--transport http`, all client configs point to the Streamable HTTP endpoint as primary
 - **Generic config section** — "Streamable HTTP" (recommended) and "SSE (Legacy)" options replace the old "Standard SSE" and "mcp-remote" options
+
+### Changed
+- **`getServerUrl()` returns Streamable HTTP URL** — `McpServerService.getServerUrl()` now returns the Streamable HTTP endpoint. Use `getLegacySseUrl()` for the legacy SSE endpoint.
+- **Gemini CLI and Codex CLI use native Streamable HTTP** — Removed `mcp-remote` bridge. Codex CLI now uses `--transport http` natively. Gemini CLI now uses the `httpUrl` field in settings.json.
+
+### Fixed
+- **JSON-RPC batch arrays no longer crash the server** — Sending a JSON array to the Streamable HTTP endpoint now returns a clear "JSON-RPC batching is not supported" error instead of a misleading parse error.
+- **Session not created on failed initialize** — Streamable HTTP sessions are only created when `initialize` succeeds, not on error responses.
+- **Consistent JSON-RPC error format** — All error responses from the Streamable HTTP endpoint now use proper JSON-RPC error format instead of mixing plain text and JSON.
+- **Error responses include request id** — JSON-RPC error responses now include the request `id` when available, so clients can correlate errors to requests.
 
 ## [3.13.0] - 2026-03-03
 

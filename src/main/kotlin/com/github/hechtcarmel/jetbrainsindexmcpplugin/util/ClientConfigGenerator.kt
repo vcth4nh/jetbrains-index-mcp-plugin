@@ -129,7 +129,8 @@ object ClientConfigGenerator {
     /**
      * Builds the Codex CLI command for reinstalling the MCP server.
      *
-     * Removes any existing installation first, then adds the server.
+     * Removes any existing installation first, then adds the server using native
+     * Streamable HTTP transport (no mcp-remote bridge needed).
      * The remove command uses 2>/dev/null to suppress errors if the server wasn't installed.
      * Uses `;` between commands so add runs regardless of remove's exit status.
      *
@@ -141,7 +142,7 @@ object ClientConfigGenerator {
      */
     internal fun buildCodexCommand(serverUrl: String, serverName: String): String {
         val removeCmd = "codex mcp remove $serverName >/dev/null 2>&1"
-        val addCmd = "codex mcp add $serverName -- npx -y mcp-remote $serverUrl --allow-http"
+        val addCmd = "codex mcp add $serverName --transport http $serverUrl"
         return "$removeCmd ; $addCmd"
     }
 
@@ -152,7 +153,7 @@ object ClientConfigGenerator {
     /**
      * Generates Gemini CLI MCP configuration.
      *
-     * Uses mcp-remote to bridge SSE to stdio transport.
+     * Uses native Streamable HTTP transport via the httpUrl field.
      * Add this to ~/.gemini/settings.json
      */
     private fun generateGeminiCliConfig(serverUrl: String, serverName: String): String {
@@ -160,13 +161,7 @@ object ClientConfigGenerator {
 {
   "mcpServers": {
     "$serverName": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-remote",
-        "$serverUrl",
-        "--allow-http"
-      ]
+      "httpUrl": "$serverUrl"
     }
   }
 }
@@ -251,8 +246,7 @@ object ClientConfigGenerator {
                 Add to your Gemini CLI settings file:
                 • Config file: ~/.gemini/settings.json
 
-                Uses mcp-remote to bridge SSE to stdio transport.
-                Requires Node.js/npx to be available in your PATH.
+                Uses native Streamable HTTP transport via the httpUrl field.
             """.trimIndent()
 
             ClientType.CURSOR -> """

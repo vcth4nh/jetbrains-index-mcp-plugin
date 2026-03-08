@@ -21,6 +21,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.contentOrNull
@@ -240,8 +241,8 @@ class KtorMcpServer(
         }
 
         // Parse once to determine message type
-        val parsed = try {
-            json.parseToJsonElement(body).jsonObject
+        val element = try {
+            json.parseToJsonElement(body)
         } catch (e: Exception) {
             call.respondText(
                 createJsonRpcError(null as JsonElement?, -32700, "Parse error: ${e.message}"),
@@ -250,6 +251,17 @@ class KtorMcpServer(
             )
             return
         }
+
+        if (element is JsonArray) {
+            call.respondText(
+                createJsonRpcError(null as JsonElement?, -32600, "JSON-RPC batching is not supported"),
+                ContentType.Application.Json,
+                HttpStatusCode.BadRequest
+            )
+            return
+        }
+
+        val parsed = element.jsonObject
 
         val method = parsed["method"]?.jsonPrimitive?.contentOrNull
         val hasId = parsed.containsKey("id") && parsed["id"] != JsonNull
@@ -261,10 +273,11 @@ class KtorMcpServer(
         }
 
         // All non-initialize requests require a valid session
+        val requestId = parsed["id"]
         val sessionId = call.request.headers[McpConstants.MCP_SESSION_ID_HEADER]
         if (sessionId.isNullOrBlank()) {
             call.respondText(
-                createJsonRpcError(null as JsonElement?, -32600, "Missing ${McpConstants.MCP_SESSION_ID_HEADER} header"),
+                createJsonRpcError(requestId, -32600, "Missing ${McpConstants.MCP_SESSION_ID_HEADER} header"),
                 ContentType.Application.Json,
                 HttpStatusCode.BadRequest
             )
@@ -272,7 +285,11 @@ class KtorMcpServer(
         }
 
         if (streamableHttpSessionManager.getSession(sessionId) == null) {
-            call.respond(HttpStatusCode.NotFound, "Session not found or expired")
+            call.respondText(
+                createJsonRpcError(requestId, -32600, "Session not found or expired"),
+                ContentType.Application.Json,
+                HttpStatusCode.NotFound
+            )
             return
         }
 
@@ -318,8 +335,16 @@ class KtorMcpServer(
                 jsonRpcHandler.handleRequest(body)
             }
             if (response != null) {
-                val sessionId = streamableHttpSessionManager.createSession()
-                call.response.header(McpConstants.MCP_SESSION_ID_HEADER, sessionId)
+                val isSuccess = try {
+                    val responseElement = json.parseToJsonElement(response).jsonObject
+                    responseElement.containsKey("result")
+                } catch (_: Exception) {
+                    false
+                }
+                if (isSuccess) {
+                    val sessionId = streamableHttpSessionManager.createSession()
+                    call.response.header(McpConstants.MCP_SESSION_ID_HEADER, sessionId)
+                }
                 call.respondText(response, ContentType.Application.Json)
             } else {
                 call.respond(HttpStatusCode.InternalServerError)
