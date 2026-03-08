@@ -28,13 +28,15 @@ object McpConstants {
     // MCP Endpoint paths (HTTP+SSE transport)
     const val MCP_ENDPOINT_PATH = "/index-mcp"
     const val SSE_ENDPOINT_PATH = "$MCP_ENDPOINT_PATH/sse"
+    const val STREAMABLE_HTTP_ENDPOINT_PATH = "$MCP_ENDPOINT_PATH/streamable-http"
     const val SESSION_ID_PARAM = "sessionId"
+    const val MCP_SESSION_ID_HEADER = "Mcp-Session-Id"
 
     // JSON-RPC version
     const val JSON_RPC_VERSION = "2.0"
 
     // MCP Protocol version
-    const val MCP_PROTOCOL_VERSION = "2024-11-05"
+    const val MCP_PROTOCOL_VERSION = "2025-03-26"
 
     // Server identification - IDE-specific
     /**
