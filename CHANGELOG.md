@@ -4,7 +4,7 @@
 
 ## [Unreleased]
 
-## [3.14.0]
+## [4.0.0]
 
 ### Added
 - **Streamable HTTP transport (MCP 2025-03-26)** — New primary transport at `/index-mcp/streamable-http`.
