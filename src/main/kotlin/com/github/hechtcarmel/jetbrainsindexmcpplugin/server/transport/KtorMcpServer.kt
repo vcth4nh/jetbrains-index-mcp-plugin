@@ -213,7 +213,7 @@ class KtorMcpServer(
 
         if (sessionId.isNullOrBlank()) {
             // Streamable HTTP mode - immediate JSON response
-            handleStreamableHttpRequest(call, body)
+            handleStatelessHttpRequest(call, body)
         } else {
             // SSE transport mode - response via SSE stream
             handleSsePostRequest(call, sessionId, body)
@@ -239,15 +239,23 @@ class KtorMcpServer(
             return
         }
 
-        // Parse to check if this is an initialize request
-        val isInitialize = try {
-            val parsed = json.parseToJsonElement(body).jsonObject
-            parsed["method"]?.jsonPrimitive?.contentOrNull == "initialize"
+        // Parse once to determine message type
+        val parsed = try {
+            json.parseToJsonElement(body).jsonObject
         } catch (e: Exception) {
-            false
+            call.respondText(
+                createJsonRpcError(null as JsonElement?, -32700, "Parse error: ${e.message}"),
+                ContentType.Application.Json,
+                HttpStatusCode.BadRequest
+            )
+            return
         }
 
-        if (isInitialize) {
+        val method = parsed["method"]?.jsonPrimitive?.contentOrNull
+        val hasId = parsed.containsKey("id") && parsed["id"] != JsonNull
+
+        // Initialize: process and create session
+        if (method == "initialize") {
             handleStreamableHttpInitialize(call, body)
             return
         }
@@ -268,15 +276,8 @@ class KtorMcpServer(
             return
         }
 
-        // Check if this is a notification (no id field) or a request (has id)
-        val isNotification = try {
-            val parsed = json.parseToJsonElement(body).jsonObject
-            !parsed.containsKey("id") || parsed["id"] == JsonNull
-        } catch (e: Exception) {
-            false
-        }
-
-        if (isNotification) {
+        // Notifications (no id): fire-and-forget, return 202
+        if (!hasId) {
             try {
                 withContext(ModalityState.any().asContextElement()) {
                     jsonRpcHandler.handleRequest(body)
@@ -356,7 +357,7 @@ class KtorMcpServer(
      * Handles POST in Streamable HTTP mode (no sessionId).
      * Returns immediate JSON response.
      */
-    private suspend fun handleStreamableHttpRequest(call: ApplicationCall, body: String) {
+    private suspend fun handleStatelessHttpRequest(call: ApplicationCall, body: String) {
         if (body.isBlank()) {
             call.respondText(
                 createJsonRpcError(null as JsonElement?, -32700, "Empty request body"),

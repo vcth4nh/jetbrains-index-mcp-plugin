@@ -25,7 +25,7 @@ object McpConstants {
      */
     const val DEFAULT_SERVER_PORT = 29170
 
-    // MCP Endpoint paths (HTTP+SSE transport)
+    // MCP Endpoint paths
     const val MCP_ENDPOINT_PATH = "/index-mcp"
     const val SSE_ENDPOINT_PATH = "$MCP_ENDPOINT_PATH/sse"
     const val STREAMABLE_HTTP_ENDPOINT_PATH = "$MCP_ENDPOINT_PATH/streamable-http"

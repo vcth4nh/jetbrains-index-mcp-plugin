@@ -19,7 +19,7 @@ Create an MCP server within an IntelliJ plugin that allows AI coding assistants 
 - **Build System**: Gradle 9.0 with Kotlin DSL
 - **IDE Platform**: IntelliJ IDEA 2025.1+ (platformType = IC)
 - **HTTP Server**: Ktor CIO 2.3.12 (embedded, configurable port)
-- **Protocol**: Model Context Protocol (MCP) 2024-11-05
+- **Protocol**: Model Context Protocol (MCP) 2025-03-26
 
 ## Key Documentation
 
@@ -62,7 +62,8 @@ src/
 │   │   │   ├── models/                 # Protocol models (JsonRpc, MCP)
 │   │   │   └── transport/              # HTTP+SSE transport layer
 │   │   │       ├── KtorMcpServer.kt    # Embedded Ktor CIO server
-│   │   │       └── KtorSseSessionManager.kt # SSE session management
+│   │   │       ├── KtorSseSessionManager.kt # SSE session management
+│   │   │       └── StreamableHttpSessionManager.kt # Streamable HTTP session management
 │   │   ├── startup/                    # Startup activities
 │   │   ├── tools/                      # MCP tool implementations
 │   │   │   ├── McpTool.kt             # Tool interface
@@ -148,7 +149,14 @@ MCP servers expose:
 - `KtorSseSessionManager` - SSE session management using Kotlin channels
 - `JsonRpcHandler` - JSON-RPC 2.0 request processing
 
-**Transport**: This plugin uses HTTP+SSE transport with JSON-RPC 2.0:
+**Transport**: This plugin supports two transports with JSON-RPC 2.0:
+
+*Streamable HTTP (Primary, MCP 2025-03-26):*
+- `POST /index-mcp/streamable-http` → JSON-RPC requests/responses with `Mcp-Session-Id` header
+- `GET /index-mcp/streamable-http` → 405 Method Not Allowed
+- `DELETE /index-mcp/streamable-http` → Session termination
+
+*Legacy SSE (MCP 2024-11-05):*
 - `GET /index-mcp/sse` → Opens SSE stream, sends `endpoint` event with POST URL
 - `POST /index-mcp` → JSON-RPC requests/responses
 
@@ -157,7 +165,7 @@ MCP servers expose:
 {
   "mcpServers": {
     "intellij-index": {
-      "url": "http://127.0.0.1:29170/index-mcp/sse"
+      "url": "http://127.0.0.1:29170/index-mcp/streamable-http"
     }
   }
 }
