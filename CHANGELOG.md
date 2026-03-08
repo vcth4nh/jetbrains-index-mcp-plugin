@@ -2,8 +2,6 @@
 
 # IDE Index MCP Server Changelog
 
-## [Unreleased]
-
 ## [4.0.0]
 
 ### Added
