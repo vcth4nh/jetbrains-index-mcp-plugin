@@ -2,7 +2,10 @@
 
 # IDE Index MCP Server Changelog
 
-## [Unreleased]
+## [4.0.0] - 2026-03-11
+
+### Added
+- **Primary transport changed** — Default server URL now points to Streamable HTTP endpoint (`/index-mcp/streamable-http`). Existing client configurations using the SSE URL continue to work but should be updated.
 
 ## [3.14.0] - 2026-03-11
 

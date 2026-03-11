@@ -5,6 +5,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.McpConstants
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.ServerStatusListener
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.transport.KtorMcpServer
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.transport.KtorSseSessionManager
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.transport.StreamableHttpSessionManager
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.settings.McpSettings
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.settings.McpSettingsConfigurable
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.ToolRegistry
@@ -16,15 +17,11 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
-import com.intellij.openapi.application.asContextElement
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.options.ShowSettingsUtil
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 /**
@@ -40,24 +37,16 @@ import kotlinx.coroutines.launch
  * Uses HTTP+SSE transport for compatibility with MCP clients.
  */
 @Service(Service.Level.APP)
-class McpServerService : Disposable {
+class McpServerService(
+    private val coroutineScope: CoroutineScope
+) : Disposable {
 
     private val toolRegistry: ToolRegistry = ToolRegistry()
     private val jsonRpcHandler: JsonRpcHandler
     private val sseSessionManager: KtorSseSessionManager = KtorSseSessionManager()
+    private val streamableHttpSessionManager: StreamableHttpSessionManager = StreamableHttpSessionManager()
     private var ktorServer: KtorMcpServer? = null
     private var serverError: ServerError? = null
-
-    /**
-     * Coroutine scope for non-blocking tool execution.
-     * Uses SupervisorJob so failures in one tool don't cancel others.
-     * Uses Default dispatcher for CPU-bound PSI operations.
-     * Uses ModalityState.any() so EDT-bound work executes even when modal dialogs are open,
-     * preventing MCP tool calls from hanging indefinitely (see issue #68).
-     */
-    val coroutineScope: CoroutineScope = CoroutineScope(
-        SupervisorJob() + Dispatchers.Default + ModalityState.any().asContextElement()
-    )
 
     /**
      * Represents a server error state.
@@ -121,6 +110,7 @@ class McpServerService : Disposable {
             host = host,
             jsonRpcHandler = jsonRpcHandler,
             sseSessionManager = sseSessionManager,
+            streamableHttpSessionManager = streamableHttpSessionManager,
             coroutineScope = coroutineScope
         )
 
@@ -204,12 +194,25 @@ class McpServerService : Disposable {
     fun getSseSessionManager(): KtorSseSessionManager = sseSessionManager
 
     /**
-     * Returns the SSE endpoint URL for MCP connections.
-     * Clients should connect to this URL to establish SSE stream.
+     * Returns the Streamable HTTP endpoint URL for MCP connections (primary transport).
+     * Clients should use this URL for the MCP 2025-03-26 Streamable HTTP transport.
      *
      * @return The server URL, or null if server is not running
      */
     fun getServerUrl(): String? {
+        if (ktorServer == null || serverError != null) return null
+        val settings = McpSettings.getInstance()
+        val port = settings.serverPort
+        val host = settings.serverHost
+        return "http://$host:$port${McpConstants.STREAMABLE_HTTP_ENDPOINT_PATH}"
+    }
+
+    /**
+     * Returns the legacy SSE endpoint URL for older MCP clients (2024-11-05 transport).
+     *
+     * @return The SSE URL, or null if server is not running
+     */
+    fun getLegacySseUrl(): String? {
         if (ktorServer == null || serverError != null) return null
         val settings = McpSettings.getInstance()
         val port = settings.serverPort
@@ -234,7 +237,8 @@ class McpServerService : Disposable {
             name = McpConstants.SERVER_NAME,
             version = McpConstants.SERVER_VERSION,
             protocolVersion = McpConstants.MCP_PROTOCOL_VERSION,
-            sseUrl = if (isRunning) "http://$host:$port${McpConstants.SSE_ENDPOINT_PATH}" else "Server not running",
+            streamableHttpUrl = if (isRunning) "http://$host:$port${McpConstants.STREAMABLE_HTTP_ENDPOINT_PATH}" else "Server not running",
+            legacySseUrl = if (isRunning) "http://$host:$port${McpConstants.SSE_ENDPOINT_PATH}" else "Server not running",
             postUrl = "http://$host:$port${McpConstants.MCP_ENDPOINT_PATH}",
             port = port,
             registeredTools = toolRegistry.getAllTools().size,
@@ -269,7 +273,7 @@ class McpServerService : Disposable {
         LOG.info("Disposing MCP Server Service")
         stopServer()
         sseSessionManager.closeAllSessions()
-        coroutineScope.cancel("McpServerService disposed")
+        streamableHttpSessionManager.closeAllSessions()
     }
 }
 
@@ -280,7 +284,8 @@ data class ServerStatusInfo(
     val name: String,
     val version: String,
     val protocolVersion: String,
-    val sseUrl: String,
+    val streamableHttpUrl: String,
+    val legacySseUrl: String,
     val postUrl: String,
     val port: Int,
     val registeredTools: Int,
