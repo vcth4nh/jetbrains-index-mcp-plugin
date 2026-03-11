@@ -200,9 +200,7 @@ Each JetBrains IDE has a unique default port and server name to allow running mu
 | CLion | `clion-index` | 29177 |
 | RustRover | `rustrover-index` | 29178 |
 | DataGrip | `datagrip-index` | 29179 |
-| Aqua | `aqua-index` | 29180 |
-| DataSpell | `dataspell-index` | 29181 |
-| Rider | `rider-index` | 29182 |
+
 
 > **Tip**: Use the "Install on Coding Agents" button in the tool window - it automatically uses the correct server name and port for your IDE.
 
