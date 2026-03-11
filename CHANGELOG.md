@@ -2,10 +2,11 @@
 
 # IDE Index MCP Server Changelog
 
-## [4.0.0] - 2026-03-08
+## [4.0.0] - 2026-03-11
 
 ### Added
 - **Primary transport changed** — Default server URL now points to Streamable HTTP endpoint (`/index-mcp/streamable-http`). Existing client configurations using the SSE URL continue to work but should be updated.
+- **Configurable server host** — Allows the user to configure the listening server host, making it possible to use the MCP server on another machine or WSL (Windows Subsystem for Linux).
 
 ## [3.13.0] - 2026-03-03
 

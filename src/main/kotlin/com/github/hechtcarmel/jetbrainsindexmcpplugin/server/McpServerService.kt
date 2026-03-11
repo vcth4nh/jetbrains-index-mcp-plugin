@@ -1,5 +1,6 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.server
 
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.McpBundle
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.McpConstants
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.ServerStatusListener
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.transport.KtorMcpServer
@@ -82,9 +83,11 @@ class McpServerService(
 
         toolRegistry.registerBuiltInTools()
 
-        val port = McpSettings.getInstance().serverPort
+        val settings = McpSettings.getInstance()
+        val port = settings.serverPort
+        val host = settings.serverHost
         isInitialized = true
-        startServer(port)
+        startServer(host, port)
 
         LOG.info("MCP Server Service initialized with Ktor CIO server")
     }
@@ -92,18 +95,19 @@ class McpServerService(
     /**
      * Starts the MCP server on the specified port.
      *
+     * @param host The host to bind to
      * @param port The port to listen on
      * @return The result of the start operation
      */
-    fun startServer(port: Int): KtorMcpServer.StartResult {
+    fun startServer(host: String, port: Int): KtorMcpServer.StartResult {
         // Stop existing server if running
         stopServer()
 
-        LOG.info("Starting MCP Server on port $port")
+        LOG.info("Starting MCP Server on $host:$port")
 
         val server = KtorMcpServer(
             port = port,
-            host = McpConstants.DEFAULT_SERVER_HOST,
+            host = host,
             jsonRpcHandler = jsonRpcHandler,
             sseSessionManager = sseSessionManager,
             streamableHttpSessionManager = streamableHttpSessionManager,
@@ -114,17 +118,24 @@ class McpServerService(
             is KtorMcpServer.StartResult.Success -> {
                 ktorServer = server
                 serverError = null
-                LOG.info("MCP Server started successfully on port $port")
+                LOG.info("MCP Server started successfully on $host:$port")
                 startResult
             }
             is KtorMcpServer.StartResult.PortInUse -> {
                 serverError = ServerError("Port $port is already in use", port)
-                showPortInUseNotification(port)
+                showErrorNotification(
+                    McpBundle.message("notification.serverPortInUse.title"),
+                    McpBundle.message("notification.serverPortInUse.content", port, host)
+                )
                 startResult
             }
             is KtorMcpServer.StartResult.Error -> {
                 serverError = ServerError(startResult.message)
-                LOG.error("Failed to start MCP Server: ${startResult.message}")
+                LOG.warn("Failed to start MCP Server: ${startResult.message}", startResult.cause)
+                showErrorNotification(
+                    McpBundle.message("notification.serverStartFailed.title"),
+                    McpBundle.message("notification.serverStartFailed.content", startResult.message)
+                )
                 startResult
             }
         }
@@ -155,14 +166,15 @@ class McpServerService(
     }
 
     /**
-     * Restarts the MCP server on a new port.
+     * Restarts the MCP server on a new host/port.
      *
+     * @param newHost The new host to bind to
      * @param newPort The new port to listen on
      * @return The result of the restart operation
      */
-    fun restartServer(newPort: Int): KtorMcpServer.StartResult {
-        LOG.info("Restarting MCP Server on port $newPort")
-        return startServer(newPort)
+    fun restartServer(newHost: String, newPort: Int): KtorMcpServer.StartResult {
+        LOG.info("Restarting MCP Server on $newHost:$newPort")
+        return startServer(newHost, newPort)
     }
 
     /**
@@ -189,8 +201,10 @@ class McpServerService(
      */
     fun getServerUrl(): String? {
         if (ktorServer == null || serverError != null) return null
-        val port = McpSettings.getInstance().serverPort
-        return "http://${McpConstants.DEFAULT_SERVER_HOST}:$port${McpConstants.STREAMABLE_HTTP_ENDPOINT_PATH}"
+        val settings = McpSettings.getInstance()
+        val port = settings.serverPort
+        val host = settings.serverHost
+        return "http://$host:$port${McpConstants.STREAMABLE_HTTP_ENDPOINT_PATH}"
     }
 
     /**
@@ -200,8 +214,10 @@ class McpServerService(
      */
     fun getLegacySseUrl(): String? {
         if (ktorServer == null || serverError != null) return null
-        val port = McpSettings.getInstance().serverPort
-        return "http://${McpConstants.DEFAULT_SERVER_HOST}:$port${McpConstants.SSE_ENDPOINT_PATH}"
+        val settings = McpSettings.getInstance()
+        val port = settings.serverPort
+        val host = settings.serverHost
+        return "http://$host:$port${McpConstants.SSE_ENDPOINT_PATH}"
     }
 
     /**
@@ -213,15 +229,17 @@ class McpServerService(
      * Returns information about the server status.
      */
     fun getServerInfo(): ServerStatusInfo {
-        val port = McpSettings.getInstance().serverPort
+        val settings = McpSettings.getInstance()
+        val port = settings.serverPort
+        val host = settings.serverHost
         val isRunning = isServerRunning()
         return ServerStatusInfo(
             name = McpConstants.SERVER_NAME,
             version = McpConstants.SERVER_VERSION,
             protocolVersion = McpConstants.MCP_PROTOCOL_VERSION,
-            streamableHttpUrl = if (isRunning) "http://${McpConstants.DEFAULT_SERVER_HOST}:$port${McpConstants.STREAMABLE_HTTP_ENDPOINT_PATH}" else "Server not running",
-            legacySseUrl = if (isRunning) "http://${McpConstants.DEFAULT_SERVER_HOST}:$port${McpConstants.SSE_ENDPOINT_PATH}" else "Server not running",
-            postUrl = "http://${McpConstants.DEFAULT_SERVER_HOST}:$port${McpConstants.MCP_ENDPOINT_PATH}",
+            streamableHttpUrl = if (isRunning) "http://$host:$port${McpConstants.STREAMABLE_HTTP_ENDPOINT_PATH}" else "Server not running",
+            legacySseUrl = if (isRunning) "http://$host:$port${McpConstants.SSE_ENDPOINT_PATH}" else "Server not running",
+            postUrl = "http://$host:$port${McpConstants.MCP_ENDPOINT_PATH}",
             port = port,
             registeredTools = toolRegistry.getAllTools().size,
             error = serverError?.message,
@@ -230,18 +248,18 @@ class McpServerService(
     }
 
     /**
-     * Shows a notification when the port is already in use.
+     * Shows an error notification with an action to open settings.
      */
-    private fun showPortInUseNotification(port: Int) {
+    private fun showErrorNotification(title: String, content: String) {
         ApplicationManager.getApplication().invokeLater({
             NotificationGroupManager.getInstance()
                 .getNotificationGroup(McpConstants.NOTIFICATION_GROUP_ID)
                 .createNotification(
-                    "MCP Server Error",
-                    "Port $port is already in use. Please choose a different port in Settings.",
+                    title,
+                    content,
                     NotificationType.ERROR
                 )
-                .addAction(object : NotificationAction("Open Settings") {
+                .addAction(object : NotificationAction(McpBundle.message("notification.action.openSettings")) {
                     override fun actionPerformed(e: AnActionEvent, notification: Notification) {
                         ShowSettingsUtil.getInstance().showSettingsDialog(null, McpSettingsConfigurable::class.java)
                         notification.expire()
