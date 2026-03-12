@@ -7,6 +7,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
 import com.intellij.lang.LanguageNamesValidation
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.application.EDT
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
@@ -365,9 +366,11 @@ class RenameSymbolTool : AbstractMcpTool() {
         // Execute the rename - this modifies files in place (primary + all related elements)
         renameProcessor.run()
 
-        // Commit documents and save
-        PsiDocumentManager.getInstance(project).commitAllDocuments()
-        FileDocumentManager.getInstance().saveAllDocuments()
+        // Commit documents and save (WriteCommandAction provides write-safe context)
+        WriteCommandAction.runWriteCommandAction(project) {
+            PsiDocumentManager.getInstance(project).commitAllDocuments()
+            FileDocumentManager.getInstance().saveAllDocuments()
+        }
 
         return Pair(affectedFiles.size, relatedRenamesCount)
     }

@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+## [4.0.1] - 2026-03-12
+
+### Fixed
+- **Fixed exception introduced in 4.0.0 that could occur when `ide_sync_files` was used after external file changes**
+
 ## [4.0.0] - 2026-03-11
 
 ### Added
