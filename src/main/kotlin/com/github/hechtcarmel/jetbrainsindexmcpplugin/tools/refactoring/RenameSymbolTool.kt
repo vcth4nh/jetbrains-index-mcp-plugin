@@ -7,10 +7,8 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
 import com.intellij.lang.LanguageNamesValidation
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.application.EDT
-import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNamedElement
 import com.intellij.psi.util.PsiTreeUtil
@@ -139,6 +137,13 @@ class RenameSymbolTool : AbstractMcpTool() {
             } catch (e: Exception) {
                 errorMessage = e.message ?: "Unknown error during rename"
             }
+        }
+
+        // Commit and save outside EDT block — commitDocuments uses
+        // TransactionGuard.submitTransactionAndWait for write-safe context
+        if (errorMessage == null) {
+            commitDocuments(project)
+            edtAction { FileDocumentManager.getInstance().saveAllDocuments() }
         }
 
         return if (errorMessage != null) {
@@ -365,12 +370,6 @@ class RenameSymbolTool : AbstractMcpTool() {
 
         // Execute the rename - this modifies files in place (primary + all related elements)
         renameProcessor.run()
-
-        // Commit documents and save (WriteCommandAction provides write-safe context)
-        WriteCommandAction.runWriteCommandAction(project) {
-            PsiDocumentManager.getInstance(project).commitAllDocuments()
-            FileDocumentManager.getInstance().saveAllDocuments()
-        }
 
         return Pair(affectedFiles.size, relatedRenamesCount)
     }

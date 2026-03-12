@@ -11,7 +11,6 @@ import com.intellij.codeInsight.actions.OptimizeImportsProcessor
 import com.intellij.codeInsight.actions.RearrangeCodeProcessor
 import com.intellij.codeInsight.actions.ReformatCodeProcessor
 import com.intellij.openapi.application.EDT
-import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
@@ -124,6 +123,13 @@ class ReformatCodeTool : AbstractMcpTool() {
             }
         }
 
+        // Commit and save outside EDT block — commitDocuments uses
+        // TransactionGuard.submitTransactionAndWait for write-safe context
+        if (errorMessage == null) {
+            commitDocuments(project)
+            edtAction { FileDocumentManager.getInstance().saveAllDocuments() }
+        }
+
         return if (errorMessage != null) {
             createErrorResult("Reformat failed: $errorMessage")
         } else {
@@ -215,11 +221,5 @@ class ReformatCodeTool : AbstractMcpTool() {
         }
 
         processor.run()
-
-        // WriteCommandAction provides write-safe context for commitAllDocuments
-        WriteCommandAction.runWriteCommandAction(project) {
-            PsiDocumentManager.getInstance(project).commitAllDocuments()
-            FileDocumentManager.getInstance().saveAllDocuments()
-        }
     }
 }
