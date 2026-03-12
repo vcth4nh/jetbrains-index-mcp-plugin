@@ -8,6 +8,7 @@
 
 ### Fixed
 - **Fixed exception introduced in 4.0.0 that could occur when `ide_sync_files` was used after external file changes**
+- **Fixed contructor param renaming forcing modal popup**
 
 ## [4.0.0] - 2026-03-11
 
