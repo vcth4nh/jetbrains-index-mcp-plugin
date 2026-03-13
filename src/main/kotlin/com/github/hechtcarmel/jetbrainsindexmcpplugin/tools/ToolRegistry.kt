@@ -13,6 +13,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindFileT
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindUsagesTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.ReadFileTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.SearchTextTool
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.BuildProjectTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.GetIndexStatusTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.SyncFilesTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.refactoring.ReformatCodeTool
@@ -218,6 +219,7 @@ class ToolRegistry {
         // Project tools
         register(GetIndexStatusTool())
         register(SyncFilesTool())
+        register(BuildProjectTool())
 
         // Refactoring tools (universal - uses platform RenameProcessor)
         register(RenameSymbolTool())
