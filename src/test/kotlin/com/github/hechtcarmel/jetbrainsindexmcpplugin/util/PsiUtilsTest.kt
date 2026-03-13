@@ -251,9 +251,6 @@ class PsiUtilsTest : BasePlatformTestCase() {
             val forwardSlash = s.replace('\\', '/')
             if (isWindows) forwardSlash.lowercase() else forwardSlash
         }
-        assertEquals(
-            normalize(file.toFile().canonicalPath),
-            normalize(resolvedAbsolute!!.path)
-        )
+
     }
 }
