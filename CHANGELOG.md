@@ -6,7 +6,7 @@
 
 ## [4.1.0] - 2026-03-13
 ### Added
-- **`ide_build_project` tool** — Trigger project builds via the IDE's build system (JPS, Gradle, Maven). Returns structured error/warning messages with file locations when available. Supports workspace sub-projects (builds specific module and its dependencies when `project_path` targets a sub-project). Includes trusted-project security gate, optional timeout, and optional raw build output.
+- **`ide_build_project` tool** — Trigger project builds via the IDE's build system (JPS, Gradle, Maven). Returns structured error/warning messages with file locations when available. Supports workspace sub-projects (builds specific module and its dependencies when `project_path` targets a sub-project). Includes trusted-project security gate, optional timeout, and optional raw build output. Disabled by default — enable in Settings → Tools → Index MCP Server.
 
 ## [4.0.2] - 2026-03-13
 ### Changed

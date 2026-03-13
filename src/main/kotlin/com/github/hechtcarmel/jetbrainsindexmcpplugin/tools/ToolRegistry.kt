@@ -42,6 +42,7 @@ import java.util.concurrent.ConcurrentHashMap
  * - `ide_find_file` - File search using FILE_EP_NAME index
  * - `ide_search_text` - Text search using word index
  * - `ide_diagnostics` - Analyze code for problems and available intentions
+ * - `ide_build_project` - Build project using IDE's build system (disabled by default)
  * - `ide_index_status` - Check indexing status
  * - `ide_get_active_file` - Get the currently active file(s) in the editor (disabled by default)
  * - `ide_open_file` - Open a file in the editor (disabled by default)
