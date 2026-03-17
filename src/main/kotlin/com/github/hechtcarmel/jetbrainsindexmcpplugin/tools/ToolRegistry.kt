@@ -16,6 +16,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.SearchTex
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.BuildProjectTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.GetIndexStatusTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.SyncFilesTool
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.refactoring.OptimizeImportsTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.refactoring.ReformatCodeTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.refactoring.RenameSymbolTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PluginDetectors
@@ -62,6 +63,7 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * - `ide_refactor_rename` - Rename symbol (works across ALL languages via RenameProcessor)
  * - `ide_reformat_code` - Reformat code using project code style (disabled by default)
+ * - `ide_optimize_imports` - Optimize imports without reformatting (disabled by default)
  *
  * ### Java-Specific Refactoring Tools (IntelliJ IDEA & Android Studio Only)
  *
@@ -225,6 +227,7 @@ class ToolRegistry {
         // Refactoring tools (universal - uses platform RenameProcessor)
         register(RenameSymbolTool())
         register(ReformatCodeTool())
+        register(OptimizeImportsTool())
 
         // Fast search tools (universal)
         register(FindClassTool())
