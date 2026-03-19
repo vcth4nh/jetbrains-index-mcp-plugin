@@ -6,7 +6,7 @@
 
 ## [4.4.1] - 2026-03-19
 ### Fixed
-- **`ide_convert_java_to_kotlin` — IntelliJ 2026.1 compatibility** — The `JavaToKotlinAction.Handler` class was extracted to a top-level `JavaToKotlinActionHandler` in IntelliJ 2026.1 (KTIJ-37205), causing `NoClassDefFoundError` at runtime. The converter now uses reflection to detect and call the appropriate API: new `JavaToKotlinActionHandler` (2026.1+, suspend) or old `JavaToKotlinAction.Handler` (2025.x, synchronous). This follows the same reflection pattern used by all language-specific handlers in the plugin.
+- **2026.1 compatability issues** 
 
 ## [4.4.0] - 2026-03-18
 ### Added
