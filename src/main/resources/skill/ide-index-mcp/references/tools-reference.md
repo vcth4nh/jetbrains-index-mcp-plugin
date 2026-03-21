@@ -230,7 +230,7 @@ Move a file to a new directory, updating all references, imports, and package de
 |-----------|------|----------|-------------|
 | `file` | string | yes | Relative path of file to move |
 | `destination` | string | yes | Target directory (relative to project root, created if needed) |
-| `search_for_references` | boolean | no | Update references (default true) |
+| `update_references` | boolean | no | Update references (default true) |
 | `project_path` | string | no | Project root path |
 
 **Returns**: `{ success, affectedFiles: [paths], changesCount, message }`

@@ -107,7 +107,7 @@ class ConstantsUnitTest : TestCase() {
 
     fun testParamNamesRefactoring() {
         assertEquals("destination", ParamNames.DESTINATION)
-        assertEquals("search_for_references", ParamNames.SEARCH_FOR_REFERENCES)
+        assertEquals("update_references", ParamNames.UPDATE_REFERENCES)
         assertEquals("newName", ParamNames.NEW_NAME)
         assertEquals("methodName", ParamNames.METHOD_NAME)
         assertEquals("variableName", ParamNames.VARIABLE_NAME)

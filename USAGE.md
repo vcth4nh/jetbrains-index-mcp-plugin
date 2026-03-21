@@ -888,7 +888,7 @@ Move a file to a new directory using the IDE's refactoring engine. Automatically
 |-----------|------|----------|-------------|
 | `file` | string | Yes | Path to the source file to move, relative to project root |
 | `destination` | string | Yes | Target directory path relative to project root |
-| `search_for_references` | boolean | No | Whether to update references (default: `true`) |
+| `update_references` | boolean | No | Whether to update references (default: `true`) |
 
 **Example Request:**
 
@@ -915,7 +915,7 @@ Move a file to a new directory using the IDE's refactoring engine. Automatically
     "arguments": {
       "file": "config/old-config.yml",
       "destination": "config/archive",
-      "search_for_references": false
+      "update_references": false
     }
   }
 }
