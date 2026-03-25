@@ -114,9 +114,12 @@ class ToolsUnitTest : TestCase() {
         assertNotNull("Should have file property", properties?.get(ParamNames.FILE))
         assertNotNull("Should have line property", properties?.get(ParamNames.LINE))
         assertNotNull("Should have column property", properties?.get(ParamNames.COLUMN))
+        assertNotNull("Should have cursor property", properties?.get("cursor"))
+        assertNotNull("Should have pageSize property", properties?.get("pageSize"))
 
-        val required = schema[SchemaConstants.REQUIRED]
-        assertNotNull("Should have required array", required)
+        val anyOf = schema["anyOf"]?.jsonArray
+        assertNotNull("Should have anyOf array for pagination support", anyOf)
+        assertEquals("Should have two anyOf groups", 2, anyOf?.size)
     }
 
     fun testFindDefinitionToolSchema() {
