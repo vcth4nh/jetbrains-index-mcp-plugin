@@ -4,6 +4,9 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.PaginationService
 import junit.framework.TestCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonPrimitive
 
 class PaginationServiceUnitTest : TestCase() {
@@ -70,6 +73,92 @@ class PaginationServiceUnitTest : TestCase() {
         val newToken = service.createCursor("tool", emptyList(), emptySet(), null, 0L, "/path")
         assertNotNull(newToken)
         assertTrue(newToken.isNotEmpty())
+    }
+
+    // --- Task 3: getPage core logic ---
+
+    fun testGetPageSuccess() = runBlocking {
+        val service = createTestService()
+        val results = (1..50).map { PaginationService.SerializedResult("key$it", JsonPrimitive("data$it")) }
+        val token = service.createCursor("tool", results, results.map { it.key }.toSet(), null, 42L, "/project")
+        val result = service.getPage(token, 10, "/project", 42L)
+        assertTrue(result is PaginationService.GetPageResult.Success)
+        val page = (result as PaginationService.GetPageResult.Success).page
+        assertEquals(10, page.items.size)
+        assertEquals(0, page.offset)
+        assertTrue(page.hasMore)
+        assertFalse(page.stale)
+        assertNotNull(page.nextCursor)
+    }
+
+    fun testGetPageSecondPage() = runBlocking {
+        val service = createTestService()
+        val results = (1..50).map { PaginationService.SerializedResult("key$it", JsonPrimitive("data$it")) }
+        val token = service.createCursor("tool", results, results.map { it.key }.toSet(), null, 42L, "/project")
+        val firstResult = service.getPage(token, 10, "/project", 42L) as PaginationService.GetPageResult.Success
+        val nextCursor = firstResult.page.nextCursor!!
+        val secondResult = service.getPage(nextCursor, 10, "/project", 42L) as PaginationService.GetPageResult.Success
+        assertEquals(10, secondResult.page.offset)
+        assertEquals(JsonPrimitive("data11"), secondResult.page.items.first())
+    }
+
+    fun testGetPageIdempotent() = runBlocking {
+        val service = createTestService()
+        val results = (1..10).map { PaginationService.SerializedResult("key$it", JsonPrimitive("data$it")) }
+        val token = service.createCursor("tool", results, emptySet(), null, 42L, "/project")
+        val r1 = service.getPage(token, 5, "/project", 42L) as PaginationService.GetPageResult.Success
+        val r2 = service.getPage(token, 5, "/project", 42L) as PaginationService.GetPageResult.Success
+        assertEquals(r1.page.items, r2.page.items)
+    }
+
+    fun testGetPageMalformedToken() = runBlocking {
+        val service = createTestService()
+        val result = service.getPage("garbage", 10, "/project", 42L)
+        assertTrue(result is PaginationService.GetPageResult.Error)
+        assertEquals(PaginationService.CursorError.MALFORMED, (result as PaginationService.GetPageResult.Error).reason)
+    }
+
+    fun testGetPageWrongProject() = runBlocking {
+        val service = createTestService()
+        val token = service.createCursor("tool", emptyList(), emptySet(), null, 42L, "/project-a")
+        val result = service.getPage(token, 10, "/project-b", 42L)
+        assertTrue(result is PaginationService.GetPageResult.Error)
+        assertEquals(PaginationService.CursorError.WRONG_PROJECT, (result as PaginationService.GetPageResult.Error).reason)
+    }
+
+    fun testGetPageStaleDetection() = runBlocking {
+        val service = createTestService()
+        val results = (1..10).map { PaginationService.SerializedResult("key$it", JsonPrimitive("data$it")) }
+        val token = service.createCursor("tool", results, emptySet(), null, 42L, "/project")
+        val result = service.getPage(token, 10, "/project", 99L) as PaginationService.GetPageResult.Success
+        assertTrue(result.page.stale)
+    }
+
+    fun testGetPageLastPageHasMoreFalse() = runBlocking {
+        val service = createTestService()
+        val results = (1..5).map { PaginationService.SerializedResult("key$it", JsonPrimitive("data$it")) }
+        val token = service.createCursor("tool", results, emptySet(), null, 42L, "/project")
+        val result = service.getPage(token, 10, "/project", 42L) as PaginationService.GetPageResult.Success
+        assertEquals(5, result.page.items.size)
+        assertFalse(result.page.hasMore)
+        assertNull(result.page.nextCursor)
+    }
+
+    fun testConcurrentPageRequests() = runBlocking {
+        val service = createTestService()
+        val results = (1..100).map { PaginationService.SerializedResult("key$it", JsonPrimitive("data$it")) }
+        val token = service.createCursor("tool", results, results.map { it.key }.toSet(), null, 42L, "/project")
+        val page1 = service.getPage(token, 50, "/project", 42L) as PaginationService.GetPageResult.Success
+        val nextToken = page1.page.nextCursor!!
+        val (r1, r2) = coroutineScope {
+            val d1 = async { service.getPage(nextToken, 50, "/project", 42L) }
+            val d2 = async { service.getPage(nextToken, 50, "/project", 42L) }
+            Pair(d1.await(), d2.await())
+        }
+        assertEquals(
+            (r1 as PaginationService.GetPageResult.Success).page.items,
+            (r2 as PaginationService.GetPageResult.Success).page.items
+        )
     }
 
     // --- Helper ---

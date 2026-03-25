@@ -4,7 +4,9 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.JsonElement
+import java.time.Duration
 import java.time.Instant
 import java.util.Base64
 import java.util.UUID
@@ -117,7 +119,62 @@ class PaginationService(private val coroutineScope: CoroutineScope) : Disposable
         pageSize: Int,
         projectBasePath: String,
         currentModCount: Long
-    ): GetPageResult = GetPageResult.Error(CursorError.NOT_FOUND, "Not implemented")
+    ): GetPageResult {
+        val decoded = decodeCursor(cursorToken)
+            ?: return GetPageResult.Error(CursorError.MALFORMED, "Invalid cursor format. Please re-search.")
+
+        val (entryId, offset) = decoded
+
+        val entry = cursors[entryId]
+            ?: return GetPageResult.Error(CursorError.NOT_FOUND, "Cursor not found. Please re-search.")
+
+        if (Duration.between(entry.lastAccessedAt, Instant.now()).toMinutes() >= TTL_MINUTES) {
+            return GetPageResult.Error(CursorError.EXPIRED, "Cursor expired. Please re-search.")
+        }
+
+        if (entry.projectBasePath != projectBasePath) {
+            return GetPageResult.Error(CursorError.WRONG_PROJECT, "Cursor belongs to a different project.")
+        }
+
+        entry.lastAccessedAt = Instant.now()
+
+        return entry.mutex.withLock {
+            val stale = entry.psiModCount != currentModCount
+
+            val end = minOf(offset + pageSize, entry.results.size)
+            if (offset >= entry.results.size) {
+                return@withLock GetPageResult.Success(
+                    PaginationPage(
+                        items = emptyList(),
+                        nextCursor = null,
+                        offset = offset,
+                        pageSize = 0,
+                        totalCollected = entry.results.size,
+                        hasMore = false,
+                        stale = stale
+                    )
+                )
+            }
+
+            val items = entry.results.subList(offset, end).map { it.data }
+            val actualPageSize = items.size
+            val hasMore = end < entry.results.size ||
+                    (entry.searchExtender != null && entry.results.size < MAX_CACHED_RESULTS_PER_CURSOR)
+            val nextCursor = if (hasMore && actualPageSize > 0) encodeCursor(entryId, offset + actualPageSize) else null
+
+            GetPageResult.Success(
+                PaginationPage(
+                    items = items,
+                    nextCursor = nextCursor,
+                    offset = offset,
+                    pageSize = actualPageSize,
+                    totalCollected = entry.results.size,
+                    hasMore = hasMore,
+                    stale = stale
+                )
+            )
+        }
+    }
 
     override fun dispose() {}
 }
