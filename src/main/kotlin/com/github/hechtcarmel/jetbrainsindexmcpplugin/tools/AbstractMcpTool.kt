@@ -34,6 +34,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -457,14 +458,39 @@ abstract class AbstractMcpTool : McpTool {
     }
 
     /**
-     * Resolves pageSize from arguments, checking pageSize first, then legacy aliases.
+     * Builds a paginated tool result from a GetPageResult.
+     * Handles error mapping and JSON deserialization of page items.
+     * @param T The item type to deserialize from JSON
+     * @param result The pagination result from getPageFromCache
+     * @param builder Constructs the tool-specific result model from deserialized items and page metadata
      */
-    protected fun resolvePageSize(arguments: JsonObject, defaultPageSize: Int, vararg aliases: String): Int {
-        arguments["pageSize"]?.jsonPrimitive?.int?.let { return it }
-        for (alias in aliases) {
-            arguments[alias]?.jsonPrimitive?.int?.let { return it }
+    protected inline fun <reified T> buildPaginatedResult(
+        result: PaginationService.GetPageResult,
+        builder: (items: List<T>, page: PaginationService.PaginationPage) -> Any
+    ): ToolCallResult {
+        return when (result) {
+            is PaginationService.GetPageResult.Error -> createErrorResult(result.message)
+            is PaginationService.GetPageResult.Success -> {
+                val items = result.page.items.map { json.decodeFromJsonElement<T>(it) }
+                createJsonResult(builder(items, result.page))
+            }
         }
-        return defaultPageSize
+    }
+
+    /**
+     * Resolves pageSize from arguments, checking pageSize first, then legacy aliases.
+     * Result is clamped to [1, maxPageSize].
+     */
+    protected fun resolvePageSize(
+        arguments: JsonObject,
+        defaultPageSize: Int,
+        maxPageSize: Int = PaginationService.MAX_PAGE_SIZE,
+        vararg aliases: String
+    ): Int {
+        val raw = arguments["pageSize"]?.jsonPrimitive?.int
+            ?: aliases.firstNotNullOfOrNull { arguments[it]?.jsonPrimitive?.int }
+            ?: defaultPageSize
+        return raw.coerceIn(1, maxPageSize)
     }
 
     /**

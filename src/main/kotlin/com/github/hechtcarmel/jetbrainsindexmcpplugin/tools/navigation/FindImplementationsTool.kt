@@ -12,7 +12,6 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.util.PsiModificationTracker
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
@@ -61,9 +60,19 @@ class FindImplementationsTool : AbstractMcpTool() {
     override suspend fun doExecute(project: Project, arguments: JsonObject): ToolCallResult {
         val cursor = arguments["cursor"]?.jsonPrimitive?.content
         if (cursor != null) {
-            val pageSize = (arguments["pageSize"]?.jsonPrimitive?.int ?: DEFAULT_PAGE_SIZE)
-                .coerceIn(1, MAX_PAGE_SIZE)
-            return buildPaginatedResult(getPageFromCache(cursor, pageSize, project))
+            val pageSize = resolvePageSize(arguments, DEFAULT_PAGE_SIZE)
+            return buildPaginatedResult<ImplementationLocation>(getPageFromCache(cursor, pageSize, project)) { items, page ->
+                ImplementationResult(
+                    implementations = items,
+                    totalCount = page.totalCollected,
+                    nextCursor = page.nextCursor,
+                    hasMore = page.hasMore,
+                    totalCollected = page.totalCollected,
+                    offset = page.offset,
+                    pageSize = page.pageSize,
+                    stale = page.stale
+                )
+            }
         }
 
         val file = arguments["file"]?.jsonPrimitive?.content
@@ -72,8 +81,7 @@ class FindImplementationsTool : AbstractMcpTool() {
             ?: return createErrorResult("Missing required parameter: line")
         val column = arguments["column"]?.jsonPrimitive?.int
             ?: return createErrorResult("Missing required parameter: column")
-        val pageSize = (arguments["pageSize"]?.jsonPrimitive?.int ?: DEFAULT_PAGE_SIZE)
-            .coerceIn(1, MAX_PAGE_SIZE)
+        val pageSize = resolvePageSize(arguments, DEFAULT_PAGE_SIZE)
 
         requireSmartMode(project)
 
@@ -128,26 +136,17 @@ class FindImplementationsTool : AbstractMcpTool() {
         val (token, errorResult) = cursorToken
         if (errorResult != null) return errorResult
 
-        return buildPaginatedResult(getPageFromCache(token!!, pageSize, project))
-    }
-
-    private fun buildPaginatedResult(result: PaginationService.GetPageResult): ToolCallResult {
-        return when (result) {
-            is PaginationService.GetPageResult.Error -> createErrorResult(result.message)
-            is PaginationService.GetPageResult.Success -> {
-                val page = result.page
-                val implementations = page.items.map { json.decodeFromJsonElement<ImplementationLocation>(it) }
-                createJsonResult(ImplementationResult(
-                    implementations = implementations,
-                    totalCount = page.totalCollected,
-                    nextCursor = page.nextCursor,
-                    hasMore = page.hasMore,
-                    totalCollected = page.totalCollected,
-                    offset = page.offset,
-                    pageSize = page.pageSize,
-                    stale = page.stale
-                ))
-            }
+        return buildPaginatedResult<ImplementationLocation>(getPageFromCache(token!!, pageSize, project)) { items, page ->
+            ImplementationResult(
+                implementations = items,
+                totalCount = page.totalCollected,
+                nextCursor = page.nextCursor,
+                hasMore = page.hasMore,
+                totalCollected = page.totalCollected,
+                offset = page.offset,
+                pageSize = page.pageSize,
+                stale = page.stale
+            )
         }
     }
 }

@@ -230,6 +230,17 @@ class PaginationServiceUnitTest : TestCase() {
         assertEquals(PaginationService.CursorError.NOT_FOUND, (result as PaginationService.GetPageResult.Error).reason)
     }
 
+    // --- Task 6: Metadata round-trip ---
+
+    fun testMetadataRoundTrip() = runBlocking {
+        val service = createTestService()
+        val results = (1..10).map { PaginationService.SerializedResult("key$it", JsonPrimitive("data$it")) }
+        val token = service.createCursor("tool", results, emptySet(), null, 42L, "/project",
+            metadata = mapOf("query" to "test_query"))
+        val result = service.getPage(token, 5, "/project", 42L) as PaginationService.GetPageResult.Success
+        assertEquals("test_query", result.page.metadata["query"])
+    }
+
     // --- Helper ---
 
     private fun createTestService(): PaginationService {

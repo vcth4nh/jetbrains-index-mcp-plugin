@@ -25,7 +25,6 @@ import com.intellij.util.Processor
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
@@ -66,9 +65,20 @@ class FindUsagesTool : AbstractMcpTool() {
     override suspend fun doExecute(project: Project, arguments: JsonObject): ToolCallResult {
         val cursor = arguments["cursor"]?.jsonPrimitive?.content
         if (cursor != null) {
-            val pageSize = (arguments["pageSize"]?.jsonPrimitive?.int ?: DEFAULT_MAX_RESULTS)
-                .coerceIn(1, MAX_PAGE_SIZE)
-            return buildPaginatedResult(getPageFromCache(cursor, pageSize, project))
+            val pageSize = resolvePageSize(arguments, DEFAULT_MAX_RESULTS)
+            return buildPaginatedResult<UsageLocation>(getPageFromCache(cursor, pageSize, project)) { items, page ->
+                FindUsagesResult(
+                    usages = items,
+                    totalCount = page.totalCollected,
+                    truncated = page.hasMore,
+                    nextCursor = page.nextCursor,
+                    hasMore = page.hasMore,
+                    totalCollected = page.totalCollected,
+                    offset = page.offset,
+                    pageSize = page.pageSize,
+                    stale = page.stale
+                )
+            }
         }
 
         val file = arguments[ParamNames.FILE]?.jsonPrimitive?.content
@@ -77,8 +87,7 @@ class FindUsagesTool : AbstractMcpTool() {
             ?: return createErrorResult(ErrorMessages.missingRequiredParam(ParamNames.LINE))
         val column = arguments[ParamNames.COLUMN]?.jsonPrimitive?.int
             ?: return createErrorResult(ErrorMessages.missingRequiredParam(ParamNames.COLUMN))
-        val pageSize = resolvePageSize(arguments, DEFAULT_MAX_RESULTS, "maxResults")
-            .coerceIn(1, MAX_PAGE_SIZE)
+        val pageSize = resolvePageSize(arguments, DEFAULT_MAX_RESULTS, aliases = arrayOf("maxResults"))
         val collectLimit = maxOf(PaginationService.DEFAULT_OVERCOLLECT, pageSize)
 
         requireSmartMode(project)
@@ -169,30 +178,27 @@ class FindUsagesTool : AbstractMcpTool() {
         val (token, errorResult) = cursorToken
         if (errorResult != null) return errorResult
 
-        return buildPaginatedResult(getPageFromCache(token!!, pageSize, project))
-    }
-
-    private fun buildPaginatedResult(result: PaginationService.GetPageResult): ToolCallResult {
-        return when (result) {
-            is PaginationService.GetPageResult.Error -> createErrorResult(result.message)
-            is PaginationService.GetPageResult.Success -> {
-                val page = result.page
-                val usages = page.items.map { json.decodeFromJsonElement<UsageLocation>(it) }
-                createJsonResult(FindUsagesResult(
-                    usages = usages,
-                    totalCount = page.totalCollected,
-                    truncated = page.hasMore,
-                    nextCursor = page.nextCursor,
-                    hasMore = page.hasMore,
-                    totalCollected = page.totalCollected,
-                    offset = page.offset,
-                    pageSize = page.pageSize,
-                    stale = page.stale
-                ))
-            }
+        return buildPaginatedResult<UsageLocation>(getPageFromCache(token!!, pageSize, project)) { items, page ->
+            FindUsagesResult(
+                usages = items,
+                totalCount = page.totalCollected,
+                truncated = page.hasMore,
+                nextCursor = page.nextCursor,
+                hasMore = page.hasMore,
+                totalCollected = page.totalCollected,
+                offset = page.offset,
+                pageSize = page.pageSize,
+                stale = page.stale
+            )
         }
     }
 
+    /**
+     * Re-executes the search to collect more results beyond the initial cache.
+     * This re-scans from the beginning, skipping already-seen keys — O(total_results) per extension.
+     * This is unavoidable: IntelliJ's search APIs (ReferencesSearch, PsiSearchHelper, etc.)
+     * don't support offset-based iteration or resumption.
+     */
     private fun extendFindUsages(
         project: Project,
         targetElement: PsiElement,

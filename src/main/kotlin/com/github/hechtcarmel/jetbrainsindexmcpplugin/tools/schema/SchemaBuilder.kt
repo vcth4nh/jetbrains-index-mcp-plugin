@@ -88,6 +88,13 @@ class SchemaBuilder private constructor() {
         }
         val groups = anyOfGroups
         if (groups != null) {
+            for (group in groups) {
+                for (field in group) {
+                    require(field in properties) {
+                        "anyOfRequired references unknown property '$field'. Known properties: ${properties.keys}"
+                    }
+                }
+            }
             putJsonArray("anyOf") {
                 for (group in groups) {
                     add(buildJsonObject {

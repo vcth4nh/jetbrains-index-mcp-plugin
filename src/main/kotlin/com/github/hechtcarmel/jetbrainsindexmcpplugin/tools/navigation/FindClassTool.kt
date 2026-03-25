@@ -28,7 +28,6 @@ import com.intellij.psi.util.PsiModificationTracker
 import com.intellij.util.indexing.FindSymbolParameters
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
-import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
@@ -87,9 +86,20 @@ class FindClassTool : AbstractMcpTool() {
     override suspend fun doExecute(project: Project, arguments: JsonObject): ToolCallResult {
         val cursor = arguments["cursor"]?.jsonPrimitive?.content
         if (cursor != null) {
-            val pageSize = (arguments["pageSize"]?.jsonPrimitive?.int ?: DEFAULT_PAGE_SIZE)
-                .coerceIn(1, MAX_PAGE_SIZE)
-            return buildPaginatedResult(getPageFromCache(cursor, pageSize, project))
+            val pageSize = resolvePageSize(arguments, DEFAULT_PAGE_SIZE)
+            return buildPaginatedResult<SymbolMatch>(getPageFromCache(cursor, pageSize, project)) { items, page ->
+                FindClassResult(
+                    classes = items,
+                    totalCount = page.totalCollected,
+                    query = page.metadata["query"] ?: "",
+                    nextCursor = page.nextCursor,
+                    hasMore = page.hasMore,
+                    totalCollected = page.totalCollected,
+                    offset = page.offset,
+                    pageSize = page.pageSize,
+                    stale = page.stale
+                )
+            }
         }
 
         val query = arguments[ParamNames.QUERY]?.jsonPrimitive?.content
@@ -97,8 +107,7 @@ class FindClassTool : AbstractMcpTool() {
         val includeLibraries = arguments[ParamNames.INCLUDE_LIBRARIES]?.jsonPrimitive?.boolean ?: false
         val languageFilter = arguments[ParamNames.LANGUAGE]?.jsonPrimitive?.content
         val matchMode = arguments[ParamNames.MATCH_MODE]?.jsonPrimitive?.content ?: "substring"
-        val pageSize = resolvePageSize(arguments, DEFAULT_PAGE_SIZE, "limit")
-            .coerceIn(1, MAX_PAGE_SIZE)
+        val pageSize = resolvePageSize(arguments, DEFAULT_PAGE_SIZE, aliases = arrayOf("limit"))
         val collectLimit = maxOf(PaginationService.DEFAULT_OVERCOLLECT, pageSize)
 
         if (query.isBlank()) {
@@ -138,34 +147,32 @@ class FindClassTool : AbstractMcpTool() {
                 seenKeys = serializedResults.map { it.key }.toSet(),
                 searchExtender = searchExtender,
                 psiModCount = PsiModificationTracker.getInstance(project).modificationCount,
-                projectBasePath = ProjectResolver.normalizePath(project.basePath ?: "")
+                projectBasePath = ProjectResolver.normalizePath(project.basePath ?: ""),
+                metadata = mapOf("query" to query)
             )
         }
 
-        return buildPaginatedResult(getPageFromCache(cursorToken, pageSize, project))
-    }
-
-    private fun buildPaginatedResult(result: PaginationService.GetPageResult): ToolCallResult {
-        return when (result) {
-            is PaginationService.GetPageResult.Error -> createErrorResult(result.message)
-            is PaginationService.GetPageResult.Success -> {
-                val page = result.page
-                val classes = page.items.map { json.decodeFromJsonElement<SymbolMatch>(it) }
-                createJsonResult(FindClassResult(
-                    classes = classes,
-                    totalCount = page.totalCollected,
-                    query = "",
-                    nextCursor = page.nextCursor,
-                    hasMore = page.hasMore,
-                    totalCollected = page.totalCollected,
-                    offset = page.offset,
-                    pageSize = page.pageSize,
-                    stale = page.stale
-                ))
-            }
+        return buildPaginatedResult<SymbolMatch>(getPageFromCache(cursorToken, pageSize, project)) { items, page ->
+            FindClassResult(
+                classes = items,
+                totalCount = page.totalCollected,
+                query = page.metadata["query"] ?: "",
+                nextCursor = page.nextCursor,
+                hasMore = page.hasMore,
+                totalCollected = page.totalCollected,
+                offset = page.offset,
+                pageSize = page.pageSize,
+                stale = page.stale
+            )
         }
     }
 
+    /**
+     * Re-executes the search to collect more results beyond the initial cache.
+     * This re-scans from the beginning, skipping already-seen keys — O(total_results) per extension.
+     * This is unavoidable: IntelliJ's search APIs (ReferencesSearch, PsiSearchHelper, etc.)
+     * don't support offset-based iteration or resumption.
+     */
     private fun extendSearchClasses(
         project: Project,
         query: String,

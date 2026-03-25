@@ -37,7 +37,8 @@ class PaginationService(private val coroutineScope: CoroutineScope) : Disposable
         val psiModCount: Long,
         val projectBasePath: String,
         val createdAt: Instant,
-        var lastAccessedAt: Instant,
+        @Volatile var lastAccessedAt: Instant,
+        val metadata: Map<String, String> = emptyMap(),
         val mutex: Mutex = Mutex()
     )
 
@@ -50,7 +51,8 @@ class PaginationService(private val coroutineScope: CoroutineScope) : Disposable
         val pageSize: Int,
         val totalCollected: Int,
         val hasMore: Boolean,
-        val stale: Boolean
+        val stale: Boolean,
+        val metadata: Map<String, String> = emptyMap()
     )
 
     sealed interface GetPageResult {
@@ -102,7 +104,8 @@ class PaginationService(private val coroutineScope: CoroutineScope) : Disposable
         seenKeys: Set<String>,
         searchExtender: (suspend (Set<String>, Int) -> List<SerializedResult>)?,
         psiModCount: Long,
-        projectBasePath: String
+        projectBasePath: String,
+        metadata: Map<String, String> = emptyMap()
     ): String {
         val entryId = UUID.randomUUID().toString().replace("-", "")
         val now = Instant.now()
@@ -115,8 +118,11 @@ class PaginationService(private val coroutineScope: CoroutineScope) : Disposable
             psiModCount = psiModCount,
             projectBasePath = projectBasePath,
             createdAt = now,
-            lastAccessedAt = now
+            lastAccessedAt = now,
+            metadata = metadata
         )
+        // ConcurrentHashMap.size is approximate under contention, so eviction count may be
+        // slightly off. Acceptable at MAX_CURSORS=20 with typical 1-3 concurrent agents.
         if (cursors.size >= MAX_CURSORS) {
             val oldest = cursors.entries.minByOrNull { it.value.lastAccessedAt }
             if (oldest != null) {
@@ -185,7 +191,8 @@ class PaginationService(private val coroutineScope: CoroutineScope) : Disposable
                         pageSize = 0,
                         totalCollected = entry.results.size,
                         hasMore = false,
-                        stale = stale
+                        stale = stale,
+                        metadata = entry.metadata
                     )
                 )
             }
@@ -204,7 +211,8 @@ class PaginationService(private val coroutineScope: CoroutineScope) : Disposable
                     pageSize = actualPageSize,
                     totalCollected = entry.results.size,
                     hasMore = hasMore,
-                    stale = stale
+                    stale = stale,
+                    metadata = entry.metadata
                 )
             )
         }
