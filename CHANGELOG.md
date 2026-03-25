@@ -4,6 +4,17 @@
 
 ## [Unreleased]
 
+### Added
+- Cursor-based pagination for `ide_find_references`, `ide_search_text`, `ide_find_class`, `ide_find_file`, `ide_find_symbol`, and `ide_find_implementations`
+- New `cursor` and `pageSize` parameters on all paginated tools
+- `PaginationService` for server-side result caching with LRU eviction, inactivity-based TTL, and staleness detection
+- `SchemaBuilder.anyOfRequired()` for conditional JSON Schema required fields
+- `nextCursor`, `hasMore`, `totalCollected`, `offset`, `pageSize`, `stale` fields in paginated tool responses
+
+### Changed
+- `maxResults` (FindUsagesTool) and `limit` (other tools) are now deprecated aliases for `pageSize`
+- Default page sizes preserved per tool for backward compatibility (find_class/find_file/find_symbol: 25, others: 100)
+
 ## [4.6.0] - 2026-03-21
 ### Added
 - **`ide_refactor_rename`: `relatedRenamingStrategy` parameter** — Controls automatic renaming of related symbols (same-named properties on unrelated classes, getters/setters, test classes, variables). Options: `"all"` (default, current behavior), `"none"` (rename only the targeted symbol), `"accessors_and_tests"` (only rename getters/setters and test classes/methods), `"ask"` (show IDE dialog for interactive choice). Fixes [#101](https://github.com/hechtcarmel/jetbrains-index-mcp-plugin/issues/101).
