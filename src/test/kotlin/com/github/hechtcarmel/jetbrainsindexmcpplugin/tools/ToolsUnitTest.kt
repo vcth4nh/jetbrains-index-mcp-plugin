@@ -189,6 +189,12 @@ class ToolsUnitTest : TestCase() {
         assertNotNull("Should have file property", properties?.get(ParamNames.FILE))
         assertNotNull("Should have line property", properties?.get(ParamNames.LINE))
         assertNotNull("Should have column property", properties?.get(ParamNames.COLUMN))
+        assertNotNull("Should have cursor property", properties?.get("cursor"))
+        assertNotNull("Should have pageSize property", properties?.get("pageSize"))
+
+        val anyOf = schema["anyOf"]?.jsonArray
+        assertNotNull("Should have anyOf array for pagination support", anyOf)
+        assertEquals("Should have two anyOf groups", 2, anyOf?.size)
     }
 
     fun testGetDiagnosticsToolSchema() {
@@ -404,9 +410,12 @@ class ToolsUnitTest : TestCase() {
         assertNotNull("Should have query property", properties?.get(ParamNames.QUERY))
         assertNotNull("Should have includeLibraries property", properties?.get(ParamNames.INCLUDE_LIBRARIES))
         assertNotNull("Should have limit property", properties?.get(ParamNames.LIMIT))
+        assertNotNull("Should have cursor property", properties?.get("cursor"))
+        assertNotNull("Should have pageSize property", properties?.get("pageSize"))
 
-        val required = schema[SchemaConstants.REQUIRED]
-        assertNotNull("Should have required array", required)
+        val anyOf = schema["anyOf"]?.jsonArray
+        assertNotNull("Should have anyOf array for pagination support", anyOf)
+        assertEquals("Should have two anyOf groups", 2, anyOf?.size)
     }
 
     fun testFindSuperMethodsToolSchema() {
@@ -556,9 +565,12 @@ class ToolsUnitTest : TestCase() {
         assertNotNull("Should have query property", properties?.get(ParamNames.QUERY))
         assertNotNull("Should have includeLibraries property", properties?.get(ParamNames.INCLUDE_LIBRARIES))
         assertNotNull("Should have limit property", properties?.get(ParamNames.LIMIT))
+        assertNotNull("Should have cursor property", properties?.get("cursor"))
+        assertNotNull("Should have pageSize property", properties?.get("pageSize"))
 
-        val required = schema[SchemaConstants.REQUIRED]
-        assertNotNull("Should have required array", required)
+        val anyOf = schema["anyOf"]?.jsonArray
+        assertNotNull("Should have anyOf array for pagination support", anyOf)
+        assertEquals("Should have two anyOf groups", 2, anyOf?.size)
     }
 
     fun testFindFileToolSchema() {
@@ -577,9 +589,12 @@ class ToolsUnitTest : TestCase() {
         assertNotNull("Should have query property", properties?.get(ParamNames.QUERY))
         assertNotNull("Should have includeLibraries property", properties?.get(ParamNames.INCLUDE_LIBRARIES))
         assertNotNull("Should have limit property", properties?.get(ParamNames.LIMIT))
+        assertNotNull("Should have cursor property", properties?.get("cursor"))
+        assertNotNull("Should have pageSize property", properties?.get("pageSize"))
 
-        val required = schema[SchemaConstants.REQUIRED]
-        assertNotNull("Should have required array", required)
+        val anyOf = schema["anyOf"]?.jsonArray
+        assertNotNull("Should have anyOf array for pagination support", anyOf)
+        assertEquals("Should have two anyOf groups", 2, anyOf?.size)
     }
 
     fun testSearchTextToolSchema() {
@@ -599,9 +614,12 @@ class ToolsUnitTest : TestCase() {
         assertNotNull("Should have context property", properties?.get(ParamNames.CONTEXT))
         assertNotNull("Should have caseSensitive property", properties?.get(ParamNames.CASE_SENSITIVE))
         assertNotNull("Should have limit property", properties?.get(ParamNames.LIMIT))
+        assertNotNull("Should have cursor property", properties?.get("cursor"))
+        assertNotNull("Should have pageSize property", properties?.get("pageSize"))
 
-        val required = schema[SchemaConstants.REQUIRED]
-        assertNotNull("Should have required array", required)
+        val anyOf = schema["anyOf"]?.jsonArray
+        assertNotNull("Should have anyOf array for pagination support", anyOf)
+        assertEquals("Should have two anyOf groups", 2, anyOf?.size)
     }
 
     fun testGetActiveFileToolSchema() {
