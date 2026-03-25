@@ -3,14 +3,20 @@ package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ParamNames
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ToolNames
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageHandlerRegistry
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.PaginationService
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.ProjectResolver
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.AbstractMcpTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.FindSymbolResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.SymbolMatch
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
+import com.intellij.psi.util.PsiModificationTracker
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -24,8 +30,8 @@ import kotlinx.serialization.json.jsonPrimitive
 class FindSymbolTool : AbstractMcpTool() {
 
     companion object {
-        private const val DEFAULT_LIMIT = 25
-        private const val MAX_LIMIT = 100
+        private const val DEFAULT_PAGE_SIZE = 25
+        private const val MAX_PAGE_SIZE = PaginationService.MAX_PAGE_SIZE
     }
 
     override val name = ToolNames.FIND_SYMBOL
@@ -39,28 +45,43 @@ class FindSymbolTool : AbstractMcpTool() {
 
         Returns: matching symbols with qualified names, file paths, line/column numbers, and kind.
 
-        Parameters: query (required), includeLibraries (optional, default: false), limit (optional, default: 25, max: 100).
+        Supports pagination: first call returns results + nextCursor. Pass cursor to get the next page.
+        Parameters: query (required for fresh search), includeLibraries (optional, default: false), pageSize (optional, default: 25, max: 500), cursor (for pagination, replaces all other params).
 
         Example: {"query": "UserService"} or {"query": "find_user", "includeLibraries": true}
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
         .projectPath()
-        .stringProperty(ParamNames.QUERY, "Search pattern. Supports substring and camelCase matching.", required = true)
+        .stringProperty(ParamNames.QUERY, "Search pattern. Supports substring and camelCase matching. Required for fresh search, ignored when cursor is provided.")
         .booleanProperty(ParamNames.INCLUDE_LIBRARIES, "Include symbols from library dependencies. Default: false.")
         .stringProperty(ParamNames.LANGUAGE, "Filter results by language (e.g., \"Kotlin\", \"Java\", \"Python\"). Case-insensitive. Optional.")
         .enumProperty(ParamNames.MATCH_MODE, "How to match the query. Default: \"substring\".", listOf("substring", "prefix", "exact"))
-        .intProperty(ParamNames.LIMIT, "Maximum results to return. Default: 25, Max: 100.")
+        .intProperty(ParamNames.LIMIT, "Maximum results per page (deprecated, use pageSize). Default: $DEFAULT_PAGE_SIZE, max: $MAX_PAGE_SIZE.")
+        .stringProperty("cursor", "Pagination cursor from a previous response. When provided, returns the next page of results. All other search parameters are ignored.")
+        .intProperty("pageSize", "Results per page. Default: $DEFAULT_PAGE_SIZE, max: $MAX_PAGE_SIZE.")
+        .anyOfRequired(
+            listOf("cursor"),
+            listOf("query")
+        )
         .build()
 
     override suspend fun doExecute(project: Project, arguments: JsonObject): ToolCallResult {
+        val cursor = arguments["cursor"]?.jsonPrimitive?.content
+        if (cursor != null) {
+            val pageSize = (arguments["pageSize"]?.jsonPrimitive?.int ?: DEFAULT_PAGE_SIZE)
+                .coerceIn(1, MAX_PAGE_SIZE)
+            return buildPaginatedResult(getPageFromCache(cursor, pageSize, project))
+        }
+
         val query = arguments[ParamNames.QUERY]?.jsonPrimitive?.content
             ?: return createErrorResult("Missing required parameter: ${ParamNames.QUERY}")
         val includeLibraries = arguments[ParamNames.INCLUDE_LIBRARIES]?.jsonPrimitive?.boolean ?: false
         val languageFilter = arguments[ParamNames.LANGUAGE]?.jsonPrimitive?.content
         val matchMode = arguments[ParamNames.MATCH_MODE]?.jsonPrimitive?.content ?: "substring"
-        val limit = (arguments[ParamNames.LIMIT]?.jsonPrimitive?.int ?: DEFAULT_LIMIT)
-            .coerceIn(1, MAX_LIMIT)
+        val pageSize = resolvePageSize(arguments, DEFAULT_PAGE_SIZE, "limit")
+            .coerceIn(1, MAX_PAGE_SIZE)
+        val collectLimit = maxOf(PaginationService.DEFAULT_OVERCOLLECT, pageSize)
 
         if (query.isBlank()) {
             return createErrorResult("Query cannot be empty")
@@ -68,21 +89,19 @@ class FindSymbolTool : AbstractMcpTool() {
 
         requireSmartMode(project)
 
-        return suspendingReadAction {
-            // Aggregate results from ALL available language handlers
+        val cursorToken = suspendingReadAction {
             val handlers = LanguageHandlerRegistry.getAllSymbolSearchHandlers()
             if (handlers.isEmpty()) {
-                return@suspendingReadAction createErrorResult(
+                return@suspendingReadAction null to createErrorResult(
                     "No symbol search handlers available. " +
                     "Supported languages: ${LanguageHandlerRegistry.getSupportedLanguagesForSymbolSearch()}"
                 )
             }
 
             val allMatches = mutableListOf<SymbolMatch>()
-            val handlerLimit = limit
 
             for (handler in handlers) {
-                val handlerResults = handler.searchSymbols(project, query, includeLibraries, handlerLimit, matchMode)
+                val handlerResults = handler.searchSymbols(project, query, includeLibraries, collectLimit, matchMode)
                 for (symbolData in handlerResults) {
                     if (languageFilter != null && !symbolData.language.equals(languageFilter, ignoreCase = true)) continue
                     allMatches.add(SymbolMatch(
@@ -100,14 +119,98 @@ class FindSymbolTool : AbstractMcpTool() {
 
             val sortedMatches = allMatches
                 .distinctBy { "${it.file}:${it.line}:${it.column}:${it.name}" }
-                .take(limit)
 
-            createJsonResult(FindSymbolResult(
-                symbols = sortedMatches,
-                totalCount = sortedMatches.size,
-                query = query
-            ))
+            val searchExtender: suspend (Set<String>, Int) -> List<PaginationService.SerializedResult> = { seenKeys, limit ->
+                suspendingReadAction {
+                    extendSearchSymbols(project, query, includeLibraries, matchMode, languageFilter, seenKeys, limit)
+                }
+            }
+
+            val serializedResults = sortedMatches.map { sym ->
+                PaginationService.SerializedResult(
+                    key = "${sym.file}:${sym.line}:${sym.column}:${sym.name}",
+                    data = json.encodeToJsonElement(sym)
+                )
+            }
+
+            val paginationService = ApplicationManager.getApplication().getService(PaginationService::class.java)
+            val token = paginationService.createCursor(
+                toolName = name,
+                results = serializedResults,
+                seenKeys = serializedResults.map { it.key }.toSet(),
+                searchExtender = searchExtender,
+                psiModCount = PsiModificationTracker.getInstance(project).modificationCount,
+                projectBasePath = ProjectResolver.normalizePath(project.basePath ?: "")
+            )
+
+            token to null
+        }
+
+        val (token, errorResult) = cursorToken
+        if (errorResult != null) return errorResult
+
+        return buildPaginatedResult(getPageFromCache(token!!, pageSize, project))
+    }
+
+    private fun buildPaginatedResult(result: PaginationService.GetPageResult): ToolCallResult {
+        return when (result) {
+            is PaginationService.GetPageResult.Error -> createErrorResult(result.message)
+            is PaginationService.GetPageResult.Success -> {
+                val page = result.page
+                val symbols = page.items.map { json.decodeFromJsonElement<SymbolMatch>(it) }
+                createJsonResult(FindSymbolResult(
+                    symbols = symbols,
+                    totalCount = page.totalCollected,
+                    query = "",
+                    nextCursor = page.nextCursor,
+                    hasMore = page.hasMore,
+                    totalCollected = page.totalCollected,
+                    offset = page.offset,
+                    pageSize = page.pageSize,
+                    stale = page.stale
+                ))
+            }
         }
     }
 
+    private fun extendSearchSymbols(
+        project: Project,
+        query: String,
+        includeLibraries: Boolean,
+        matchMode: String,
+        languageFilter: String?,
+        seenKeys: Set<String>,
+        limit: Int
+    ): List<PaginationService.SerializedResult> {
+        val handlers = LanguageHandlerRegistry.getAllSymbolSearchHandlers()
+        val allMatches = mutableListOf<SymbolMatch>()
+
+        for (handler in handlers) {
+            val handlerResults = handler.searchSymbols(project, query, includeLibraries, limit + seenKeys.size, matchMode)
+            for (symbolData in handlerResults) {
+                if (languageFilter != null && !symbolData.language.equals(languageFilter, ignoreCase = true)) continue
+                allMatches.add(SymbolMatch(
+                    name = symbolData.name,
+                    qualifiedName = symbolData.qualifiedName,
+                    kind = symbolData.kind,
+                    file = symbolData.file,
+                    line = symbolData.line,
+                    column = symbolData.column,
+                    containerName = symbolData.containerName,
+                    language = symbolData.language
+                ))
+            }
+        }
+
+        return allMatches
+            .distinctBy { "${it.file}:${it.line}:${it.column}:${it.name}" }
+            .filter { sym -> "${sym.file}:${sym.line}:${sym.column}:${sym.name}" !in seenKeys }
+            .take(limit)
+            .map { sym ->
+                PaginationService.SerializedResult(
+                    key = "${sym.file}:${sym.line}:${sym.column}:${sym.name}",
+                    data = json.encodeToJsonElement(sym)
+                )
+            }
+    }
 }
