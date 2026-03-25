@@ -161,6 +161,54 @@ class PaginationServiceUnitTest : TestCase() {
         )
     }
 
+    // --- Task 4: Cache extension via searchExtender ---
+
+    fun testExtenderCalledWhenCacheExhausted() = runBlocking {
+        val service = createTestService()
+        val initial = (1..5).map { PaginationService.SerializedResult("key$it", JsonPrimitive("data$it")) }
+        var extenderCalled = false
+        val extender: suspend (Set<String>, Int) -> List<PaginationService.SerializedResult> = { seen, _ ->
+            extenderCalled = true
+            assertEquals(5, seen.size)
+            (6..10).map { PaginationService.SerializedResult("key$it", JsonPrimitive("data$it")) }
+        }
+        val token = service.createCursor("tool", initial, initial.map { it.key }.toSet(), extender, 42L, "/project")
+        val p1 = service.getPage(token, 5, "/project", 42L) as PaginationService.GetPageResult.Success
+        val p2 = service.getPage(p1.page.nextCursor!!, 5, "/project", 42L) as PaginationService.GetPageResult.Success
+        assertTrue(extenderCalled)
+        assertEquals(5, p2.page.items.size)
+    }
+
+    fun testMaxCachedResultsStopsExtension() = runBlocking {
+        val service = createTestService()
+        val max = PaginationService.MAX_CACHED_RESULTS_PER_CURSOR
+        val results = (1..max).map { PaginationService.SerializedResult("key$it", JsonPrimitive("data$it")) }
+        var extenderCalled = false
+        val extender: suspend (Set<String>, Int) -> List<PaginationService.SerializedResult> = { _, _ ->
+            extenderCalled = true
+            listOf(PaginationService.SerializedResult("extra", JsonPrimitive("extra")))
+        }
+        val token = service.createCursor("tool", results, results.map { it.key }.toSet(), extender, 42L, "/project")
+        val lastOffset = max - 10
+        val cursor = service.encodeCursor(service.decodeCursor(token)!!.first, lastOffset)
+        val result = service.getPage(cursor, 100, "/project", 42L) as PaginationService.GetPageResult.Success
+        assertFalse(extenderCalled)
+        assertFalse(result.page.hasMore)
+    }
+
+    fun testExtenderFailureReturnsSearchInvalidated() = runBlocking {
+        val service = createTestService()
+        val initial = (1..3).map { PaginationService.SerializedResult("key$it", JsonPrimitive("data$it")) }
+        val extender: suspend (Set<String>, Int) -> List<PaginationService.SerializedResult> = { _, _ ->
+            throw IllegalStateException("Target element no longer valid")
+        }
+        val token = service.createCursor("tool", initial, initial.map { it.key }.toSet(), extender, 42L, "/project")
+        val p1 = service.getPage(token, 3, "/project", 42L) as PaginationService.GetPageResult.Success
+        val result = service.getPage(p1.page.nextCursor!!, 3, "/project", 42L)
+        assertTrue(result is PaginationService.GetPageResult.Error)
+        assertEquals(PaginationService.CursorError.SEARCH_INVALIDATED, (result as PaginationService.GetPageResult.Error).reason)
+    }
+
     // --- Helper ---
 
     private fun createTestService(): PaginationService {

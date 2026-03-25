@@ -11,6 +11,7 @@ import java.time.Instant
 import java.util.Base64
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.coroutines.cancellation.CancellationException
 
 @Service(Service.Level.APP)
 class PaginationService(private val coroutineScope: CoroutineScope) : Disposable {
@@ -140,6 +141,27 @@ class PaginationService(private val coroutineScope: CoroutineScope) : Disposable
 
         return entry.mutex.withLock {
             val stale = entry.psiModCount != currentModCount
+
+            // Extend cache if needed and possible
+            if (offset + pageSize > entry.results.size
+                && entry.searchExtender != null
+                && entry.results.size < MAX_CACHED_RESULTS_PER_CURSOR
+            ) {
+                try {
+                    val newResults = entry.searchExtender!!(entry.seenKeys.toSet(), DEFAULT_OVERCOLLECT)
+                    for (result in newResults) {
+                        entry.results.add(result)
+                        entry.seenKeys.add(result.key)
+                    }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    return@withLock GetPageResult.Error(
+                        CursorError.SEARCH_INVALIDATED,
+                        "Search context invalidated due to file changes. Please re-search."
+                    )
+                }
+            }
 
             val end = minOf(offset + pageSize, entry.results.size)
             if (offset >= entry.results.size) {
