@@ -12,9 +12,11 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.TextMatch
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.search.PsiSearchHelper
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.search.TextOccurenceProcessor
 import com.intellij.psi.search.UsageSearchContext
 import com.intellij.psi.util.PsiModificationTracker
@@ -296,7 +298,14 @@ class SearchTextTool : AbstractMcpTool() {
         val lineEndOffset = document.getLineEndOffset(lineNumber)
         val lineText = document.getText(com.intellij.openapi.util.TextRange(lineStartOffset, lineEndOffset))
 
-        val contextType = determineContextType(element, searchContext)
+        val contextType = resolveActualContextType(element)
+
+        // When a specific context filter is active, skip elements that don't match.
+        // processElementsWithWord may return false positives (e.g., code occurrences
+        // from files that also have the word in a comment).
+        if (searchContext != UsageSearchContext.ANY && !matchesRequestedContext(contextType, searchContext)) {
+            return null
+        }
 
         return TextMatch(
             file = relativePath,
@@ -307,23 +316,38 @@ class SearchTextTool : AbstractMcpTool() {
         )
     }
 
-    private fun determineContextType(element: PsiElement, searchContext: Short): String {
-        if (searchContext == UsageSearchContext.IN_COMMENTS) {
+    private fun resolveActualContextType(element: PsiElement): String {
+        // Check if element is inside a comment (PsiComment or comment-type node)
+        if (PsiTreeUtil.getParentOfType(element, PsiComment::class.java, false) != null) {
             return "COMMENT"
         }
-        if (searchContext == UsageSearchContext.IN_STRINGS) {
-            return "STRING_LITERAL"
+        // Walk ancestors checking node element types for languages where PsiComment
+        // may not cover all comment variants (e.g., doc comments, template comments)
+        var current: PsiElement? = element
+        while (current != null && current !is com.intellij.psi.PsiFile) {
+            val typeName = current.node?.elementType?.toString() ?: ""
+            when {
+                typeName.contains("COMMENT", ignoreCase = true) -> return "COMMENT"
+                typeName.contains("STRING_LITERAL", ignoreCase = true) ||
+                typeName.contains("TEMPLATE_EXPRESSION", ignoreCase = true) -> return "STRING_LITERAL"
+            }
+            current = current.parent
         }
-        if (searchContext == UsageSearchContext.IN_CODE) {
-            return "CODE"
-        }
-
+        // Check the element itself for string-like types not caught by ancestor walk
         val elementType = element.node?.elementType?.toString() ?: ""
         return when {
-            elementType.contains("COMMENT", ignoreCase = true) -> "COMMENT"
             elementType.contains("STRING", ignoreCase = true) -> "STRING_LITERAL"
             elementType.contains("LITERAL", ignoreCase = true) -> "STRING_LITERAL"
             else -> "CODE"
+        }
+    }
+
+    private fun matchesRequestedContext(actualType: String, searchContext: Short): Boolean {
+        return when (searchContext) {
+            UsageSearchContext.IN_COMMENTS -> actualType == "COMMENT"
+            UsageSearchContext.IN_STRINGS -> actualType == "STRING_LITERAL"
+            UsageSearchContext.IN_CODE -> actualType == "CODE"
+            else -> true
         }
     }
 }

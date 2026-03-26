@@ -15,6 +15,7 @@
 ### Fixed
 - `hasMore` incorrectly returned `true` when all results fit in the requested page (affected all paginated tools except `ide_find_implementations`). Clients no longer make an extra round-trip to discover there are no more results.
 - Serialization error (`Serializer for class 'Any' is not found`) on all paginated tools due to missing reified type parameter on `buildPaginatedResult`
+- `ide_search_text` context filter (`context: "comments"`, `"code"`, `"strings"`) returned false positives — occurrences from non-matching contexts were included and mislabeled. Now verifies each element's actual PSI context type and filters accordingly.
 
 ### Changed
 - `maxResults` (FindUsagesTool) and `limit` (other tools) are now deprecated aliases for `pageSize`
