@@ -460,9 +460,7 @@ The plugin supports cursor-based pagination for search tools that return flat re
 3. `searchExtender` lambda enables lazy cache extension when pages are exhausted
 4. Each tool has a `buildPaginatedResult()` helper mapping `GetPageResult` to its own result model
 
-**Schema:** Tools use `SchemaBuilder.anyOfRequired()` to define two valid request shapes:
-- Fresh search: tool-specific required params (e.g., `file`+`line`+`column` or `query`)
-- Pagination resume: `cursor` only
+**Schema:** All parameters are optional in the schema (no `required` array) because the Anthropic API does not support `anyOf`/`oneOf` at the top level. Validation is done at runtime — if `cursor` is absent, the tool checks for its required search params and returns an error if missing.
 
 **Backward compatibility:** Old `limit`/`maxResults` parameters work as aliases for `pageSize`.
 

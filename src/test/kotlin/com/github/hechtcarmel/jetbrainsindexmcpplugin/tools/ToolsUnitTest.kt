@@ -840,36 +840,4 @@ class ToolsUnitTest : TestCase() {
         assertFalse("root file should not be excluded",   isExcludedPath("README.md"))
     }
 
-    // ── SchemaBuilder anyOfRequired tests ─────────────────────────────────────
-
-    fun testSchemaBuilderAnyOfRequired() {
-        val schema = SchemaBuilder.tool()
-            .stringProperty("cursor", "Pagination cursor")
-            .intProperty("pageSize", "Page size")
-            .file()
-            .lineAndColumn()
-            .anyOfRequired(
-                listOf("cursor"),
-                listOf("file", "line", "column")
-            )
-            .build()
-
-        assertNotNull(schema["anyOf"])
-        assertNull(schema["required"])
-
-        val anyOf = schema["anyOf"]!!.jsonArray
-        assertEquals(2, anyOf.size)
-        assertEquals("cursor", anyOf[0].jsonObject["required"]!!.jsonArray[0].jsonPrimitive.content)
-        assertEquals(3, anyOf[1].jsonObject["required"]!!.jsonArray.size)
-    }
-
-    fun testSchemaBuilderWithoutAnyOfPreservesRequired() {
-        val schema = SchemaBuilder.tool()
-            .file()
-            .lineAndColumn()
-            .build()
-
-        assertNotNull(schema["required"])
-        assertNull(schema["anyOf"])
-    }
 }
