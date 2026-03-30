@@ -4,13 +4,18 @@
 
 ## [Unreleased]
 
-## [4.8.0] - 2026-03-30
+## [4.9.0] - 2026-03-30
 ### Added
 - **Enhanced `ide_diagnostics` with build error and test result sources** — The diagnostics tool now supports three independent sources: per-file code analysis (existing), build output from the last build (new), and test results from open test run tabs (new). New parameters: `includeBuildErrors`, `includeTestResults`, `severity` filter (`all`/`errors`/`warnings`), `testResultFilter` (`failed`/`all`), `maxBuildErrors`, `maxTestResults`. The `file` parameter is now optional — omit it to query only build/test results. Fully backward compatible. Addresses [#104](https://github.com/hechtcarmel/jetbrains-index-mcp-plugin/issues/104).
 - **`BuildDiagnosticsCacheService`** — Persistent project-level service that captures build errors/warnings from all build sources (Gradle, Maven, JPS) as they happen. Queried by `ide_diagnostics` when `includeBuildErrors` is enabled.
 
 ### Changed
 - Extracted shared build listener reflection code from `BuildProjectTool` into `BuildListenerUtils` utility for reuse.
+
+## [4.8.0] - 2026-03-30
+### Added
+- **`ide_find_references` and `ide_find_definition`: `astPath` field** — Returns the chain of named AST ancestors (classes, methods, etc.) enclosing the target element, providing structural context for each result without requiring additional file reads.
+
 
 ## [4.7.0] - 2026-03-26
 ### Added

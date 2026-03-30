@@ -37,7 +37,8 @@ class ToolModelsUnitTest : TestCase() {
             line = 25,
             column = 12,
             context = "val service = UserService()",
-            type = "METHOD_CALL"
+            type = "METHOD_CALL",
+            astPath = listOf("MyClass", "myMethod")
         )
 
         val serialized = json.encodeToString(location)
@@ -48,6 +49,7 @@ class ToolModelsUnitTest : TestCase() {
         assertEquals(12, deserialized.column)
         assertEquals("val service = UserService()", deserialized.context)
         assertEquals("METHOD_CALL", deserialized.type)
+        assertEquals(listOf("MyClass", "myMethod"), deserialized.astPath)
     }
 
     // FindUsagesResult tests
@@ -55,8 +57,8 @@ class ToolModelsUnitTest : TestCase() {
     fun testFindUsagesResultSerialization() {
         val result = FindUsagesResult(
             usages = listOf(
-                UsageLocation("file1.kt", 10, 5, "context1", "REFERENCE"),
-                UsageLocation("file2.kt", 20, 8, "context2", "METHOD_CALL")
+                UsageLocation("file1.kt", 10, 5, "context1", "REFERENCE", listOf("ClassA", "methodX")),
+                UsageLocation("file2.kt", 20, 8, "context2", "METHOD_CALL", listOf("ClassB", "methodY"))
             ),
             totalCount = 2
         )
@@ -86,7 +88,8 @@ class ToolModelsUnitTest : TestCase() {
             line = 5,
             column = 1,
             preview = "data class User(val name: String)",
-            symbolName = "User"
+            symbolName = "User",
+            astPath = listOf("UserService")
         )
 
         val serialized = json.encodeToString(result)
@@ -97,6 +100,7 @@ class ToolModelsUnitTest : TestCase() {
         assertEquals(1, deserialized.column)
         assertEquals("data class User(val name: String)", deserialized.preview)
         assertEquals("User", deserialized.symbolName)
+        assertEquals(listOf("UserService"), deserialized.astPath)
     }
 
     // TypeHierarchyResult tests

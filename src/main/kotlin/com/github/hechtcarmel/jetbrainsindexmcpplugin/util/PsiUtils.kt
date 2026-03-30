@@ -215,6 +215,26 @@ object PsiUtils {
         return lines.subList(clampedStart, clampedEnd + 1).joinToString("\n")
     }
 
+    /**
+     * Returns the chain of named PSI ancestors enclosing [element], ordered from the
+     * outermost (closest to file root) to the innermost (immediate named parent).
+     * The [element] itself is never included, nor are anonymous (unnamed) nodes.
+     */
+    fun getAstPath(element: PsiElement): List<String> {
+        val ancestors = mutableListOf<String>()
+        var current: PsiElement? = element.parent
+        while (current != null && current !is PsiFile) {
+            if (current is PsiNamedElement) {
+                val name = current.name
+                if (!name.isNullOrEmpty()) {
+                    ancestors.add(name)
+                }
+            }
+            current = current.parent
+        }
+        return ancestors.asReversed()
+    }
+
     fun findNamedElement(element: PsiElement): PsiNamedElement? {
         var current: PsiElement? = element
         while (current != null) {

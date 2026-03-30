@@ -16,7 +16,8 @@ data class UsageLocation(
     val line: Int,
     val column: Int,
     val context: String,
-    val type: String
+    val type: String,
+    val astPath: List<String>,
 )
 
 @Serializable
@@ -39,7 +40,8 @@ data class DefinitionResult(
     val line: Int,
     val column: Int,
     val preview: String,
-    val symbolName: String
+    val symbolName: String,
+    val astPath: List<String>
 )
 
 // ide_read_file output
