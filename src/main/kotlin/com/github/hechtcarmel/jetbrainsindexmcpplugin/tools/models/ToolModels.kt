@@ -116,10 +116,18 @@ data class ImplementationLocation(
 // ide_diagnostics output
 @Serializable
 data class DiagnosticsResult(
-    val problems: List<ProblemInfo>,
-    val intentions: List<IntentionInfo>,
-    val problemCount: Int,
-    val intentionCount: Int
+    val problems: List<ProblemInfo>? = null,
+    val intentions: List<IntentionInfo>? = null,
+    val problemCount: Int? = null,
+    val intentionCount: Int? = null,
+    val buildErrors: List<BuildMessage>? = null,
+    val buildErrorCount: Int? = null,
+    val buildWarningCount: Int? = null,
+    val buildErrorsTruncated: Boolean? = null,
+    val buildTimestamp: Long? = null,
+    val testResults: List<TestResultInfo>? = null,
+    val testSummary: TestSummary? = null,
+    val testResultsTruncated: Boolean? = null
 )
 
 @Serializable
@@ -137,6 +145,28 @@ data class ProblemInfo(
 data class IntentionInfo(
     val name: String,
     val description: String?
+)
+
+// ide_diagnostics test results output
+@Serializable
+data class TestResultInfo(
+    val name: String,
+    val suite: String?,
+    val status: String,
+    val durationMs: Long?,
+    val errorMessage: String?,
+    val stacktrace: String?,
+    val file: String?,
+    val line: Int?
+)
+
+@Serializable
+data class TestSummary(
+    val total: Int,
+    val passed: Int,
+    val failed: Int,
+    val ignored: Int,
+    val runConfigName: String?
 )
 
 // Refactoring result
