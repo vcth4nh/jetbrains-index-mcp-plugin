@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+## [4.9.1] - 2026-04-01
+### Fixed
+- **Path traversal protection for file operations** — All file-based tools now validate that resolved paths stay within project boundaries, preventing access to files outside the project via relative paths like `../../`.
+- **JAR reading restricted to project libraries** — `ide_read_file` now only allows reading JARs that are part of the project's configured library roots, blocking access to arbitrary JARs on the filesystem.
+
 ## [4.9.0] - 2026-03-30
 ### Added
 - **Enhanced `ide_diagnostics` with build error and test result sources** — The diagnostics tool now supports three independent sources: per-file code analysis (existing), build output from the last build (new), and test results from open test run tabs (new). New parameters: `includeBuildErrors`, `includeTestResults`, `severity` filter (`all`/`errors`/`warnings`), `testResultFilter` (`failed`/`all`), `maxBuildErrors`, `maxTestResults`. The `file` parameter is now optional — omit it to query only build/test results. Fully backward compatible. Addresses [#104](https://github.com/hechtcarmel/jetbrains-index-mcp-plugin/issues/104).
