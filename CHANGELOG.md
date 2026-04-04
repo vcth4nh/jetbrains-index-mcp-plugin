@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+## [4.9.3] - 2026-04-04
+### Fixed
+- **`ide_refactor_rename` now supports file renames (binary files, Android resources)** — Previously, renaming binary files like `.webp`, `.png`, or `.jpg` failed with "No element found at the specified position" because binary files have no text PSI elements. The `line` and `column` parameters are now optional: omit them to rename the file itself instead of a symbol within it. This enables renaming Android resource files (drawables, mipmaps, etc.) with automatic reference updates across the project. Fixes [#115](https://github.com/hechtcarmel/jetbrains-index-mcp-plugin/issues/115).
+
 ## [4.9.2] - 2026-04-02
 ### Fixed
 - **`ide_refactor_rename` renamed XML attribute name instead of referenced resource** — When renaming inside an XML attribute value (e.g., `android:id="@+id/XXTVProgress"`), the tool incorrectly renamed the attribute name (`android:id`) instead of the referenced resource ID. Now resolves PSI references before falling back to tree-walking, so the rename correctly targets the referenced declaration. Fixes [#113](https://github.com/hechtcarmel/jetbrains-index-mcp-plugin/issues/113).

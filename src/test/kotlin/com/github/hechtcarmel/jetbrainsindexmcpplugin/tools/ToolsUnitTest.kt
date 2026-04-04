@@ -372,6 +372,13 @@ class ToolsUnitTest : TestCase() {
         assertNotNull("Should have newName property", properties?.get(ParamNames.NEW_NAME))
         assertNotNull("Should have relatedRenamingStrategy property", properties?.get("relatedRenamingStrategy"))
 
+        // line and column should be optional (not in required) to support file rename mode
+        val required = schema[SchemaConstants.REQUIRED]?.jsonArray?.map { it.jsonPrimitive.content } ?: emptyList()
+        assertTrue("file should be required", required.contains(ParamNames.FILE))
+        assertTrue("newName should be required", required.contains(ParamNames.NEW_NAME))
+        assertFalse("line should NOT be required (optional for file rename)", required.contains(ParamNames.LINE))
+        assertFalse("column should NOT be required (optional for file rename)", required.contains(ParamNames.COLUMN))
+
         // Verify relatedRenamingStrategy has enum values
         val relatedStrategyProp = properties?.get("relatedRenamingStrategy")?.jsonObject
         assertNotNull("relatedRenamingStrategy should have enum", relatedStrategyProp?.get("enum"))

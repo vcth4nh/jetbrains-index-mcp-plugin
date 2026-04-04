@@ -44,7 +44,11 @@ class RenameSymbolTool : AbstractMcpTool() {
     override val name = "ide_refactor_rename"
 
     override val description = """
-        Rename a symbol and update all references across the project. Use instead of find-and-replace for safe, semantic renaming that handles all usages correctly. Supports undo (Ctrl+Z).
+        Rename a symbol or file and update all references across the project. Use instead of find-and-replace for safe, semantic renaming that handles all usages correctly. Supports undo (Ctrl+Z).
+
+        Two modes:
+        - **Symbol rename** (file + line + column + newName): Rename a symbol at a specific position.
+        - **File rename** (file + newName, WITHOUT line/column): Rename the file itself. Works for all file types including binary files (images, etc.). Especially useful for Android resource files (.webp, .png, .xml in res/) where it updates all resource references across the project.
 
         Automatically renames related elements: getters/setters, overriding methods, constructor parameters ↔ fields, test classes.
 
@@ -61,16 +65,19 @@ class RenameSymbolTool : AbstractMcpTool() {
 
         Returns: affected files list and change count. Modifies source files.
 
-        Parameters: file + line + column + newName (all required), overrideStrategy + relatedRenamingStrategy (optional).
+        Parameters: file + newName (required). line + column (optional — omit for file rename). overrideStrategy + relatedRenamingStrategy (optional).
 
-        Example: {"file": "src/UserService.java", "line": 15, "column": 18, "newName": "CustomerService"}
+        Examples:
+        - Symbol rename: {"file": "src/UserService.java", "line": 15, "column": 18, "newName": "CustomerService"}
+        - File rename: {"file": "res/mipmap-hdpi/ic_launcher.webp", "newName": "ic_app_icon.webp"}
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
         .projectPath()
         .file(description = "Path to file relative to project root. REQUIRED.")
-        .lineAndColumn()
-        .stringProperty("newName", "The new name for the symbol. REQUIRED.", required = true)
+        .intProperty("line", "1-based line number. Required for symbol rename, omit for file rename.")
+        .intProperty("column", "1-based column number. Required for symbol rename, omit for file rename.")
+        .stringProperty("newName", "The new name for the symbol or file. REQUIRED. For file renames, include the file extension (e.g., 'new_name.webp').", required = true)
         .enumProperty(
             "overrideStrategy",
             "Strategy when renaming a method that overrides a base method. " +
@@ -103,9 +110,7 @@ class RenameSymbolTool : AbstractMcpTool() {
         val file = arguments["file"]?.jsonPrimitive?.content
             ?: return createErrorResult("Missing required parameter: file")
         val line = arguments["line"]?.jsonPrimitive?.int
-            ?: return createErrorResult("Missing required parameter: line")
         val column = arguments["column"]?.jsonPrimitive?.int
-            ?: return createErrorResult("Missing required parameter: column")
         val newName = arguments["newName"]?.jsonPrimitive?.content
             ?: return createErrorResult("Missing required parameter: newName")
 
@@ -123,13 +128,23 @@ class RenameSymbolTool : AbstractMcpTool() {
             return createErrorResult("newName cannot be blank")
         }
 
+        // Validate that line and column are either both present or both absent
+        val isFileRename = line == null && column == null
+        if (!isFileRename && (line == null || column == null)) {
+            return createErrorResult("Both 'line' and 'column' must be provided for symbol rename, or both omitted for file rename.")
+        }
+
         requireSmartMode(project)
 
         // ═══════════════════════════════════════════════════════════════════════
         // PHASE 1: BACKGROUND - Find element and validate (suspending read action)
         // ═══════════════════════════════════════════════════════════════════════
         val validation = suspendingReadAction {
-            validateAndPrepare(project, file, line, column, newName)
+            if (isFileRename) {
+                validateAndPrepareFileRename(project, file, newName)
+            } else {
+                validateAndPrepare(project, file, line!!, column!!, newName)
+            }
         }
 
         if (validation.error != null) {
@@ -244,6 +259,45 @@ class RenameSymbolTool : AbstractMcpTool() {
 
         return RenameValidation(
             element = namedElement,
+            oldName = oldName
+        )
+    }
+
+    /**
+     * Validates and prepares a file rename (no line/column — renames the file itself).
+     *
+     * Uses the PsiFile directly as the rename target, which works for all file types
+     * including binary files (images, etc.). The RenameProcessor and its
+     * RenamePsiElementProcessor handle language-specific behavior (e.g., Android
+     * resource renaming updates all XML references).
+     *
+     * Skips language-specific identifier validation since file names follow different
+     * rules than code identifiers.
+     */
+    private fun validateAndPrepareFileRename(
+        project: Project,
+        file: String,
+        newName: String
+    ): RenameValidation {
+        val psiFile = getPsiFile(project, file)
+            ?: return RenameValidation(
+                element = DummyNamedElement,
+                oldName = "",
+                error = "File not found: $file"
+            )
+
+        val oldName = psiFile.name
+
+        if (oldName == newName) {
+            return RenameValidation(
+                element = DummyNamedElement,
+                oldName = oldName,
+                error = "New name is the same as the current name"
+            )
+        }
+
+        return RenameValidation(
+            element = psiFile,
             oldName = oldName
         )
     }
