@@ -10,6 +10,7 @@
 
 ### Fixed
 - **`ide_refactor_rename` file rename correctly handles Android resource naming** — When renaming Android resource files (drawables, mipmaps, etc.), the tool now probes `RenamePsiElementProcessor.prepareRenaming()` to detect element substitution. If the `PsiFile` will be substituted for a resource element, the file extension is stripped from `newName` to match the SDK's resource naming convention. This prevents double extensions (e.g., `app_icon.webp.webp`) on related DPI variants and corrupted `R.drawable` references.
+- **`ide_refactor_safe_delete` now detects Android resource references for file deletion** — Previously, deleting Android resource files (e.g., `backup_rules.xml`) did not detect `@xml/` or `@drawable/` references in other XML files, allowing deletion despite active references. The tool now checks three layers: direct file references, resource element references (via `prepareRenaming` probe), and top-level symbol references. This correctly blocks deletion when the file is referenced via the Android resource system.
 
 ## [4.9.2] - 2026-04-02
 ### Fixed
