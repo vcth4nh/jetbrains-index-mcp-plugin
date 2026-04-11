@@ -145,8 +145,9 @@ intellijPlatform {
     pluginVerification {
         ides {
             recommended()
-            // Baseline forward-compatibility target for issue #122 and similar reports.
-            create("IU", "261.22158.277")
+            // CI must use a published IDE release version, not a raw build number.
+            // 2026.1 resolves correctly in JetBrains repositories and still keeps 261 as the baseline.
+            create("IU", "2026.1")
         }
     }
 }
