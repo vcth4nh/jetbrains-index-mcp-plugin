@@ -125,6 +125,34 @@ class McpSettingsUnitTest : TestCase() {
         assertEquals(300, state.maxHistorySize)
     }
 
+    fun testAvailableProjectsModeDefaultsAndDelegation() {
+        val stateField = McpSettings.State::class.java.declaredFields.find { it.name == "availableProjectsMode" }
+        assertNotNull("State should persist availableProjectsMode", stateField)
+
+        stateField!!.isAccessible = true
+        val defaultState = McpSettings.State()
+        assertEquals("EXPANDED", (stateField.get(defaultState) as Enum<*>).name)
+
+        val settings = McpSettings()
+        val getter = settings.javaClass.methods.find {
+            it.name == "getAvailableProjectsMode" && it.parameterCount == 0
+        }
+        val setter = settings.javaClass.methods.find {
+            it.name == "setAvailableProjectsMode" && it.parameterCount == 1
+        }
+
+        assertNotNull("McpSettings should expose availableProjectsMode getter", getter)
+        assertNotNull("McpSettings should expose availableProjectsMode setter", setter)
+        assertEquals("EXPANDED", (getter!!.invoke(settings) as Enum<*>).name)
+
+        val enumClass = setter!!.parameterTypes.single().asSubclass(Enum::class.java)
+        val compactValue = java.lang.Enum.valueOf(enumClass, "COMPACT")
+        setter.invoke(settings, compactValue)
+
+        assertEquals("COMPACT", (getter.invoke(settings) as Enum<*>).name)
+        assertEquals("COMPACT", (stateField.get(settings.state) as Enum<*>).name)
+    }
+
     // Edge case tests
 
     fun testMaxHistorySizeZero() {

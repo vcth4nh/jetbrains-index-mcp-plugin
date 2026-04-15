@@ -1,6 +1,7 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.server
 
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ErrorMessages
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.settings.McpSettings
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ContentBlock
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
 import com.intellij.openapi.diagnostic.logger
@@ -133,10 +134,12 @@ object ProjectResolver {
 
     /**
      * Builds the available_projects JSON array including workspace sub-project paths.
-     * For workspace projects, lists each module's content root as a separate entry
+     * In expanded mode, lists each module's content root as a separate entry
      * so AI agents can discover the correct paths to use.
      */
     private fun buildAvailableProjectsArray(openProjects: List<Project>): JsonArray {
+        val mode = McpSettings.getInstance().availableProjectsMode
+
         return buildJsonArray {
             for (proj in openProjects) {
                 add(buildJsonObject {
@@ -144,24 +147,26 @@ object ProjectResolver {
                     put("path", proj.basePath ?: "")
                 })
 
-                // Include workspace sub-projects (module content roots)
-                try {
-                    val modules = ModuleManager.getInstance(proj).modules
-                    for (module in modules) {
-                        val contentRoots = ModuleRootManager.getInstance(module).contentRoots
-                        for (root in contentRoots) {
-                            val rootPath = root.path
-                            if (rootPath != proj.basePath) {
-                                add(buildJsonObject {
-                                    put("name", module.name)
-                                    put("path", rootPath)
-                                    put("workspace", proj.name)
-                                })
+                if (mode == McpSettings.AvailableProjectsMode.EXPANDED) {
+                    // Include workspace sub-projects (module content roots)
+                    try {
+                        val modules = ModuleManager.getInstance(proj).modules
+                        for (module in modules) {
+                            val contentRoots = ModuleRootManager.getInstance(module).contentRoots
+                            for (root in contentRoots) {
+                                val rootPath = root.path
+                                if (rootPath != proj.basePath) {
+                                    add(buildJsonObject {
+                                        put("name", module.name)
+                                        put("path", rootPath)
+                                        put("workspace", proj.name)
+                                    })
+                                }
                             }
                         }
+                    } catch (e: Exception) {
+                        LOG.debug("Failed to list module content roots for project ${proj.name}", e)
                     }
-                } catch (e: Exception) {
-                    LOG.debug("Failed to list module content roots for project ${proj.name}", e)
                 }
             }
         }
