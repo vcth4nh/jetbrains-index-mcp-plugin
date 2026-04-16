@@ -6,7 +6,7 @@
 
 ## [4.11.0] - 2026-04-15
 ### Added
-- **Configurable `available_projects` error payload size** — Added a **Project list in error responses** setting with `Expanded` and `Compact` modes. Workspace sub-project/module content roots remain valid `project_path` targets, while compact mode limits invalid/missing `project_path` errors to top-level project roots only.
+- Added a **Project list in error responses** setting with `Expanded` and `Compact` modes. Workspace sub-project/module content roots remain valid `project_path` targets, while compact mode limits invalid/missing `project_path` errors to top-level project roots only.
 
 ## [4.10.5] - 2026-04-15
 ### Changed
