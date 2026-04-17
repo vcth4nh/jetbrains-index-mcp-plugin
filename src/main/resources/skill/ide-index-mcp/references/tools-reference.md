@@ -9,7 +9,7 @@ Complete parameter reference for all IDE MCP tools. All tools use JSON-RPC via M
 | `project_path` | string, optional | Absolute path to project root. Required for multi-project workspaces. Omit for single-project setups. |
 | `file` | string | For project files, path relative to project root (e.g., `src/main/App.java`). `ide_read_file` and read-only position-based navigation tools also accept dependency/library paths returned by the plugin as absolute paths or `jar://` URLs. |
 | `line` | integer | **1-based** line number |
-| `column` | integer | **1-based** column number. Place on the symbol name, not whitespace. |
+| `column` | integer | **1-based** column number. Place on the symbol name, not whitespace. For dotted expressions like `json.dumps()` or `os.path.join()`, point to the member token (`dumps`, `join`) when targeting the member definition. |
 | `language` | string | Language of the symbol (e.g., `"Java"`). Required when using `symbol`. |
 | `symbol` | string | Fully qualified symbol reference. Format: `com.example.ClassName`, `com.example.ClassName#memberName`. |
 

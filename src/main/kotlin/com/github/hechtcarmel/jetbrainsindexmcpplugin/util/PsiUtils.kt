@@ -47,7 +47,8 @@ object PsiUtils {
         val reference = element.reference
         if (reference != null) {
             val resolved = reference.resolve()
-            if (resolved != null) return resolved
+            val refined = PythonDefinitionResolver.refineResolvedTarget(element, resolved)
+            if (refined != null) return refined
         }
 
         // Walk up parent chain looking for references (handles cases where
@@ -55,8 +56,11 @@ object PsiUtils {
         val parentReference = findReferenceInParent(element)
         if (parentReference != null) {
             val resolved = parentReference.resolve()
-            if (resolved != null) return resolved
+            val refined = PythonDefinitionResolver.refineResolvedTarget(element, resolved)
+            if (refined != null) return refined
         }
+
+        PythonDefinitionResolver.refineResolvedTarget(element, null)?.let { return it }
 
         // Fallback: if we're ON a declaration (not a reference), find it syntactically
         return findNamedElement(element)

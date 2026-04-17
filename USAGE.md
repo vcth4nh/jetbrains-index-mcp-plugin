@@ -100,7 +100,7 @@ Most tools operate on a specific location in code and require these parameters:
 |-----------|------|-------------|
 | `file` | string | For project files, path relative to project root (e.g., `src/main/java/MyClass.java`). `ide_read_file` and read-only position-based navigation tools also accept dependency/library paths returned by the plugin as absolute paths or `jar://` URLs. |
 | `line` | integer | 1-based line number |
-| `column` | integer | 1-based column number |
+| `column` | integer | 1-based column number. For dotted expressions like `json.dumps()` or `os.path.join()`, point to the member token (`dumps`, `join`) when targeting the member definition. |
 
 ### Symbol Reference Parameters
 
