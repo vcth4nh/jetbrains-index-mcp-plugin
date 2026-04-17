@@ -37,7 +37,7 @@ class CallHierarchyTool : AbstractMcpTool() {
 
         Target (mutually exclusive):
         - file + line + column: position-based lookup
-        - language + symbol: fully qualified symbol reference
+        - language + symbol: fully qualified symbol reference (currently supported for Java only)
 
         Parameters: direction (required): "callers" or "callees". depth (optional, default: 3, max: 5).
 

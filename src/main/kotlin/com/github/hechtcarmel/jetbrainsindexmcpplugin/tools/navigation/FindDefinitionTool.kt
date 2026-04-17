@@ -34,7 +34,7 @@ class FindDefinitionTool : AbstractMcpTool() {
 
         Target (mutually exclusive):
         - file + line + column: position-based lookup
-        - language + symbol: fully qualified symbol reference
+        - language + symbol: fully qualified symbol reference (currently supported for Java only)
 
         Example: {"file": "src/Main.java", "line": 15, "column": 10}
         Example: {"language": "Java", "symbol": "com.example.MyClass#processData(String)"}

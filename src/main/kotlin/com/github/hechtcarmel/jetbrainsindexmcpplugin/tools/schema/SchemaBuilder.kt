@@ -43,7 +43,15 @@ class SchemaBuilder private constructor() {
         val supportedLanguages = LanguageHandlerRegistry.getSupportedLanguageNamesForSymbolReference()
         properties[ParamNames.LANGUAGE] = buildJsonObject {
             put(SchemaConstants.TYPE, SchemaConstants.TYPE_STRING)
-            put(SchemaConstants.DESCRIPTION, SchemaConstants.DESC_LANGUAGE)
+            val languageDescription = buildString {
+                append(SchemaConstants.DESC_LANGUAGE)
+                if (supportedLanguages.isEmpty()) {
+                    append(" No symbol reference handlers are currently available.")
+                } else {
+                    append(" Currently supported languages: ${supportedLanguages.joinToString(", ")}.")
+                }
+            }
+            put(SchemaConstants.DESCRIPTION, languageDescription)
             if (supportedLanguages.isNotEmpty()) {
                 putJsonArray("enum") { supportedLanguages.forEach { add(JsonPrimitive(it)) } }
             }

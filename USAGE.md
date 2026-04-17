@@ -108,12 +108,12 @@ Some tools support identifying the target element by fully qualified symbol refe
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `language` | string | Language of the symbol (e.g., `"Java"`). Required when using `symbol`. |
+| `language` | string | Language of the symbol (e.g., `"Java"`). Required when using `symbol`. Unsupported languages are rejected at runtime; use `file` + `line` + `column` for languages without symbol-reference support. |
 | `symbol` | string | Fully qualified symbol reference. Format: `com.example.ClassName`, `com.example.ClassName#memberName`. |
 
 **Important:** The two parameter groups are **mutually exclusive** — provide either `file` + `line` + `column` OR `language` + `symbol`, not both.
 
-**Supported languages:** Java (more languages planned).
+**Supported languages:** Java only today. Unsupported languages return an explicit error listing the currently supported symbol-reference languages.
 
 **Tools that support symbol references:** `ide_find_references`, `ide_find_definition`, `ide_call_hierarchy`, `ide_find_implementations`, `ide_find_super_methods`.
 

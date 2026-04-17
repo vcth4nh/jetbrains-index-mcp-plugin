@@ -177,6 +177,20 @@ class ConstantsUnitTest : TestCase() {
         assertTrue(ErrorMessages.MISSING_RESOURCE_URI.contains("URI"))
     }
 
+    fun testNoSymbolReferenceHandlerWithSupportedLanguages() {
+        val message = ErrorMessages.noSymbolReferenceHandler("Python", listOf("Java", "Kotlin", "Java"))
+        assertTrue(message.contains("Unsupported language for symbol references: Python"))
+        assertTrue(message.contains("Use file+line+column instead"))
+        assertTrue(message.contains("Currently supported languages: Java, Kotlin"))
+    }
+
+    fun testNoSymbolReferenceHandlerWithoutSupportedLanguages() {
+        val message = ErrorMessages.noSymbolReferenceHandler("Python", emptyList())
+        assertTrue(message.contains("Unsupported language for symbol references: Python"))
+        assertTrue(message.contains("No symbol reference handlers are available in this IDE session"))
+        assertTrue(message.contains("Use file+line+column instead"))
+    }
+
     // SchemaConstants tests
 
     fun testSchemaConstantsKeys() {

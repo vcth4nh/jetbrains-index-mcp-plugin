@@ -135,6 +135,10 @@ class SchemaBuilderUnitTest : TestCase() {
             val languageProp = properties[ParamNames.LANGUAGE]?.jsonObject!!
             val enumValues = languageProp["enum"]?.jsonArray?.map { it.jsonPrimitive.content }!!
             assertEquals(listOf("Java", "Kotlin"), enumValues)
+            assertTrue(
+                "language description should list supported languages",
+                languageProp[SchemaConstants.DESCRIPTION]?.jsonPrimitive?.content?.contains("Currently supported languages: Java, Kotlin.") == true
+            )
 
             val required = schema[SchemaConstants.REQUIRED]?.jsonArray?.map { it.jsonPrimitive.content }!!
             assertTrue("language should be required", required.contains(ParamNames.LANGUAGE))
@@ -157,6 +161,10 @@ class SchemaBuilderUnitTest : TestCase() {
             val properties = schema[SchemaConstants.PROPERTIES]?.jsonObject!!
             val languageProp = properties[ParamNames.LANGUAGE]?.jsonObject!!
             assertNull("enum should be absent when no handlers registered", languageProp["enum"])
+            assertTrue(
+                "language description should explain when symbol references are unavailable",
+                languageProp[SchemaConstants.DESCRIPTION]?.jsonPrimitive?.content?.contains("No symbol reference handlers are currently available.") == true
+            )
         } finally {
             unmockkObject(LanguageHandlerRegistry)
         }
