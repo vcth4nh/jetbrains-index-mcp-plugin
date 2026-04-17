@@ -8,6 +8,7 @@
 ### Fixed
 - **External library path round-tripping in read-only navigation tools** — Search results now preserve dependency/library paths, and read-only position-based navigation tools accept those returned absolute paths or `jar://` URLs. Fixes [#135](https://github.com/hechtcarmel/jetbrains-index-mcp-plugin/issues/135).
 - **Python dotted member definition resolution** — Position-based navigation now prefers the Python callable/member target for dotted expressions like `json.dumps`, `os.path.join`, and `datetime.datetime.now()` when the caret is on the member token, instead of incorrectly jumping to a module/package directory.
+- **Python supertypes and super-method hierarchies** — `ide_type_hierarchy` now returns Python supertypes again, and `ide_find_super_methods` now returns inherited Python override chains instead of empty hierarchies.
 
 ## [4.11.1] - 2026-04-16
 ### Fixed
