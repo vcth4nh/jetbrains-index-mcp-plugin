@@ -104,6 +104,14 @@ abstract class BasePythonHandler<T> : LanguageHandler<T> {
         }
     }
 
+    protected val pyTypeEvalContextClass: Class<*>? by lazy {
+        try {
+            Class.forName("com.jetbrains.python.psi.types.TypeEvalContext")
+        } catch (e: ClassNotFoundException) {
+            null
+        }
+    }
+
     protected fun getRelativePath(project: Project, file: com.intellij.openapi.vfs.VirtualFile): String {
         return ProjectUtils.getToolFilePath(project, file)
     }
@@ -182,13 +190,76 @@ abstract class BasePythonHandler<T> : LanguageHandler<T> {
     /**
      * Gets superclasses of a PyClass via reflection.
      */
-    protected fun getSuperClasses(pyClass: PsiElement): Array<*>? {
+    protected fun getSuperClasses(
+        pyClass: PsiElement,
+        context: Any? = createCodeAnalysisContext(pyClass.project, pyClass.containingFile)
+    ): Array<*>? {
+        val typeEvalContextClass = pyTypeEvalContextClass ?: return null
         return try {
-            val method = pyClass.javaClass.getMethod("getSuperClasses", com.intellij.psi.search.GlobalSearchScope::class.java)
-            val scope = GlobalSearchScope.allScope(pyClass.project)
-            method.invoke(pyClass, scope) as? Array<*>
+            val method = pyClass.javaClass.getMethod("getSuperClasses", typeEvalContextClass)
+            method.invoke(pyClass, context) as? Array<*>
         } catch (e: Exception) {
             null
+        }
+    }
+
+    /**
+     * Finds a method by name in a PyClass via reflection.
+     */
+    protected fun findMethodInClass(
+        pyClass: PsiElement,
+        methodName: String,
+        context: Any? = createUserInitiatedContext(pyClass.project, pyClass.containingFile)
+    ): PsiElement? {
+        val typeEvalContextClass = pyTypeEvalContextClass
+
+        if (typeEvalContextClass != null) {
+            try {
+                val method = pyClass.javaClass.getMethod(
+                    "findMethodByName",
+                    String::class.java,
+                    java.lang.Boolean.TYPE,
+                    typeEvalContextClass
+                )
+                val result = method.invoke(pyClass, methodName, false, context) as? PsiElement
+                if (result != null) {
+                    return result
+                }
+            } catch (e: Exception) {
+                // Fall back to enumerating methods below.
+            }
+        }
+
+        return try {
+            val getMethodsMethod = pyClass.javaClass.getMethod("getMethods")
+            val methods = getMethodsMethod.invoke(pyClass) as? Array<*> ?: return null
+            methods.filterIsInstance<PsiElement>().find { getName(it) == methodName }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun createCodeAnalysisContext(project: Project, origin: PsiFile?): Any? {
+        return createTypeEvalContext("codeAnalysis", project, origin)
+    }
+
+    private fun createUserInitiatedContext(project: Project, origin: PsiFile?): Any? {
+        return createTypeEvalContext("userInitiated", project, origin)
+    }
+
+    private fun createTypeEvalContext(factoryMethod: String, project: Project, origin: PsiFile?): Any? {
+        val typeEvalContextClass = pyTypeEvalContextClass ?: return null
+
+        return try {
+            val method = typeEvalContextClass.getMethod(factoryMethod, Project::class.java, PsiFile::class.java)
+            method.invoke(null, project, origin)
+        } catch (e: Exception) {
+            try {
+                val fallbackMethod = typeEvalContextClass.getMethod("codeInsightFallback", Project::class.java)
+                fallbackMethod.invoke(null, project)
+            } catch (_: Exception) {
+                null
+            }
         }
     }
 }
@@ -454,16 +525,6 @@ class PythonCallHierarchyHandler : BasePythonHandler<CallHierarchyData>(), CallH
                 result.add(superMethod)
                 findSuperMethodsRecursive(project, superMethod, result, visited)
             }
-        }
-    }
-
-    private fun findMethodInClass(pyClass: PsiElement, methodName: String): PsiElement? {
-        return try {
-            val getMethodsMethod = pyClass.javaClass.getMethod("getMethods")
-            val methods = getMethodsMethod.invoke(pyClass) as? Array<*> ?: return null
-            methods.filterIsInstance<PsiElement>().find { getName(it) == methodName }
-        } catch (e: Exception) {
-            null
         }
     }
 
@@ -740,17 +801,6 @@ class PythonSuperMethodsHandler : BasePythonHandler<SuperMethodsData>(), SuperMe
         return hierarchy
     }
 
-    private fun findMethodInClass(pyClass: PsiElement, methodName: String): PsiElement? {
-        return try {
-            // Try to get methods and find by name - more reliable than findMethodByName
-            val getMethodsMethod = pyClass.javaClass.getMethod("getMethods")
-            val methods = getMethodsMethod.invoke(pyClass) as? Array<*> ?: return null
-            methods.filterIsInstance<PsiElement>().find { getName(it) == methodName }
-        } catch (e: Exception) {
-            null
-        }
-    }
-
     private fun buildMethodSignature(pyFunction: PsiElement): String {
         return try {
             val getParameterListMethod = pyFunction.javaClass.getMethod("getParameterList")
@@ -933,12 +983,7 @@ class PythonStructureHandler : BasePythonHandler<List<StructureNode>>(), Structu
 
     private fun buildClassSignature(pyClass: PsiElement): String {
         return try {
-            val getSuperClassesMethod = pyClass.javaClass.getMethod(
-                "getSuperClasses",
-                GlobalSearchScope::class.java
-            )
-            val scope = GlobalSearchScope.allScope(pyClass.project)
-            val superClasses = getSuperClassesMethod.invoke(pyClass, scope) as? Array<*> ?: emptyArray<Any?>()
+            val superClasses = getSuperClasses(pyClass) ?: emptyArray<Any?>()
 
             if (superClasses.isNotEmpty()) {
                 val names = superClasses.mapNotNull {

@@ -17,7 +17,6 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.application.ReadAction
-import com.intellij.openapi.application.TransactionGuard
 import com.intellij.openapi.application.asContextElement
 import com.intellij.openapi.application.readAction as platformReadAction
 import com.intellij.openapi.command.WriteCommandAction
@@ -37,7 +36,10 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.util.PsiModificationTracker
 import com.intellij.util.concurrency.annotations.RequiresReadLock
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -138,24 +140,32 @@ abstract class AbstractMcpTool : McpTool {
     }
 
     /**
-     * Commits all documents in a write-safe context.
+     * Executes an action on EDT from a write-safe invocation context.
      *
-     * [PsiDocumentManager.commitAllDocuments] requires a write-safe EDT context
-     * (enforced by [TransactionGuard]). Since MCP tools are invoked from HTTP handlers
-     * (not user actions), there is no inherent write-safe context.
-     * [TransactionGuard.submitTransactionAndWait] explicitly creates one.
-     *
-     * From EDT (e.g. inside [withContext]([Dispatchers.EDT])), falls back to
-     * [WriteCommandAction] which also provides write-safety.
+     * Directly switching to [Dispatchers.EDT] does not create the write-safe
+     * invocation context required for PSI/VFS/project model writes. Scheduling via
+     * [ApplicationManager.getApplication().invokeLater] with the default modality does.
      */
-    @Suppress("DEPRECATION")
+    protected suspend fun <T> writeSafeEdtAction(action: () -> T): T {
+        val application = ApplicationManager.getApplication()
+        return suspendCancellableCoroutine { continuation ->
+            application.invokeLater({
+                if (!continuation.isActive) return@invokeLater
+                try {
+                    continuation.resume(action())
+                } catch (t: Throwable) {
+                    continuation.resumeWithException(t)
+                }
+            }, ModalityState.defaultModalityState())
+        }
+    }
+
+    /**
+     * Commits all documents in a write-safe context.
+     */
     protected suspend fun commitDocuments(project: Project) {
-        if (ApplicationManager.getApplication().isDispatchThread) {
+        writeSafeEdtAction {
             WriteCommandAction.runWriteCommandAction(project) {
-                PsiDocumentManager.getInstance(project).commitAllDocuments()
-            }
-        } else {
-            TransactionGuard.getInstance().submitTransactionAndWait {
                 PsiDocumentManager.getInstance(project).commitAllDocuments()
             }
         }
@@ -317,7 +327,7 @@ abstract class AbstractMcpTool : McpTool {
         commandName: String,
         action: () -> Unit
     ) {
-        edtAction {
+        writeSafeEdtAction {
             WriteCommandAction.runWriteCommandAction(project, commandName, null, { action() })
         }
     }
