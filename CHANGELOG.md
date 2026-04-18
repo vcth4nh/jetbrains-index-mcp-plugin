@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+## [4.12.0] - 2026-04-18
+### Added
+- **Optional library/test filters for navigation tools** — `ide_find_implementations`, `ide_call_hierarchy`, `ide_type_hierarchy`, and `ide_find_references` now accept `includeLibraries` and `includeTests`, both defaulting to `true`, so agents can suppress dependency noise and test-only results when narrowing navigation queries. Addresses [#138](https://github.com/hechtcarmel/jetbrains-index-mcp-plugin/issues/138).
+
+### Fixed
+- **`includeLibraries=true` now widens hierarchy search scopes correctly** — call-hierarchy and related language-specific navigation searches no longer stay pinned to project-only scope when library results are requested, so callers/implementations from dependency sources can be returned again for library-backed targets.
+- **Navigation library/test filtering uses IntelliJ file-index classification** — project files are no longer misclassified as dependencies when filtering results, which preserves project implementations while still excluding actual library/test nodes.
+
 ## [4.11.3] - 2026-04-17
 ### Changed
 - Completely reworked `ide_diagnostics` for better reliability and multi-project support.
