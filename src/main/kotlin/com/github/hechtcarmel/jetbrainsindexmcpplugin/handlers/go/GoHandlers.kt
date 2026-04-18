@@ -556,7 +556,7 @@ class GoTypeHierarchyHandler : BaseGoHandler<TypeHierarchyData>(), TypeHierarchy
     ): List<TypeElementData> {
         // Use DefinitionsScopedSearch for finding implementing types
         try {
-            val scope = maybeCreateVisibilityFilteredScope(GlobalSearchScope.projectScope(project), project, includeLibraries, includeTests)
+            val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
             val results = mutableListOf<TypeElementData>()
 
             DefinitionsScopedSearch.search(goType, scope).forEach(Processor { definition ->
@@ -635,7 +635,7 @@ class GoImplementationsHandler : BaseGoHandler<List<ImplementationData>>(), Impl
     ): List<ImplementationData> {
         // Use DefinitionsScopedSearch (Platform API)
         try {
-            val scope = maybeCreateVisibilityFilteredScope(GlobalSearchScope.projectScope(project), project, includeLibraries, includeTests)
+            val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
             val results = mutableListOf<ImplementationData>()
 
             DefinitionsScopedSearch.search(goFunction, scope).forEach(Processor { definition ->
@@ -676,7 +676,7 @@ class GoImplementationsHandler : BaseGoHandler<List<ImplementationData>>(), Impl
     ): List<ImplementationData> {
         // Use DefinitionsScopedSearch (Platform API) to find implementing types
         try {
-            val scope = maybeCreateVisibilityFilteredScope(GlobalSearchScope.projectScope(project), project, includeLibraries, includeTests)
+            val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
             val results = mutableListOf<ImplementationData>()
 
             DefinitionsScopedSearch.search(goType, scope).forEach(Processor { definition ->
@@ -766,7 +766,7 @@ class GoCallHierarchyHandler : BaseGoHandler<CallHierarchyData>(), CallHierarchy
 
         return try {
             // Use platform ReferencesSearch API with Processor pattern
-            val scope = maybeCreateVisibilityFilteredScope(GlobalSearchScope.projectScope(project), project, includeLibraries, includeTests)
+            val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
             val references = mutableListOf<com.intellij.psi.PsiReference>()
 
             ReferencesSearch.search(goFunction, scope).forEach(Processor { reference ->

@@ -518,7 +518,7 @@ class RustTypeHierarchyHandler : BaseRustHandler<TypeHierarchyData>(), TypeHiera
         val results = mutableListOf<TypeElementData>()
 
         try {
-            val scope = maybeCreateVisibilityFilteredScope(GlobalSearchScope.projectScope(project), project, includeLibraries, includeTests)
+            val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
 
             DefinitionsScopedSearch.search(trait, scope).forEach(Processor { definition ->
                 if (isRsImpl(definition) && shouldIncludeNavigationElement(project, definition, includeLibraries, includeTests)) {
@@ -586,7 +586,7 @@ class RustTypeHierarchyHandler : BaseRustHandler<TypeHierarchyData>(), TypeHiera
         val results = mutableListOf<TypeElementData>()
 
         try {
-            val scope = maybeCreateVisibilityFilteredScope(GlobalSearchScope.projectScope(project), project, includeLibraries, includeTests)
+            val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
 
             // Search for references to this type to find impl blocks
             ReferencesSearch.search(type, scope).forEach(Processor { reference ->
@@ -769,7 +769,7 @@ class RustImplementationsHandler : BaseRustHandler<List<ImplementationData>>(), 
         val results = mutableListOf<ImplementationData>()
 
         try {
-            val scope = maybeCreateVisibilityFilteredScope(GlobalSearchScope.projectScope(project), project, includeLibraries, includeTests)
+            val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
             val traitName = getName(trait) ?: "unknown"
 
             DefinitionsScopedSearch.search(trait, scope).forEach(Processor { definition ->
@@ -811,7 +811,7 @@ class RustImplementationsHandler : BaseRustHandler<List<ImplementationData>>(), 
 
         try {
             val methodName = getName(method) ?: return emptyList()
-            val scope = maybeCreateVisibilityFilteredScope(GlobalSearchScope.projectScope(project), project, includeLibraries, includeTests)
+            val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
 
             // Use DefinitionsScopedSearch to find implementations of this method
             DefinitionsScopedSearch.search(method, scope).forEach(Processor { definition ->
@@ -911,7 +911,7 @@ class RustCallHierarchyHandler : BaseRustHandler<CallHierarchyData>(), CallHiera
         visited.add(key)
 
         return try {
-            val scope = maybeCreateVisibilityFilteredScope(GlobalSearchScope.projectScope(project), project, includeLibraries, includeTests)
+            val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
             val references = mutableListOf<com.intellij.psi.PsiReference>()
 
             ReferencesSearch.search(function, scope).forEach(Processor { reference ->

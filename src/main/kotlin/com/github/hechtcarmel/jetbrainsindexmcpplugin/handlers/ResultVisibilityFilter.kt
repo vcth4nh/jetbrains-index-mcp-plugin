@@ -73,3 +73,16 @@ internal fun maybeCreateVisibilityFilteredScope(
         VisibilityFilteredScope(baseScope, project, includeLibraries, includeTests)
     }
 }
+
+internal fun createNavigationSearchScope(
+    project: Project,
+    includeLibraries: Boolean,
+    includeTests: Boolean,
+): GlobalSearchScope {
+    return maybeCreateVisibilityFilteredScope(
+        createFilteredScope(project, includeLibraries),
+        project,
+        includeLibraries,
+        includeTests
+    )
+}

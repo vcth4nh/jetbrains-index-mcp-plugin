@@ -115,6 +115,29 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
         assertFalse("Test caller should be filtered out", callerNames.any { it.contains("TargetServiceTest.exercise") })
     }
 
+    fun testCallHierarchyCanIncludeLibraryCallersWhenRequested() = runBlocking {
+        val fixture = createLibraryMethodFixture()
+        val tool = CallHierarchyTool()
+
+        val result = tool.execute(project, buildJsonObject {
+            put("file", fixture.targetFile.toString().replace('\\', '/'))
+            put("line", fixture.targetLine)
+            put("column", fixture.targetColumn)
+            put("direction", "callers")
+            put("includeLibraries", true)
+            put("includeTests", false)
+        })
+
+        assertFalse("Call hierarchy should succeed: ${result.content}", result.isError)
+
+        val content = result.content.first() as ContentBlock.Text
+        val hierarchy = json.decodeFromString<CallHierarchyResult>(content.text)
+        val callerNames = hierarchy.calls.map { it.name }
+
+        assertTrue("Project caller should be visible", callerNames.any { it.contains("ProjectCaller.call") })
+        assertTrue("Library caller should be visible when includeLibraries=true", callerNames.any { it.contains("LibraryCaller.call") })
+    }
+
     fun testFindReferencesCanExcludeTestUsages() = runBlocking {
         val fixture = createProjectMethodFixture()
         val tool = FindUsagesTool()
@@ -144,6 +167,12 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
 
     private data class ProjectMethodFixture(
         val targetFilePath: String,
+        val targetLine: Int,
+        val targetColumn: Int
+    )
+
+    private data class LibraryMethodFixture(
+        val targetFile: Path,
         val targetLine: Int,
         val targetColumn: Int
     )
@@ -299,6 +328,74 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
 
         return ProjectMethodFixture(
             targetFilePath = ProjectUtils.getRelativePath(project, targetFile.toString().replace('\\', '/')),
+            targetLine = line,
+            targetColumn = column
+        )
+    }
+
+    private fun createLibraryMethodFixture(): LibraryMethodFixture {
+        val prodRootPath = createProjectDirectory("library-callers-src")
+        val prodRoot = refreshVfsDirectory(prodRootPath)
+        PsiTestUtil.addSourceRoot(module, prodRoot, false)
+
+        val librarySourceRoot = Files.createTempDirectory("jetbrains-index-mcp-lib-callers-src")
+        val libraryClassesRoot = Files.createTempDirectory("jetbrains-index-mcp-lib-callers-classes")
+        val targetSource = """
+            package libcallers;
+
+            public class TargetApi {
+                public void run() {
+                }
+            }
+        """.trimIndent()
+        val libraryCallerSource = """
+            package libcallers;
+
+            public class LibraryCaller {
+                public void call(TargetApi api) {
+                    api.run();
+                }
+            }
+        """.trimIndent()
+
+        val targetFile = writePathFile(librarySourceRoot, "libcallers/TargetApi.java", targetSource)
+        val libraryCallerFile = writePathFile(librarySourceRoot, "libcallers/LibraryCaller.java", libraryCallerSource)
+        compileJavaSources(listOf(targetFile, libraryCallerFile), libraryClassesRoot)
+
+        val sourceRootVFile = refreshVfsDirectory(librarySourceRoot)
+        val classesRootVFile = refreshVfsDirectory(libraryClassesRoot)
+        ModuleRootModificationUtil.addModuleLibrary(
+            module,
+            "library-callers-library",
+            listOf(classesRootVFile.url),
+            listOf(sourceRootVFile.url)
+        )
+
+        val projectCallerFile = writePathFile(
+            prodRootPath,
+            "app/ProjectCaller.java",
+            """
+                package app;
+
+                import libcallers.TargetApi;
+
+                public class ProjectCaller {
+                    public void call(TargetApi api) {
+                        api.run();
+                    }
+                }
+            """.trimIndent()
+        )
+
+        refreshVfsFile(targetFile)
+        refreshVfsFile(libraryCallerFile)
+        refreshVfsFile(projectCallerFile)
+        PsiDocumentManager.getInstance(project).commitAllDocuments()
+        IndexingTestUtil.waitUntilIndexesAreReady(project)
+
+        val (line, column) = findPosition(targetSource, "run")
+        return LibraryMethodFixture(
+            targetFile = targetFile,
             targetLine = line,
             targetColumn = column
         )

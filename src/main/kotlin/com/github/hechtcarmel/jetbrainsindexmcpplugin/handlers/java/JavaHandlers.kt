@@ -496,8 +496,9 @@ class JavaTypeHierarchyHandler : BaseJavaHandler<TypeHierarchyData>(), TypeHiera
         includeTests: Boolean
     ): List<TypeElementData> {
         val results = mutableListOf<TypeElementData>()
+        val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
         try {
-            ClassInheritorsSearch.search(psiClass, true).forEach(Processor { subClass ->
+            ClassInheritorsSearch.search(psiClass, scope, true).forEach(Processor { subClass ->
                 if (shouldIncludeNavigationElement(project, subClass, includeLibraries, includeTests)) {
                     results.add(TypeElementData(
                         name = subClass.qualifiedName ?: subClass.name ?: "unknown",
@@ -559,8 +560,9 @@ class JavaImplementationsHandler : BaseJavaHandler<List<ImplementationData>>(), 
         includeTests: Boolean
     ): List<ImplementationData> {
         val results = mutableListOf<ImplementationData>()
+        val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
         try {
-            OverridingMethodsSearch.search(method).forEach(Processor { overridingMethod ->
+            OverridingMethodsSearch.search(method, scope, true).forEach(Processor { overridingMethod ->
                 val file = overridingMethod.containingFile?.virtualFile
                 if (file != null && shouldIncludeNavigationElement(project, overridingMethod, includeLibraries, includeTests)) {
                     results.add(ImplementationData(
@@ -587,8 +589,9 @@ class JavaImplementationsHandler : BaseJavaHandler<List<ImplementationData>>(), 
         includeTests: Boolean
     ): List<ImplementationData> {
         val results = mutableListOf<ImplementationData>()
+        val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
         try {
-            ClassInheritorsSearch.search(psiClass, true).forEach(Processor { inheritor ->
+            ClassInheritorsSearch.search(psiClass, scope, true).forEach(Processor { inheritor ->
                 val file = inheritor.containingFile?.virtualFile
                 if (file != null && shouldIncludeNavigationElement(project, inheritor, includeLibraries, includeTests)) {
                     results.add(ImplementationData(
@@ -687,12 +690,7 @@ class JavaCallHierarchyHandler : BaseJavaHandler<CallHierarchyData>(), CallHiera
             val allReferences = mutableListOf<PsiElement>()
             // Dedup key includes file path — textOffset alone is not globally unique across files
             val seenKeys = mutableSetOf<String>()
-            val callerScope = maybeCreateVisibilityFilteredScope(
-                GlobalSearchScope.projectScope(project),
-                project,
-                includeLibraries,
-                includeTests
-            )
+            val callerScope = createNavigationSearchScope(project, includeLibraries, includeTests)
             for (methodToSearch in methodsToSearch) {
                 if (allReferences.size >= MAX_RESULTS_PER_LEVEL * 2) break
                 MethodReferencesSearch.search(methodToSearch, callerScope, true)

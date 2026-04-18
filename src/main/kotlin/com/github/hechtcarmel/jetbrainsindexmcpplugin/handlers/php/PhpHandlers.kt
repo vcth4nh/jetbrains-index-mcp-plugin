@@ -857,7 +857,7 @@ class PhpCallHierarchyHandler : BasePhpHandler<CallHierarchyData>(), CallHierarc
                 methodsToSearch.addAll(findAllSuperMethods(project, callable))
             }
 
-            val scope = maybeCreateVisibilityFilteredScope(GlobalSearchScope.projectScope(project), project, includeLibraries, includeTests)
+            val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
             val allReferences = mutableListOf<com.intellij.psi.PsiReference>()
 
             for (methodToSearch in methodsToSearch) {

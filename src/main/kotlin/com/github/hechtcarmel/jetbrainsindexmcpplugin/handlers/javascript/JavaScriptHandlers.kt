@@ -512,7 +512,7 @@ class JavaScriptTypeHierarchyHandler : BaseJavaScriptHandler<TypeHierarchyData>(
         includeLibraries: Boolean,
         includeTests: Boolean
     ): List<TypeElementData> {
-        val scope = maybeCreateVisibilityFilteredScope(GlobalSearchScope.projectScope(project), project, includeLibraries, includeTests)
+        val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
         val results = mutableListOf<TypeElementData>()
 
         DefinitionsScopedSearch.search(jsClass, scope).forEach(Processor { definition ->
@@ -709,7 +709,7 @@ class JavaScriptImplementationsHandler : BaseJavaScriptHandler<List<Implementati
         includeLibraries: Boolean,
         includeTests: Boolean
     ): List<ImplementationData> {
-        val scope = maybeCreateVisibilityFilteredScope(GlobalSearchScope.projectScope(project), project, includeLibraries, includeTests)
+        val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
         val results = mutableListOf<ImplementationData>()
 
         DefinitionsScopedSearch.search(element, scope).forEach(Processor { definition ->
@@ -848,7 +848,7 @@ class JavaScriptCallHierarchyHandler : BaseJavaScriptHandler<CallHierarchyData>(
             methodsToSearch.addAll(findAllSuperMethods(project, jsFunction))
 
             // Use platform ReferencesSearch API with Processor pattern for early termination
-            val scope = maybeCreateVisibilityFilteredScope(GlobalSearchScope.projectScope(project), project, includeLibraries, includeTests)
+            val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
             val allReferences = mutableListOf<com.intellij.psi.PsiReference>()
 
             for (methodToSearch in methodsToSearch) {
