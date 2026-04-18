@@ -37,8 +37,7 @@ Find all usages of a symbol (semantic, not text search).
 | `column` | integer | conditional | 1-based column. Required for position-based lookup. |
 | `language` | string | conditional | Symbol language (e.g., `"Java"`). Required for symbol-based lookup. |
 | `symbol` | string | conditional | Fully qualified symbol reference. Required for symbol-based lookup. |
-| `includeLibraries` | boolean | no | Keep references from dependency/library code (default true) |
-| `includeTests` | boolean | no | Keep references from test sources (default true) |
+| `scope` | enum | no | One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 | `maxResults` | integer | no | Deprecated alias for `pageSize`. Default 100, max 500 |
 | `cursor` | string | no | Pagination cursor from a previous response. When provided, search parameters are ignored; `project_path` and `pageSize` may still be provided. |
 | `pageSize` | integer | no | Results per page. Default 100, max 500 |
@@ -73,10 +72,12 @@ Search for classes/interfaces by name using IDE's class index. Equivalent to Ctr
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `query` | string | yes | Class name pattern |
-| `includeLibraries` | boolean | no | Include library classes (default false) |
+| `scope` | enum | no | One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 | `language` | string | no | Filter: "Java", "Kotlin", "Python", etc. |
 | `matchMode` | enum | no | `substring` (default), `prefix`, `exact` |
-| `limit` | integer | no | Default 25, max 100 |
+| `limit` | integer | no | Deprecated alias for `pageSize`. Default 25, max 500 |
+| `cursor` | string | no | Pagination cursor from a previous response. When provided, search parameters are ignored; `project_path` and `pageSize` may still be provided. |
+| `pageSize` | integer | no | Results per page. Default 25, max 500 |
 | `project_path` | string | no | Project root path |
 
 **Returns**: `{ classes: [{name, qualifiedName, file, line, kind, language}], totalCount, query }`
@@ -89,8 +90,10 @@ Search for files by name using IDE's file index. Equivalent to Ctrl+Shift+N / Cm
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `query` | string | yes | File name pattern |
-| `includeLibraries` | boolean | no | Include library files (default false) |
-| `limit` | integer | no | Default 25, max 100 |
+| `scope` | enum | no | One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
+| `limit` | integer | no | Deprecated alias for `pageSize`. Default 25, max 500 |
+| `cursor` | string | no | Pagination cursor from a previous response. When provided, search parameters are ignored; `project_path` and `pageSize` may still be provided. |
+| `pageSize` | integer | no | Results per page. Default 25, max 500 |
 | `project_path` | string | no | Project root path |
 
 **Returns**: `{ files: [{name, path, directory}], totalCount, query }`
@@ -121,8 +124,7 @@ Find implementations of interfaces, abstract classes, or abstract methods.
 | `column` | integer | conditional | 1-based column. Required for position-based lookup. |
 | `language` | string | conditional | Symbol language (e.g., `"Java"`). Required for symbol-based lookup. |
 | `symbol` | string | conditional | Fully qualified symbol reference. Required for symbol-based lookup. |
-| `includeLibraries` | boolean | no | Keep dependency/library implementations in results (default true) |
-| `includeTests` | boolean | no | Keep test-source implementations in results (default true) |
+| `scope` | enum | no | One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 | `cursor` | string | no | Pagination cursor from a previous response. When provided, search parameters are ignored; `project_path` and `pageSize` may still be provided. |
 | `pageSize` | integer | no | Results per page. Default 100, max 500 |
 | `project_path` | string | no | Project root path |
@@ -136,10 +138,12 @@ Search for any symbol (classes, methods, fields, functions) by name.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `query` | string | yes | Symbol name pattern |
-| `includeLibraries` | boolean | no | Default false |
+| `scope` | enum | no | One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 | `language` | string | no | Filter by language |
 | `matchMode` | enum | no | `substring` (default), `prefix`, `exact` |
-| `limit` | integer | no | Default 25, max 100 |
+| `limit` | integer | no | Deprecated alias for `pageSize`. Default 25, max 500 |
+| `cursor` | string | no | Pagination cursor from a previous response. When provided, search parameters are ignored; `project_path` and `pageSize` may still be provided. |
+| `pageSize` | integer | no | Results per page. Default 25, max 500 |
 | `project_path` | string | no | Project root path |
 
 **Returns**: `{ symbols: [{name, qualifiedName, file, line, kind, language}], totalCount, query }`
@@ -171,8 +175,7 @@ Get complete type inheritance hierarchy (supertypes and subtypes).
 | `file` | string | no | Alternative: project-relative file path. Unlike other read-only navigation tools, `ide_type_hierarchy` file mode does not resolve dependency/library absolute paths or `jar://` URLs. |
 | `line` | integer | no | Required with file |
 | `column` | integer | no | Required with file |
-| `includeLibraries` | boolean | no | Keep dependency/library supertypes and subtypes in results (default true) |
-| `includeTests` | boolean | no | Keep test-source subtypes in results (default true) |
+| `scope` | enum | no | One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 | `project_path` | string | no | Project root path |
 
 **Provide either** `className` **or** `file`+`line`+`column`.
@@ -193,8 +196,7 @@ Build call tree showing who calls a method or what a method calls.
 | `symbol` | string | conditional | Fully qualified symbol reference. Required for symbol-based lookup. |
 | `direction` | enum | yes | `callers` or `callees` |
 | `depth` | integer | no | Recursion depth (default 3, max 5) |
-| `includeLibraries` | boolean | no | Keep dependency/library callers or callees in results (default true) |
-| `includeTests` | boolean | no | Keep test-source callers or callees in results (default true) |
+| `scope` | enum | no | One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 | `project_path` | string | no | Project root path |
 
 **Returns**: `{ element: {name, file, line, column, language}, calls: [{name, file, line, column, language, children: [...]}] }`

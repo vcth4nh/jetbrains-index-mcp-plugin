@@ -78,8 +78,7 @@ interface TypeHierarchyHandler : LanguageHandler<TypeHierarchyData> {
     fun getTypeHierarchy(
         element: PsiElement,
         project: Project,
-        includeLibraries: Boolean = true,
-        includeTests: Boolean = true
+        scope: BuiltInSearchScope = BuiltInSearchScope.PROJECT_FILES
     ): TypeHierarchyData?
 }
 
@@ -99,8 +98,7 @@ interface ImplementationsHandler : LanguageHandler<List<ImplementationData>> {
     fun findImplementations(
         element: PsiElement,
         project: Project,
-        includeLibraries: Boolean = true,
-        includeTests: Boolean = true
+        scope: BuiltInSearchScope = BuiltInSearchScope.PROJECT_FILES
     ): List<ImplementationData>?
 }
 
@@ -124,8 +122,7 @@ interface CallHierarchyHandler : LanguageHandler<CallHierarchyData> {
         project: Project,
         direction: String,
         depth: Int,
-        includeLibraries: Boolean = true,
-        includeTests: Boolean = true
+        scope: BuiltInSearchScope = BuiltInSearchScope.PROJECT_FILES
     ): CallHierarchyData?
 }
 
@@ -140,7 +137,7 @@ interface SymbolSearchHandler : LanguageHandler<List<SymbolData>> {
      *
      * @param project The project context
      * @param pattern The search pattern (supports substring and camelCase matching)
-     * @param includeLibraries Whether to search in library dependencies
+     * @param scope The built-in search scope to honor for this search
      * @param limit Maximum number of results
      * @param matchMode How to match the pattern: "substring" (default, matches anywhere),
      *                  "prefix" (camelCase-aware prefix matching), or "exact" (case-sensitive exact match)
@@ -149,7 +146,7 @@ interface SymbolSearchHandler : LanguageHandler<List<SymbolData>> {
     fun searchSymbols(
         project: Project,
         pattern: String,
-        includeLibraries: Boolean,
+        scope: BuiltInSearchScope = BuiltInSearchScope.PROJECT_FILES,
         limit: Int,
         matchMode: String = "substring"
     ): List<SymbolData>

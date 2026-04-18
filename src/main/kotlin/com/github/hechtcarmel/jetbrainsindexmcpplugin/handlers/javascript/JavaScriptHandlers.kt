@@ -357,14 +357,14 @@ class JavaScriptTypeHierarchyHandler : BaseJavaScriptHandler<TypeHierarchyData>(
     override fun getTypeHierarchy(
         element: PsiElement,
         project: Project,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        scope: BuiltInSearchScope
     ): TypeHierarchyData? {
         val jsClass = findContainingJSClass(element) ?: return null
         LOG.debug("Getting type hierarchy for JS class: ${getName(jsClass)}")
+        val searchScope = createNavigationSearchScope(project, scope)
 
-        val supertypes = getSupertypes(project, jsClass, includeLibraries = includeLibraries, includeTests = includeTests)
-        val subtypes = getSubtypes(project, jsClass, includeLibraries, includeTests)
+        val supertypes = getSupertypes(project, jsClass, searchScope = searchScope)
+        val subtypes = getSubtypes(project, jsClass, searchScope)
 
         LOG.debug("Found ${supertypes.size} supertypes and ${subtypes.size} subtypes")
 
@@ -387,8 +387,7 @@ class JavaScriptTypeHierarchyHandler : BaseJavaScriptHandler<TypeHierarchyData>(
         jsClass: PsiElement,
         visited: MutableSet<String> = mutableSetOf(),
         depth: Int = 0,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<TypeElementData> {
         if (depth > MAX_HIERARCHY_DEPTH) return emptyList()
 
@@ -403,8 +402,8 @@ class JavaScriptTypeHierarchyHandler : BaseJavaScriptHandler<TypeHierarchyData>(
             val superClasses = getSuperClasses(jsClass)
             superClasses?.filterIsInstance<PsiElement>()?.forEach { superClass ->
                 val superName = getQualifiedName(superClass) ?: getName(superClass)
-                if (superName != null && shouldIncludeNavigationElement(project, superClass, includeLibraries, includeTests)) {
-                    val superSupertypes = getSupertypes(project, superClass, visited, depth + 1, includeLibraries, includeTests)
+                if (superName != null && shouldIncludeNavigationElement(searchScope, superClass)) {
+                    val superSupertypes = getSupertypes(project, superClass, visited, depth + 1, searchScope)
                     supertypes.add(TypeElementData(
                         name = superName,
                         qualifiedName = getQualifiedName(superClass),
@@ -424,9 +423,9 @@ class JavaScriptTypeHierarchyHandler : BaseJavaScriptHandler<TypeHierarchyData>(
                 if (
                     ifaceName != null &&
                     ifaceName !in visited &&
-                    shouldIncludeNavigationElement(project, iface, includeLibraries, includeTests)
+                    shouldIncludeNavigationElement(searchScope, iface)
                 ) {
-                    val ifaceSupertypes = getSupertypes(project, iface, visited, depth + 1, includeLibraries, includeTests)
+                    val ifaceSupertypes = getSupertypes(project, iface, visited, depth + 1, searchScope)
                     supertypes.add(TypeElementData(
                         name = ifaceName,
                         qualifiedName = getQualifiedName(iface),
@@ -448,12 +447,11 @@ class JavaScriptTypeHierarchyHandler : BaseJavaScriptHandler<TypeHierarchyData>(
     private fun getSubtypes(
         project: Project,
         jsClass: PsiElement,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<TypeElementData> {
         // Strategy 1: Try JSInheritorsSearch (JavaScript plugin API)
         try {
-            val result = searchUsingJSInheritorsSearch(project, jsClass, includeLibraries, includeTests)
+            val result = searchUsingJSInheritorsSearch(project, jsClass, searchScope)
             if (result.isNotEmpty()) {
                 LOG.debug("Found ${result.size} subtypes via JSInheritorsSearch")
                 return result
@@ -464,7 +462,7 @@ class JavaScriptTypeHierarchyHandler : BaseJavaScriptHandler<TypeHierarchyData>(
 
         // Strategy 2: Try DefinitionsScopedSearch (Platform API)
         try {
-            val result = searchSubtypesUsingDefinitionsScopedSearch(project, jsClass, includeLibraries, includeTests)
+            val result = searchSubtypesUsingDefinitionsScopedSearch(project, jsClass, searchScope)
             if (result.isNotEmpty()) {
                 LOG.debug("Found ${result.size} subtypes via DefinitionsScopedSearch")
                 return result
@@ -480,8 +478,7 @@ class JavaScriptTypeHierarchyHandler : BaseJavaScriptHandler<TypeHierarchyData>(
     private fun searchUsingJSInheritorsSearch(
         project: Project,
         jsClass: PsiElement,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<TypeElementData> {
         val searchClass = Class.forName("com.intellij.lang.javascript.psi.resolve.JSInheritorsSearch")
         val searchMethod = searchClass.getMethod("search", jsClassClass)
@@ -490,7 +487,7 @@ class JavaScriptTypeHierarchyHandler : BaseJavaScriptHandler<TypeHierarchyData>(
         val results = mutableListOf<TypeElementData>()
         val forEachMethod = query.javaClass.getMethod("forEach", Processor::class.java)
         forEachMethod.invoke(query, Processor<Any> { inheritor ->
-            if (inheritor is PsiElement && shouldIncludeNavigationElement(project, inheritor, includeLibraries, includeTests)) {
+            if (inheritor is PsiElement && shouldIncludeNavigationElement(searchScope, inheritor)) {
                 results.add(TypeElementData(
                     name = getQualifiedName(inheritor) ?: getName(inheritor) ?: "unknown",
                     qualifiedName = getQualifiedName(inheritor),
@@ -509,14 +506,12 @@ class JavaScriptTypeHierarchyHandler : BaseJavaScriptHandler<TypeHierarchyData>(
     private fun searchSubtypesUsingDefinitionsScopedSearch(
         project: Project,
         jsClass: PsiElement,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<TypeElementData> {
-        val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
         val results = mutableListOf<TypeElementData>()
 
-        DefinitionsScopedSearch.search(jsClass, scope).forEach(Processor { definition ->
-            if (definition != jsClass && isJSClass(definition) && shouldIncludeNavigationElement(project, definition, includeLibraries, includeTests)) {
+        DefinitionsScopedSearch.search(jsClass, searchScope).forEach(Processor { definition ->
+            if (definition != jsClass && isJSClass(definition) && shouldIncludeNavigationElement(searchScope, definition)) {
                 results.add(TypeElementData(
                     name = getQualifiedName(definition) ?: getName(definition) ?: "unknown",
                     qualifiedName = getQualifiedName(definition),
@@ -549,24 +544,24 @@ class JavaScriptImplementationsHandler : BaseJavaScriptHandler<List<Implementati
     override fun findImplementations(
         element: PsiElement,
         project: Project,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        scope: BuiltInSearchScope
     ): List<ImplementationData>? {
         LOG.debug("Finding implementations for element at ${element.containingFile?.name}")
+        val searchScope = createNavigationSearchScope(project, scope)
 
         val jsFunction = findContainingJSFunction(element)
         if (jsFunction != null) {
             val containingClass = findContainingJSClass(jsFunction)
             if (containingClass != null) {
                 LOG.debug("Finding method implementations for ${getName(jsFunction)}")
-                return findMethodImplementations(project, jsFunction, includeLibraries, includeTests)
+                return findMethodImplementations(project, jsFunction, searchScope)
             }
         }
 
         val jsClass = findContainingJSClass(element)
         if (jsClass != null) {
             LOG.debug("Finding class implementations for ${getName(jsClass)}")
-            return findClassImplementations(project, jsClass, includeLibraries, includeTests)
+            return findClassImplementations(project, jsClass, searchScope)
         }
 
         return null
@@ -575,12 +570,11 @@ class JavaScriptImplementationsHandler : BaseJavaScriptHandler<List<Implementati
     private fun findMethodImplementations(
         project: Project,
         jsFunction: PsiElement,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<ImplementationData> {
         // Strategy 1: Try JSFunctionOverridingSearch
         try {
-            val result = searchUsingJSFunctionOverridingSearch(project, jsFunction, includeLibraries, includeTests)
+            val result = searchUsingJSFunctionOverridingSearch(project, jsFunction, searchScope)
             if (result.isNotEmpty()) {
                 LOG.debug("Found ${result.size} implementations via JSFunctionOverridingSearch")
                 return result
@@ -591,7 +585,7 @@ class JavaScriptImplementationsHandler : BaseJavaScriptHandler<List<Implementati
 
         // Strategy 2: Try DefinitionsScopedSearch (Platform API)
         try {
-            val result = searchImplementationsUsingDefinitionsScopedSearch(project, jsFunction, includeLibraries, includeTests)
+            val result = searchImplementationsUsingDefinitionsScopedSearch(project, jsFunction, searchScope)
             if (result.isNotEmpty()) {
                 LOG.debug("Found ${result.size} implementations via DefinitionsScopedSearch")
                 return result
@@ -607,8 +601,7 @@ class JavaScriptImplementationsHandler : BaseJavaScriptHandler<List<Implementati
     private fun searchUsingJSFunctionOverridingSearch(
         project: Project,
         jsFunction: PsiElement,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<ImplementationData> {
         val searchClass = Class.forName("com.intellij.lang.javascript.psi.resolve.JSFunctionOverridingSearch")
         val searchMethod = searchClass.getMethod("search", jsFunctionClass)
@@ -617,7 +610,7 @@ class JavaScriptImplementationsHandler : BaseJavaScriptHandler<List<Implementati
         val results = mutableListOf<ImplementationData>()
         val forEachMethod = query.javaClass.getMethod("forEach", Processor::class.java)
         forEachMethod.invoke(query, Processor<Any> { overridingMethod ->
-            if (overridingMethod is PsiElement && shouldIncludeNavigationElement(project, overridingMethod, includeLibraries, includeTests)) {
+            if (overridingMethod is PsiElement && shouldIncludeNavigationElement(searchScope, overridingMethod)) {
                 val file = overridingMethod.containingFile?.virtualFile
                 if (file != null) {
                     val containingClass = findContainingJSClass(overridingMethod)
@@ -642,12 +635,11 @@ class JavaScriptImplementationsHandler : BaseJavaScriptHandler<List<Implementati
     private fun findClassImplementations(
         project: Project,
         jsClass: PsiElement,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<ImplementationData> {
         // Strategy 1: Try JSInheritorsSearch
         try {
-            val result = searchClassUsingJSInheritorsSearch(project, jsClass, includeLibraries, includeTests)
+            val result = searchClassUsingJSInheritorsSearch(project, jsClass, searchScope)
             if (result.isNotEmpty()) {
                 LOG.debug("Found ${result.size} class implementations via JSInheritorsSearch")
                 return result
@@ -658,7 +650,7 @@ class JavaScriptImplementationsHandler : BaseJavaScriptHandler<List<Implementati
 
         // Strategy 2: Try DefinitionsScopedSearch (Platform API)
         try {
-            val result = searchImplementationsUsingDefinitionsScopedSearch(project, jsClass, includeLibraries, includeTests)
+            val result = searchImplementationsUsingDefinitionsScopedSearch(project, jsClass, searchScope)
             if (result.isNotEmpty()) {
                 LOG.debug("Found ${result.size} class implementations via DefinitionsScopedSearch")
                 return result
@@ -674,8 +666,7 @@ class JavaScriptImplementationsHandler : BaseJavaScriptHandler<List<Implementati
     private fun searchClassUsingJSInheritorsSearch(
         project: Project,
         jsClass: PsiElement,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<ImplementationData> {
         val searchClass = Class.forName("com.intellij.lang.javascript.psi.resolve.JSInheritorsSearch")
         val searchMethod = searchClass.getMethod("search", jsClassClass)
@@ -684,7 +675,7 @@ class JavaScriptImplementationsHandler : BaseJavaScriptHandler<List<Implementati
         val results = mutableListOf<ImplementationData>()
         val forEachMethod = query.javaClass.getMethod("forEach", Processor::class.java)
         forEachMethod.invoke(query, Processor<Any> { inheritor ->
-            if (inheritor is PsiElement && shouldIncludeNavigationElement(project, inheritor, includeLibraries, includeTests)) {
+            if (inheritor is PsiElement && shouldIncludeNavigationElement(searchScope, inheritor)) {
                 val file = inheritor.containingFile?.virtualFile
                 if (file != null) {
                     results.add(ImplementationData(
@@ -706,14 +697,12 @@ class JavaScriptImplementationsHandler : BaseJavaScriptHandler<List<Implementati
     private fun searchImplementationsUsingDefinitionsScopedSearch(
         project: Project,
         element: PsiElement,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<ImplementationData> {
-        val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
         val results = mutableListOf<ImplementationData>()
 
-        DefinitionsScopedSearch.search(element, scope).forEach(Processor { definition ->
-            if (definition != element && shouldIncludeNavigationElement(project, definition, includeLibraries, includeTests)) {
+        DefinitionsScopedSearch.search(element, searchScope).forEach(Processor { definition ->
+            if (definition != element && shouldIncludeNavigationElement(searchScope, definition)) {
                 val file = definition.containingFile?.virtualFile
                 if (file != null) {
                     val kind = when {
@@ -762,17 +751,17 @@ class JavaScriptCallHierarchyHandler : BaseJavaScriptHandler<CallHierarchyData>(
         project: Project,
         direction: String,
         depth: Int,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        scope: BuiltInSearchScope
     ): CallHierarchyData? {
         val jsFunction = findContainingJSFunction(element) ?: return null
         LOG.debug("Getting call hierarchy for ${getName(jsFunction)}, direction=$direction, depth=$depth")
+        val searchScope = createNavigationSearchScope(project, scope)
 
         val visited = mutableSetOf<String>()
         val calls = if (direction == "callers") {
-            findCallersRecursive(project, jsFunction, depth, visited, includeLibraries = includeLibraries, includeTests = includeTests)
+            findCallersRecursive(project, jsFunction, depth, visited, searchScope = searchScope)
         } else {
-            findCalleesRecursive(project, jsFunction, depth, visited, includeLibraries = includeLibraries, includeTests = includeTests)
+            findCalleesRecursive(project, jsFunction, depth, visited, searchScope = searchScope)
         }
 
         LOG.debug("Found ${calls.size} ${direction}")
@@ -833,8 +822,7 @@ class JavaScriptCallHierarchyHandler : BaseJavaScriptHandler<CallHierarchyData>(
         depth: Int,
         visited: MutableSet<String>,
         stackDepth: Int = 0,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<CallElementData> {
         if (stackDepth > MAX_STACK_DEPTH || depth <= 0) return emptyList()
 
@@ -848,12 +836,11 @@ class JavaScriptCallHierarchyHandler : BaseJavaScriptHandler<CallHierarchyData>(
             methodsToSearch.addAll(findAllSuperMethods(project, jsFunction))
 
             // Use platform ReferencesSearch API with Processor pattern for early termination
-            val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
             val allReferences = mutableListOf<com.intellij.psi.PsiReference>()
 
             for (methodToSearch in methodsToSearch) {
                 if (allReferences.size >= MAX_RESULTS_PER_LEVEL * 2) break
-                ReferencesSearch.search(methodToSearch, scope).forEach(Processor { reference ->
+                ReferencesSearch.search(methodToSearch, searchScope).forEach(Processor { reference ->
                     allReferences.add(reference)
                     allReferences.size < MAX_RESULTS_PER_LEVEL * 2
                 })
@@ -868,9 +855,9 @@ class JavaScriptCallHierarchyHandler : BaseJavaScriptHandler<CallHierarchyData>(
                 val containingFunction = findContainingCallable(refElement)
                 if (containingFunction != null && containingFunction != jsFunction && !methodsToSearch.contains(containingFunction)) {
                     val children = if (depth > 1) {
-                        findCallersRecursive(project, containingFunction, depth - 1, visited, stackDepth + 1, includeLibraries, includeTests)
+                        findCallersRecursive(project, containingFunction, depth - 1, visited, stackDepth + 1, searchScope)
                     } else null
-                    if (shouldIncludeNavigationElement(project, containingFunction, includeLibraries, includeTests)) {
+                    if (shouldIncludeNavigationElement(searchScope, containingFunction)) {
                         results.add(createCallElement(project, containingFunction, children))
                     } else if (children != null) {
                         results.addAll(children)
@@ -906,8 +893,7 @@ class JavaScriptCallHierarchyHandler : BaseJavaScriptHandler<CallHierarchyData>(
         depth: Int,
         visited: MutableSet<String>,
         stackDepth: Int = 0,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<CallElementData> {
         if (stackDepth > MAX_STACK_DEPTH || depth <= 0) return emptyList()
 
@@ -925,9 +911,9 @@ class JavaScriptCallHierarchyHandler : BaseJavaScriptHandler<CallHierarchyData>(
                 val calledFunction = resolveCallExpression(callExpr)
                 if (calledFunction != null && isJSFunction(calledFunction)) {
                     val children = if (depth > 1) {
-                        findCalleesRecursive(project, calledFunction, depth - 1, visited, stackDepth + 1, includeLibraries, includeTests)
+                        findCalleesRecursive(project, calledFunction, depth - 1, visited, stackDepth + 1, searchScope)
                     } else null
-                    if (shouldIncludeNavigationElement(project, calledFunction, includeLibraries, includeTests)) {
+                    if (shouldIncludeNavigationElement(searchScope, calledFunction)) {
                         val element = createCallElement(project, calledFunction, children)
                         if (callees.none { it.name == element.name && it.file == element.file }) {
                             callees.add(element)
@@ -1004,17 +990,17 @@ class JavaScriptSymbolSearchHandler : BaseJavaScriptHandler<List<SymbolData>>(),
     override fun searchSymbols(
         project: Project,
         pattern: String,
-        includeLibraries: Boolean,
+        scope: BuiltInSearchScope,
         limit: Int,
         matchMode: String
     ): List<SymbolData> {
-        val scope = createFilteredScope(project, includeLibraries)
+        val searchScope = BuiltInSearchScopeResolver.resolveGlobalScope(project, scope)
 
         // Use the optimized platform-based search with language filter for JavaScript/TypeScript
         return OptimizedSymbolSearch.search(
             project = project,
             pattern = pattern,
-            scope = scope,
+            scope = searchScope,
             limit = limit,
             languageFilter = setOf("JavaScript", "TypeScript"),
             matchMode = matchMode

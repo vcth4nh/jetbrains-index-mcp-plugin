@@ -3,6 +3,7 @@ package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ParamNames
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.SchemaConstants
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ToolNames
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.editor.GetActiveFileTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.editor.OpenFileTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.intelligence.GetDiagnosticsTool
@@ -37,6 +38,16 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 class ToolsUnitTest : TestCase() {
+    private fun assertHasScopeAndNoLegacyFilters(properties: kotlinx.serialization.json.JsonObject?) {
+        val scopeProperty = properties?.get(ParamNames.SCOPE)?.jsonObject
+        assertNotNull("Should have scope property", scopeProperty)
+        assertEquals(
+            BuiltInSearchScope.supportedWireValues(),
+            scopeProperty?.get("enum")?.jsonArray?.map { it.jsonPrimitive.content }
+        )
+        assertNull("Should not have includeLibraries property", properties?.get("includeLibraries"))
+        assertNull("Should not have includeTests property", properties?.get("includeTests"))
+    }
 
     override fun setUp() {
         super.setUp()
@@ -134,8 +145,7 @@ class ToolsUnitTest : TestCase() {
         assertNotNull("Should have column property", properties?.get(ParamNames.COLUMN))
         assertNotNull("Should have language property", properties?.get(ParamNames.LANGUAGE))
         assertNotNull("Should have symbol property", properties?.get(ParamNames.SYMBOL))
-        assertNotNull("Should have includeLibraries property", properties?.get(ParamNames.INCLUDE_LIBRARIES))
-        assertNotNull("Should have includeTests property", properties?.get(ParamNames.INCLUDE_TESTS))
+        assertHasScopeAndNoLegacyFilters(properties)
         assertNotNull("Should have cursor property", properties?.get("cursor"))
         assertNotNull("Should have pageSize property", properties?.get("pageSize"))
 
@@ -182,8 +192,7 @@ class ToolsUnitTest : TestCase() {
         assertNotNull("Should have line property", properties?.get(ParamNames.LINE))
         assertNotNull("Should have column property", properties?.get(ParamNames.COLUMN))
         assertNotNull("Should have className property", properties?.get(ParamNames.CLASS_NAME))
-        assertNotNull("Should have includeLibraries property", properties?.get(ParamNames.INCLUDE_LIBRARIES))
-        assertNotNull("Should have includeTests property", properties?.get(ParamNames.INCLUDE_TESTS))
+        assertHasScopeAndNoLegacyFilters(properties)
     }
 
     fun testCallHierarchyToolSchema() {
@@ -201,8 +210,7 @@ class ToolsUnitTest : TestCase() {
         assertNotNull("Should have direction property", properties?.get(ParamNames.DIRECTION))
         assertNotNull("Should have language property", properties?.get(ParamNames.LANGUAGE))
         assertNotNull("Should have symbol property", properties?.get(ParamNames.SYMBOL))
-        assertNotNull("Should have includeLibraries property", properties?.get(ParamNames.INCLUDE_LIBRARIES))
-        assertNotNull("Should have includeTests property", properties?.get(ParamNames.INCLUDE_TESTS))
+        assertHasScopeAndNoLegacyFilters(properties)
     }
 
     fun testFindImplementationsToolSchema() {
@@ -222,13 +230,36 @@ class ToolsUnitTest : TestCase() {
         assertNotNull("Should have column property", properties?.get(ParamNames.COLUMN))
         assertNotNull("Should have language property", properties?.get(ParamNames.LANGUAGE))
         assertNotNull("Should have symbol property", properties?.get(ParamNames.SYMBOL))
-        assertNotNull("Should have includeLibraries property", properties?.get(ParamNames.INCLUDE_LIBRARIES))
-        assertNotNull("Should have includeTests property", properties?.get(ParamNames.INCLUDE_TESTS))
+        assertHasScopeAndNoLegacyFilters(properties)
         assertNotNull("Should have cursor property", properties?.get("cursor"))
         assertNotNull("Should have pageSize property", properties?.get("pageSize"))
 
         assertNull("Should not have anyOf (incompatible with Anthropic API)", schema["anyOf"])
         assertNull("Should not have required array (all params optional for pagination)", schema[SchemaConstants.REQUIRED])
+    }
+
+    fun testFindClassToolSchemaUsesScope() {
+        val tool = FindClassTool()
+        val properties = tool.inputSchema[SchemaConstants.PROPERTIES]?.jsonObject
+
+        assertNotNull("Should have query property", properties?.get(ParamNames.QUERY))
+        assertHasScopeAndNoLegacyFilters(properties)
+    }
+
+    fun testFindFileToolSchemaUsesScope() {
+        val tool = FindFileTool()
+        val properties = tool.inputSchema[SchemaConstants.PROPERTIES]?.jsonObject
+
+        assertNotNull("Should have query property", properties?.get(ParamNames.QUERY))
+        assertHasScopeAndNoLegacyFilters(properties)
+    }
+
+    fun testFindSymbolToolSchemaUsesScope() {
+        val tool = FindSymbolTool()
+        val properties = tool.inputSchema[SchemaConstants.PROPERTIES]?.jsonObject
+
+        assertNotNull("Should have query property", properties?.get(ParamNames.QUERY))
+        assertHasScopeAndNoLegacyFilters(properties)
     }
 
     fun testGetDiagnosticsToolSchema() {
@@ -485,7 +516,7 @@ class ToolsUnitTest : TestCase() {
 
         assertNotNull("Should have project_path property", properties?.get(ParamNames.PROJECT_PATH))
         assertNotNull("Should have query property", properties?.get(ParamNames.QUERY))
-        assertNotNull("Should have includeLibraries property", properties?.get(ParamNames.INCLUDE_LIBRARIES))
+        assertHasScopeAndNoLegacyFilters(properties)
         assertNotNull("Should have limit property", properties?.get(ParamNames.LIMIT))
         assertNotNull("Should have cursor property", properties?.get("cursor"))
         assertNotNull("Should have pageSize property", properties?.get("pageSize"))
@@ -640,7 +671,7 @@ class ToolsUnitTest : TestCase() {
 
         assertNotNull("Should have project_path property", properties?.get(ParamNames.PROJECT_PATH))
         assertNotNull("Should have query property", properties?.get(ParamNames.QUERY))
-        assertNotNull("Should have includeLibraries property", properties?.get(ParamNames.INCLUDE_LIBRARIES))
+        assertHasScopeAndNoLegacyFilters(properties)
         assertNotNull("Should have limit property", properties?.get(ParamNames.LIMIT))
         assertNotNull("Should have cursor property", properties?.get("cursor"))
         assertNotNull("Should have pageSize property", properties?.get("pageSize"))
@@ -663,7 +694,7 @@ class ToolsUnitTest : TestCase() {
 
         assertNotNull("Should have project_path property", properties?.get(ParamNames.PROJECT_PATH))
         assertNotNull("Should have query property", properties?.get(ParamNames.QUERY))
-        assertNotNull("Should have includeLibraries property", properties?.get(ParamNames.INCLUDE_LIBRARIES))
+        assertHasScopeAndNoLegacyFilters(properties)
         assertNotNull("Should have limit property", properties?.get(ParamNames.LIMIT))
         assertNotNull("Should have cursor property", properties?.get("cursor"))
         assertNotNull("Should have pageSize property", properties?.get("pageSize"))

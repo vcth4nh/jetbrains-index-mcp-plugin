@@ -143,8 +143,7 @@ Finds all references to a symbol across the entire project using IntelliJ's sema
 | `column` | integer | Conditional | 1-based column number. Required for position-based lookup. |
 | `language` | string | Conditional | Language of the symbol (e.g., `"Java"`). Required for symbol-based lookup. |
 | `symbol` | string | Conditional | Fully qualified symbol reference. Required for symbol-based lookup. |
-| `includeLibraries` | boolean | No | Include references from dependency/library code (default: `true`) |
-| `includeTests` | boolean | No | Include references from test sources (default: `true`) |
+| `scope` | string | No | Built-in search scope. One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 | `maxResults` | integer | No | Deprecated alias for `pageSize` (default: 100, max: 500) |
 | `cursor` | string | No | Pagination cursor from a previous response |
 | `pageSize` | integer | No | Number of results per page (default: 100, max: 500) |
@@ -174,7 +173,8 @@ Finds all references to a symbol across the entire project using IntelliJ's sema
     "name": "ide_find_references",
     "arguments": {
       "language": "Java",
-      "symbol": "com.example.UserService#findUser(String)"
+      "symbol": "com.example.UserService#findUser(String)",
+      "scope": "project_and_libraries"
     }
   }
 }
@@ -311,10 +311,12 @@ Searches for classes and interfaces by name using the IDE's class index.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `query` | string | Yes | Search pattern |
-| `includeLibraries` | boolean | No | Include classes from dependencies (default: false) |
+| `scope` | string | No | Built-in search scope. One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 | `language` | string | No | Filter by language (e.g., `"Kotlin"`, `"Java"`, `"Python"`). Case-insensitive |
 | `matchMode` | string | No | `"substring"` (default), `"prefix"`, or `"exact"` |
-| `limit` | integer | No | Maximum results (default: 25, max: 100) |
+| `limit` | integer | No | Deprecated alias for `pageSize` (default: 25, max: 500) |
+| `cursor` | string | No | Pagination cursor from a previous response |
+| `pageSize` | integer | No | Number of results per page (default: 25, max: 500) |
 
 **Example Request:**
 
@@ -325,7 +327,8 @@ Searches for classes and interfaces by name using the IDE's class index.
     "name": "ide_find_class",
     "arguments": {
       "query": "UserService",
-      "language": "Kotlin"
+      "language": "Kotlin",
+      "scope": "project_files"
     }
   }
 }
@@ -369,8 +372,10 @@ Searches for files by name using the IDE's file index.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `query` | string | Yes | File name pattern |
-| `includeLibraries` | boolean | No | Include files from dependencies (default: false) |
-| `limit` | integer | No | Maximum results (default: 25, max: 100) |
+| `scope` | string | No | Built-in search scope. One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
+| `limit` | integer | No | Deprecated alias for `pageSize` (default: 25, max: 500) |
+| `cursor` | string | No | Pagination cursor from a previous response |
+| `pageSize` | integer | No | Number of results per page (default: 25, max: 500) |
 
 **Example Request:**
 
@@ -380,7 +385,8 @@ Searches for files by name using the IDE's file index.
   "params": {
     "name": "ide_find_file",
     "arguments": {
-      "query": "UserService"
+      "query": "UserService",
+      "scope": "project_and_libraries"
     }
   }
 }
@@ -1095,8 +1101,7 @@ Retrieves the complete type hierarchy for a class or interface.
 | `line` | integer | No* | 1-based line number |
 | `column` | integer | No* | 1-based column number |
 | `className` | string | No* | Fully qualified class name (alternative to position) |
-| `includeLibraries` | boolean | No | Include dependency/library hierarchy nodes (default: `true`) |
-| `includeTests` | boolean | No | Include test-source subtype nodes (default: `true`) |
+| `scope` | string | No | Built-in search scope. One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 
 *Either `file`/`line`/`column` OR `className` must be provided.
 
@@ -1124,7 +1129,8 @@ Retrieves the complete type hierarchy for a class or interface.
   "params": {
     "name": "ide_type_hierarchy",
     "arguments": {
-      "className": "java.util.ArrayList"
+      "className": "java.util.ArrayList",
+      "scope": "project_and_libraries"
     }
   }
 }
@@ -1212,8 +1218,7 @@ Analyzes method call relationships to find callers or callees.
 | `symbol` | string | Conditional | Fully qualified symbol reference. Required for symbol-based lookup. |
 | `direction` | string | Yes | `"callers"` or `"callees"` |
 | `depth` | integer | No | How deep to traverse (default: 3, max: 5) |
-| `includeLibraries` | boolean | No | Include dependency/library callers or callees (default: `true`) |
-| `includeTests` | boolean | No | Include test-source callers or callees (default: `true`) |
+| `scope` | string | No | Built-in search scope. One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 
 **Example Request (position-based):**
 
@@ -1242,7 +1247,8 @@ Analyzes method call relationships to find callers or callees.
     "arguments": {
       "language": "Java",
       "symbol": "com.example.UserService#validateUser(String)",
-      "direction": "callers"
+      "direction": "callers",
+      "scope": "project_and_libraries"
     }
   }
 }
@@ -1302,8 +1308,7 @@ Finds all concrete implementations of an interface, abstract class, or abstract 
 | `column` | integer | Conditional | 1-based column number. Required for position-based lookup. |
 | `language` | string | Conditional | Language of the symbol (e.g., `"Java"`). Required for symbol-based lookup. |
 | `symbol` | string | Conditional | Fully qualified symbol reference. Required for symbol-based lookup. |
-| `includeLibraries` | boolean | No | Include dependency/library implementations (default: `true`) |
-| `includeTests` | boolean | No | Include test-source implementations (default: `true`) |
+| `scope` | string | No | Built-in search scope. One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 | `cursor` | string | No | Pagination cursor from a previous response |
 | `pageSize` | integer | No | Number of results per page (default: 100, max: 500) |
 
@@ -1332,7 +1337,8 @@ Finds all concrete implementations of an interface, abstract class, or abstract 
     "name": "ide_find_implementations",
     "arguments": {
       "language": "Java",
-      "symbol": "com.example.Repository"
+      "symbol": "com.example.Repository",
+      "scope": "project_test_files"
     }
   }
 }
@@ -1391,10 +1397,12 @@ Searches for code symbols (classes, interfaces, methods, fields) by name using t
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `query` | string | Yes | Search pattern (supports substring and camelCase matching) |
-| `includeLibraries` | boolean | No | Include symbols from library dependencies (default: false) |
+| `scope` | string | No | Built-in search scope. One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 | `language` | string | No | Filter by language (e.g., `"Kotlin"`, `"Java"`). Case-insensitive |
 | `matchMode` | string | No | `"substring"` (default), `"prefix"`, or `"exact"` |
-| `limit` | integer | No | Maximum results to return (default: 25, max: 100) |
+| `limit` | integer | No | Deprecated alias for `pageSize` (default: 25, max: 500) |
+| `cursor` | string | No | Pagination cursor from a previous response |
+| `pageSize` | integer | No | Number of results per page (default: 25, max: 500) |
 
 **Example Request:**
 
@@ -1419,8 +1427,8 @@ Searches for code symbols (classes, interfaces, methods, fields) by name using t
     "name": "ide_find_symbol",
     "arguments": {
       "query": "USvc",
-      "includeLibraries": true,
-      "limit": 50
+      "scope": "project_and_libraries",
+      "pageSize": 50
     }
   }
 }

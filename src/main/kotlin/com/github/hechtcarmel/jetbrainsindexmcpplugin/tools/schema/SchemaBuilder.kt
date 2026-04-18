@@ -2,6 +2,7 @@ package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema
 
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ParamNames
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.SchemaConstants
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageHandlerRegistry
 import kotlinx.serialization.json.*
 
@@ -97,6 +98,15 @@ class SchemaBuilder private constructor() {
             putJsonArray("enum") { values.forEach { add(JsonPrimitive(it)) } }
         }
         if (required) requiredFields.add(name)
+    }
+
+    fun scopeProperty(description: String, required: Boolean = false) = apply {
+        enumProperty(
+            name = ParamNames.SCOPE,
+            description = description,
+            values = BuiltInSearchScope.supportedWireValues(),
+            required = required
+        )
     }
 
     fun property(name: String, schema: JsonObject, required: Boolean = false) = apply {

@@ -146,7 +146,7 @@ object OptimizedSymbolSearch {
                     { item ->
                         if (results.size >= limit) return@processElementsWithName false
 
-                        val symbolData = convertToSymbolData(item, project, languageFilter)
+                        val symbolData = convertToSymbolData(item, project, scope, languageFilter)
                         if (symbolData != null) {
                             val key = "${symbolData.file}:${symbolData.line}:${symbolData.column}:${symbolData.name}"
                             if (key !in seen) {
@@ -171,7 +171,7 @@ object OptimizedSymbolSearch {
                 for (item in items) {
                     if (results.size >= limit) break
 
-                    val symbolData = convertToSymbolData(item, project, languageFilter)
+                    val symbolData = convertToSymbolData(item, project, scope, languageFilter)
                     if (symbolData != null) {
                         val key = "${symbolData.file}:${symbolData.line}:${symbolData.column}:${symbolData.name}"
                         if (key !in seen) {
@@ -190,6 +190,7 @@ object OptimizedSymbolSearch {
     private fun convertToSymbolData(
         item: NavigationItem,
         project: Project,
+        scope: GlobalSearchScope,
         languageFilter: Set<String>?
     ): SymbolData? {
         val element = when (item) {
@@ -214,6 +215,7 @@ object OptimizedSymbolSearch {
         }
 
         val file = targetElement.containingFile?.virtualFile ?: return null
+        if (!scope.contains(file)) return null
         val relativePath = ProjectUtils.getToolFilePath(project, file)
 
         if (isExcludedPath(relativePath)) return null

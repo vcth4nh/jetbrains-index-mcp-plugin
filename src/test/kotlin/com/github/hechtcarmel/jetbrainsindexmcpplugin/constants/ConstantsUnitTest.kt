@@ -121,12 +121,11 @@ class ConstantsUnitTest : TestCase() {
     fun testParamNamesNavigation() {
         assertEquals("className", ParamNames.CLASS_NAME)
         assertEquals("direction", ParamNames.DIRECTION)
-        assertEquals("includeTests", ParamNames.INCLUDE_TESTS)
+        assertEquals("scope", ParamNames.SCOPE)
     }
 
     fun testParamNamesSymbolSearch() {
         assertEquals("query", ParamNames.QUERY)
-        assertEquals("includeLibraries", ParamNames.INCLUDE_LIBRARIES)
         assertEquals("limit", ParamNames.LIMIT)
     }
 

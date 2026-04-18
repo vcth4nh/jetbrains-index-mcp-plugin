@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+## [4.13.0] - 2026-04-18
+### Changed
+- **Breaking: covered navigation and adjacent search tools now use built-in `scope` instead of `includeLibraries` / `includeTests`** — `ide_find_references`, `ide_find_implementations`, `ide_call_hierarchy`, `ide_type_hierarchy`, `ide_find_class`, `ide_find_file`, and `ide_find_symbol` now accept `scope` with the built-in values `project_files`, `project_and_libraries`, `project_production_files`, and `project_test_files`. The old boolean parameters are no longer part of the public contract.
+
+### Fixed
+- **Covered search/navigation tools now honor the requested built-in scope end-to-end** — library, production-only, and test-only searches now use explicit scoped IntelliJ searches instead of collapsing back to legacy boolean behavior in tool, handler, or contributor fallback paths.
+
 ## [4.12.0] - 2026-04-18
 ### Added
 - **Optional library/test filters for navigation tools** — `ide_find_implementations`, `ide_call_hierarchy`, `ide_type_hierarchy`, and `ide_find_references` now accept `includeLibraries` and `includeTests`, both defaulting to `true`, so agents can suppress dependency noise and test-only results when narrowing navigation queries. Addresses [#138](https://github.com/hechtcarmel/jetbrains-index-mcp-plugin/issues/138).

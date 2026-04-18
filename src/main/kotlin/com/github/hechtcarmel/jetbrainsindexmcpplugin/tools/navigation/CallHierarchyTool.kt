@@ -2,6 +2,8 @@ package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation
 
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ErrorMessages
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ParamNames
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScopeResolver
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.CallElementData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageHandlerRegistry
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
@@ -12,9 +14,13 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 
 /**
  * Tool for analyzing method call relationships across multiple languages.
@@ -40,14 +46,10 @@ class CallHierarchyTool : AbstractMcpTool() {
         - file + line + column: position-based lookup
         - language + symbol: fully qualified symbol reference (currently supported for Java only)
 
-        Filters:
-        - includeLibraries (optional, default: true): keep dependency/library callers or callees in results
-        - includeTests (optional, default: true): keep test-source callers or callees in results
-
-        Parameters: direction (required): "callers" or "callees". depth (optional, default: 3, max: 5).
+        Parameters: direction (required): "callers" or "callees". depth (optional, default: 3, max: 5). scope (optional, default: "project_files"; supported: project_files, project_and_libraries, project_production_files, project_test_files).
 
         Example: {"file": "src/Service.java", "line": 42, "column": 10, "direction": "callers"}
-        Example: {"language": "Java", "symbol": "com.example.Service#processRequest(String)", "direction": "callers"}
+        Example: {"language": "Java", "symbol": "com.example.Service#processRequest(String)", "direction": "callers", "scope": "project_and_libraries"}
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
@@ -57,8 +59,7 @@ class CallHierarchyTool : AbstractMcpTool() {
         .languageAndSymbol(required = false)
         .enumProperty("direction", "Direction: 'callers' (methods that call this method) or 'callees' (methods this method calls)", listOf("callers", "callees"), required = true)
         .intProperty("depth", "How many levels deep to traverse the call hierarchy (default: 3, max: 5)")
-        .booleanProperty(ParamNames.INCLUDE_LIBRARIES, "Include callers/callees from dependency/library code. Default: true.")
-        .booleanProperty(ParamNames.INCLUDE_TESTS, "Include callers/callees from test sources. Default: true.")
+        .scopeProperty("Search scope. Default: project_files.")
         .build()
 
     companion object {
@@ -70,9 +71,14 @@ class CallHierarchyTool : AbstractMcpTool() {
         val direction = arguments["direction"]?.jsonPrimitive?.content
             ?: return createErrorResult("Missing required parameter: direction")
         val depth = (arguments["depth"]?.jsonPrimitive?.int ?: DEFAULT_DEPTH).coerceIn(1, MAX_DEPTH)
-        val includeLibraries = arguments[ParamNames.INCLUDE_LIBRARIES]?.jsonPrimitive?.boolean ?: true
-        val includeTests = arguments[ParamNames.INCLUDE_TESTS]?.jsonPrimitive?.boolean ?: true
-
+        val rawScope = rawScopeValue(arguments[ParamNames.SCOPE])
+        val scope = try {
+            BuiltInSearchScopeResolver.parse(arguments, BuiltInSearchScope.PROJECT_FILES)
+        } catch (_: IllegalArgumentException) {
+            return createInvalidScopeError(rawScope)
+        } catch (_: IllegalStateException) {
+            return createInvalidScopeError(rawScope)
+        }
         if (direction !in listOf("callers", "callees")) {
             return createErrorResult("direction must be 'callers' or 'callees'")
         }
@@ -97,7 +103,7 @@ class CallHierarchyTool : AbstractMcpTool() {
 
             ProgressManager.checkCanceled() // Allow cancellation before heavy operation
 
-            val hierarchyData = handler.getCallHierarchy(element, project, direction, depth, includeLibraries, includeTests)
+            val hierarchyData = handler.getCallHierarchy(element, project, direction, depth, scope)
             if (hierarchyData == null) {
                 val isSymbolMode = arguments[ParamNames.LANGUAGE] != null
                 return@suspendingReadAction createErrorResult(
@@ -113,6 +119,22 @@ class CallHierarchyTool : AbstractMcpTool() {
             ))
         }
     }
+
+    private fun rawScopeValue(scopeElement: JsonElement?): String = when (scopeElement) {
+        null -> ""
+        is JsonPrimitive -> scopeElement.content
+        else -> scopeElement.toString()
+    }
+
+    private fun createInvalidScopeError(provided: String): ToolCallResult =
+        createErrorResult(buildJsonObject {
+            put("error", JsonPrimitive("invalid_scope"))
+            put("parameter", JsonPrimitive(ParamNames.SCOPE))
+            put("provided", JsonPrimitive(provided))
+            put("supportedValues", buildJsonArray {
+                BuiltInSearchScope.supportedWireValues().forEach { add(JsonPrimitive(it)) }
+            })
+        }.toString())
 
     /**
      * Converts handler CallElementData to tool CallElement.

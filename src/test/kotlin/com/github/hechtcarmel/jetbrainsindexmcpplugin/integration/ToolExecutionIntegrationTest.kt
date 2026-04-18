@@ -229,16 +229,29 @@ class ToolExecutionIntegrationTest : BasePlatformTestCase() {
         DumbService.getInstance(project).waitForSmartMode()
 
         val tool = FindFileTool()
+        val projectOnlyResult = tool.execute(project, buildJsonObject {
+            put("query", "$className.java")
+            put("scope", "project_files")
+        })
+
+        assertFalse("Project-only file search should succeed", projectOnlyResult.isError)
+        val projectOnlyContent = projectOnlyResult.content.first() as ContentBlock.Text
+        val projectOnlyMatches = json.decodeFromString<FindFileResult>(projectOnlyContent.text)
+        assertNull(
+            "Library file should not be returned when scope excludes libraries",
+            projectOnlyMatches.files.firstOrNull { it.name == "$className.java" }
+        )
+
         val result = tool.execute(project, buildJsonObject {
             put("query", "$className.java")
-            put("includeLibraries", true)
+            put("scope", "project_and_libraries")
         })
 
         assertFalse("Library file search should succeed", result.isError)
         val content = result.content.first() as ContentBlock.Text
         val findFile = json.decodeFromString<FindFileResult>(content.text)
         val match = findFile.files.firstOrNull { it.name == "$className.java" }
-        assertNotNull("Library file should be returned when includeLibraries=true", match)
+        assertNotNull("Library file should be returned when scope includes libraries", match)
         assertEquals(
             "External library paths should remain absolute",
             libraryFile.toString().replace('\\', '/'),

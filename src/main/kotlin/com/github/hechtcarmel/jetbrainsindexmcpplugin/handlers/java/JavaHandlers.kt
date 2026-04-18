@@ -338,15 +338,15 @@ class JavaTypeHierarchyHandler : BaseJavaHandler<TypeHierarchyData>(), TypeHiera
     override fun getTypeHierarchy(
         element: PsiElement,
         project: Project,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        scope: BuiltInSearchScope
     ): TypeHierarchyData? {
         // Use reference-aware resolution: if cursor is on a type reference,
         // resolve to the actual class being referenced
         val psiClass = resolveClass(element) ?: return null
 
-        val supertypes = getSupertypes(project, psiClass, includeLibraries = includeLibraries, includeTests = includeTests)
-        val subtypes = getSubtypes(project, psiClass, includeLibraries, includeTests)
+        val searchScope = createNavigationSearchScope(project, scope)
+        val supertypes = getSupertypes(project, psiClass, searchScope = searchScope)
+        val subtypes = getSubtypes(project, psiClass, searchScope)
 
         // Detect language from the navigation element (original source), not the light class wrapper.
         // Light classes for Kotlin report language as "JAVA", but navigationElement preserves the original language.
@@ -371,8 +371,7 @@ class JavaTypeHierarchyHandler : BaseJavaHandler<TypeHierarchyData>(), TypeHiera
         psiClass: PsiClass,
         visited: MutableSet<String> = mutableSetOf(),
         depth: Int = 0,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<TypeElementData> {
         if (depth > MAX_HIERARCHY_DEPTH) return emptyList()
 
@@ -385,14 +384,13 @@ class JavaTypeHierarchyHandler : BaseJavaHandler<TypeHierarchyData>(), TypeHiera
         // Try resolved superclass first
         val superClass = psiClass.superClass
         if (superClass != null && superClass.qualifiedName != "java.lang.Object") {
-            if (shouldIncludeNavigationElement(project, superClass, includeLibraries, includeTests)) {
+            if (shouldIncludeNavigationElement(searchScope, superClass)) {
                 val superSupertypes = getSupertypes(
                     project,
                     superClass,
                     visited,
                     depth + 1,
-                    includeLibraries,
-                    includeTests
+                    searchScope
                 )
                 supertypes.add(TypeElementData(
                     name = superClass.qualifiedName ?: superClass.name ?: "unknown",
@@ -410,9 +408,9 @@ class JavaTypeHierarchyHandler : BaseJavaHandler<TypeHierarchyData>(), TypeHiera
                 val resolved = ref.resolve() as? PsiClass
                 if (resolved != null &&
                     resolved.qualifiedName != "java.lang.Object" &&
-                    shouldIncludeNavigationElement(project, resolved, includeLibraries, includeTests)
+                    shouldIncludeNavigationElement(searchScope, resolved)
                 ) {
-                    val superSupertypes = getSupertypes(project, resolved, visited, depth + 1, includeLibraries, includeTests)
+                    val superSupertypes = getSupertypes(project, resolved, visited, depth + 1, searchScope)
                     supertypes.add(TypeElementData(
                         name = resolved.qualifiedName ?: resolved.name ?: "unknown",
                         qualifiedName = resolved.qualifiedName,
@@ -443,8 +441,8 @@ class JavaTypeHierarchyHandler : BaseJavaHandler<TypeHierarchyData>(), TypeHiera
         val interfaces = psiClass.interfaces
         if (interfaces.isNotEmpty()) {
             for (iface in interfaces) {
-                if (shouldIncludeNavigationElement(project, iface, includeLibraries, includeTests)) {
-                    val ifaceSupertypes = getSupertypes(project, iface, visited, depth + 1, includeLibraries, includeTests)
+                if (shouldIncludeNavigationElement(searchScope, iface)) {
+                    val ifaceSupertypes = getSupertypes(project, iface, visited, depth + 1, searchScope)
                     supertypes.add(TypeElementData(
                         name = iface.qualifiedName ?: iface.name ?: "unknown",
                         qualifiedName = iface.qualifiedName,
@@ -460,8 +458,8 @@ class JavaTypeHierarchyHandler : BaseJavaHandler<TypeHierarchyData>(), TypeHiera
             // Fallback: check unresolved implements list (when type resolution fails)
             psiClass.implementsList?.referenceElements?.forEach { ref ->
                 val resolved = ref.resolve() as? PsiClass
-                if (resolved != null && shouldIncludeNavigationElement(project, resolved, includeLibraries, includeTests)) {
-                    val ifaceSupertypes = getSupertypes(project, resolved, visited, depth + 1, includeLibraries, includeTests)
+                if (resolved != null && shouldIncludeNavigationElement(searchScope, resolved)) {
+                    val ifaceSupertypes = getSupertypes(project, resolved, visited, depth + 1, searchScope)
                     supertypes.add(TypeElementData(
                         name = resolved.qualifiedName ?: resolved.name ?: "unknown",
                         qualifiedName = resolved.qualifiedName,
@@ -492,14 +490,12 @@ class JavaTypeHierarchyHandler : BaseJavaHandler<TypeHierarchyData>(), TypeHiera
     private fun getSubtypes(
         project: Project,
         psiClass: PsiClass,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<TypeElementData> {
         val results = mutableListOf<TypeElementData>()
-        val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
         try {
-            ClassInheritorsSearch.search(psiClass, scope, true).forEach(Processor { subClass ->
-                if (shouldIncludeNavigationElement(project, subClass, includeLibraries, includeTests)) {
+            ClassInheritorsSearch.search(psiClass, searchScope, true).forEach(Processor { subClass ->
+                if (shouldIncludeNavigationElement(searchScope, subClass)) {
                     results.add(TypeElementData(
                         name = subClass.qualifiedName ?: subClass.name ?: "unknown",
                         qualifiedName = subClass.qualifiedName,
@@ -534,20 +530,19 @@ class JavaImplementationsHandler : BaseJavaHandler<List<ImplementationData>>(), 
     override fun findImplementations(
         element: PsiElement,
         project: Project,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        scope: BuiltInSearchScope
     ): List<ImplementationData>? {
         // Use reference-aware resolution: if cursor is on a method call/reference,
         // resolve to the actual method being referenced, not the containing method
         val method = resolveMethod(element)
         if (method != null) {
-            return findMethodImplementations(project, method, includeLibraries, includeTests)
+            return findMethodImplementations(project, method, createNavigationSearchScope(project, scope))
         }
 
         // Use reference-aware resolution for classes too
         val psiClass = resolveClass(element)
         if (psiClass != null) {
-            return findClassImplementations(project, psiClass, includeLibraries, includeTests)
+            return findClassImplementations(project, psiClass, createNavigationSearchScope(project, scope))
         }
 
         return null
@@ -556,15 +551,13 @@ class JavaImplementationsHandler : BaseJavaHandler<List<ImplementationData>>(), 
     private fun findMethodImplementations(
         project: Project,
         method: PsiMethod,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<ImplementationData> {
         val results = mutableListOf<ImplementationData>()
-        val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
         try {
-            OverridingMethodsSearch.search(method, scope, true).forEach(Processor { overridingMethod ->
+            OverridingMethodsSearch.search(method, searchScope, true).forEach(Processor { overridingMethod ->
                 val file = overridingMethod.containingFile?.virtualFile
-                if (file != null && shouldIncludeNavigationElement(project, overridingMethod, includeLibraries, includeTests)) {
+                if (file != null && shouldIncludeNavigationElement(searchScope, overridingMethod)) {
                     results.add(ImplementationData(
                         name = "${overridingMethod.containingClass?.name}.${overridingMethod.name}",
                         file = getRelativePath(project, file),
@@ -585,15 +578,13 @@ class JavaImplementationsHandler : BaseJavaHandler<List<ImplementationData>>(), 
     private fun findClassImplementations(
         project: Project,
         psiClass: PsiClass,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<ImplementationData> {
         val results = mutableListOf<ImplementationData>()
-        val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
         try {
-            ClassInheritorsSearch.search(psiClass, scope, true).forEach(Processor { inheritor ->
+            ClassInheritorsSearch.search(psiClass, searchScope, true).forEach(Processor { inheritor ->
                 val file = inheritor.containingFile?.virtualFile
-                if (file != null && shouldIncludeNavigationElement(project, inheritor, includeLibraries, includeTests)) {
+                if (file != null && shouldIncludeNavigationElement(searchScope, inheritor)) {
                     results.add(ImplementationData(
                         name = inheritor.qualifiedName ?: inheritor.name ?: "unknown",
                         file = getRelativePath(project, file),
@@ -648,18 +639,18 @@ class JavaCallHierarchyHandler : BaseJavaHandler<CallHierarchyData>(), CallHiera
         project: Project,
         direction: String,
         depth: Int,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        scope: BuiltInSearchScope
     ): CallHierarchyData? {
         // Use reference-aware resolution: if cursor is on a method call,
         // resolve to the actual method being called
         val method = resolveMethod(element) ?: return null
         val visited = mutableSetOf<String>()
+        val searchScope = createNavigationSearchScope(project, scope)
 
         val calls = if (direction == "callers") {
-            findCallersRecursive(project, method, depth, visited, includeLibraries = includeLibraries, includeTests = includeTests)
+            findCallersRecursive(project, method, depth, visited, searchScope = searchScope)
         } else {
-            findCalleesRecursive(project, method, depth, visited, includeLibraries = includeLibraries, includeTests = includeTests)
+            findCalleesRecursive(project, method, depth, visited, searchScope = searchScope)
         }
 
         return CallHierarchyData(
@@ -674,8 +665,7 @@ class JavaCallHierarchyHandler : BaseJavaHandler<CallHierarchyData>(), CallHiera
         depth: Int,
         visited: MutableSet<String>,
         stackDepth: Int = 0,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<CallElementData> {
         if (stackDepth > MAX_STACK_DEPTH || depth <= 0) return emptyList()
 
@@ -690,10 +680,9 @@ class JavaCallHierarchyHandler : BaseJavaHandler<CallHierarchyData>(), CallHiera
             val allReferences = mutableListOf<PsiElement>()
             // Dedup key includes file path — textOffset alone is not globally unique across files
             val seenKeys = mutableSetOf<String>()
-            val callerScope = createNavigationSearchScope(project, includeLibraries, includeTests)
             for (methodToSearch in methodsToSearch) {
                 if (allReferences.size >= MAX_RESULTS_PER_LEVEL * 2) break
-                MethodReferencesSearch.search(methodToSearch, callerScope, true)
+                MethodReferencesSearch.search(methodToSearch, searchScope, true)
                     .forEach(Processor { reference ->
                         val file = reference.element.containingFile?.virtualFile?.path ?: ""
                         if (seenKeys.add("$file:${reference.element.textOffset}")) {
@@ -718,7 +707,7 @@ class JavaCallHierarchyHandler : BaseJavaHandler<CallHierarchyData>(), CallHiera
                 val navElement = methodToSearch.navigationElement ?: continue
                 if (navElement.language.id != "kotlin") continue
                 // Use element.useScope (no explicit scope arg) — matches FindUsagesTool behaviour
-                ReferencesSearch.search(navElement)
+                ReferencesSearch.search(navElement, searchScope)
                     .forEach(Processor { reference ->
                         val file = reference.element.containingFile?.virtualFile?.path ?: ""
                         if (seenKeys.add("$file:${reference.element.textOffset}")) {
@@ -741,11 +730,10 @@ class JavaCallHierarchyHandler : BaseJavaHandler<CallHierarchyData>(), CallHiera
                             depth - 1,
                             visited,
                             stackDepth + 1,
-                            includeLibraries,
-                            includeTests
+                            searchScope
                         )
                     } else null
-                    if (shouldIncludeNavigationElement(project, containingMethod, includeLibraries, includeTests)) {
+                    if (shouldIncludeNavigationElement(searchScope, containingMethod)) {
                         results.add(createCallElement(project, containingMethod, children))
                     } else if (children != null) {
                         results.addAll(children)
@@ -764,8 +752,7 @@ class JavaCallHierarchyHandler : BaseJavaHandler<CallHierarchyData>(), CallHiera
         depth: Int,
         visited: MutableSet<String>,
         stackDepth: Int = 0,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<CallElementData> {
         if (stackDepth > MAX_STACK_DEPTH || depth <= 0) return emptyList()
 
@@ -783,9 +770,9 @@ class JavaCallHierarchyHandler : BaseJavaHandler<CallHierarchyData>(), CallHiera
                         val calledMethod = methodCall.resolveMethod()
                         if (calledMethod != null) {
                             val children = if (depth > 1) {
-                                findCalleesRecursive(project, calledMethod, depth - 1, visited, stackDepth + 1, includeLibraries, includeTests)
+                                findCalleesRecursive(project, calledMethod, depth - 1, visited, stackDepth + 1, searchScope)
                             } else null
-                            if (shouldIncludeNavigationElement(project, calledMethod, includeLibraries, includeTests)) {
+                            if (shouldIncludeNavigationElement(searchScope, calledMethod)) {
                                 val element = createCallElement(project, calledMethod, children)
                                 if (callees.none { it.name == element.name && it.file == element.file }) {
                                     callees.add(element)
@@ -817,7 +804,7 @@ class JavaCallHierarchyHandler : BaseJavaHandler<CallHierarchyData>(), CallHiera
 
             // For Kotlin light methods, the body is null — find callees from the original Kotlin PSI
             if (callees.isEmpty()) {
-                findKotlinCallees(project, method, depth, visited, stackDepth, callees, includeLibraries, includeTests)
+                findKotlinCallees(project, method, depth, visited, stackDepth, callees, searchScope)
             }
         } catch (e: Exception) {
             // Handle gracefully
@@ -836,8 +823,7 @@ class JavaCallHierarchyHandler : BaseJavaHandler<CallHierarchyData>(), CallHiera
         visited: MutableSet<String>,
         stackDepth: Int,
         callees: MutableList<CallElementData>,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ) {
         val callExprClass = ktCallExpressionClass ?: return
 
@@ -866,9 +852,9 @@ class JavaCallHierarchyHandler : BaseJavaHandler<CallHierarchyData>(), CallHiera
 
             if (calledMethod != null) {
                 val children = if (depth > 1) {
-                    findCalleesRecursive(project, calledMethod, depth - 1, visited, stackDepth + 1, includeLibraries, includeTests)
+                    findCalleesRecursive(project, calledMethod, depth - 1, visited, stackDepth + 1, searchScope)
                 } else null
-                if (shouldIncludeNavigationElement(project, calledMethod, includeLibraries, includeTests)) {
+                if (shouldIncludeNavigationElement(searchScope, calledMethod)) {
                     val element = createCallElement(project, calledMethod, children)
                     if (callees.none { it.name == element.name && it.file == element.file }) {
                         callees.add(element)
@@ -960,17 +946,17 @@ class JavaSymbolSearchHandler : BaseJavaHandler<List<SymbolData>>(), SymbolSearc
     override fun searchSymbols(
         project: Project,
         pattern: String,
-        includeLibraries: Boolean,
+        scope: BuiltInSearchScope,
         limit: Int,
         matchMode: String
     ): List<SymbolData> {
-        val scope = createFilteredScope(project, includeLibraries)
+        val searchScope = BuiltInSearchScopeResolver.resolveGlobalScope(project, scope)
 
         // Use the optimized platform-based search with language filter for Java/Kotlin
         return OptimizedSymbolSearch.search(
             project = project,
             pattern = pattern,
-            scope = scope,
+            scope = searchScope,
             limit = limit,
             languageFilter = setOf("Java", "Kotlin"),
             matchMode = matchMode

@@ -2,6 +2,7 @@ package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema
 
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ParamNames
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.SchemaConstants
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageHandlerRegistry
 import io.mockk.every
 import io.mockk.mockkObject
@@ -67,6 +68,25 @@ class SchemaBuilderUnitTest : TestCase() {
         val enumValues = modeProp["enum"]?.jsonArray?.map { it.jsonPrimitive.content }!!
         assertEquals(3, enumValues.size)
         assertTrue(enumValues.contains("exact"))
+    }
+
+    fun testScopeProperty() {
+        val schema = SchemaBuilder.tool()
+            .projectPath()
+            .scopeProperty("Search scope. Default: project_files.")
+            .build()
+
+        val properties = schema[SchemaConstants.PROPERTIES]?.jsonObject!!
+        val scopeProp = properties[ParamNames.SCOPE]?.jsonObject!!
+        assertEquals(SchemaConstants.TYPE_STRING, scopeProp[SchemaConstants.TYPE]?.jsonPrimitive?.content)
+        assertEquals(
+            BuiltInSearchScope.supportedWireValues(),
+            scopeProp["enum"]?.jsonArray?.map { it.jsonPrimitive.content }
+        )
+        assertEquals(
+            "Search scope. Default: project_files.",
+            scopeProp[SchemaConstants.DESCRIPTION]?.jsonPrimitive?.content
+        )
     }
 
     fun testBooleanProperty() {

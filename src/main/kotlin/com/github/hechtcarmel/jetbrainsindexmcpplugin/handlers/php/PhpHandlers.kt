@@ -466,14 +466,14 @@ class PhpTypeHierarchyHandler : BasePhpHandler<TypeHierarchyData>(), TypeHierarc
     override fun getTypeHierarchy(
         element: PsiElement,
         project: Project,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        scope: BuiltInSearchScope
     ): TypeHierarchyData? {
         val phpClass = findContainingPhpClass(element) ?: return null
         LOG.debug("Getting type hierarchy for PHP class: ${getName(phpClass)}")
+        val searchScope = createNavigationSearchScope(project, scope)
 
-        val supertypes = getSupertypes(project, phpClass, includeLibraries = includeLibraries, includeTests = includeTests)
-        val subtypes = getSubtypes(project, phpClass, includeLibraries, includeTests)
+        val supertypes = getSupertypes(project, phpClass, searchScope = searchScope)
+        val subtypes = getSubtypes(project, phpClass, searchScope)
 
         LOG.debug("Found ${supertypes.size} supertypes and ${subtypes.size} subtypes")
 
@@ -496,8 +496,7 @@ class PhpTypeHierarchyHandler : BasePhpHandler<TypeHierarchyData>(), TypeHierarc
         phpClass: PsiElement,
         visited: MutableSet<String> = mutableSetOf(),
         depth: Int = 0,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<TypeElementData> {
         if (depth > MAX_HIERARCHY_DEPTH) return emptyList()
 
@@ -510,10 +509,10 @@ class PhpTypeHierarchyHandler : BasePhpHandler<TypeHierarchyData>(), TypeHierarc
         try {
             // Get superclass (extends)
             val superClass = getSuperClass(phpClass)
-            if (superClass != null && shouldIncludeNavigationElement(project, superClass, includeLibraries, includeTests)) {
+            if (superClass != null && shouldIncludeNavigationElement(searchScope, superClass)) {
                 val superName = getFQN(superClass) ?: getName(superClass)
                 if (superName != null && superName !in visited) {
-                    val superSupertypes = getSupertypes(project, superClass, visited, depth + 1, includeLibraries, includeTests)
+                    val superSupertypes = getSupertypes(project, superClass, visited, depth + 1, searchScope)
                     supertypes.add(TypeElementData(
                         name = superName,
                         qualifiedName = getFQN(superClass),
@@ -533,9 +532,9 @@ class PhpTypeHierarchyHandler : BasePhpHandler<TypeHierarchyData>(), TypeHierarc
                 if (
                     ifaceName != null &&
                     ifaceName !in visited &&
-                    shouldIncludeNavigationElement(project, iface, includeLibraries, includeTests)
+                    shouldIncludeNavigationElement(searchScope, iface)
                 ) {
-                    val ifaceSupertypes = getSupertypes(project, iface, visited, depth + 1, includeLibraries, includeTests)
+                    val ifaceSupertypes = getSupertypes(project, iface, visited, depth + 1, searchScope)
                     supertypes.add(TypeElementData(
                         name = ifaceName,
                         qualifiedName = getFQN(iface),
@@ -555,7 +554,7 @@ class PhpTypeHierarchyHandler : BasePhpHandler<TypeHierarchyData>(), TypeHierarc
                 if (
                     traitName != null &&
                     traitName !in visited &&
-                    shouldIncludeNavigationElement(project, trait, includeLibraries, includeTests)
+                    shouldIncludeNavigationElement(searchScope, trait)
                 ) {
                     supertypes.add(TypeElementData(
                         name = traitName,
@@ -577,8 +576,7 @@ class PhpTypeHierarchyHandler : BasePhpHandler<TypeHierarchyData>(), TypeHierarc
     private fun getSubtypes(
         project: Project,
         phpClass: PsiElement,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<TypeElementData> {
         return try {
             val fqn = getFQN(phpClass) ?: return emptyList()
@@ -588,7 +586,7 @@ class PhpTypeHierarchyHandler : BasePhpHandler<TypeHierarchyData>(), TypeHierarc
             val subclasses = getAllSubclasses(project, fqn)
 
             subclasses
-                .filter { shouldIncludeNavigationElement(project, it, includeLibraries, includeTests) }
+                .filter { shouldIncludeNavigationElement(searchScope, it) }
                 .take(100)
                 .forEach { subclass ->
                 results.add(TypeElementData(
@@ -631,23 +629,23 @@ class PhpImplementationsHandler : BasePhpHandler<List<ImplementationData>>(), Im
     override fun findImplementations(
         element: PsiElement,
         project: Project,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        scope: BuiltInSearchScope
     ): List<ImplementationData>? {
         LOG.debug("Finding implementations for element at ${element.containingFile?.name}")
+        val searchScope = createNavigationSearchScope(project, scope)
 
         // Check if it's a method
         val method = findContainingMethod(element)
         if (method != null) {
             LOG.debug("Finding method implementations for ${getName(method)}")
-            return findMethodImplementations(project, method, includeLibraries, includeTests)
+            return findMethodImplementations(project, method, searchScope)
         }
 
         // Check if it's a class/interface
         val phpClass = findContainingPhpClass(element)
         if (phpClass != null) {
             LOG.debug("Finding class implementations for ${getName(phpClass)}")
-            return findClassImplementations(project, phpClass, includeLibraries, includeTests)
+            return findClassImplementations(project, phpClass, searchScope)
         }
 
         return null
@@ -656,8 +654,7 @@ class PhpImplementationsHandler : BasePhpHandler<List<ImplementationData>>(), Im
     private fun findMethodImplementations(
         project: Project,
         method: PsiElement,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<ImplementationData> {
         return try {
             val methodName = getName(method) ?: return emptyList()
@@ -670,7 +667,7 @@ class PhpImplementationsHandler : BasePhpHandler<List<ImplementationData>>(), Im
             val subclasses = getAllSubclasses(project, classFqn)
 
             subclasses
-                .filter { shouldIncludeNavigationElement(project, it, includeLibraries, includeTests) }
+                .filter { shouldIncludeNavigationElement(searchScope, it) }
                 .take(100)
                 .forEach { subclass ->
                 // Find method with same name in this subclass
@@ -702,8 +699,7 @@ class PhpImplementationsHandler : BasePhpHandler<List<ImplementationData>>(), Im
     private fun findClassImplementations(
         project: Project,
         phpClass: PsiElement,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<ImplementationData> {
         return try {
             val fqn = getFQN(phpClass) ?: return emptyList()
@@ -713,7 +709,7 @@ class PhpImplementationsHandler : BasePhpHandler<List<ImplementationData>>(), Im
             val subclasses = getAllSubclasses(project, fqn)
 
             subclasses
-                .filter { shouldIncludeNavigationElement(project, it, includeLibraries, includeTests) }
+                .filter { shouldIncludeNavigationElement(searchScope, it) }
                 .take(100)
                 .forEach { subclass ->
                 val file = subclass.containingFile?.virtualFile
@@ -762,17 +758,17 @@ class PhpCallHierarchyHandler : BasePhpHandler<CallHierarchyData>(), CallHierarc
         project: Project,
         direction: String,
         depth: Int,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        scope: BuiltInSearchScope
     ): CallHierarchyData? {
         val callable = findContainingCallable(element) ?: return null
         LOG.debug("Getting call hierarchy for ${getName(callable)}, direction=$direction, depth=$depth")
+        val searchScope = createNavigationSearchScope(project, scope)
 
         val visited = mutableSetOf<String>()
         val calls = if (direction == "callers") {
-            findCallersRecursive(project, callable, depth, visited, includeLibraries = includeLibraries, includeTests = includeTests)
+            findCallersRecursive(project, callable, depth, visited, searchScope = searchScope)
         } else {
-            findCalleesRecursive(project, callable, depth, visited, includeLibraries = includeLibraries, includeTests = includeTests)
+            findCalleesRecursive(project, callable, depth, visited, searchScope = searchScope)
         }
 
         LOG.debug("Found ${calls.size} $direction")
@@ -841,8 +837,7 @@ class PhpCallHierarchyHandler : BasePhpHandler<CallHierarchyData>(), CallHierarc
         depth: Int,
         visited: MutableSet<String>,
         stackDepth: Int = 0,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<CallElementData> {
         if (stackDepth > MAX_STACK_DEPTH || depth <= 0) return emptyList()
 
@@ -857,11 +852,10 @@ class PhpCallHierarchyHandler : BasePhpHandler<CallHierarchyData>(), CallHierarc
                 methodsToSearch.addAll(findAllSuperMethods(project, callable))
             }
 
-            val scope = createNavigationSearchScope(project, includeLibraries, includeTests)
             val allReferences = mutableListOf<com.intellij.psi.PsiReference>()
 
             for (methodToSearch in methodsToSearch) {
-                ReferencesSearch.search(methodToSearch, scope).forEach(Processor { reference ->
+                ReferencesSearch.search(methodToSearch, searchScope).forEach(Processor { reference ->
                     allReferences.add(reference)
                     allReferences.size < MAX_RESULTS_PER_LEVEL * 2
                 })
@@ -876,9 +870,9 @@ class PhpCallHierarchyHandler : BasePhpHandler<CallHierarchyData>(), CallHierarc
                 val containingCallable = findContainingCallable(refElement)
                 if (containingCallable != null && containingCallable != callable && containingCallable !in methodsToSearch) {
                     val children = if (depth > 1) {
-                        findCallersRecursive(project, containingCallable, depth - 1, visited, stackDepth + 1, includeLibraries, includeTests)
+                        findCallersRecursive(project, containingCallable, depth - 1, visited, stackDepth + 1, searchScope)
                     } else null
-                    if (shouldIncludeNavigationElement(project, containingCallable, includeLibraries, includeTests)) {
+                    if (shouldIncludeNavigationElement(searchScope, containingCallable)) {
                         results.add(createCallElement(project, containingCallable, children))
                     } else if (children != null) {
                         results.addAll(children)
@@ -898,8 +892,7 @@ class PhpCallHierarchyHandler : BasePhpHandler<CallHierarchyData>(), CallHierarc
         depth: Int,
         visited: MutableSet<String>,
         stackDepth: Int = 0,
-        includeLibraries: Boolean,
-        includeTests: Boolean
+        searchScope: GlobalSearchScope
     ): List<CallElementData> {
         if (stackDepth > MAX_STACK_DEPTH || depth <= 0) return emptyList()
 
@@ -920,9 +913,9 @@ class PhpCallHierarchyHandler : BasePhpHandler<CallHierarchyData>(), CallHierarc
                     val calledMethod = resolveReference(callExpr)
                     if (calledMethod != null && (isMethod(calledMethod) || isFunction(calledMethod))) {
                         val children = if (depth > 1) {
-                            findCalleesRecursive(project, calledMethod, depth - 1, visited, stackDepth + 1, includeLibraries, includeTests)
+                            findCalleesRecursive(project, calledMethod, depth - 1, visited, stackDepth + 1, searchScope)
                         } else null
-                        if (shouldIncludeNavigationElement(project, calledMethod, includeLibraries, includeTests)) {
+                        if (shouldIncludeNavigationElement(searchScope, calledMethod)) {
                             val element = createCallElement(project, calledMethod, children)
                             if (callees.none { it.name == element.name && it.file == element.file }) {
                                 callees.add(element)
@@ -945,9 +938,9 @@ class PhpCallHierarchyHandler : BasePhpHandler<CallHierarchyData>(), CallHierarc
                     val calledFunction = resolveReference(callExpr)
                     if (calledFunction != null && isFunction(calledFunction)) {
                         val children = if (depth > 1) {
-                            findCalleesRecursive(project, calledFunction, depth - 1, visited, stackDepth + 1, includeLibraries, includeTests)
+                            findCalleesRecursive(project, calledFunction, depth - 1, visited, stackDepth + 1, searchScope)
                         } else null
-                        if (shouldIncludeNavigationElement(project, calledFunction, includeLibraries, includeTests)) {
+                        if (shouldIncludeNavigationElement(searchScope, calledFunction)) {
                             val element = createCallElement(project, calledFunction, children)
                             if (callees.none { it.name == element.name && it.file == element.file }) {
                                 callees.add(element)
@@ -1024,17 +1017,17 @@ class PhpSymbolSearchHandler : BasePhpHandler<List<SymbolData>>(), SymbolSearchH
     override fun searchSymbols(
         project: Project,
         pattern: String,
-        includeLibraries: Boolean,
+        scope: BuiltInSearchScope,
         limit: Int,
         matchMode: String
     ): List<SymbolData> {
-        val scope = createFilteredScope(project, includeLibraries)
+        val searchScope = BuiltInSearchScopeResolver.resolveGlobalScope(project, scope)
 
         // Use the optimized platform-based search with language filter for PHP
         return OptimizedSymbolSearch.search(
             project = project,
             pattern = pattern,
-            scope = scope,
+            scope = searchScope,
             limit = limit,
             languageFilter = setOf("PHP"),
             matchMode = matchMode

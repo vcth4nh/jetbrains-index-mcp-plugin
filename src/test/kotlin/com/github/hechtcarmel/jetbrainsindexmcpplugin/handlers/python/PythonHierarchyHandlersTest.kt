@@ -2,19 +2,16 @@ package com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.python
 
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodsData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.TypeHierarchyData
-import com.intellij.openapi.project.Project
 import com.jetbrains.python.psi.PyClass
 import com.jetbrains.python.psi.PyFunction
 import com.jetbrains.python.psi.types.TypeEvalContext
 import io.mockk.every
 import io.mockk.mockk
-import junit.framework.TestCase
+import com.intellij.testFramework.fixtures.BasePlatformTestCase
 
-class PythonHierarchyHandlersTest : TestCase() {
+class PythonHierarchyHandlersTest : BasePlatformTestCase() {
 
     fun testTypeHierarchyIncludesPythonSupertypes() {
-        val project = mockk<Project>(relaxed = true)
-
         val base = mockPyClass("BaseProcessor")
         val intermediate = mockPyClass("JsonProcessor")
         val leaf = mockPyClass("AdvancedJsonProcessor")
@@ -34,8 +31,6 @@ class PythonHierarchyHandlersTest : TestCase() {
     }
 
     fun testFindSuperMethodsBuildsPythonHierarchy() {
-        val project = mockk<Project>(relaxed = true)
-
         val baseClass = mockPyClass("BaseProcessor")
         val childClass = mockPyClass("JsonProcessor")
         val leafClass = mockPyClass("AdvancedJsonProcessor")
