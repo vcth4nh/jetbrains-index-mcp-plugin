@@ -947,8 +947,7 @@ class JavaSymbolSearchHandler : BaseJavaHandler<List<SymbolData>>(), SymbolSearc
         project: Project,
         pattern: String,
         scope: BuiltInSearchScope,
-        limit: Int,
-        matchMode: String
+        limit: Int
     ): List<SymbolData> {
         val searchScope = BuiltInSearchScopeResolver.resolveGlobalScope(project, scope)
 
@@ -958,8 +957,7 @@ class JavaSymbolSearchHandler : BaseJavaHandler<List<SymbolData>>(), SymbolSearc
             pattern = pattern,
             scope = searchScope,
             limit = limit,
-            languageFilter = setOf("Java", "Kotlin"),
-            matchMode = matchMode
+            languageFilter = setOf("Java", "Kotlin")
         )
     }
 }

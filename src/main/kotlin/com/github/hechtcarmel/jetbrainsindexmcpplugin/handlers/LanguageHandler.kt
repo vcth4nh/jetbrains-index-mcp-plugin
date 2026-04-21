@@ -136,19 +136,16 @@ interface SymbolSearchHandler : LanguageHandler<List<SymbolData>> {
      * Searches for symbols matching the given pattern.
      *
      * @param project The project context
-     * @param pattern The search pattern (supports substring and camelCase matching)
+     * @param pattern The search pattern. Matching follows IntelliJ's Go to Symbol behavior.
      * @param scope The built-in search scope to honor for this search
      * @param limit Maximum number of results
-     * @param matchMode How to match the pattern: "substring" (default, matches anywhere),
-     *                  "prefix" (camelCase-aware prefix matching), or "exact" (case-sensitive exact match)
      * @return List of matching symbols
      */
     fun searchSymbols(
         project: Project,
         pattern: String,
         scope: BuiltInSearchScope = BuiltInSearchScope.PROJECT_FILES,
-        limit: Int,
-        matchMode: String = "substring"
+        limit: Int
     ): List<SymbolData>
 }
 
