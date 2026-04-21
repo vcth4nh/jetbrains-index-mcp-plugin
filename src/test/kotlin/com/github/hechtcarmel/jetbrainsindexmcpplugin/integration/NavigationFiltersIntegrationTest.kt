@@ -187,7 +187,6 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
 
         val symbolResult = symbolTool.execute(project, buildJsonObject {
             put("query", fixture.className)
-            put("matchMode", "exact")
             put("scope", "project_production_files")
         })
         assertFalse("Find symbol should succeed: ${symbolResult.content}", symbolResult.isError)
@@ -221,13 +220,12 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
         )
     }
 
-    fun testFindSymbolSupportsFullyQualifiedExactNameSearch() = runBlocking {
+    fun testFindSymbolSupportsFullyQualifiedNameSearch() = runBlocking {
         val fixture = createQualifiedSymbolFixture()
         val tool = FindSymbolTool()
 
         val result = tool.execute(project, buildJsonObject {
             put("query", "test.BasicSolver.run")
-            put("matchMode", "exact")
         })
 
         assertFalse("Find symbol should succeed: ${result.content}", result.isError)
@@ -235,11 +233,11 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
         val content = result.content.first() as ContentBlock.Text
         val symbols = json.decodeFromString<FindSymbolResult>(content.text)
 
-        assertEquals("Exact fully-qualified query should resolve to exactly one method", 1, symbols.symbols.size)
+        assertEquals("Fully-qualified query should resolve to exactly one method", 1, symbols.symbols.size)
         val symbol = symbols.symbols.single()
         assertEquals("run", symbol.name)
         assertTrue(
-            "Exact fully-qualified query should resolve to BasicSolver.run",
+            "Fully-qualified query should resolve to BasicSolver.run",
             symbol.file.endsWith(fixture.basicSolverRelativePath)
         )
     }

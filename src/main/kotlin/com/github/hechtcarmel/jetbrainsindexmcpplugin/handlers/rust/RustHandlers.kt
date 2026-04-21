@@ -1107,8 +1107,7 @@ class RustSymbolSearchHandler : BaseRustHandler<List<SymbolData>>(), SymbolSearc
         project: Project,
         pattern: String,
         scope: BuiltInSearchScope,
-        limit: Int,
-        matchMode: String
+        limit: Int
     ): List<SymbolData> {
         val searchScope = BuiltInSearchScopeResolver.resolveGlobalScope(project, scope)
 
@@ -1118,8 +1117,7 @@ class RustSymbolSearchHandler : BaseRustHandler<List<SymbolData>>(), SymbolSearc
             pattern = pattern,
             scope = searchScope,
             limit = limit,
-            languageFilter = setOf("Rust"),
-            matchMode = matchMode
+            languageFilter = setOf("Rust")
         )
     }
 }

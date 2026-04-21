@@ -1018,8 +1018,7 @@ class PhpSymbolSearchHandler : BasePhpHandler<List<SymbolData>>(), SymbolSearchH
         project: Project,
         pattern: String,
         scope: BuiltInSearchScope,
-        limit: Int,
-        matchMode: String
+        limit: Int
     ): List<SymbolData> {
         val searchScope = BuiltInSearchScopeResolver.resolveGlobalScope(project, scope)
 
@@ -1029,8 +1028,7 @@ class PhpSymbolSearchHandler : BasePhpHandler<List<SymbolData>>(), SymbolSearchH
             pattern = pattern,
             scope = searchScope,
             limit = limit,
-            languageFilter = setOf("PHP"),
-            matchMode = matchMode
+            languageFilter = setOf("PHP")
         )
     }
 }

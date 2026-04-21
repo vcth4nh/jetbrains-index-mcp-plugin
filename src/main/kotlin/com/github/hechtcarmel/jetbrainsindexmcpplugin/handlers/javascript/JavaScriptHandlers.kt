@@ -991,8 +991,7 @@ class JavaScriptSymbolSearchHandler : BaseJavaScriptHandler<List<SymbolData>>(),
         project: Project,
         pattern: String,
         scope: BuiltInSearchScope,
-        limit: Int,
-        matchMode: String
+        limit: Int
     ): List<SymbolData> {
         val searchScope = BuiltInSearchScopeResolver.resolveGlobalScope(project, scope)
 
@@ -1002,8 +1001,7 @@ class JavaScriptSymbolSearchHandler : BaseJavaScriptHandler<List<SymbolData>>(),
             pattern = pattern,
             scope = searchScope,
             limit = limit,
-            languageFilter = setOf("JavaScript", "TypeScript"),
-            matchMode = matchMode
+            languageFilter = setOf("JavaScript", "TypeScript")
         )
     }
 }

@@ -137,10 +137,9 @@ Search for any symbol (classes, methods, fields, functions) by name.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `query` | string | yes | Symbol name pattern |
+| `query` | string | yes | Symbol name pattern. Matching follows IntelliJ's Go to Symbol popup, including qualified queries like `BasicSolver.run`. |
 | `scope` | enum | no | One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 | `language` | string | no | Filter by language |
-| `matchMode` | enum | no | `substring` (default), `prefix`, `exact` |
 | `limit` | integer | no | Deprecated alias for `pageSize`. Default 25, max 500 |
 | `cursor` | string | no | Pagination cursor from a previous response. When provided, search parameters are ignored; `project_path` and `pageSize` may still be provided. |
 | `pageSize` | integer | no | Results per page. Default 25, max 500 |

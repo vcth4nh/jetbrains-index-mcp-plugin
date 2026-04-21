@@ -46,7 +46,7 @@ class FindSymbolTool : AbstractMcpTool() {
 
         Languages: Java, Kotlin, Python, JavaScript, TypeScript, PHP, Rust.
 
-        Matching: substring ("Service" → "UserService") and camelCase ("USvc" → "UserService").
+        Matching follows IntelliJ's Go to Symbol popup, including qualified queries like "BasicSolver.run".
 
         Returns: matching symbols with qualified names, file paths, line/column numbers, and kind.
 
@@ -58,10 +58,9 @@ class FindSymbolTool : AbstractMcpTool() {
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
         .projectPath()
-        .stringProperty(ParamNames.QUERY, "Search pattern. Supports substring and camelCase matching. Required for fresh search, ignored when cursor is provided.")
+        .stringProperty(ParamNames.QUERY, "Search pattern. Matching follows IntelliJ's Go to Symbol popup, including qualified queries. Required for fresh search, ignored when cursor is provided.")
         .scopeProperty("Search scope. Default: project_files.")
         .stringProperty(ParamNames.LANGUAGE, "Filter results by language (e.g., \"Kotlin\", \"Java\", \"Python\"). Case-insensitive. Optional.")
-        .enumProperty(ParamNames.MATCH_MODE, "How to match the query. Default: \"substring\".", listOf("substring", "prefix", "exact"))
         .intProperty(ParamNames.LIMIT, "Maximum results per page (deprecated, use pageSize). Default: $DEFAULT_PAGE_SIZE, max: $MAX_PAGE_SIZE.")
         .stringProperty("cursor", "Pagination cursor from a previous response. When provided, returns the next page of results. Search parameters are ignored; project_path and pageSize may still be provided.")
         .intProperty("pageSize", "Results per page. Default: $DEFAULT_PAGE_SIZE, max: $MAX_PAGE_SIZE.")
@@ -97,7 +96,6 @@ class FindSymbolTool : AbstractMcpTool() {
             return createInvalidScopeError(rawScope)
         }
         val languageFilter = arguments[ParamNames.LANGUAGE]?.jsonPrimitive?.content
-        val matchMode = arguments[ParamNames.MATCH_MODE]?.jsonPrimitive?.content ?: "substring"
         val pageSize = resolvePageSize(arguments, DEFAULT_PAGE_SIZE, aliases = arrayOf("limit"))
         val collectLimit = maxOf(PaginationService.DEFAULT_OVERCOLLECT, pageSize)
 
@@ -119,7 +117,7 @@ class FindSymbolTool : AbstractMcpTool() {
             val allMatches = mutableListOf<SymbolMatch>()
 
             for (handler in handlers) {
-                val handlerResults = handler.searchSymbols(project, query, scope, collectLimit, matchMode)
+                val handlerResults = handler.searchSymbols(project, query, scope, collectLimit)
                 for (symbolData in handlerResults) {
                     if (languageFilter != null && !symbolData.language.equals(languageFilter, ignoreCase = true)) continue
                     allMatches.add(SymbolMatch(
@@ -140,7 +138,7 @@ class FindSymbolTool : AbstractMcpTool() {
 
             val searchExtender: suspend (Set<String>, Int) -> List<PaginationService.SerializedResult> = { seenKeys, limit ->
                 suspendingReadAction {
-                    extendSearchSymbols(project, query, scope, matchMode, languageFilter, seenKeys, limit)
+                    extendSearchSymbols(project, query, scope, languageFilter, seenKeys, limit)
                 }
             }
 
@@ -193,7 +191,6 @@ class FindSymbolTool : AbstractMcpTool() {
         project: Project,
         query: String,
         scope: BuiltInSearchScope,
-        matchMode: String,
         languageFilter: String?,
         seenKeys: Set<String>,
         limit: Int
@@ -202,7 +199,7 @@ class FindSymbolTool : AbstractMcpTool() {
         val allMatches = mutableListOf<SymbolMatch>()
 
         for (handler in handlers) {
-            val handlerResults = handler.searchSymbols(project, query, scope, limit + seenKeys.size, matchMode)
+            val handlerResults = handler.searchSymbols(project, query, scope, limit + seenKeys.size)
             for (symbolData in handlerResults) {
                 if (languageFilter != null && !symbolData.language.equals(languageFilter, ignoreCase = true)) continue
                 allMatches.add(SymbolMatch(

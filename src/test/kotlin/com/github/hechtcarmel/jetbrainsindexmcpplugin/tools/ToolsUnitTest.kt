@@ -843,22 +843,11 @@ class ToolsUnitTest : TestCase() {
 
     // ── matchMode enum schema tests ────────────────────────────────────────────
 
-    fun testFindSymbolToolSchemaHasMatchModeEnum() {
+    fun testFindSymbolToolSchemaDoesNotExposeMatchMode() {
         val tool = FindSymbolTool()
         val properties = tool.inputSchema[SchemaConstants.PROPERTIES]?.jsonObject
         assertNotNull("Should have properties", properties)
-
-        val matchModeProp = properties?.get(ParamNames.MATCH_MODE)?.jsonObject
-        assertNotNull("Should have matchMode property", matchModeProp)
-
-        val enumArray = matchModeProp?.get("enum")?.jsonArray
-        assertNotNull("matchMode should have an enum array", enumArray)
-
-        val values = enumArray?.map { it.jsonPrimitive.content }
-        assertTrue("enum should contain 'substring'", values?.contains("substring") == true)
-        assertTrue("enum should contain 'prefix'",    values?.contains("prefix")    == true)
-        assertTrue("enum should contain 'exact'",     values?.contains("exact")     == true)
-        assertEquals("enum should have exactly 3 values", 3, values?.size)
+        assertNull("ide_find_symbol should not expose matchMode", properties?.get(ParamNames.MATCH_MODE))
     }
 
     fun testFindClassToolSchemaHasMatchModeEnum() {

@@ -753,8 +753,7 @@ class PythonSymbolSearchHandler : BasePythonHandler<List<SymbolData>>(), SymbolS
         project: Project,
         pattern: String,
         scope: BuiltInSearchScope,
-        limit: Int,
-        matchMode: String
+        limit: Int
     ): List<SymbolData> {
         val searchScope = BuiltInSearchScopeResolver.resolveGlobalScope(project, scope)
 
@@ -764,8 +763,7 @@ class PythonSymbolSearchHandler : BasePythonHandler<List<SymbolData>>(), SymbolS
             pattern = pattern,
             scope = searchScope,
             limit = limit,
-            languageFilter = setOf("Python"),
-            matchMode = matchMode
+            languageFilter = setOf("Python")
         )
     }
 }

@@ -51,28 +51,20 @@ object OptimizedSymbolSearch {
         pattern: String,
         scope: GlobalSearchScope,
         limit: Int,
-        languageFilter: Set<String>? = null,
-        matchMode: String = "substring"
+        languageFilter: Set<String>? = null
     ): List<SymbolData> {
         if (pattern.isBlank()) return emptyList()
 
-        LOG.debug("Searching for symbols matching '$pattern' (limit=$limit, filter=$languageFilter, matchMode=$matchMode)")
+        LOG.debug("Searching for symbols matching '$pattern' (limit=$limit, filter=$languageFilter)")
 
         try {
-            val matcher = if (matchMode == "substring") null else createMatcher(pattern, matchMode)
             var popupLimit = limit
             val popupLimitCap = maxOf(limit * 8, limit + 200)
 
             while (true) {
                 val popupResults = PopupFaithfulSymbolSearch.search(project, pattern, scope, popupLimit)
                 val results = popupResults.candidates
-                    .mapNotNull { candidate ->
-                        val symbolData = convertToSymbolData(candidate.item, project, scope, languageFilter) ?: return@mapNotNull null
-                        if (!matchesPattern(candidate, symbolData, pattern, matchMode, matcher, popupResults.isQualifiedQuery)) {
-                            return@mapNotNull null
-                        }
-                        symbolData
-                    }
+                    .mapNotNull { candidate -> convertToSymbolData(candidate.item, project, scope, languageFilter) }
                     .distinctBy { "${it.file}:${it.line}:${it.column}:${it.name}" }
 
                 if (results.size >= limit || popupResults.candidates.size < popupLimit || popupLimit >= popupLimitCap) {
@@ -86,7 +78,7 @@ object OptimizedSymbolSearch {
             LOG.debug("Popup-backed symbol search failed, falling back to contributor iteration: ${e.message}", e)
         }
 
-        return legacySearch(project, pattern, scope, limit, languageFilter, matchMode)
+        return legacySearch(project, pattern, scope, limit, languageFilter)
     }
 
     /**
@@ -97,13 +89,12 @@ object OptimizedSymbolSearch {
         pattern: String,
         scope: GlobalSearchScope,
         limit: Int,
-        languageFilter: Set<String>? = null,
-        matchMode: String = "substring"
+        languageFilter: Set<String>? = null
     ): List<SymbolData> {
         val results = mutableListOf<SymbolData>()
         val seen = mutableSetOf<String>() // Deduplication key: file:line:column:name
-        val matcher = createMatcher(pattern, matchMode)
-        val nameFilter = createNameFilter(pattern, matchMode, matcher)
+        val matcher = createMatcher(pattern)
+        val nameFilter = createNameFilter(pattern, matcher)
 
         for (contributor in ChooseByNameContributor.SYMBOL_EP_NAME.extensionList) {
             if (results.size >= limit) break
@@ -195,35 +186,6 @@ object OptimizedSymbolSearch {
                     }
                 }
             }
-        }
-    }
-
-    private fun matchesPattern(
-        candidate: PopupSearchCandidate,
-        symbolData: SymbolData,
-        pattern: String,
-        matchMode: String,
-        matcher: MinusculeMatcher?,
-        isQualifiedQuery: Boolean
-    ): Boolean {
-        if (matchMode == "substring") return true
-
-        val matchTarget = if (isQualifiedQuery) {
-            if (matchMode == "exact") {
-                symbolData.qualifiedName
-            } else {
-                candidate.fullName
-            }
-                ?: symbolData.qualifiedName
-                ?: symbolData.containerName?.let { "$it.${symbolData.name}" }
-                ?: symbolData.name
-        } else {
-            symbolData.name
-        }
-
-        return when (matchMode) {
-            "exact" -> matchTarget == pattern
-            else -> matcher?.matches(matchTarget) == true
         }
     }
 
@@ -387,10 +349,10 @@ object OptimizedSymbolSearch {
     }
 
     // Delegated to shared SearchMatchUtils.createMatcher — kept as private alias for call-site clarity
-    private fun createMatcher(pattern: String, matchMode: String = "substring"): MinusculeMatcher =
-        com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.createMatcher(pattern, matchMode)
+    private fun createMatcher(pattern: String): MinusculeMatcher =
+        com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.createMatcher(pattern)
 
     // Delegated to shared SearchMatchUtils.createNameFilter
-    private fun createNameFilter(pattern: String, matchMode: String, matcher: MinusculeMatcher): (String) -> Boolean =
-        com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.createNameFilter(pattern, matchMode, matcher)
+    private fun createNameFilter(pattern: String, matcher: MinusculeMatcher): (String) -> Boolean =
+        com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.createNameFilter(pattern, "substring", matcher)
 }
