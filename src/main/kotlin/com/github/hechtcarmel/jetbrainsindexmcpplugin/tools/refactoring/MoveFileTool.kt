@@ -5,9 +5,11 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.RefactoringRe
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PluginDetectors
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
+import com.intellij.codeInsight.actions.OptimizeImportsProcessor
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
@@ -20,11 +22,16 @@ import com.intellij.psi.PsiNamedElement
 import com.intellij.psi.SmartPointerManager
 import com.intellij.psi.SmartPsiElementPointer
 import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.refactoring.move.MoveHandler
 import com.intellij.refactoring.move.moveFilesOrDirectories.MoveFilesOrDirectoriesProcessor
 import com.intellij.util.containers.MultiMap
 import com.intellij.usageView.UsageInfo
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
@@ -33,9 +40,9 @@ import kotlinx.serialization.json.jsonPrimitive
  *
  * Most languages use [MoveFilesOrDirectoriesProcessor], which delegates file-move
  * semantics to language-specific [com.intellij.refactoring.move.moveFilesOrDirectories.MoveFileHandler]s.
- * PHP class files are special: PhpStorm exposes class/namespace-aware move refactorings
- * through the higher-level [MoveHandler] dispatcher, so we route those files through
- * the semantic move path instead of the plain file-move processor.
+ * PHP class files are special: PhpStorm exposes a dedicated class-move refactoring
+ * processor. We route those files through that processor instead of the generic
+ * file-move backend.
  *
  * Three-phase approach:
  * 1. **Read Action**: Validate source file exists
@@ -240,6 +247,10 @@ open class MoveFileTool : AbstractRefactoringTool() {
                     MoveBackend.PHP_SEMANTIC_MOVE -> executePhpSemanticMove(project, preparation)
                 }
 
+                if (preparation.backend == MoveBackend.PHP_SEMANTIC_MOVE) {
+                    cleanupMovedPhpFileImports(filePointer.element)
+                }
+
                 PsiDocumentManager.getInstance(project).commitAllDocuments()
                 affectedFiles = collectAffectedFiles(project, preparation, filePointer, fileName, modifiedFilesBeforeMove)
                 FileDocumentManager.getInstance().saveAllDocuments()
@@ -251,8 +262,11 @@ open class MoveFileTool : AbstractRefactoringTool() {
         }
 
         return if (success) {
-            val newPath = affectedFiles.lastOrNull { it != preparation.sourceRelativePath }
-                ?: "${preparation.destinationRelativePath}/$fileName"
+            val newPath = if (preparation.destinationRelativePath.isBlank()) {
+                fileName
+            } else {
+                "${preparation.destinationRelativePath}/$fileName"
+            }
             val backendNote = when (preparation.backend) {
                 MoveBackend.GENERIC_FILE_MOVE -> " using IDE file move semantics"
                 MoveBackend.PHP_SEMANTIC_MOVE -> " using PhpStorm semantic PHP move"
@@ -316,19 +330,224 @@ open class MoveFileTool : AbstractRefactoringTool() {
     internal open fun executePhpSemanticMove(project: Project, preparation: MovePreparation) {
         val declaration = preparation.phpDeclarationPointer?.element
             ?: error("PHP declaration for semantic move is no longer valid")
-        val adjusted = MoveHandler.adjustForMove(project, arrayOf(declaration), preparation.targetDirectory)
-            ?: error(
-                "PhpStorm semantic move could not prepare declaration '${preparation.phpDeclarationName ?: preparation.psiFile.name}'"
-            )
-
-        if (!MoveHandler.canMove(adjusted, preparation.targetDirectory)) {
+        val phpClassClass = loadPhpClassClass()
+        if (!phpClassClass.isInstance(declaration)) {
             error(
                 "PhpStorm semantic move is unavailable for PHP declaration '${preparation.phpDeclarationName ?: preparation.psiFile.name}'. " +
-                    "Use PhpStorm's interactive Move refactoring for this file."
+                    "Only PHP class-like declarations are supported."
             )
         }
 
-        MoveHandler.doMove(project, adjusted, preparation.targetDirectory, null, null)
+        val destinationNamespace = determinePhpDestinationNamespace(project, preparation)
+            ?: error(
+                "PhpStorm semantic move could not determine the destination namespace for '${preparation.destinationRelativePath}'. " +
+                    "Use a PSR-mapped source directory or PhpStorm's interactive Move refactoring."
+            )
+
+        runPhpMoveClassProcessor(project, preparation, phpClassClass.cast(declaration), destinationNamespace)
+    }
+
+    private fun runPhpMoveClassProcessor(
+        project: Project,
+        preparation: MovePreparation,
+        phpClass: PsiElement,
+        destinationNamespace: String
+    ) {
+        try {
+            val phpClassClass = loadPhpClassClass()
+            val className = (phpClass as? PsiNamedElement)?.name
+                ?: error("PHP declaration name is no longer available")
+
+            val phpFileCreationInfoClass = Class.forName("com.jetbrains.php.refactoring.PhpFileCreationInfo")
+            val moveClassSettingsClass = Class.forName("com.jetbrains.php.refactoring.move.clazz.PhpMoveClassSettings")
+            val moveClassProcessorClass = Class.forName("com.jetbrains.php.refactoring.move.clazz.PhpMoveClassProcessor")
+            val moveClassDialogClass = Class.forName("com.jetbrains.php.refactoring.move.clazz.PhpMoveClassDialog")
+
+            val generateConfiguration = phpFileCreationInfoClass.getMethod(
+                "generateConfiguration",
+                Project::class.java,
+                String::class.java,
+                String::class.java
+            )
+            val fileCreationInfo = generateConfiguration.invoke(
+                null,
+                project,
+                preparation.targetDirectory.virtualFile.path,
+                "$className.php"
+            )
+
+            val scopeContainsMultipleClasses = moveClassDialogClass
+                .getMethod("isScopeHolderContainsMultipleClasses", phpClassClass)
+                .invoke(null, phpClass) as Boolean
+
+            val settings = moveClassSettingsClass
+                .getConstructor(
+                    phpClassClass,
+                    String::class.java,
+                    phpFileCreationInfoClass,
+                    Boolean::class.javaPrimitiveType,
+                    Boolean::class.javaPrimitiveType
+                )
+                .newInstance(phpClass, destinationNamespace, fileCreationInfo, scopeContainsMultipleClasses, true)
+
+            val processor = moveClassProcessorClass
+                .getConstructor(
+                    Project::class.java,
+                    moveClassSettingsClass,
+                    Boolean::class.javaPrimitiveType,
+                    Boolean::class.javaPrimitiveType
+                )
+                .newInstance(project, settings, false, false)
+
+            processor.javaClass.methods.firstOrNull { it.name == "setPreviewUsages" && it.parameterCount == 1 }
+                ?.invoke(processor, false)
+            processor.javaClass.getMethod("run").invoke(processor)
+        } catch (e: ReflectiveOperationException) {
+            throw IllegalStateException(
+                "PhpStorm semantic move is unavailable in this IDE build: ${e.cause?.message ?: e.message}",
+                e
+            )
+        }
+    }
+
+    private fun determinePhpDestinationNamespace(project: Project, preparation: MovePreparation): String? {
+        val suggested = suggestPhpNamespaceFromProvider(preparation.targetDirectory)
+        if (!suggested.isNullOrBlank()) {
+            return normalizePhpNamespace(suggested)
+        }
+
+        val composerNamespace = determinePhpNamespaceFromComposer(project, preparation.targetDirectory)
+        if (!composerNamespace.isNullOrBlank()) {
+            return composerNamespace
+        }
+
+        return derivePhpNamespaceFromSourceRoot(project, preparation)
+    }
+
+    private fun suggestPhpNamespaceFromProvider(targetDirectory: PsiDirectory): String? {
+        return try {
+            val providerClass = Class.forName("com.jetbrains.php.roots.PhpNamespaceByPsrProvider")
+            val suggestMethod = providerClass.getMethod("suggestNamespaceWithPsrRootsDetection", PsiDirectory::class.java)
+            suggestMethod.invoke(null, targetDirectory) as? String
+        } catch (_: ReflectiveOperationException) {
+            null
+        }
+    }
+
+    private fun determinePhpNamespaceFromComposer(project: Project, targetDirectory: PsiDirectory): String? {
+        val projectBasePath = project.basePath ?: return null
+        val composerFile = Path.of(projectBasePath, "composer.json")
+        if (!Files.isRegularFile(composerFile)) {
+            return null
+        }
+
+        return try {
+            val root = Json.parseToJsonElement(Files.readString(composerFile)).jsonObject
+            val mappings = buildList {
+                addAll(extractComposerPsrMappings(root["autoload"] as? JsonObject, projectBasePath))
+                addAll(extractComposerPsrMappings(root["autoload-dev"] as? JsonObject, projectBasePath))
+            }
+            val targetPath = targetDirectory.virtualFile.path
+            val mapping = mappings
+                .filter { (namespacePrefix, directoryPath) ->
+                    targetPath == directoryPath || targetPath.startsWith("$directoryPath/")
+                }
+                .maxByOrNull { (_, directoryPath) -> directoryPath.length }
+                ?: return null
+
+            val relativePath = targetPath.removePrefix(mapping.second).trimStart('/')
+            val suffix = relativePath
+                .split('/')
+                .filter { it.isNotBlank() }
+                .joinToString("\\")
+
+            normalizePhpNamespace(
+                listOf(mapping.first, suffix)
+                    .filter { it.isNotBlank() }
+                    .joinToString("\\")
+            )
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun extractComposerPsrMappings(section: JsonObject?, projectBasePath: String): List<Pair<String, String>> {
+        val psr4 = section?.get("psr-4") as? JsonObject ?: return emptyList()
+        return buildList {
+            for ((namespacePrefix, locationValue) in psr4) {
+                val namespace = normalizePhpNamespace(namespacePrefix)
+                when (locationValue) {
+                    is JsonPrimitive -> {
+                        add(namespace to resolveComposerPath(projectBasePath, locationValue.content))
+                    }
+                    else -> {
+                        locationValue.jsonArray.forEach { entry ->
+                            val entryValue = entry as? JsonPrimitive ?: return@forEach
+                            add(namespace to resolveComposerPath(projectBasePath, entryValue.content))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun resolveComposerPath(projectBasePath: String, rawPath: String): String {
+        return Path.of(projectBasePath)
+            .resolve(rawPath)
+            .normalize()
+            .toString()
+            .replace('\\', '/')
+            .removeSuffix("/")
+    }
+
+    private fun derivePhpNamespaceFromSourceRoot(project: Project, preparation: MovePreparation): String? {
+        val currentDirectory = preparation.psiFile.containingDirectory ?: return null
+        val currentNamespace = extractPhpNamespace(preparation.phpDeclarationPointer?.element ?: preparation.psiFile) ?: return null
+
+        val fileIndex = ProjectRootManager.getInstance(project).fileIndex
+        val currentSourceRoot = fileIndex.getSourceRootForFile(currentDirectory.virtualFile) ?: return null
+        if (!VfsUtil.isAncestor(currentSourceRoot, preparation.targetDirectory.virtualFile, false)) {
+            return null
+        }
+
+        val currentRelativeDir = VfsUtil.getRelativePath(currentDirectory.virtualFile, currentSourceRoot, '/')
+            ?.takeIf { it.isNotEmpty() }
+        val targetRelativeDir = VfsUtil.getRelativePath(preparation.targetDirectory.virtualFile, currentSourceRoot, '/')
+            ?: return null
+
+        val suffix = currentRelativeDir?.replace('/', '\\')
+        val prefix = when {
+            suffix.isNullOrEmpty() -> currentNamespace
+            currentNamespace == suffix -> ""
+            currentNamespace.endsWith("\\$suffix") -> currentNamespace.removeSuffix("\\$suffix")
+            else -> return null
+        }
+
+        val targetSuffix = targetRelativeDir
+            .takeIf { it.isNotEmpty() }
+            ?.replace('/', '\\')
+            .orEmpty()
+        return normalizePhpNamespace(listOf(prefix, targetSuffix).filter { it.isNotBlank() }.joinToString("\\"))
+    }
+
+    private fun extractPhpNamespace(element: PsiElement): String? {
+        return try {
+            val method = element.javaClass.methods.firstOrNull {
+                it.name == "getNamespaceName" && it.parameterCount == 0 && it.returnType == String::class.java
+            } ?: return null
+            method.invoke(element) as? String
+        } catch (_: ReflectiveOperationException) {
+            null
+        }
+    }
+
+    private fun normalizePhpNamespace(namespace: String): String {
+        return namespace.trim().removePrefix("\\").removeSuffix("\\")
+    }
+
+    private fun loadPhpClassClass(): Class<out PsiElement> {
+        @Suppress("UNCHECKED_CAST")
+        return Class.forName("com.jetbrains.php.lang.psi.elements.PhpClass") as Class<out PsiElement>
     }
 
     private fun collectAffectedFiles(
@@ -368,8 +587,7 @@ open class MoveFileTool : AbstractRefactoringTool() {
 
     private fun findNamedPhpDeclarations(psiFile: PsiFile): List<PsiElement> {
         val phpClassClass = try {
-            @Suppress("UNCHECKED_CAST")
-            Class.forName("com.jetbrains.php.lang.psi.elements.PhpClass") as Class<out PsiElement>
+            loadPhpClassClass()
         } catch (_: ClassNotFoundException) {
             return emptyList()
         }
@@ -378,6 +596,16 @@ open class MoveFileTool : AbstractRefactoringTool() {
             .filter { it.containingFile == psiFile }
             .filter { (it as? PsiNamedElement)?.name != null }
             .sortedBy { it.textOffset }
+    }
+
+    private fun cleanupMovedPhpFileImports(movedFile: PsiFile?) {
+        if (movedFile == null || !movedFile.isValid || !isPhpFile(movedFile)) {
+            return
+        }
+
+        runCatching {
+            OptimizeImportsProcessor(movedFile.project, movedFile).runWithoutProgress()
+        }
     }
 }
 

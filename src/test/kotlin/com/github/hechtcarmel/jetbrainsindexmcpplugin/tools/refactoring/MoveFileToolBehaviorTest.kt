@@ -86,6 +86,7 @@ class MoveFileToolBehaviorTest : BasePlatformTestCase() {
         val resultJson = json.parseToJsonElement(textResult(result)).jsonObject
         val message = resultJson["message"]?.jsonPrimitive?.content ?: error("Missing message")
         assertTrue(message.contains("using PhpStorm semantic PHP move"))
+        assertTrue(message.contains("src/Internal/Foo.php"))
         assertFalse("Source file should be moved away", Files.exists(sourceFile))
         assertTrue("Moved file should exist in target directory", Files.exists(sourceFile.parent.resolve("Internal/Foo.php")))
     }
