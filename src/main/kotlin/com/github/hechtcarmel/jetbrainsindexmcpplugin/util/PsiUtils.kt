@@ -11,7 +11,9 @@ import com.intellij.openapi.vfs.toNioPathOrNull
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiFileSystemItem
 import com.intellij.psi.PsiManager
+import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.PsiNamedElement
 import com.intellij.psi.PsiReference
 import java.nio.file.InvalidPathException
@@ -62,7 +64,12 @@ object PsiUtils {
 
         PythonDefinitionResolver.refineResolvedTarget(element, null)?.let { return it }
 
-        // Fallback: if we're ON a declaration (not a reference), find it syntactically
+        // Fallback: only walk to enclosing named ancestor if the caret is actually on a
+        // declaration's name identifier (the ONE case where syntactic walk is semantically
+        // justified — cursor on `foo` in `def foo()`, `fun foo()`, `public int foo()`, etc.).
+        // For comments, whitespace, literals, and keywords, return null so callers can report
+        // "no symbol at position" — bug B.1 fix.
+        if (!isOnDeclarationIdentifier(element)) return null
         return findNamedElement(element)
     }
 
@@ -84,6 +91,23 @@ object PsiUtils {
             current?.reference?.let { return it }
         }
         return null
+    }
+
+    /**
+     * Returns true if [element] is the name identifier token of its parent declaration.
+     *
+     * Used as a precondition for "cursor-on-declaration" fallbacks. When false, callers
+     * should NOT walk up the PSI tree to find an enclosing named ancestor — the caret
+     * is on a comment, whitespace, literal, or unrelated token.
+     *
+     * This is the canonical IntelliJ platform pattern: every language's declaration PSI
+     * type implements [PsiNameIdentifierOwner] (PsiMethod, PsiClass, KtNamedFunction,
+     * KtClassOrObject, PyFunction, RsFunction, etc.) and exposes
+     * [PsiNameIdentifierOwner.getNameIdentifier] as its name token.
+     */
+    fun isOnDeclarationIdentifier(element: PsiElement): Boolean {
+        val parent = element.parent ?: return false
+        return parent is PsiNameIdentifierOwner && parent.nameIdentifier === element
     }
 
     fun findElementAtPosition(
@@ -290,9 +314,14 @@ object PsiUtils {
     fun findNamedElement(element: PsiElement): PsiNamedElement? {
         var current: PsiElement? = element
         while (current != null) {
-            // Exclude PsiFile - it's too high-level to be a useful "named element" target
-            // and would cause accidental file deletion when targeting whitespace/comments
-            if (current is PsiNamedElement && current !is PsiFile && current.name != null) {
+            // Exclude PsiFile (too high-level; would cause file-level side effects in safe_delete —
+            // issue #47) and PsiFileSystemItem (parent chain continues past PsiFile to PsiDirectory,
+            // which is a PsiNamedElement; returning it leaks the containing directory as
+            // "Package directory: …" from find_definition — bug B.2).
+            if (current is PsiNamedElement
+                && current !is PsiFile
+                && current !is PsiFileSystemItem
+                && current.name != null) {
                 return current
             }
             current = current.parent

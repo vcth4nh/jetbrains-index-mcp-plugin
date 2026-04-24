@@ -85,7 +85,15 @@ class PsiUtilsPythonFallbackUnitTest : TestCase() {
         )
     }
 
-    fun testResolveTargetElementFallsBackToNamedElementForNonPythonDeclarations() {
+    fun testResolveTargetElementReturnsNullForNonDeclarationIdentifierFallback() {
+        // Regression guard for the precondition gate added in the navigation walk-to-enclosing
+        // fix: resolveTargetElement's findNamedElement fallback now fires only when the caret is
+        // actually on a declaration's name identifier (PsiNameIdentifierOwner.nameIdentifier ===
+        // element). A raw PsiNamedElement with no parent chain fails the precondition — which
+        // reflects real PSI behavior, since production callers always pass leaf tokens from
+        // psiFile.findElementAt(offset), never PsiNamedElement instances directly. Positive
+        // coverage for the "caret IS on a declaration identifier" path lives in
+        // NavigationPrecisionTest.testResolveTarget_onJavaDeclarationIdentifier_resolves.
         val namedElement = mockk<com.intellij.psi.PsiNamedElement>(relaxed = true)
         every { namedElement.reference } returns null
         every { namedElement.parent } returns null
@@ -93,6 +101,9 @@ class PsiUtilsPythonFallbackUnitTest : TestCase() {
 
         val resolved = PsiUtils.resolveTargetElement(namedElement)
 
-        assertSame("Declaration fallback should remain unchanged", namedElement, resolved)
+        assertNull(
+            "Precondition gate rejects fallback when element has no PsiNameIdentifierOwner parent",
+            resolved
+        )
     }
 }
