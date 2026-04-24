@@ -4,6 +4,15 @@
 
 ## [Unreleased]
 
+## [4.16.2] - 2026-04-25
+### Fixed
+- **ide_find_definition, ide_find_references, ide_call_hierarchy, ide_find_implementations, ide_find_super_methods**: caret on a comment, whitespace, or literal no longer silently walks to the enclosing method/class/fn and returns results for that unrelated symbol. The previous behavior made these tools unreliable when clients (e.g., Serena) reported symbol locations that included docstrings or leading comments — the MCP tools would appear to succeed on the wrong target. Position-based invocations now return the tool's "no symbol at position" error (or an empty result for find_definition / find_references) unless the caret is on a reference or a declaration's name identifier.
+- **ide_find_definition**: caret on a module-level empty line or file-top comment in Python or Rust projects no longer returns `{"symbolName": "src", "preview": "Package directory: src"}`. The fix hardens `PsiUtils.findNamedElement` so its walk-up cannot escape past `PsiFile` to the containing `PsiDirectory`.
+- Caret on a package segment in a Java `import` statement still resolves to the package / directory (legitimate PR #64 behavior preserved).
+
+### Changed
+- Caret on a literal (e.g., `42` in `return 42`) now returns empty / "no symbol at position" instead of walking to the enclosing function. This matches the IDE's own Ctrl-click behavior on literals. Agents that relied on the incidental walk-to-enclosing-fn shortcut should position the caret on the method's name identifier instead.
+
 ## [4.16.0] - 2026-04-24
 ### Fixed
 - **`ide_find_symbol` ordering, missing/extra results, and qualified-query handling now match IntelliJ's Go to Symbol popup.** The tool previously ran the popup search separately for each registered language handler and concatenated results in handler-iteration order, which destroyed cross-language ranking. Symbol search now issues a single popup-backed call.
