@@ -12,6 +12,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.AbstractMcpTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.ImplementationLocation
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.ImplementationResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PsiUtils
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.util.PsiModificationTracker
@@ -104,6 +105,13 @@ class FindImplementationsTool : AbstractMcpTool() {
                 return@suspendingReadAction null to createErrorResult(it.message ?: ErrorMessages.COULD_NOT_RESOLVE_SYMBOL)
             }
 
+            // Tool-layer gate: reject position-based invocations where the caret is not on a
+            // resolvable target. See CallHierarchyTool for rationale.
+            val isSymbolMode = arguments[ParamNames.LANGUAGE] != null
+            if (!isSymbolMode && PsiUtils.resolveTargetElement(element) == null) {
+                return@suspendingReadAction null to createErrorResult("No method or class found at position")
+            }
+
             val handler = LanguageHandlerRegistry.getImplementationsHandler(element)
             if (handler == null) {
                 return@suspendingReadAction null to createErrorResult(
@@ -114,7 +122,6 @@ class FindImplementationsTool : AbstractMcpTool() {
 
             val implementations = handler.findImplementations(element, project, scope)
             if (implementations == null) {
-                val isSymbolMode = arguments[ParamNames.LANGUAGE] != null
                 return@suspendingReadAction null to createErrorResult(
                     if (isSymbolMode) "No method or class found for the specified symbol"
                     else "No method or class found at position"
