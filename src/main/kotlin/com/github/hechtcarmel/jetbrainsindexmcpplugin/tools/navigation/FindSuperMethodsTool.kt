@@ -10,6 +10,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.MethodInfo
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.SuperMethodInfo
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.SuperMethodsResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PsiUtils
 import com.intellij.openapi.project.Project
 import kotlinx.serialization.json.JsonObject
 
@@ -56,6 +57,15 @@ class FindSuperMethodsTool : AbstractMcpTool() {
                 return@suspendingReadAction createErrorResult(it.message ?: ErrorMessages.COULD_NOT_RESOLVE_SYMBOL)
             }
 
+            // Tool-layer gate: reject position-based invocations where the caret is not on a
+            // resolvable target. See CallHierarchyTool for rationale.
+            val isSymbolMode = arguments[ParamNames.LANGUAGE] != null
+            if (!isSymbolMode && PsiUtils.resolveTargetElement(element) == null) {
+                return@suspendingReadAction createErrorResult(
+                    "No method found at position. Ensure the position is within a method declaration or body."
+                )
+            }
+
             // Find appropriate handler for this element's language
             val handler = LanguageHandlerRegistry.getSuperMethodsHandler(element)
             if (handler == null) {
@@ -67,7 +77,6 @@ class FindSuperMethodsTool : AbstractMcpTool() {
 
             val superMethodsData = handler.findSuperMethods(element, project)
             if (superMethodsData == null) {
-                val isSymbolMode = arguments[ParamNames.LANGUAGE] != null
                 return@suspendingReadAction createErrorResult(
                     if (isSymbolMode) "No method found for the specified symbol. Ensure the symbol refers to a method declaration."
                     else "No method found at position. Ensure the position is within a method declaration or body."
