@@ -11,6 +11,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.AbstractMcpTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.CallElement
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.CallHierarchyResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PsiUtils
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
 import kotlinx.serialization.json.JsonObject
@@ -92,6 +93,18 @@ class CallHierarchyTool : AbstractMcpTool() {
                 return@suspendingReadAction createErrorResult(it.message ?: ErrorMessages.COULD_NOT_RESOLVE_SYMBOL)
             }
 
+            // Tool-layer gate: reject position-based invocations where the caret is not on a
+            // resolvable navigation target (comment, whitespace, literal). Uses the full
+            // resolveTargetElement chain to include parent-reference lookup — required so
+            // real call sites like `obj.foo()` (where the leaf `.foo` has no direct reference
+            // but the parent PsiReferenceExpression does) are still accepted. Symbol-mode
+            // invocations (language+symbol) return a PsiNamedElement directly and bypass the
+            // check.
+            val isSymbolMode = arguments[ParamNames.LANGUAGE] != null
+            if (!isSymbolMode && PsiUtils.resolveTargetElement(element) == null) {
+                return@suspendingReadAction createErrorResult("No method/function found at position")
+            }
+
             // Find appropriate handler for this element's language
             val handler = LanguageHandlerRegistry.getCallHierarchyHandler(element)
             if (handler == null) {
@@ -105,7 +118,6 @@ class CallHierarchyTool : AbstractMcpTool() {
 
             val hierarchyData = handler.getCallHierarchy(element, project, direction, depth, scope)
             if (hierarchyData == null) {
-                val isSymbolMode = arguments[ParamNames.LANGUAGE] != null
                 return@suspendingReadAction createErrorResult(
                     if (isSymbolMode) "No method/function found for the specified symbol"
                     else "No method/function found at position"
