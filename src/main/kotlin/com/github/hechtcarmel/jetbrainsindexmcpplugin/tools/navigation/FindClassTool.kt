@@ -14,6 +14,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.FindClassResu
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.SymbolMatch
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
 import com.intellij.navigation.ChooseByNameContributor
 import com.intellij.navigation.ChooseByNameContributorEx
 import com.intellij.navigation.NavigationItem
@@ -358,12 +359,7 @@ class FindClassTool : AbstractMcpTool() {
             }
         } ?: return null
 
-        val qualifiedName = try {
-            val method = targetElement.javaClass.getMethod("getQualifiedName")
-            method.invoke(targetElement) as? String
-        } catch (e: Exception) {
-            null
-        }
+        val qualifiedName = QualifiedNameUtil.getQualifiedName(targetElement)
 
         val line = getLineNumber(project, targetElement) ?: 1
         val kind = determineKind(targetElement)

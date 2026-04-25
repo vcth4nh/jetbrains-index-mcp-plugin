@@ -1,6 +1,7 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers
 
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
 import com.intellij.navigation.ChooseByNameContributor
 import com.intellij.navigation.ChooseByNameContributorEx
 import com.intellij.navigation.NavigationItem
@@ -236,13 +237,7 @@ object OptimizedSymbolSearch {
             }
         } ?: return null
 
-        val directQualifiedName = try {
-            val method = targetElement.javaClass.getMethod("getQualifiedName")
-            method.invoke(targetElement) as? String
-        } catch (e: Exception) {
-            null
-        }
-        val qualifiedName = directQualifiedName ?: buildQualifiedNameFromContainer(targetElement, name)
+        val qualifiedName = QualifiedNameUtil.getQualifiedName(targetElement)
 
         val line = getLineNumber(project, targetElement) ?: 1
         val kind = determineKind(targetElement)
@@ -258,25 +253,6 @@ object OptimizedSymbolSearch {
             containerName = containerName,
             language = language
         )
-    }
-
-    private fun buildQualifiedNameFromContainer(element: PsiElement, name: String): String? {
-        var parent = element.parent
-
-        while (parent != null) {
-            try {
-                val method = parent.javaClass.getMethod("getQualifiedName")
-                val parentQualifiedName = method.invoke(parent) as? String
-                if (!parentQualifiedName.isNullOrBlank()) {
-                    return "$parentQualifiedName.$name"
-                }
-            } catch (_: Exception) {
-                // Ignore and continue walking up the PSI tree.
-            }
-            parent = parent.parent
-        }
-
-        return null
     }
 
     private fun getLanguageName(element: PsiElement): String {

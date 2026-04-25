@@ -3,6 +3,7 @@ package com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.php
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.*
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PluginDetectors
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
@@ -298,19 +299,6 @@ abstract class BasePhpHandler<T> : LanguageHandler<T> {
     }
 
     /**
-     * Gets the FQN (Fully Qualified Name) of a PhpClass via reflection.
-     */
-    protected fun getFQN(element: PsiElement): String? {
-        return try {
-            val method = element.javaClass.getMethod("getFQN")
-            method.invoke(element) as? String
-        } catch (e: Exception) {
-            // Fallback to just the name
-            getName(element)
-        }
-    }
-
-    /**
      * Gets the superclass of a PhpClass via reflection.
      */
     protected fun getSuperClass(phpClass: PsiElement): PsiElement? {
@@ -478,8 +466,8 @@ class PhpTypeHierarchyHandler : BasePhpHandler<TypeHierarchyData>(), TypeHierarc
 
         return TypeHierarchyData(
             element = TypeElementData(
-                name = getFQN(phpClass) ?: getName(phpClass) ?: "unknown",
-                qualifiedName = getFQN(phpClass),
+                name = QualifiedNameUtil.getQualifiedName(phpClass) ?: getName(phpClass) ?: "unknown",
+                qualifiedName = QualifiedNameUtil.getQualifiedName(phpClass),
                 file = phpClass.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                 line = getLineNumber(project, phpClass),
                 kind = determineClassKind(phpClass),
@@ -499,7 +487,7 @@ class PhpTypeHierarchyHandler : BasePhpHandler<TypeHierarchyData>(), TypeHierarc
     ): List<TypeElementData> {
         if (depth > MAX_HIERARCHY_DEPTH) return emptyList()
 
-        val className = getFQN(phpClass) ?: getName(phpClass) ?: return emptyList()
+        val className = QualifiedNameUtil.getQualifiedName(phpClass) ?: getName(phpClass) ?: return emptyList()
         if (className in visited) return emptyList()
         visited.add(className)
 
@@ -509,12 +497,12 @@ class PhpTypeHierarchyHandler : BasePhpHandler<TypeHierarchyData>(), TypeHierarc
             // Get superclass (extends)
             val superClass = getSuperClass(phpClass)
             if (superClass != null && shouldIncludeNavigationElement(searchScope, superClass)) {
-                val superName = getFQN(superClass) ?: getName(superClass)
+                val superName = QualifiedNameUtil.getQualifiedName(superClass) ?: getName(superClass)
                 if (superName != null && superName !in visited) {
                     val superSupertypes = getSupertypes(project, superClass, visited, depth + 1, searchScope)
                     supertypes.add(TypeElementData(
                         name = superName,
-                        qualifiedName = getFQN(superClass),
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(superClass),
                         file = superClass.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                         line = getLineNumber(project, superClass),
                         kind = determineClassKind(superClass),
@@ -527,7 +515,7 @@ class PhpTypeHierarchyHandler : BasePhpHandler<TypeHierarchyData>(), TypeHierarc
             // Get implemented interfaces
             val interfaces = getImplementedInterfaces(phpClass)
             interfaces?.filterIsInstance<PsiElement>()?.forEach { iface ->
-                val ifaceName = getFQN(iface) ?: getName(iface)
+                val ifaceName = QualifiedNameUtil.getQualifiedName(iface) ?: getName(iface)
                 if (
                     ifaceName != null &&
                     ifaceName !in visited &&
@@ -536,7 +524,7 @@ class PhpTypeHierarchyHandler : BasePhpHandler<TypeHierarchyData>(), TypeHierarc
                     val ifaceSupertypes = getSupertypes(project, iface, visited, depth + 1, searchScope)
                     supertypes.add(TypeElementData(
                         name = ifaceName,
-                        qualifiedName = getFQN(iface),
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(iface),
                         file = iface.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                         line = getLineNumber(project, iface),
                         kind = "INTERFACE",
@@ -549,7 +537,7 @@ class PhpTypeHierarchyHandler : BasePhpHandler<TypeHierarchyData>(), TypeHierarc
             // Get used traits
             val traits = getTraits(phpClass)
             traits?.filterIsInstance<PsiElement>()?.forEach { trait ->
-                val traitName = getFQN(trait) ?: getName(trait)
+                val traitName = QualifiedNameUtil.getQualifiedName(trait) ?: getName(trait)
                 if (
                     traitName != null &&
                     traitName !in visited &&
@@ -557,7 +545,7 @@ class PhpTypeHierarchyHandler : BasePhpHandler<TypeHierarchyData>(), TypeHierarc
                 ) {
                     supertypes.add(TypeElementData(
                         name = traitName,
-                        qualifiedName = getFQN(trait),
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(trait),
                         file = trait.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                         line = getLineNumber(project, trait),
                         kind = "TRAIT",
@@ -578,7 +566,10 @@ class PhpTypeHierarchyHandler : BasePhpHandler<TypeHierarchyData>(), TypeHierarc
         searchScope: GlobalSearchScope
     ): List<TypeElementData> {
         return try {
-            val fqn = getFQN(phpClass) ?: return emptyList()
+            // PhpIndex.getAllSubclasses expects the PhpClass FQN form (e.g. "\Namespace\Foo").
+            // PhpQualifiedNameProvider currently produces this format; if that ever diverges,
+            // this path will silently return empty results — fall back to PhpClass#getFQN directly.
+            val fqn = QualifiedNameUtil.getQualifiedName(phpClass) ?: return emptyList()
             val results = mutableListOf<TypeElementData>()
 
             // Use PhpIndex.getAllSubclasses() - the correct API for finding PHP subclasses
@@ -589,8 +580,8 @@ class PhpTypeHierarchyHandler : BasePhpHandler<TypeHierarchyData>(), TypeHierarc
                 .take(100)
                 .forEach { subclass ->
                 results.add(TypeElementData(
-                    name = getFQN(subclass) ?: getName(subclass) ?: "unknown",
-                    qualifiedName = getFQN(subclass),
+                    name = QualifiedNameUtil.getQualifiedName(subclass) ?: getName(subclass) ?: "unknown",
+                    qualifiedName = QualifiedNameUtil.getQualifiedName(subclass),
                     file = subclass.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                     line = getLineNumber(project, subclass),
                     kind = determineClassKind(subclass),
@@ -658,7 +649,10 @@ class PhpImplementationsHandler : BasePhpHandler<List<ImplementationData>>(), Im
         return try {
             val methodName = getName(method) ?: return emptyList()
             val containingClass = getContainingClass(method) ?: return emptyList()
-            val classFqn = getFQN(containingClass) ?: return emptyList()
+            // PhpIndex.getAllSubclasses expects the PhpClass FQN form (e.g. "\Namespace\Foo").
+            // PhpQualifiedNameProvider currently produces this format; if that ever diverges,
+            // this path will silently return empty results — fall back to PhpClass#getFQN directly.
+            val classFqn = QualifiedNameUtil.getQualifiedName(containingClass) ?: return emptyList()
 
             val results = mutableListOf<ImplementationData>()
 
@@ -701,7 +695,10 @@ class PhpImplementationsHandler : BasePhpHandler<List<ImplementationData>>(), Im
         searchScope: GlobalSearchScope
     ): List<ImplementationData> {
         return try {
-            val fqn = getFQN(phpClass) ?: return emptyList()
+            // PhpIndex.getAllSubclasses expects the PhpClass FQN form (e.g. "\Namespace\Foo").
+            // PhpQualifiedNameProvider currently produces this format; if that ever diverges,
+            // this path will silently return empty results — fall back to PhpClass#getFQN directly.
+            val fqn = QualifiedNameUtil.getQualifiedName(phpClass) ?: return emptyList()
             val results = mutableListOf<ImplementationData>()
 
             // Use PhpIndex.getAllSubclasses() - the correct API for finding PHP implementations
@@ -714,7 +711,7 @@ class PhpImplementationsHandler : BasePhpHandler<List<ImplementationData>>(), Im
                 val file = subclass.containingFile?.virtualFile
                 if (file != null) {
                     results.add(ImplementationData(
-                        name = getFQN(subclass) ?: getName(subclass) ?: "unknown",
+                        name = QualifiedNameUtil.getQualifiedName(subclass) ?: getName(subclass) ?: "unknown",
                         file = getRelativePath(project, file),
                         line = getLineNumber(project, subclass) ?: 0,
                         column = getColumnNumber(project, subclass) ?: 0,
@@ -803,7 +800,7 @@ class PhpCallHierarchyHandler : BasePhpHandler<CallHierarchyData>(), CallHierarc
         // Check superclass
         val superClass = getSuperClass(containingClass)
         if (superClass != null) {
-            val superClassName = getFQN(superClass) ?: getName(superClass)
+            val superClassName = QualifiedNameUtil.getQualifiedName(superClass) ?: getName(superClass)
             val key = "$superClassName::$methodName"
             if (key !in visited) {
                 visited.add(key)
@@ -818,7 +815,7 @@ class PhpCallHierarchyHandler : BasePhpHandler<CallHierarchyData>(), CallHierarc
         // Check interfaces
         val interfaces = getImplementedInterfaces(containingClass)
         interfaces?.filterIsInstance<PsiElement>()?.forEach { iface ->
-            val ifaceName = getFQN(iface) ?: getName(iface)
+            val ifaceName = QualifiedNameUtil.getQualifiedName(iface) ?: getName(iface)
             val key = "$ifaceName::$methodName"
             if (key !in visited) {
                 visited.add(key)
@@ -971,7 +968,7 @@ class PhpCallHierarchyHandler : BasePhpHandler<CallHierarchyData>(), CallHierarc
 
     private fun getCallableKey(callable: PsiElement): String {
         val containingClass = if (isMethod(callable)) getContainingClass(callable) else null
-        val className = containingClass?.let { getFQN(it) ?: getName(it) } ?: ""
+        val className = containingClass?.let { QualifiedNameUtil.getQualifiedName(it) ?: getName(it) } ?: ""
         val callableName = getName(callable) ?: ""
         return "$className::$callableName"
     }
@@ -1026,7 +1023,7 @@ class PhpSuperMethodsHandler : BasePhpHandler<SuperMethodsData>(), SuperMethodsH
         val methodData = MethodData(
             name = getName(method) ?: "unknown",
             signature = buildMethodSignature(method),
-            containingClass = getFQN(containingClass) ?: getName(containingClass) ?: "unknown",
+            containingClass = QualifiedNameUtil.getQualifiedName(containingClass) ?: getName(containingClass) ?: "unknown",
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, method) ?: 0,
             column = getColumnNumber(project, method) ?: 0,
@@ -1057,7 +1054,7 @@ class PhpSuperMethodsHandler : BasePhpHandler<SuperMethodsData>(), SuperMethodsH
             // Check superclass
             val superClass = getSuperClass(containingClass)
             if (superClass != null) {
-                val superClassName = getFQN(superClass) ?: getName(superClass)
+                val superClassName = QualifiedNameUtil.getQualifiedName(superClass) ?: getName(superClass)
                 val key = "$superClassName::$methodName"
                 if (key !in visited) {
                     visited.add(key)
@@ -1087,7 +1084,7 @@ class PhpSuperMethodsHandler : BasePhpHandler<SuperMethodsData>(), SuperMethodsH
             // Check interfaces
             val interfaces = getImplementedInterfaces(containingClass)
             interfaces?.filterIsInstance<PsiElement>()?.forEach { iface ->
-                val ifaceName = getFQN(iface) ?: getName(iface)
+                val ifaceName = QualifiedNameUtil.getQualifiedName(iface) ?: getName(iface)
                 val key = "$ifaceName::$methodName"
                 if (key !in visited) {
                     visited.add(key)

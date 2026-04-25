@@ -8,6 +8,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.AbstractMcpTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.DefinitionResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PsiUtils
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDirectory
@@ -95,12 +96,12 @@ class FindDefinitionTool : AbstractMcpTool() {
                     astPath = PsiUtils.getAstPath(effectiveTarget)
                 ))
             }
-            // PsiPackage is Java-plugin-only; use reflection to avoid NoClassDefFoundError in non-Java IDEs
+            // PsiPackage is Java-plugin-only; guard with Class.forName / isInstance to avoid NoClassDefFoundError in non-Java IDEs.
+            // getDirectories remains reflective (loading package directories is out of scope for the QualifiedNameProvider migration).
             try {
                 val psiPackageClass = Class.forName("com.intellij.psi.PsiPackage")
                 if (psiPackageClass.isInstance(effectiveTarget)) {
-                    val qualifiedName = psiPackageClass.getMethod("getQualifiedName")
-                        .invoke(effectiveTarget) as? String ?: "unknown"
+                    val qualifiedName = QualifiedNameUtil.getQualifiedName(effectiveTarget) ?: "unknown"
                     val dirs = psiPackageClass
                         .getMethod("getDirectories", GlobalSearchScope::class.java)
                         .invoke(effectiveTarget, GlobalSearchScope.projectScope(project)) as Array<*>

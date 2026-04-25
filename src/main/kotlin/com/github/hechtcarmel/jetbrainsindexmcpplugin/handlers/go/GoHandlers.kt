@@ -3,6 +3,7 @@ package com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.go
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.*
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PluginDetectors
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
@@ -278,19 +279,6 @@ abstract class BaseGoHandler<T> : LanguageHandler<T> {
     }
 
     /**
-     * Gets the qualified name of a Go type via reflection.
-     */
-    protected fun getQualifiedName(element: PsiElement): String? {
-        return try {
-            val method = element.javaClass.getMethod("getQualifiedName")
-            method.invoke(element) as? String
-        } catch (e: Exception) {
-            // Fallback to just the name
-            getName(element)
-        }
-    }
-
-    /**
      * Gets the spec type (struct, interface, etc.) of a GoTypeSpec via reflection.
      */
     protected fun getSpecType(goTypeSpec: PsiElement): PsiElement? {
@@ -367,8 +355,8 @@ class GoTypeHierarchyHandler : BaseGoHandler<TypeHierarchyData>(), TypeHierarchy
 
         return TypeHierarchyData(
             element = TypeElementData(
-                name = getQualifiedName(goType) ?: getName(goType) ?: "unknown",
-                qualifiedName = getQualifiedName(goType),
+                name = QualifiedNameUtil.getQualifiedName(goType) ?: getName(goType) ?: "unknown",
+                qualifiedName = QualifiedNameUtil.getQualifiedName(goType),
                 file = goType.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                 line = getLineNumber(project, goType),
                 kind = determineTypeKind(goType),
@@ -389,7 +377,7 @@ class GoTypeHierarchyHandler : BaseGoHandler<TypeHierarchyData>(), TypeHierarchy
     ): List<TypeElementData> {
         if (depth > MAX_HIERARCHY_DEPTH) return emptyList()
 
-        val typeName = getQualifiedName(goType) ?: getName(goType) ?: return emptyList()
+        val typeName = QualifiedNameUtil.getQualifiedName(goType) ?: getName(goType) ?: return emptyList()
         if (typeName in visited) return emptyList()
         visited.add(typeName)
 
@@ -451,8 +439,8 @@ class GoTypeHierarchyHandler : BaseGoHandler<TypeHierarchyData>(), TypeHierarchy
                                     searchScope
                                 )
                                 embeddedTypes.add(TypeElementData(
-                                    name = getQualifiedName(resolvedType) ?: embeddedTypeName,
-                                    qualifiedName = getQualifiedName(resolvedType),
+                                    name = QualifiedNameUtil.getQualifiedName(resolvedType) ?: embeddedTypeName,
+                                    qualifiedName = QualifiedNameUtil.getQualifiedName(resolvedType),
                                     file = resolvedType.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                                     line = getLineNumber(project, resolvedType),
                                     kind = determineTypeKind(resolvedType),
@@ -510,8 +498,8 @@ class GoTypeHierarchyHandler : BaseGoHandler<TypeHierarchyData>(), TypeHierarchy
                                 searchScope
                             )
                             embeddedInterfaces.add(TypeElementData(
-                                name = getQualifiedName(resolvedType) ?: embeddedName,
-                                qualifiedName = getQualifiedName(resolvedType),
+                                name = QualifiedNameUtil.getQualifiedName(resolvedType) ?: embeddedName,
+                                qualifiedName = QualifiedNameUtil.getQualifiedName(resolvedType),
                                 file = resolvedType.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                                 line = getLineNumber(project, resolvedType),
                                 kind = "INTERFACE",
@@ -554,8 +542,8 @@ class GoTypeHierarchyHandler : BaseGoHandler<TypeHierarchyData>(), TypeHierarchy
             DefinitionsScopedSearch.search(goType, searchScope).forEach(Processor { definition ->
                 if (definition != goType && isGoTypeSpec(definition) && shouldIncludeNavigationElement(searchScope, definition)) {
                     results.add(TypeElementData(
-                        name = getQualifiedName(definition) ?: getName(definition) ?: "unknown",
-                        qualifiedName = getQualifiedName(definition),
+                        name = QualifiedNameUtil.getQualifiedName(definition) ?: getName(definition) ?: "unknown",
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(definition),
                         file = definition.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                         line = getLineNumber(project, definition),
                         kind = determineTypeKind(definition),
@@ -672,7 +660,7 @@ class GoImplementationsHandler : BaseGoHandler<List<ImplementationData>>(), Impl
                     val file = definition.containingFile?.virtualFile
                     if (file != null) {
                         results.add(ImplementationData(
-                            name = getQualifiedName(definition) ?: getName(definition) ?: "unknown",
+                            name = QualifiedNameUtil.getQualifiedName(definition) ?: getName(definition) ?: "unknown",
                             file = getRelativePath(project, file),
                             line = getLineNumber(project, definition) ?: 0,
                             column = getColumnNumber(project, definition) ?: 0,
@@ -1003,7 +991,7 @@ class GoSuperMethodsHandler : BaseGoHandler<SuperMethodsData>(), SuperMethodsHan
                                     results.add(SuperMethodData(
                                         name = methodName,
                                         signature = buildMethodSignature(embeddedMethod),
-                                        containingClass = getQualifiedName(embeddedType) ?: embeddedTypeName,
+                                        containingClass = QualifiedNameUtil.getQualifiedName(embeddedType) ?: embeddedTypeName,
                                         containingClassKind = determineTypeKind(embeddedType),
                                         file = file?.let { getRelativePath(project, it) },
                                         line = getLineNumber(project, embeddedMethod),

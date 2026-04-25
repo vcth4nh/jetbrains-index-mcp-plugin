@@ -598,7 +598,7 @@ class ToolModelsUnitTest : TestCase() {
         val result = FindSymbolResult(
             symbols = listOf(
                 SymbolMatch("UserService", "com.example.UserService", "CLASS", "src/UserService.kt", 10, 1, null),
-                SymbolMatch("findById", "com.example.UserRepository.findById", "METHOD", "src/UserRepository.kt", 25, 1, "UserRepository")
+                SymbolMatch("findById", "com.example.UserRepository#findById(java.lang.Long)", "METHOD", "src/UserRepository.kt", 25, 1, "UserRepository")
             ),
             totalCount = 2,
             query = "User"
@@ -651,7 +651,7 @@ class ToolModelsUnitTest : TestCase() {
     fun testSymbolMatchWithContainer() {
         val match = SymbolMatch(
             name = "findById",
-            qualifiedName = "com.example.UserRepository.findById",
+            qualifiedName = "com.example.UserRepository#findById(java.lang.Long)",
             kind = "METHOD",
             file = "src/UserRepository.kt",
             line = 25,

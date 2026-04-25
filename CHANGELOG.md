@@ -4,6 +4,19 @@
 
 ## [Unreleased]
 
+### Breaking
+- **`qualifiedName` field in MCP tool responses now matches IntelliJ's "Copy Reference" output.** All sites that produced `qualifiedName` now delegate to the platform's `QualifiedNameProvider` extension point — the same API "Copy Reference" uses. This eliminates per-language divergence: no more reflective probing, no per-language wrappers, no direct PSI property access at FQN-producing sites, no hand-rolled string concatenation. Affected tools: `ide_find_symbol`, `ide_find_class`, `ide_find_definition`, `ide_type_hierarchy`, `ide_call_hierarchy`, `ide_find_implementations`, `ide_find_super_methods`.
+
+  Per-language wire changes:
+  - **Java**: method/field access now uses `#` instead of `.`, and method qualified names include parameter signatures. E.g. `com.example.Foo.bar` → `com.example.Foo#bar(java.lang.String)`. Overloaded methods now have distinct qualified names. Java *class* FQNs are unchanged.
+  - **Rust**: elements the Rust provider doesn't handle now return `null` instead of the simple name (the `name` field is unaffected).
+  - **PHP**: edge-case elements where the PHP provider can't compute an FQN now return `null` for `qualifiedName` (previously a simple name). `name` fields are unchanged because call-site fallback chains compensate.
+  - **Python, Kotlin, JS/TS, Go**: no expected change in the common cases (providers produce the same output the plugin was approximating).
+
+  `qualifiedName` has always been nullable; clients must continue to handle `null`. Fixes the overload-collision problem where two Java methods with the same name produced identical qualified names.
+
+  Closes #3.
+
 ## [4.16.2] - 2026-04-25
 ### Fixed
 - **ide_find_definition, ide_find_references, ide_call_hierarchy, ide_find_implementations, ide_find_super_methods**: caret on a comment, whitespace, or literal no longer silently walks to the enclosing method/class/fn and returns results for that unrelated symbol. The previous behavior made these tools unreliable when clients (e.g., Serena) reported symbol locations that included docstrings or leading comments — the MCP tools would appear to succeed on the wrong target. Position-based invocations now return the tool's "no symbol at position" error (or an empty result for find_definition / find_references) unless the caret is on a reference or a declaration's name identifier.

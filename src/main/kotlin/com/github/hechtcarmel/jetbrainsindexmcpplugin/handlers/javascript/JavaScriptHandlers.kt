@@ -5,6 +5,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.StructureKind
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.StructureNode
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PluginDetectors
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
@@ -253,18 +254,6 @@ abstract class BaseJavaScriptHandler<T> : LanguageHandler<T> {
     }
 
     /**
-     * Gets the qualified name of a JSClass via reflection.
-     */
-    protected fun getQualifiedName(element: PsiElement): String? {
-        return try {
-            val method = element.javaClass.getMethod("getQualifiedName")
-            method.invoke(element) as? String
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    /**
      * Gets the kind of a JS class (class, interface, etc.)
      */
     protected fun getClassKind(jsClass: PsiElement): String {
@@ -368,8 +357,8 @@ class JavaScriptTypeHierarchyHandler : BaseJavaScriptHandler<TypeHierarchyData>(
 
         return TypeHierarchyData(
             element = TypeElementData(
-                name = getQualifiedName(jsClass) ?: getName(jsClass) ?: "unknown",
-                qualifiedName = getQualifiedName(jsClass),
+                name = QualifiedNameUtil.getQualifiedName(jsClass) ?: getName(jsClass) ?: "unknown",
+                qualifiedName = QualifiedNameUtil.getQualifiedName(jsClass),
                 file = jsClass.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                 line = getLineNumber(project, jsClass),
                 kind = getClassKind(jsClass),
@@ -389,7 +378,7 @@ class JavaScriptTypeHierarchyHandler : BaseJavaScriptHandler<TypeHierarchyData>(
     ): List<TypeElementData> {
         if (depth > MAX_HIERARCHY_DEPTH) return emptyList()
 
-        val className = getQualifiedName(jsClass) ?: getName(jsClass) ?: return emptyList()
+        val className = QualifiedNameUtil.getQualifiedName(jsClass) ?: getName(jsClass) ?: return emptyList()
         if (className in visited) return emptyList()
         visited.add(className)
 
@@ -399,12 +388,12 @@ class JavaScriptTypeHierarchyHandler : BaseJavaScriptHandler<TypeHierarchyData>(
             // Get superclasses
             val superClasses = getSuperClasses(jsClass)
             superClasses?.filterIsInstance<PsiElement>()?.forEach { superClass ->
-                val superName = getQualifiedName(superClass) ?: getName(superClass)
+                val superName = QualifiedNameUtil.getQualifiedName(superClass) ?: getName(superClass)
                 if (superName != null && shouldIncludeNavigationElement(searchScope, superClass)) {
                     val superSupertypes = getSupertypes(project, superClass, visited, depth + 1, searchScope)
                     supertypes.add(TypeElementData(
                         name = superName,
-                        qualifiedName = getQualifiedName(superClass),
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(superClass),
                         file = superClass.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                         line = getLineNumber(project, superClass),
                         kind = getClassKind(superClass),
@@ -417,7 +406,7 @@ class JavaScriptTypeHierarchyHandler : BaseJavaScriptHandler<TypeHierarchyData>(
             // Get implemented interfaces
             val interfaces = getImplementedInterfaces(jsClass)
             interfaces?.filterIsInstance<PsiElement>()?.forEach { iface ->
-                val ifaceName = getQualifiedName(iface) ?: getName(iface)
+                val ifaceName = QualifiedNameUtil.getQualifiedName(iface) ?: getName(iface)
                 if (
                     ifaceName != null &&
                     ifaceName !in visited &&
@@ -426,7 +415,7 @@ class JavaScriptTypeHierarchyHandler : BaseJavaScriptHandler<TypeHierarchyData>(
                     val ifaceSupertypes = getSupertypes(project, iface, visited, depth + 1, searchScope)
                     supertypes.add(TypeElementData(
                         name = ifaceName,
-                        qualifiedName = getQualifiedName(iface),
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(iface),
                         file = iface.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                         line = getLineNumber(project, iface),
                         kind = "INTERFACE",
@@ -487,8 +476,8 @@ class JavaScriptTypeHierarchyHandler : BaseJavaScriptHandler<TypeHierarchyData>(
         forEachMethod.invoke(query, Processor<Any> { inheritor ->
             if (inheritor is PsiElement && shouldIncludeNavigationElement(searchScope, inheritor)) {
                 results.add(TypeElementData(
-                    name = getQualifiedName(inheritor) ?: getName(inheritor) ?: "unknown",
-                    qualifiedName = getQualifiedName(inheritor),
+                    name = QualifiedNameUtil.getQualifiedName(inheritor) ?: getName(inheritor) ?: "unknown",
+                    qualifiedName = QualifiedNameUtil.getQualifiedName(inheritor),
                     file = inheritor.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                     line = getLineNumber(project, inheritor),
                     kind = getClassKind(inheritor),
@@ -511,8 +500,8 @@ class JavaScriptTypeHierarchyHandler : BaseJavaScriptHandler<TypeHierarchyData>(
         DefinitionsScopedSearch.search(jsClass, searchScope).forEach(Processor { definition ->
             if (definition != jsClass && isJSClass(definition) && shouldIncludeNavigationElement(searchScope, definition)) {
                 results.add(TypeElementData(
-                    name = getQualifiedName(definition) ?: getName(definition) ?: "unknown",
-                    qualifiedName = getQualifiedName(definition),
+                    name = QualifiedNameUtil.getQualifiedName(definition) ?: getName(definition) ?: "unknown",
+                    qualifiedName = QualifiedNameUtil.getQualifiedName(definition),
                     file = definition.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                     line = getLineNumber(project, definition),
                     kind = getClassKind(definition),
@@ -677,7 +666,7 @@ class JavaScriptImplementationsHandler : BaseJavaScriptHandler<List<Implementati
                 val file = inheritor.containingFile?.virtualFile
                 if (file != null) {
                     results.add(ImplementationData(
-                        name = getQualifiedName(inheritor) ?: getName(inheritor) ?: "unknown",
+                        name = QualifiedNameUtil.getQualifiedName(inheritor) ?: getName(inheritor) ?: "unknown",
                         file = getRelativePath(project, file),
                         line = getLineNumber(project, inheritor) ?: 0,
                         column = getColumnNumber(project, inheritor) ?: 0,
@@ -709,7 +698,7 @@ class JavaScriptImplementationsHandler : BaseJavaScriptHandler<List<Implementati
                         else -> "UNKNOWN"
                     }
                     results.add(ImplementationData(
-                        name = getQualifiedName(definition) ?: getName(definition) ?: "unknown",
+                        name = QualifiedNameUtil.getQualifiedName(definition) ?: getName(definition) ?: "unknown",
                         file = getRelativePath(project, file),
                         line = getLineNumber(project, definition) ?: 0,
                         column = getColumnNumber(project, definition) ?: 0,
@@ -788,7 +777,7 @@ class JavaScriptCallHierarchyHandler : BaseJavaScriptHandler<CallHierarchyData>(
 
         val superClasses = getSuperClasses(containingClass)
         superClasses?.filterIsInstance<PsiElement>()?.forEach { superClass ->
-            val superClassName = getQualifiedName(superClass) ?: getName(superClass)
+            val superClassName = QualifiedNameUtil.getQualifiedName(superClass) ?: getName(superClass)
             val key = "$superClassName.$methodName"
             if (key in visited) return@forEach
             visited.add(key)
@@ -802,7 +791,7 @@ class JavaScriptCallHierarchyHandler : BaseJavaScriptHandler<CallHierarchyData>(
 
         val interfaces = getImplementedInterfaces(containingClass)
         interfaces?.filterIsInstance<PsiElement>()?.forEach { iface ->
-            val ifaceName = getQualifiedName(iface) ?: getName(iface)
+            val ifaceName = QualifiedNameUtil.getQualifiedName(iface) ?: getName(iface)
             val key = "$ifaceName.$methodName"
             if (key in visited) return@forEach
             visited.add(key)
@@ -946,7 +935,7 @@ class JavaScriptCallHierarchyHandler : BaseJavaScriptHandler<CallHierarchyData>(
 
     private fun getFunctionKey(jsFunction: PsiElement): String {
         val containingClass = findContainingJSClass(jsFunction)
-        val className = containingClass?.let { getQualifiedName(it) ?: getName(it) } ?: ""
+        val className = containingClass?.let { QualifiedNameUtil.getQualifiedName(it) ?: getName(it) } ?: ""
         val functionName = getName(jsFunction) ?: ""
         val file = jsFunction.containingFile?.virtualFile?.path ?: ""
         return "$file:$className.$functionName"
@@ -994,7 +983,7 @@ class JavaScriptSuperMethodsHandler : BaseJavaScriptHandler<SuperMethodsData>(),
         val methodData = MethodData(
             name = getName(jsFunction) ?: "unknown",
             signature = buildMethodSignature(jsFunction),
-            containingClass = getQualifiedName(containingClass) ?: getName(containingClass) ?: "unknown",
+            containingClass = QualifiedNameUtil.getQualifiedName(containingClass) ?: getName(containingClass) ?: "unknown",
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, jsFunction) ?: 0,
             column = getColumnNumber(project, jsFunction) ?: 0,
@@ -1025,7 +1014,7 @@ class JavaScriptSuperMethodsHandler : BaseJavaScriptHandler<SuperMethodsData>(),
             // Get superclasses and look for methods with the same name
             val superClasses = getSuperClasses(containingClass)
             superClasses?.filterIsInstance<PsiElement>()?.forEach { superClass ->
-                val superClassName = getQualifiedName(superClass) ?: getName(superClass)
+                val superClassName = QualifiedNameUtil.getQualifiedName(superClass) ?: getName(superClass)
                 val key = "$superClassName.$methodName"
                 if (key in visited) return@forEach
                 visited.add(key)
@@ -1054,7 +1043,7 @@ class JavaScriptSuperMethodsHandler : BaseJavaScriptHandler<SuperMethodsData>(),
             // Also check implemented interfaces
             val interfaces = getImplementedInterfaces(containingClass)
             interfaces?.filterIsInstance<PsiElement>()?.forEach { iface ->
-                val ifaceName = getQualifiedName(iface) ?: getName(iface)
+                val ifaceName = QualifiedNameUtil.getQualifiedName(iface) ?: getName(iface)
                 val key = "$ifaceName.$methodName"
                 if (key in visited) return@forEach
                 visited.add(key)
@@ -1376,7 +1365,7 @@ class JavaScriptStructureHandler : BaseJavaScriptHandler<List<StructureNode>>(),
             val superClasses = getSuperClasses(jsClass)
             if (superClasses != null && superClasses.isNotEmpty()) {
                 val names = superClasses.filterIsInstance<PsiElement>().mapNotNull {
-                    getQualifiedName(it) ?: getName(it)
+                    QualifiedNameUtil.getQualifiedName(it) ?: getName(it)
                 }
                 if (names.isNotEmpty()) "extends ${names.joinToString(", ")}" else ""
             } else ""

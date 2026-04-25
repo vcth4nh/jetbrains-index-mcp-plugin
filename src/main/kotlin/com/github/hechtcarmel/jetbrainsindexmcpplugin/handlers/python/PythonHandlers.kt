@@ -5,6 +5,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.StructureKind
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.StructureNode
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PluginDetectors
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
@@ -175,18 +176,6 @@ abstract class BasePythonHandler<T> : LanguageHandler<T> {
     }
 
     /**
-     * Gets the qualified name of a PyClass via reflection.
-     */
-    protected fun getQualifiedName(element: PsiElement): String? {
-        return try {
-            val method = element.javaClass.getMethod("getQualifiedName")
-            method.invoke(element) as? String
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    /**
      * Gets superclasses of a PyClass via reflection.
      */
     protected fun getSuperClasses(
@@ -293,8 +282,8 @@ class PythonTypeHierarchyHandler : BasePythonHandler<TypeHierarchyData>(), TypeH
 
         return TypeHierarchyData(
             element = TypeElementData(
-                name = getQualifiedName(pyClass) ?: getName(pyClass) ?: "unknown",
-                qualifiedName = getQualifiedName(pyClass),
+                name = QualifiedNameUtil.getQualifiedName(pyClass) ?: getName(pyClass) ?: "unknown",
+                qualifiedName = QualifiedNameUtil.getQualifiedName(pyClass),
                 file = pyClass.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                 line = getLineNumber(project, pyClass),
                 kind = "CLASS",
@@ -314,7 +303,7 @@ class PythonTypeHierarchyHandler : BasePythonHandler<TypeHierarchyData>(), TypeH
     ): List<TypeElementData> {
         if (depth > MAX_HIERARCHY_DEPTH) return emptyList()
 
-        val className = getQualifiedName(pyClass) ?: getName(pyClass) ?: return emptyList()
+        val className = QualifiedNameUtil.getQualifiedName(pyClass) ?: getName(pyClass) ?: return emptyList()
         if (className in visited || className == "object") return emptyList()
         visited.add(className)
 
@@ -323,7 +312,7 @@ class PythonTypeHierarchyHandler : BasePythonHandler<TypeHierarchyData>(), TypeH
         try {
             val superClasses = getSuperClasses(pyClass)
             superClasses?.filterIsInstance<PsiElement>()?.forEach { superClass ->
-                val superName = getQualifiedName(superClass) ?: getName(superClass)
+                val superName = QualifiedNameUtil.getQualifiedName(superClass) ?: getName(superClass)
                 if (
                     superName != null &&
                     superName != "object" &&
@@ -332,7 +321,7 @@ class PythonTypeHierarchyHandler : BasePythonHandler<TypeHierarchyData>(), TypeH
                     val superSupertypes = getSupertypes(project, superClass, visited, depth + 1, searchScope)
                     supertypes.add(TypeElementData(
                         name = superName,
-                        qualifiedName = getQualifiedName(superClass),
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(superClass),
                         file = superClass.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                         line = getLineNumber(project, superClass),
                         kind = "CLASS",
@@ -366,8 +355,8 @@ class PythonTypeHierarchyHandler : BasePythonHandler<TypeHierarchyData>(), TypeH
                 .take(100)
                 .map { inheritor ->
                     TypeElementData(
-                        name = getQualifiedName(inheritor) ?: getName(inheritor) ?: "unknown",
-                        qualifiedName = getQualifiedName(inheritor),
+                        name = QualifiedNameUtil.getQualifiedName(inheritor) ?: getName(inheritor) ?: "unknown",
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(inheritor),
                         file = inheritor.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                         line = getLineNumber(project, inheritor),
                         kind = "CLASS",
@@ -466,7 +455,7 @@ class PythonImplementationsHandler : BasePythonHandler<List<ImplementationData>>
                 .mapNotNull { inheritor ->
                     val file = inheritor.containingFile?.virtualFile ?: return@mapNotNull null
                     ImplementationData(
-                        name = getQualifiedName(inheritor) ?: getName(inheritor) ?: "unknown",
+                        name = QualifiedNameUtil.getQualifiedName(inheritor) ?: getName(inheritor) ?: "unknown",
                         file = getRelativePath(project, file),
                         line = getLineNumber(project, inheritor) ?: 0,
                         column = getColumnNumber(project, inheritor) ?: 0,
@@ -546,7 +535,7 @@ class PythonCallHierarchyHandler : BasePythonHandler<CallHierarchyData>(), CallH
 
         val superClasses = getSuperClasses(containingClass)
         superClasses?.filterIsInstance<PsiElement>()?.forEach { superClass ->
-            val superClassName = getQualifiedName(superClass) ?: getName(superClass)
+            val superClassName = QualifiedNameUtil.getQualifiedName(superClass) ?: getName(superClass)
             val key = "$superClassName.$methodName"
             if (key in visited) return@forEach
             visited.add(key)
@@ -710,7 +699,7 @@ class PythonCallHierarchyHandler : BasePythonHandler<CallHierarchyData>(), CallH
 
     private fun getFunctionKey(pyFunction: PsiElement): String {
         val containingClass = findContainingPyClass(pyFunction)
-        val className = containingClass?.let { getQualifiedName(it) ?: getName(it) } ?: ""
+        val className = containingClass?.let { QualifiedNameUtil.getQualifiedName(it) ?: getName(it) } ?: ""
         val functionName = getName(pyFunction) ?: ""
         return "$className.$functionName"
     }
@@ -755,7 +744,7 @@ class PythonSuperMethodsHandler : BasePythonHandler<SuperMethodsData>(), SuperMe
         val methodData = MethodData(
             name = getName(pyFunction) ?: "unknown",
             signature = buildMethodSignature(pyFunction),
-            containingClass = getQualifiedName(containingClass) ?: getName(containingClass) ?: "unknown",
+            containingClass = QualifiedNameUtil.getQualifiedName(containingClass) ?: getName(containingClass) ?: "unknown",
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, pyFunction) ?: 0,
             column = getColumnNumber(project, pyFunction) ?: 0,
@@ -785,7 +774,7 @@ class PythonSuperMethodsHandler : BasePythonHandler<SuperMethodsData>(), SuperMe
 
             val superClasses = getSuperClasses(containingClass)
             superClasses?.filterIsInstance<PsiElement>()?.forEach { superClass ->
-                val superClassName = getQualifiedName(superClass) ?: getName(superClass)
+                val superClassName = QualifiedNameUtil.getQualifiedName(superClass) ?: getName(superClass)
                 val key = "$superClassName.$methodName"
                 if (key in visited) return@forEach
                 visited.add(key)
@@ -1006,7 +995,7 @@ class PythonStructureHandler : BasePythonHandler<List<StructureNode>>(), Structu
                 val names = superClasses.mapNotNull {
                     val element = it as? PsiElement
                     if (element != null) {
-                        getQualifiedName(element) ?: getName(element)
+                        QualifiedNameUtil.getQualifiedName(element) ?: getName(element)
                     } else null
                 }
                 return "(${names.joinToString(", ")})"

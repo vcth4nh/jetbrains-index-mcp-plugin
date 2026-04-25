@@ -3,6 +3,7 @@ package com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.rust
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.*
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PluginDetectors
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
@@ -349,27 +350,6 @@ abstract class BaseRustHandler<T> : LanguageHandler<T> {
         }
     }
 
-    /**
-     * Gets a qualified name for a Rust element if available.
-     */
-    protected fun getQualifiedName(element: PsiElement): String? {
-        return try {
-            // Try different methods for getting qualified names
-            val methodNames = listOf("getQualifiedName", "getName")
-            for (methodName in methodNames) {
-                try {
-                    val method = element.javaClass.getMethod(methodName)
-                    val result = method.invoke(element) as? String
-                    if (result != null) return result
-                } catch (e: NoSuchMethodException) {
-                    continue
-                }
-            }
-            null
-        } catch (e: Exception) {
-            getName(element)
-        }
-    }
 }
 
 /**
@@ -449,7 +429,7 @@ class RustTypeHierarchyHandler : BaseRustHandler<TypeHierarchyData>(), TypeHiera
         return TypeHierarchyData(
             element = TypeElementData(
                 name = getName(trait) ?: "unknown",
-                qualifiedName = getQualifiedName(trait),
+                qualifiedName = QualifiedNameUtil.getQualifiedName(trait),
                 file = trait.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                 line = getLineNumber(project, trait),
                 kind = "TRAIT",
@@ -489,7 +469,7 @@ class RustTypeHierarchyHandler : BaseRustHandler<TypeHierarchyData>(), TypeHiera
                         val nestedSupertypes = getSupertraitHierarchy(project, resolved, visited, depth + 1, searchScope)
                         supertypes.add(TypeElementData(
                             name = resolvedName,
-                            qualifiedName = getQualifiedName(resolved),
+                            qualifiedName = QualifiedNameUtil.getQualifiedName(resolved),
                             file = resolved.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                             line = getLineNumber(project, resolved),
                             kind = "TRAIT",
@@ -529,7 +509,7 @@ class RustTypeHierarchyHandler : BaseRustHandler<TypeHierarchyData>(), TypeHiera
                             val targetElement = resolvedType ?: definition
                             results.add(TypeElementData(
                                 name = typeName,
-                                qualifiedName = resolvedType?.let { getQualifiedName(it) },
+                                qualifiedName = resolvedType?.let { QualifiedNameUtil.getQualifiedName(it) },
                                 file = targetElement.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                                 line = getLineNumber(project, targetElement),
                                 kind = if (resolvedType != null) determineElementKind(resolvedType) else "IMPL",
@@ -559,7 +539,7 @@ class RustTypeHierarchyHandler : BaseRustHandler<TypeHierarchyData>(), TypeHiera
         return TypeHierarchyData(
             element = TypeElementData(
                 name = getName(type) ?: "unknown",
-                qualifiedName = getQualifiedName(type),
+                qualifiedName = QualifiedNameUtil.getQualifiedName(type),
                 file = type.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                 line = getLineNumber(project, type),
                 kind = determineElementKind(type),
@@ -595,7 +575,7 @@ class RustTypeHierarchyHandler : BaseRustHandler<TypeHierarchyData>(), TypeHiera
                             val targetElement = resolvedTrait ?: impl
                             results.add(TypeElementData(
                                 name = traitName,
-                                qualifiedName = resolvedTrait?.let { getQualifiedName(it) },
+                                qualifiedName = resolvedTrait?.let { QualifiedNameUtil.getQualifiedName(it) },
                                 file = targetElement.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                                 line = getLineNumber(project, targetElement),
                                 kind = "TRAIT",
@@ -632,7 +612,7 @@ class RustTypeHierarchyHandler : BaseRustHandler<TypeHierarchyData>(), TypeHiera
                 val targetElement = resolvedTrait ?: impl
                 supertypes.add(TypeElementData(
                     name = traitName,
-                    qualifiedName = resolvedTrait?.let { getQualifiedName(it) },
+                    qualifiedName = resolvedTrait?.let { QualifiedNameUtil.getQualifiedName(it) },
                     file = targetElement.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                     line = getLineNumber(project, targetElement),
                     kind = "TRAIT",
@@ -649,7 +629,7 @@ class RustTypeHierarchyHandler : BaseRustHandler<TypeHierarchyData>(), TypeHiera
                 val targetElement = resolvedType ?: impl
                 subtypes.add(TypeElementData(
                     name = typeName,
-                    qualifiedName = resolvedType?.let { getQualifiedName(it) },
+                    qualifiedName = resolvedType?.let { QualifiedNameUtil.getQualifiedName(it) },
                     file = targetElement.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                     line = getLineNumber(project, targetElement),
                     kind = if (resolvedType != null) determineElementKind(resolvedType) else "TYPE",
