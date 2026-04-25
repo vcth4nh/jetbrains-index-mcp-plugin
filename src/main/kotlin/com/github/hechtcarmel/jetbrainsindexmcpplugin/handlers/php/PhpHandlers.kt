@@ -334,7 +334,7 @@ abstract class BasePhpHandler<T> : LanguageHandler<T> {
 
     private fun isPhpMethodLike(element: PsiElement): Boolean {
         val name = element.javaClass.name
-        return name.contains("Method") || name.endsWith("Function") || name.endsWith("FunctionImpl")
+        return name.contains("Method") || name.contains("Function")
     }
 
     private fun isPhpClassLike(element: PsiElement): Boolean {
