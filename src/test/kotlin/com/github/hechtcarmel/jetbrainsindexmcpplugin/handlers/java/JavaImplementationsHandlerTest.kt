@@ -175,6 +175,119 @@ class JavaImplementationsHandlerTest : BasePlatformTestCase() {
         )
     }
 
+    fun testFunctionalInterfaceMixedClassAndLambdaImpls() {
+        // When the interface has both a concrete class implementor AND a lambda assignment,
+        // both must appear in the result, no double-counting.
+        myFixture.configureByText(
+            "Sample.java",
+            """
+            package com.example;
+            public class Sample {
+                @FunctionalInterface
+                interface Executor { void execute(String cmd); }
+
+                static class ConcreteExec implements Executor {
+                    @Override public void execute(String cmd) {}
+                }
+
+                static void useLambda() {
+                    Executor exec = s -> {};
+                }
+            }
+            """.trimIndent()
+        )
+        val executor = ReadAction.compute<PsiClass?, Throwable> {
+            findClass("com.example.Sample")?.findInnerClassByName("Executor", false)
+        }
+        assertNotNull(executor)
+
+        val result = ReadAction.compute<List<ImplementationData>?, Throwable> {
+            handler.findImplementations(executor!!, project, BuiltInSearchScope.PROJECT_FILES)
+        }
+        assertNotNull(result)
+        assertEquals("Expected exactly 2 impls (1 class + 1 lambda), got ${result!!.size}", 2, result.size)
+
+        val kinds = result.map { it.kind }.toSet()
+        assertTrue("Expected LAMBDA among kinds: $kinds", kinds.contains("LAMBDA"))
+        assertTrue("Expected non-LAMBDA class impl among kinds: $kinds", kinds.any { it != "LAMBDA" && it != "METHOD_REFERENCE" })
+    }
+
+    fun testFunctionalInterfaceDefaultMethodDoesNotSurfaceLambdas() {
+        // Querying find_implementations on a *default* method of a functional interface
+        // must NOT trigger lambda search — lambdas only override the SAM.
+        myFixture.configureByText(
+            "Sample.java",
+            """
+            package com.example;
+            public class Sample {
+                @FunctionalInterface
+                interface Executor {
+                    void execute(String cmd);          // SAM
+                    default void describe() {}         // default — not the SAM
+                }
+
+                static void useLambda() {
+                    Executor exec = s -> {};
+                }
+            }
+            """.trimIndent()
+        )
+
+        val describeMethod = ReadAction.compute<PsiMethod?, Throwable> {
+            findClass("com.example.Sample")
+                ?.findInnerClassByName("Executor", false)
+                ?.findMethodsByName("describe", false)?.firstOrNull()
+        }
+        assertNotNull(describeMethod)
+
+        val result = ReadAction.compute<List<ImplementationData>?, Throwable> {
+            handler.findImplementations(describeMethod!!, project, BuiltInSearchScope.PROJECT_FILES)
+        }
+        assertNotNull(result)
+
+        val functionalKinds = result!!.filter { it.kind == "LAMBDA" || it.kind == "METHOD_REFERENCE" }
+        assertTrue(
+            "Querying a non-SAM (default) method must not return lambdas; got: $functionalKinds",
+            functionalKinds.isEmpty()
+        )
+    }
+
+    fun testFunctionalInterfaceLambdaInFieldInitializer() {
+        // Lambda in a field initializer has no enclosing PsiMethod. Name builder must not
+        // crash and must still produce a sensible label.
+        myFixture.configureByText(
+            "Sample.java",
+            """
+            package com.example;
+            public class Sample {
+                @FunctionalInterface
+                interface Executor { void execute(String cmd); }
+
+                static final Executor STATIC_EXEC = s -> {};
+                final Executor instanceExec = s -> System.out.println(s);
+            }
+            """.trimIndent()
+        )
+
+        val executor = ReadAction.compute<PsiClass?, Throwable> {
+            findClass("com.example.Sample")?.findInnerClassByName("Executor", false)
+        }
+        assertNotNull(executor)
+
+        val result = ReadAction.compute<List<ImplementationData>?, Throwable> {
+            handler.findImplementations(executor!!, project, BuiltInSearchScope.PROJECT_FILES)
+        }
+        assertNotNull(result)
+        assertEquals("Expected 2 lambda impls in field initializers, got ${result!!.size}", 2, result.size)
+
+        result.forEach { impl ->
+            assertEquals("LAMBDA", impl.kind)
+            assertFalse("Name must not be blank: '${impl.name}'", impl.name.isBlank())
+            assertFalse("Name must not be 'unknown': '${impl.name}'", impl.name == "unknown")
+            assertTrue("Name should mention enclosing class 'Sample': '${impl.name}'", impl.name.contains("Sample"))
+        }
+    }
+
     fun testKotlinClassReportsLanguageKotlin() {
         // Sanity check the language.id fix: Kotlin source classes navigated via KtUltraLightClass
         // should report language="Kotlin", not "Java".
