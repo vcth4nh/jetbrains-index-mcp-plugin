@@ -11,6 +11,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.*
+import com.intellij.psi.presentation.java.ClassPresentationUtil
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.ClassInheritorsSearch
 import com.intellij.psi.search.searches.MethodReferencesSearch
@@ -353,7 +354,7 @@ class JavaTypeHierarchyHandler : BaseJavaHandler<TypeHierarchyData>(), TypeHiera
 
         return TypeHierarchyData(
             element = TypeElementData(
-                name = QualifiedNameUtil.getQualifiedName(psiClass) ?: psiClass.name ?: "unknown",
+                name = ClassPresentationUtil.getNameForClass(psiClass, true),
                 qualifiedName = QualifiedNameUtil.getQualifiedName(psiClass),
                 file = psiClass.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                 line = getLineNumber(project, psiClass),
@@ -392,7 +393,7 @@ class JavaTypeHierarchyHandler : BaseJavaHandler<TypeHierarchyData>(), TypeHiera
                     searchScope
                 )
                 supertypes.add(TypeElementData(
-                    name = QualifiedNameUtil.getQualifiedName(superClass) ?: superClass.name ?: "unknown",
+                    name = ClassPresentationUtil.getNameForClass(superClass, true),
                     qualifiedName = QualifiedNameUtil.getQualifiedName(superClass),
                     file = superClass.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                     line = getLineNumber(project, superClass),
@@ -411,7 +412,7 @@ class JavaTypeHierarchyHandler : BaseJavaHandler<TypeHierarchyData>(), TypeHiera
                 ) {
                     val superSupertypes = getSupertypes(project, resolved, visited, depth + 1, searchScope)
                     supertypes.add(TypeElementData(
-                        name = QualifiedNameUtil.getQualifiedName(resolved) ?: resolved.name ?: "unknown",
+                        name = ClassPresentationUtil.getNameForClass(resolved, true),
                         qualifiedName = QualifiedNameUtil.getQualifiedName(resolved),
                         file = resolved.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                         line = getLineNumber(project, resolved),
@@ -443,7 +444,7 @@ class JavaTypeHierarchyHandler : BaseJavaHandler<TypeHierarchyData>(), TypeHiera
                 if (shouldIncludeNavigationElement(searchScope, iface)) {
                     val ifaceSupertypes = getSupertypes(project, iface, visited, depth + 1, searchScope)
                     supertypes.add(TypeElementData(
-                        name = QualifiedNameUtil.getQualifiedName(iface) ?: iface.name ?: "unknown",
+                        name = ClassPresentationUtil.getNameForClass(iface, true),
                         qualifiedName = QualifiedNameUtil.getQualifiedName(iface),
                         file = iface.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                         line = getLineNumber(project, iface),
@@ -460,7 +461,7 @@ class JavaTypeHierarchyHandler : BaseJavaHandler<TypeHierarchyData>(), TypeHiera
                 if (resolved != null && shouldIncludeNavigationElement(searchScope, resolved)) {
                     val ifaceSupertypes = getSupertypes(project, resolved, visited, depth + 1, searchScope)
                     supertypes.add(TypeElementData(
-                        name = QualifiedNameUtil.getQualifiedName(resolved) ?: resolved.name ?: "unknown",
+                        name = ClassPresentationUtil.getNameForClass(resolved, true),
                         qualifiedName = QualifiedNameUtil.getQualifiedName(resolved),
                         file = resolved.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                         line = getLineNumber(project, resolved),
@@ -496,7 +497,7 @@ class JavaTypeHierarchyHandler : BaseJavaHandler<TypeHierarchyData>(), TypeHiera
             ClassInheritorsSearch.search(psiClass, searchScope, true).forEach(Processor { subClass ->
                 if (shouldIncludeNavigationElement(searchScope, subClass)) {
                     results.add(TypeElementData(
-                        name = QualifiedNameUtil.getQualifiedName(subClass) ?: subClass.name ?: "unknown",
+                        name = ClassPresentationUtil.getNameForClass(subClass, true),
                         qualifiedName = QualifiedNameUtil.getQualifiedName(subClass),
                         file = subClass.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                         line = getLineNumber(project, subClass),
@@ -558,12 +559,14 @@ class JavaImplementationsHandler : BaseJavaHandler<List<ImplementationData>>(), 
                 val file = overridingMethod.containingFile?.virtualFile
                 if (file != null && shouldIncludeNavigationElement(searchScope, overridingMethod)) {
                     results.add(ImplementationData(
-                        name = "${overridingMethod.containingClass?.name}.${overridingMethod.name}",
+                        name = (overridingMethod.containingClass?.let { ClassPresentationUtil.getNameForClass(it, true) }
+                            ?: "unknown") + "." + overridingMethod.name,
                         file = getRelativePath(project, file),
                         line = getLineNumber(project, overridingMethod) ?: 0,
                         column = getColumnNumber(project, overridingMethod) ?: 0,
                         kind = "METHOD",
-                        language = if (overridingMethod.language.id == "kotlin") "Kotlin" else "Java"
+                        language = if (overridingMethod.language.id == "kotlin") "Kotlin" else "Java",
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(overridingMethod)
                     ))
                 }
                 results.size < 100
@@ -585,12 +588,13 @@ class JavaImplementationsHandler : BaseJavaHandler<List<ImplementationData>>(), 
                 val file = inheritor.containingFile?.virtualFile
                 if (file != null && shouldIncludeNavigationElement(searchScope, inheritor)) {
                     results.add(ImplementationData(
-                        name = QualifiedNameUtil.getQualifiedName(inheritor) ?: inheritor.name ?: "unknown",
+                        name = ClassPresentationUtil.getNameForClass(inheritor, true),
                         file = getRelativePath(project, file),
                         line = getLineNumber(project, inheritor) ?: 0,
                         column = getColumnNumber(project, inheritor) ?: 0,
                         kind = getClassKind(inheritor),
-                        language = if (inheritor.language.id == "kotlin") "Kotlin" else "Java"
+                        language = if (inheritor.language.id == "kotlin") "Kotlin" else "Java",
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(inheritor)
                     ))
                 }
                 results.size < 100
@@ -906,7 +910,7 @@ class JavaCallHierarchyHandler : BaseJavaHandler<CallHierarchyData>(), CallHiera
     private fun createCallElement(project: Project, method: PsiMethod, children: List<CallElementData>? = null): CallElementData {
         val file = method.containingFile?.virtualFile
         val methodName = buildString {
-            method.containingClass?.name?.let { append(it).append(".") }
+            method.containingClass?.let { append(ClassPresentationUtil.getNameForClass(it, true)).append(".") }
             append(method.name)
             append("(")
             append(method.parameterList.parameters.joinToString(", ") {
@@ -920,7 +924,8 @@ class JavaCallHierarchyHandler : BaseJavaHandler<CallHierarchyData>(), CallHiera
             line = getLineNumber(project, method) ?: 0,
             column = getColumnNumber(project, method) ?: 0,
             language = if (method.navigationElement.language.id == "kotlin") "Kotlin" else "Java",
-            children = children?.takeIf { it.isNotEmpty() }
+            children = children?.takeIf { it.isNotEmpty() },
+            qualifiedName = QualifiedNameUtil.getQualifiedName(method)
         )
     }
 }
@@ -948,7 +953,7 @@ class JavaSuperMethodsHandler : BaseJavaHandler<SuperMethodsData>(), SuperMethod
         val methodData = MethodData(
             name = method.name,
             signature = buildMethodSignature(method),
-            containingClass = QualifiedNameUtil.getQualifiedName(containingClass) ?: containingClass.name ?: "unknown",
+            containingClass = ClassPresentationUtil.getNameForClass(containingClass, true),
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, method) ?: 0,
             column = getColumnNumber(project, method) ?: 0,
@@ -983,7 +988,7 @@ class JavaSuperMethodsHandler : BaseJavaHandler<SuperMethodsData>(), SuperMethod
             hierarchy.add(SuperMethodData(
                 name = superMethod.name,
                 signature = buildMethodSignature(superMethod),
-                containingClass = containingClass?.let { QualifiedNameUtil.getQualifiedName(it) } ?: containingClass?.name ?: "unknown",
+                containingClass = containingClass?.let { ClassPresentationUtil.getNameForClass(it, true) } ?: "unknown",
                 containingClassKind = containingClass?.let { getClassKind(it) } ?: "UNKNOWN",
                 file = file?.let { getRelativePath(project, it) },
                 line = getLineNumber(project, superMethod),

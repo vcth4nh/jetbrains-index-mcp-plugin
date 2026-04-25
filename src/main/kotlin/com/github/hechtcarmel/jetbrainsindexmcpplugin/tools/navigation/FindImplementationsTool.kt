@@ -135,7 +135,8 @@ class FindImplementationsTool : AbstractMcpTool() {
                     line = impl.line,
                     column = impl.column,
                     kind = impl.kind,
-                    language = impl.language
+                    language = impl.language,
+                    qualifiedName = impl.qualifiedName
                 )
             }
 
