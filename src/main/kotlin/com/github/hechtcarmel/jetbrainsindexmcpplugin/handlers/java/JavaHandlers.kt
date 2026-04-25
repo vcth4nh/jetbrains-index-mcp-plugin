@@ -369,18 +369,23 @@ class JavaTypeHierarchyHandler : BaseJavaHandler<TypeHierarchyData>(), TypeHiera
 
     /**
      * Returns the immediate supertypes of [psiClass] using IntelliJ's own
-     * [SupertypesHierarchyTreeStructure] — the same helper the IDE's Type Hierarchy
-     * tool window calls. This includes inherent JDK supers (java.lang.Enum for enums,
-     * java.lang.Record for records, java.lang.annotation.Annotation for annotation
-     * types, java.lang.Object for plain classes, plus the implements list).
+     * SupertypesHierarchyTreeStructure — the same helper the IDE's Type Hierarchy
+     * tool window calls. For most classes this returns the inherent JDK supers
+     * (java.lang.Enum<T> for enums, java.lang.Record for records, java.lang.Object
+     * for plain classes) plus the implements list. For annotation types
+     * (`@interface`), the platform helper returns the *meta-annotations* applied
+     * to the annotation type (`@Retention`, `@Target`, etc.) — NOT
+     * java.lang.annotation.Annotation. Lambda functional interfaces are also
+     * resolved correctly.
      *
-     * For project classes, the IDE convention is to omit java.lang.Object from the
-     * displayed supertypes for non-interface classes (it would appear under every
-     * class otherwise). We mirror that behaviour at the immediate level.
+     * Policy: we deliberately omit java.lang.Object from supertypes of non-interface
+     * project classes. (The IDE's own Type Hierarchy panel does show Object for
+     * non-interfaces; we omit it to keep the wire output clean for AI consumers
+     * who don't need the universal super on every class.)
      *
      * Transitive supers are visited recursively with [shouldIncludeNavigationElement]
      * applied, so JDK transitive ancestors are filtered when the user-supplied scope
-     * excludes libraries — matching IDE behaviour.
+     * excludes libraries — matching IDE behaviour at the transitive level.
      */
     private fun getSupertypes(
         project: Project,
