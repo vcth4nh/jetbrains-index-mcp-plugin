@@ -850,7 +850,7 @@ class JavaCallHierarchyHandler : BaseJavaHandler<CallHierarchyData>(), CallHiera
     }
 
     private fun getMethodKey(method: PsiMethod): String {
-        val className = method.containingClass?.let { QualifiedNameUtil.getQualifiedName(it) } ?: ""
+        val className = method.containingClass?.let { ClassPresentationUtil.getNameForClass(it, true) } ?: ""
         val params = method.parameterList.parameters.joinToString(",") {
             try { it.type.canonicalText } catch (e: Exception) { "?" }
         }
@@ -928,7 +928,7 @@ class JavaSuperMethodsHandler : BaseJavaHandler<SuperMethodsData>(), SuperMethod
 
         for (superMethod in method.findSuperMethods()) {
             val key = QualifiedNameUtil.getQualifiedName(superMethod)
-                ?: "${superMethod.containingClass?.qualifiedName}.${superMethod.name}"
+                ?: "${superMethod.containingClass?.let { ClassPresentationUtil.getNameForClass(it, true) }}.${superMethod.name}"
             if (key in visited) continue
             visited.add(key)
 
