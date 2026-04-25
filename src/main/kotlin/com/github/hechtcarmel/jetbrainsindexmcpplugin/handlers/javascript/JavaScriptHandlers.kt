@@ -605,6 +605,7 @@ class JavaScriptImplementationsHandler : BaseJavaScriptHandler<List<Implementati
                     val methodName = getName(overridingMethod) ?: "unknown"
                     results.add(ImplementationData(
                         name = if (className.isNotEmpty()) "$className.$methodName" else methodName,
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(overridingMethod),
                         file = getRelativePath(project, file),
                         line = getLineNumber(project, overridingMethod) ?: 0,
                         column = getColumnNumber(project, overridingMethod) ?: 0,
@@ -667,6 +668,7 @@ class JavaScriptImplementationsHandler : BaseJavaScriptHandler<List<Implementati
                 if (file != null) {
                     results.add(ImplementationData(
                         name = QualifiedNameUtil.getQualifiedName(inheritor) ?: getName(inheritor) ?: "unknown",
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(inheritor),
                         file = getRelativePath(project, file),
                         line = getLineNumber(project, inheritor) ?: 0,
                         column = getColumnNumber(project, inheritor) ?: 0,
@@ -699,6 +701,7 @@ class JavaScriptImplementationsHandler : BaseJavaScriptHandler<List<Implementati
                     }
                     results.add(ImplementationData(
                         name = QualifiedNameUtil.getQualifiedName(definition) ?: getName(definition) ?: "unknown",
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(definition),
                         file = getRelativePath(project, file),
                         line = getLineNumber(project, definition) ?: 0,
                         column = getColumnNumber(project, definition) ?: 0,
@@ -951,6 +954,7 @@ class JavaScriptCallHierarchyHandler : BaseJavaScriptHandler<CallHierarchyData>(
 
         return CallElementData(
             name = name,
+            qualifiedName = QualifiedNameUtil.getQualifiedName(jsFunction),
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, jsFunction) ?: 0,
             column = getColumnNumber(project, jsFunction) ?: 0,

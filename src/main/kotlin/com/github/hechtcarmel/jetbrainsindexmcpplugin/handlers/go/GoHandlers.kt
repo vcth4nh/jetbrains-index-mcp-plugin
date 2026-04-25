@@ -627,6 +627,7 @@ class GoImplementationsHandler : BaseGoHandler<List<ImplementationData>>(), Impl
                         }
                         results.add(ImplementationData(
                             name = getName(definition) ?: "unknown",
+                            qualifiedName = QualifiedNameUtil.getQualifiedName(definition),
                             file = getRelativePath(project, file),
                             line = getLineNumber(project, definition) ?: 0,
                             column = getColumnNumber(project, definition) ?: 0,
@@ -661,6 +662,7 @@ class GoImplementationsHandler : BaseGoHandler<List<ImplementationData>>(), Impl
                     if (file != null) {
                         results.add(ImplementationData(
                             name = QualifiedNameUtil.getQualifiedName(definition) ?: getName(definition) ?: "unknown",
+                            qualifiedName = QualifiedNameUtil.getQualifiedName(definition),
                             file = getRelativePath(project, file),
                             line = getLineNumber(project, definition) ?: 0,
                             column = getColumnNumber(project, definition) ?: 0,
@@ -860,6 +862,7 @@ class GoCallHierarchyHandler : BaseGoHandler<CallHierarchyData>(), CallHierarchy
 
         return CallElementData(
             name = name,
+            qualifiedName = QualifiedNameUtil.getQualifiedName(goFunction),
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, goFunction) ?: 0,
             column = getColumnNumber(project, goFunction) ?: 0,

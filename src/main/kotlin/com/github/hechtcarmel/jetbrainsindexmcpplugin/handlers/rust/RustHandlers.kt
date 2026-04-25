@@ -748,6 +748,7 @@ class RustImplementationsHandler : BaseRustHandler<List<ImplementationData>>(), 
                         val typeName = typeRef?.text?.trim() ?: "unknown"
                         results.add(ImplementationData(
                             name = "impl $traitName for $typeName",
+                            qualifiedName = QualifiedNameUtil.getQualifiedName(definition),
                             file = getRelativePath(project, file),
                             line = getLineNumber(project, definition) ?: 0,
                             column = getColumnNumber(project, definition) ?: 0,
@@ -794,6 +795,7 @@ class RustImplementationsHandler : BaseRustHandler<List<ImplementationData>>(), 
 
                         results.add(ImplementationData(
                             name = displayName,
+                            qualifiedName = QualifiedNameUtil.getQualifiedName(definition),
                             file = getRelativePath(project, file),
                             line = getLineNumber(project, definition) ?: 0,
                             column = getColumnNumber(project, definition) ?: 0,
@@ -1043,6 +1045,7 @@ class RustCallHierarchyHandler : BaseRustHandler<CallHierarchyData>(), CallHiera
 
         return CallElementData(
             name = name,
+            qualifiedName = QualifiedNameUtil.getQualifiedName(function),
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, function) ?: 0,
             column = getColumnNumber(project, function) ?: 0,

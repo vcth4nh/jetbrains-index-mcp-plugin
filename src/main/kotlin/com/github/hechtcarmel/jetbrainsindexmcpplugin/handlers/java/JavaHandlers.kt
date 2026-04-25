@@ -396,7 +396,7 @@ class JavaTypeHierarchyHandler : BaseJavaHandler<TypeHierarchyData>(), TypeHiera
     ): List<TypeElementData> {
         if (depth > MAX_HIERARCHY_DEPTH) return emptyList()
 
-        val className = QualifiedNameUtil.getQualifiedName(psiClass) ?: psiClass.name ?: return emptyList()
+        val className = ClassPresentationUtil.getNameForClass(psiClass, true)
         if (className in visited) return emptyList()
         visited.add(className)
 

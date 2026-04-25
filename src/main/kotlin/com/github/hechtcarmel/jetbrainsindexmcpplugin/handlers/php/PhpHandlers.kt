@@ -730,6 +730,7 @@ class PhpImplementationsHandler : BasePhpHandler<List<ImplementationData>>(), Im
                         val className = getName(subclass) ?: ""
                         results.add(ImplementationData(
                             name = if (className.isNotEmpty()) "$className::$methodName" else methodName,
+                            qualifiedName = QualifiedNameUtil.getQualifiedName(overridingMethod),
                             file = getRelativePath(project, file),
                             line = getLineNumber(project, overridingMethod) ?: 0,
                             column = getColumnNumber(project, overridingMethod) ?: 0,
@@ -771,6 +772,7 @@ class PhpImplementationsHandler : BasePhpHandler<List<ImplementationData>>(), Im
                 if (file != null) {
                     results.add(ImplementationData(
                         name = QualifiedNameUtil.getQualifiedName(subclass) ?: getName(subclass) ?: "unknown",
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(subclass),
                         file = getRelativePath(project, file),
                         line = getLineNumber(project, subclass) ?: 0,
                         column = getColumnNumber(project, subclass) ?: 0,
@@ -1046,6 +1048,7 @@ class PhpCallHierarchyHandler : BasePhpHandler<CallHierarchyData>(), CallHierarc
 
         return CallElementData(
             name = name,
+            qualifiedName = QualifiedNameUtil.getQualifiedName(callable),
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, callable) ?: 0,
             column = getColumnNumber(project, callable) ?: 0,

@@ -424,6 +424,7 @@ class PythonImplementationsHandler : BasePythonHandler<List<ImplementationData>>
                     val methodName = getName(overridingMethod) ?: "unknown"
                     ImplementationData(
                         name = if (className.isNotEmpty()) "$className.$methodName" else methodName,
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(overridingMethod),
                         file = getRelativePath(project, file),
                         line = getLineNumber(project, overridingMethod) ?: 0,
                         column = getColumnNumber(project, overridingMethod) ?: 0,
@@ -456,6 +457,7 @@ class PythonImplementationsHandler : BasePythonHandler<List<ImplementationData>>
                     val file = inheritor.containingFile?.virtualFile ?: return@mapNotNull null
                     ImplementationData(
                         name = QualifiedNameUtil.getQualifiedName(inheritor) ?: getName(inheritor) ?: "unknown",
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(inheritor),
                         file = getRelativePath(project, file),
                         line = getLineNumber(project, inheritor) ?: 0,
                         column = getColumnNumber(project, inheritor) ?: 0,
@@ -714,6 +716,7 @@ class PythonCallHierarchyHandler : BasePythonHandler<CallHierarchyData>(), CallH
 
         return CallElementData(
             name = name,
+            qualifiedName = QualifiedNameUtil.getQualifiedName(pyFunction),
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, pyFunction) ?: 0,
             column = getColumnNumber(project, pyFunction) ?: 0,
