@@ -17,6 +17,22 @@
 
   Closes #3.
 
+### Added
+- `qualifiedName: String?` field on `ImplementationLocation`, `TypeElement`, and `CallElement` wire models. Carries the strict `QualifiedNameProvider` output (null when no provider handles the element); `name` continues to carry a user-friendly display string.
+
+### Fixed
+- **`ide_find_implementations`, `ide_type_hierarchy`**: anonymous classes and enum-constant initializers no longer surface as `name="unknown"`. Display names now use IntelliJ's `ClassPresentationUtil.getNameForClass` ("Anonymous in `enclosingFn()`", "Enum constant 'X' in 'Y'") — matching IDE Find Usages / Type Hierarchy tool window output.
+- **`ide_find_implementations`**: enum-constant override methods on abstract methods no longer return `name="null.method"`. The class-qualifier portion now uses `ClassPresentationUtil.getNameForClass`.
+- **`ide_type_hierarchy`** for enums and records: supertypes list now correctly includes `java.lang.Enum<T>` / `java.lang.Record` even when the search scope excludes JDK classes. Implementation switched to IntelliJ's `SupertypesHierarchyTreeStructure.getSupers` — same API the IDE's Type Hierarchy panel uses. Lambdas and annotation supertypes also benefit.
+- **`ide_call_hierarchy`**: anonymous-class method overrides with the same simple name no longer collide on a shared dedup key, dropping callers from the result tree.
+- **`ide_find_implementations`, `ide_type_hierarchy`, `ide_find_super_methods`**: results sourced from `KtUltraLightClass`/`KtUltraLightMethod` (Kotlin classes navigated via Java light-classes) now correctly report `language: "Kotlin"` instead of `"Java"`. Five sites in `JavaHandlers.kt` switched to `.navigationElement.language.id`, matching five already-correct sites in the same file.
+- **`ide_find_symbol` (PyCharm)**: `self.x = …` instance attributes now return `kind: "FIELD"` (was `"SYMBOL"`) and a populated `qualifiedName` (e.g. `noise.Template.text`) when the upstream Python plugin's `PyQualifiedNameProvider` would have returned `null`. Falls back to `PyQualifiedNameOwner.getQualifiedName()` reflectively.
+- **`ide_type_hierarchy.className` (PyCharm)**: Python class FQNs (e.g. `noise.MyClass`) are now resolved through `QualifiedNameProvider.qualifiedNameToElement` extension-point iteration. `ClassResolver.findClassByName` is now language-agnostic, replacing the previous PHP+Java-only reflection branches. PHP interface and trait FQNs are recovered via a `PhpIndex` fallback.
+- **`ide_find_implementations` (PhpStorm)**: now resolves at usage positions (`$obj->method()`) by mirroring `JavaImplementationsHandler`'s reference-resolve-first pattern. Previously only resolved at declaration sites.
+
+### Documentation
+- `ide_find_symbol` description now notes that override methods are collapsed to the topmost super (matches IntelliJ's "Go to Symbol" popup) — for all overrides, use `ide_find_implementations`.
+
 ## [4.16.2] - 2026-04-25
 ### Fixed
 - **ide_find_definition, ide_find_references, ide_call_hierarchy, ide_find_implementations, ide_find_super_methods**: caret on a comment, whitespace, or literal no longer silently walks to the enclosing method/class/fn and returns results for that unrelated symbol. The previous behavior made these tools unreliable when clients (e.g., Serena) reported symbol locations that included docstrings or leading comments — the MCP tools would appear to succeed on the wrong target. Position-based invocations now return the tool's "no symbol at position" error (or an empty result for find_definition / find_references) unless the caret is on a reference or a declaration's name identifier.
