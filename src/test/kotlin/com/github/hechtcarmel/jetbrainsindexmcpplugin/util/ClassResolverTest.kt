@@ -2,6 +2,7 @@ package com.github.hechtcarmel.jetbrainsindexmcpplugin.util
 
 import com.intellij.openapi.application.ReadAction
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiElement
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 
 class ClassResolverTest : BasePlatformTestCase() {
@@ -55,5 +56,53 @@ class ClassResolverTest : BasePlatformTestCase() {
         // The returned element should at least have name "MyParser".
         val nameMethod = resolved!!.javaClass.methods.firstOrNull { it.name == "getName" && it.parameterCount == 0 }
         assertEquals("MyParser", nameMethod?.invoke(resolved))
+    }
+
+    fun testResolvesPhpInterfaceByFqnWhenPhpPluginPresent() {
+        try {
+            Class.forName("com.jetbrains.php.PhpIndex")
+        } catch (_: ClassNotFoundException) {
+            return
+        }
+
+        myFixture.configureByText(
+            "Greeter.php",
+            """
+            <?php
+            interface Greeter {
+                public function greet(): string;
+            }
+            """.trimIndent()
+        )
+
+        val resolved = ReadAction.compute<PsiElement?, Throwable> {
+            ClassResolver.findClassByName(project, "\\Greeter")
+        }
+
+        assertNotNull("PHP interface should resolve via PhpIndex.getInterfacesByFQN fallback", resolved)
+    }
+
+    fun testResolvesPhpTraitByFqnWhenPhpPluginPresent() {
+        try {
+            Class.forName("com.jetbrains.php.PhpIndex")
+        } catch (_: ClassNotFoundException) {
+            return
+        }
+
+        myFixture.configureByText(
+            "Loggable.php",
+            """
+            <?php
+            trait Loggable {
+                public function log(${'$'}message): void {}
+            }
+            """.trimIndent()
+        )
+
+        val resolved = ReadAction.compute<PsiElement?, Throwable> {
+            ClassResolver.findClassByName(project, "\\Loggable")
+        }
+
+        assertNotNull("PHP trait should resolve via PhpIndex.getTraitsByFQN fallback", resolved)
     }
 }

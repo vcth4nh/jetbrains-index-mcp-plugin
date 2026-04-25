@@ -544,15 +544,21 @@ abstract class AbstractMcpTool : McpTool {
     }
 
     /**
-     * Finds a class by its fully qualified name.
+     * Finds an element by its fully qualified name.
      *
-     * Delegates to [ClassResolver] which supports multiple languages:
-     * - **PHP**: Uses `PhpIndex.getClassesByFQN()` and `getInterfacesByFQN()`
-     * - **Java/Kotlin**: Uses `JavaPsiFacade.findClass()`
+     * Delegates to [ClassResolver], which resolves via:
+     * 1. `QualifiedNameProvider.EP_NAME` — handles Java, Kotlin, Python, PHP classes,
+     *    JS/TS, Rust, Go, and any other language whose plugin registers a provider.
+     *    Results are unwrapped to their `navigationElement` so library `.class` wrappers
+     *    are replaced by their source-attached counterparts.
+     * 2. PHP-specific fallback: if EP iteration returns null and the PHP plugin is
+     *    present, queries `PhpIndex.getInterfacesByFQN` and `PhpIndex.getTraitsByFQN`
+     *    (the upstream `PhpQualifiedNameProvider` only resolves classes, not interfaces
+     *    or traits, because the stub indexes are mutually exclusive).
      *
      * @param project The project context
-     * @param qualifiedName Fully qualified class name (e.g., "com.example.MyClass" or "\App\Models\User")
-     * @return The PsiClass/PhpClass, or null if not found or no suitable plugin is available
+     * @param qualifiedName Fully qualified name (e.g., "com.example.MyClass", "\App\Contracts\Repo")
+     * @return The resolved [PsiElement], or null if not found
      */
     protected fun findClassByName(project: Project, qualifiedName: String): PsiElement? {
         return ClassResolver.findClassByName(project, qualifiedName)
