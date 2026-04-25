@@ -452,7 +452,7 @@ class JavaTypeHierarchyHandler : BaseJavaHandler<TypeHierarchyData>(), TypeHiera
                         file = subClass.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                         line = getLineNumber(project, subClass),
                         kind = getClassKind(subClass),
-                        language = if (subClass.language.id == "kotlin") "Kotlin" else "Java"
+                        language = if (subClass.navigationElement.language.id == "kotlin") "Kotlin" else "Java"
                     ))
                 }
                 results.size < 100
@@ -515,7 +515,7 @@ class JavaImplementationsHandler : BaseJavaHandler<List<ImplementationData>>(), 
                         line = getLineNumber(project, overridingMethod) ?: 0,
                         column = getColumnNumber(project, overridingMethod) ?: 0,
                         kind = "METHOD",
-                        language = if (overridingMethod.language.id == "kotlin") "Kotlin" else "Java",
+                        language = if (overridingMethod.navigationElement.language.id == "kotlin") "Kotlin" else "Java",
                         qualifiedName = QualifiedNameUtil.getQualifiedName(overridingMethod)
                     ))
                 }
@@ -543,7 +543,7 @@ class JavaImplementationsHandler : BaseJavaHandler<List<ImplementationData>>(), 
                         line = getLineNumber(project, inheritor) ?: 0,
                         column = getColumnNumber(project, inheritor) ?: 0,
                         kind = getClassKind(inheritor),
-                        language = if (inheritor.language.id == "kotlin") "Kotlin" else "Java",
+                        language = if (inheritor.navigationElement.language.id == "kotlin") "Kotlin" else "Java",
                         qualifiedName = QualifiedNameUtil.getQualifiedName(inheritor)
                     ))
                 }
@@ -907,7 +907,7 @@ class JavaSuperMethodsHandler : BaseJavaHandler<SuperMethodsData>(), SuperMethod
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, method) ?: 0,
             column = getColumnNumber(project, method) ?: 0,
-            language = if (method.language.id == "kotlin") "Kotlin" else "Java"
+            language = if (method.navigationElement.language.id == "kotlin") "Kotlin" else "Java"
         )
 
         val hierarchy = buildHierarchy(project, method)
@@ -945,7 +945,7 @@ class JavaSuperMethodsHandler : BaseJavaHandler<SuperMethodsData>(), SuperMethod
                 column = getColumnNumber(project, superMethod),
                 isInterface = containingClass?.isInterface == true,
                 depth = depth,
-                language = if (superMethod.language.id == "kotlin") "Kotlin" else "Java"
+                language = if (superMethod.navigationElement.language.id == "kotlin") "Kotlin" else "Java"
             ))
 
             hierarchy.addAll(buildHierarchy(project, superMethod, visited, depth + 1))
