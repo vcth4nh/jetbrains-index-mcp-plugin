@@ -13,8 +13,10 @@ import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.*
 import com.intellij.psi.presentation.java.ClassPresentationUtil
+import com.intellij.psi.LambdaUtil
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.ClassInheritorsSearch
+import com.intellij.psi.search.searches.FunctionalExpressionSearch
 import com.intellij.psi.search.searches.MethodReferencesSearch
 import com.intellij.psi.search.searches.OverridingMethodsSearch
 import com.intellij.psi.search.searches.ReferencesSearch
@@ -524,6 +526,14 @@ class JavaImplementationsHandler : BaseJavaHandler<List<ImplementationData>>(), 
         } catch (_: Exception) {
             // Handle gracefully
         }
+
+        // If the method is the SAM of a functional interface, also surface lambda /
+        // method-reference assignments — matches IDE Goto-Implementation semantics.
+        method.containingClass?.let { containingClass ->
+            if (LambdaUtil.getFunctionalInterfaceMethod(containingClass) == method) {
+                addFunctionalExpressionImpls(project, containingClass, searchScope, results)
+            }
+        }
         return results
     }
 
@@ -552,7 +562,45 @@ class JavaImplementationsHandler : BaseJavaHandler<List<ImplementationData>>(), 
         } catch (_: Exception) {
             // Handle gracefully
         }
+
+        addFunctionalExpressionImpls(project, psiClass, searchScope, results)
         return results
+    }
+
+    private fun addFunctionalExpressionImpls(
+        project: Project,
+        psiClass: PsiClass,
+        searchScope: GlobalSearchScope,
+        results: MutableList<ImplementationData>,
+        limit: Int = 100
+    ) {
+        if (!LambdaUtil.isFunctionalClass(psiClass)) return
+        try {
+            FunctionalExpressionSearch.search(psiClass, searchScope).forEach(Processor { funExpr ->
+                val file = funExpr.containingFile?.virtualFile ?: return@Processor true
+                val isMethodRef = funExpr is PsiMethodReferenceExpression
+                val kind = if (isMethodRef) "METHOD_REFERENCE" else "LAMBDA"
+                val enclosingMethod = PsiTreeUtil.getParentOfType(funExpr, PsiMethod::class.java)
+                val enclosingClass = PsiTreeUtil.getParentOfType(funExpr, PsiClass::class.java)
+                val name = buildString {
+                    append(if (isMethodRef) "MethodRef" else "Lambda")
+                    enclosingMethod?.let { append(" in ").append(it.name).append("()") }
+                    enclosingClass?.let { append(" in ").append(ClassPresentationUtil.getNameForClass(it, true)) }
+                }
+                results.add(ImplementationData(
+                    name = name,
+                    file = getRelativePath(project, file),
+                    line = getLineNumber(project, funExpr) ?: 0,
+                    column = getColumnNumber(project, funExpr) ?: 0,
+                    kind = kind,
+                    language = "Java",
+                    qualifiedName = null
+                ))
+                results.size < limit
+            })
+        } catch (_: Exception) {
+            // Handle gracefully
+        }
     }
 }
 

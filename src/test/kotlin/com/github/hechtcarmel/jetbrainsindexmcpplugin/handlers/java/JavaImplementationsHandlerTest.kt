@@ -87,6 +87,94 @@ class JavaImplementationsHandlerTest : BasePlatformTestCase() {
         }
     }
 
+    fun testFunctionalInterfaceLambdaImpls() {
+        // A @FunctionalInterface used with a lambda assignment and a method reference must
+        // surface both as "implementations". IntelliJ's Goto-Implementation includes them
+        // (via FunctionalExpressionSearch); our handler must too.
+        myFixture.configureByText(
+            "Sample.java",
+            """
+            package com.example;
+            public class Sample {
+                @FunctionalInterface
+                interface Executor { void execute(String cmd); }
+
+                static void useLambda() {
+                    Executor exec = s -> System.out.println(s);
+                    exec.execute("hi");
+                }
+
+                static void useMethodRef() {
+                    Executor exec = System.out::println;
+                    exec.execute("hi");
+                }
+            }
+            """.trimIndent()
+        )
+
+        // Caret on the interface itself.
+        val executor = ReadAction.compute<PsiClass?, Throwable> {
+            findClass("com.example.Sample")?.findInnerClassByName("Executor", false)
+        }
+        assertNotNull("Test fixture must define Executor", executor)
+
+        val result = ReadAction.compute<List<ImplementationData>?, Throwable> {
+            handler.findImplementations(executor!!, project, BuiltInSearchScope.PROJECT_FILES)
+        }
+        assertNotNull(result)
+        assertEquals("Expected 2 functional impls (1 lambda + 1 method ref), got ${result!!.size}", 2, result.size)
+
+        val kinds = result.map { it.kind }.toSet()
+        assertTrue("Expected LAMBDA in kinds: $kinds", kinds.contains("LAMBDA"))
+        assertTrue("Expected METHOD_REFERENCE in kinds: $kinds", kinds.contains("METHOD_REFERENCE"))
+
+        result.forEach { impl ->
+            assertFalse("name must not be 'unknown': '${impl.name}'", impl.name == "unknown")
+            assertTrue(
+                "Expected name to mention enclosing context, got '${impl.name}'",
+                impl.name.contains("useLambda") || impl.name.contains("useMethodRef") || impl.name.contains("Sample")
+            )
+        }
+    }
+
+    fun testFunctionalInterfaceSamMethodLambdaImpls() {
+        // Caret on the SAM (abstract single-method) — find_implementations must include
+        // lambda/method-reference assignments to the functional interface.
+        myFixture.configureByText(
+            "Sample.java",
+            """
+            package com.example;
+            public class Sample {
+                @FunctionalInterface
+                interface Executor { void execute(String cmd); }
+
+                static void useLambda() {
+                    Executor exec = s -> {};
+                    exec.execute("hi");
+                }
+            }
+            """.trimIndent()
+        )
+
+        val executeMethod = ReadAction.compute<PsiMethod?, Throwable> {
+            findClass("com.example.Sample")
+                ?.findInnerClassByName("Executor", false)
+                ?.findMethodsByName("execute", false)?.firstOrNull()
+        }
+        assertNotNull(executeMethod)
+
+        val result = ReadAction.compute<List<ImplementationData>?, Throwable> {
+            handler.findImplementations(executeMethod!!, project, BuiltInSearchScope.PROJECT_FILES)
+        }
+        assertNotNull(result)
+        // Either the lambda is treated as an implementation directly, or the SAM resolution
+        // bridges to FunctionalExpressionSearch on the containing interface. Either way ≥1.
+        assertTrue(
+            "Expected at least 1 lambda impl when querying SAM method, got ${result!!.size}",
+            result.isNotEmpty()
+        )
+    }
+
     fun testKotlinClassReportsLanguageKotlin() {
         // Sanity check the language.id fix: Kotlin source classes navigated via KtUltraLightClass
         // should report language="Kotlin", not "Java".
