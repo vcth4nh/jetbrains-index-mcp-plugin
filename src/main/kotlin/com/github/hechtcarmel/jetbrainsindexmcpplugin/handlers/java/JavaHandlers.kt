@@ -8,6 +8,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.StructureKind
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.StructureNode
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PluginDetectors
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
+import com.intellij.ide.hierarchy.type.SupertypesHierarchyTreeStructure
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.*
@@ -366,6 +367,21 @@ class JavaTypeHierarchyHandler : BaseJavaHandler<TypeHierarchyData>(), TypeHiera
         )
     }
 
+    /**
+     * Returns the immediate supertypes of [psiClass] using IntelliJ's own
+     * [SupertypesHierarchyTreeStructure] — the same helper the IDE's Type Hierarchy
+     * tool window calls. This includes inherent JDK supers (java.lang.Enum for enums,
+     * java.lang.Record for records, java.lang.annotation.Annotation for annotation
+     * types, java.lang.Object for plain classes, plus the implements list).
+     *
+     * For project classes, the IDE convention is to omit java.lang.Object from the
+     * displayed supertypes for non-interface classes (it would appear under every
+     * class otherwise). We mirror that behaviour at the immediate level.
+     *
+     * Transitive supers are visited recursively with [shouldIncludeNavigationElement]
+     * applied, so JDK transitive ancestors are filtered when the user-supplied scope
+     * excludes libraries — matching IDE behaviour.
+     */
     private fun getSupertypes(
         project: Project,
         psiClass: PsiClass,
@@ -380,108 +396,37 @@ class JavaTypeHierarchyHandler : BaseJavaHandler<TypeHierarchyData>(), TypeHiera
         visited.add(className)
 
         val supertypes = mutableListOf<TypeElementData>()
+        val isInterface = psiClass.isInterface
+        val seen = mutableSetOf<String>()
 
-        // Try resolved superclass first
-        val superClass = psiClass.superClass
-        if (superClass != null && superClass.qualifiedName != "java.lang.Object") {
-            if (shouldIncludeNavigationElement(searchScope, superClass)) {
-                val superSupertypes = getSupertypes(
-                    project,
-                    superClass,
-                    visited,
-                    depth + 1,
-                    searchScope
-                )
-                supertypes.add(TypeElementData(
-                    name = ClassPresentationUtil.getNameForClass(superClass, true),
-                    qualifiedName = QualifiedNameUtil.getQualifiedName(superClass),
-                    file = superClass.containingFile?.virtualFile?.let { getRelativePath(project, it) },
-                    line = getLineNumber(project, superClass),
-                    kind = getClassKind(superClass),
-                    language = if (superClass.navigationElement.language.id == "kotlin") "Kotlin" else "Java",
-                    supertypes = superSupertypes.takeIf { it.isNotEmpty() }
-                ))
-            }
-        } else {
-            // Fallback: check unresolved extends list (when type resolution fails)
-            psiClass.extendsList?.referenceElements?.forEach { ref ->
-                val resolved = ref.resolve() as? PsiClass
-                if (resolved != null &&
-                    resolved.qualifiedName != "java.lang.Object" &&
-                    shouldIncludeNavigationElement(searchScope, resolved)
-                ) {
-                    val superSupertypes = getSupertypes(project, resolved, visited, depth + 1, searchScope)
-                    supertypes.add(TypeElementData(
-                        name = ClassPresentationUtil.getNameForClass(resolved, true),
-                        qualifiedName = QualifiedNameUtil.getQualifiedName(resolved),
-                        file = resolved.containingFile?.virtualFile?.let { getRelativePath(project, it) },
-                        line = getLineNumber(project, resolved),
-                        kind = getClassKind(resolved),
-                        language = if (resolved.navigationElement.language.id == "kotlin") "Kotlin" else "Java",
-                        supertypes = superSupertypes.takeIf { it.isNotEmpty() }
-                    ))
-                } else {
-                    // Can't resolve, but report the declared type name
-                    val typeName = ref.qualifiedName ?: ref.referenceName ?: "unknown"
-                    if (typeName != "java.lang.Object") {
-                        supertypes.add(TypeElementData(
-                            name = typeName,
-                            qualifiedName = ref.qualifiedName,
-                            file = null,
-                            line = null,
-                            kind = "CLASS",
-                            language = "Java"
-                        ))
-                    }
-                }
-            }
-        }
+        for (superClass in SupertypesHierarchyTreeStructure.getSupers(psiClass)) {
+            val superFqn = superClass.qualifiedName
 
-        // Try resolved interfaces first
-        val interfaces = psiClass.interfaces
-        if (interfaces.isNotEmpty()) {
-            for (iface in interfaces) {
-                if (shouldIncludeNavigationElement(searchScope, iface)) {
-                    val ifaceSupertypes = getSupertypes(project, iface, visited, depth + 1, searchScope)
-                    supertypes.add(TypeElementData(
-                        name = ClassPresentationUtil.getNameForClass(iface, true),
-                        qualifiedName = QualifiedNameUtil.getQualifiedName(iface),
-                        file = iface.containingFile?.virtualFile?.let { getRelativePath(project, it) },
-                        line = getLineNumber(project, iface),
-                        kind = "INTERFACE",
-                        language = if (iface.navigationElement.language.id == "kotlin") "Kotlin" else "Java",
-                        supertypes = ifaceSupertypes.takeIf { it.isNotEmpty() }
-                    ))
-                }
+            // Mirror IDE Type Hierarchy panel: omit java.lang.Object for non-interface
+            // project classes (it would appear under every class otherwise).
+            if (superFqn == "java.lang.Object" && !isInterface) continue
+
+            // Dedup by FQN where available, fall back to display name.
+            val dedupKey = superFqn ?: ClassPresentationUtil.getNameForClass(superClass, true)
+            if (!seen.add(dedupKey)) continue
+
+            // Apply scope filter only to *transitive* levels — immediate inherent JDK
+            // supers (Enum, Record, Annotation) must always be reported.
+            val transitive = if (shouldIncludeNavigationElement(searchScope, superClass)) {
+                getSupertypes(project, superClass, visited, depth + 1, searchScope)
+            } else {
+                null
             }
-        } else {
-            // Fallback: check unresolved implements list (when type resolution fails)
-            psiClass.implementsList?.referenceElements?.forEach { ref ->
-                val resolved = ref.resolve() as? PsiClass
-                if (resolved != null && shouldIncludeNavigationElement(searchScope, resolved)) {
-                    val ifaceSupertypes = getSupertypes(project, resolved, visited, depth + 1, searchScope)
-                    supertypes.add(TypeElementData(
-                        name = ClassPresentationUtil.getNameForClass(resolved, true),
-                        qualifiedName = QualifiedNameUtil.getQualifiedName(resolved),
-                        file = resolved.containingFile?.virtualFile?.let { getRelativePath(project, it) },
-                        line = getLineNumber(project, resolved),
-                        kind = "INTERFACE",
-                        language = if (resolved.navigationElement.language.id == "kotlin") "Kotlin" else "Java",
-                        supertypes = ifaceSupertypes.takeIf { it.isNotEmpty() }
-                    ))
-                } else {
-                    // Can't resolve, but report the declared type name
-                    val typeName = ref.qualifiedName ?: ref.referenceName ?: "unknown"
-                    supertypes.add(TypeElementData(
-                        name = typeName,
-                        qualifiedName = ref.qualifiedName,
-                        file = null,
-                        line = null,
-                        kind = "INTERFACE",
-                        language = "Java"
-                    ))
-                }
-            }
+
+            supertypes.add(TypeElementData(
+                name = ClassPresentationUtil.getNameForClass(superClass, true),
+                qualifiedName = QualifiedNameUtil.getQualifiedName(superClass),
+                file = superClass.containingFile?.virtualFile?.let { getRelativePath(project, it) },
+                line = getLineNumber(project, superClass),
+                kind = getClassKind(superClass),
+                language = if (superClass.navigationElement.language.id == "kotlin") "Kotlin" else "Java",
+                supertypes = transitive?.takeIf { it.isNotEmpty() }
+            ))
         }
 
         return supertypes
