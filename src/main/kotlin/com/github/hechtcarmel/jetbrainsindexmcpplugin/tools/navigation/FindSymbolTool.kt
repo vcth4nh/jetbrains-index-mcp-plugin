@@ -53,6 +53,8 @@ class FindSymbolTool : AbstractMcpTool() {
         Parameters: query (required for fresh search), scope (optional, default: "project_files"; supported: project_files, project_and_libraries, project_production_files, project_test_files), language (optional case-insensitive filter, e.g. "Kotlin"), pageSize (optional, default: 25, max: 500), cursor (for pagination, replaces search params; project_path may still be required).
 
         Example: {"query": "UserService"} or {"query": "find_user", "scope": "project_and_libraries"}
+
+        Note: when multiple methods share a name through inheritance, results are collapsed to the topmost super (matching IntelliJ's "Go to Symbol" popup behavior). For the full set of overriding methods, use `ide_find_implementations` instead.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
