@@ -1064,4 +1064,55 @@ class ToolModelsUnitTest : TestCase() {
         assertTrue(deserialized.opened)
         assertTrue(deserialized.message.contains("line 42"))
     }
+
+    fun testImplementationLocationCarriesQualifiedName() {
+        val loc = ImplementationLocation(
+            name = "Anonymous in Foo.bar()",
+            file = "src/Foo.java",
+            line = 10,
+            column = 4,
+            kind = "CLASS",
+            language = "Java",
+            qualifiedName = "com.example.Foo\$1"
+        )
+        val serialized = json.encodeToString(loc)
+        val deserialized = json.decodeFromString<ImplementationLocation>(serialized)
+        assertEquals("com.example.Foo\$1", deserialized.qualifiedName)
+    }
+
+    fun testImplementationLocationOmittedQualifiedNameDefaultsToNull() {
+        val loc = ImplementationLocation(
+            name = "Foo",
+            file = "Foo.java",
+            line = 1,
+            column = 1,
+            kind = "CLASS"
+        )
+        assertNull(loc.qualifiedName)
+    }
+
+    fun testTypeElementCarriesQualifiedName() {
+        val el = TypeElement(
+            name = "Foo",
+            file = "Foo.java",
+            kind = "CLASS",
+            qualifiedName = "com.example.Foo"
+        )
+        val serialized = json.encodeToString(el)
+        val deserialized = json.decodeFromString<TypeElement>(serialized)
+        assertEquals("com.example.Foo", deserialized.qualifiedName)
+    }
+
+    fun testCallElementCarriesQualifiedName() {
+        val el = CallElement(
+            name = "Foo.bar",
+            file = "Foo.java",
+            line = 5,
+            column = 2,
+            qualifiedName = "com.example.Foo#bar()"
+        )
+        val serialized = json.encodeToString(el)
+        val deserialized = json.decodeFromString<CallElement>(serialized)
+        assertEquals("com.example.Foo#bar()", deserialized.qualifiedName)
+    }
 }

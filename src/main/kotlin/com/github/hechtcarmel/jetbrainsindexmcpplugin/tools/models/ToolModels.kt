@@ -71,7 +71,8 @@ data class TypeElement(
     val file: String?,
     val kind: String,
     val language: String? = null,
-    val supertypes: List<TypeElement>? = null
+    val supertypes: List<TypeElement>? = null,
+    val qualifiedName: String? = null
 )
 
 // call_hierarchy output
@@ -88,7 +89,8 @@ data class CallElement(
     val line: Int,
     val column: Int,
     val language: String? = null,
-    val children: List<CallElement>? = null
+    val children: List<CallElement>? = null,
+    val qualifiedName: String? = null
 )
 
 // find_implementations output
@@ -111,7 +113,8 @@ data class ImplementationLocation(
     val line: Int,
     val column: Int,
     val kind: String,
-    val language: String? = null
+    val language: String? = null,
+    val qualifiedName: String? = null
 )
 
 
