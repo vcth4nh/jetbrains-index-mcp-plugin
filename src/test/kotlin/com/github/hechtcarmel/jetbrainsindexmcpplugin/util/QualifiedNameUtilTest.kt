@@ -208,4 +208,35 @@ class QualifiedNameUtilTest : BasePlatformTestCase() {
         // Throwing provider was skipped; JavaQualifiedNameProvider still wins.
         assertEquals("com.example.Foo", result)
     }
+
+    fun testPythonInstanceAttributeViaPyQualifiedNameOwnerFallback() {
+        // Skip if Python plugin not in the test platform — guard with a runtime class lookup.
+        val pyTargetExpression = try {
+            Class.forName("com.jetbrains.python.psi.PyTargetExpression")
+        } catch (_: ClassNotFoundException) {
+            return  // Python plugin not present in this test environment
+        }
+
+        val file = myFixture.configureByText(
+            "template.py",
+            """
+            class Template:
+                def __init__(self, text):
+                    self.text = text
+            """.trimIndent()
+        )
+
+        val targetExpr = ReadAction.compute<com.intellij.psi.PsiElement?, Throwable> {
+            @Suppress("UNCHECKED_CAST")
+            com.intellij.psi.util.PsiTreeUtil.findChildrenOfType(file, pyTargetExpression as Class<com.intellij.psi.PsiElement>)
+                .firstOrNull { (it as Any).javaClass.getMethod("getName").invoke(it) == "text" }
+        }
+        assertNotNull("Should locate self.text PyTargetExpression", targetExpr)
+
+        val result = ReadAction.compute<String?, Throwable> {
+            QualifiedNameUtil.getQualifiedName(targetExpr!!)
+        }
+
+        assertEquals("template.Template.text", result)
+    }
 }
