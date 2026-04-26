@@ -38,6 +38,19 @@ object OptimizedSymbolSearch {
     private val LOG = logger<OptimizedSymbolSearch>()
 
     /**
+     * Loaded once per JVM — null when the Python plugin is absent.
+     * Used by [determineKind] to recognise PyTargetExpression elements without
+     * a compile-time dependency on the Python plugin.
+     */
+    private val pyTargetExpressionClass: Class<*>? by lazy {
+        try {
+            Class.forName("com.jetbrains.python.psi.PyTargetExpression")
+        } catch (_: ClassNotFoundException) {
+            null
+        }
+    }
+
+    /**
      * Search for symbols using the optimized platform infrastructure.
      *
      * @param project The project to search in
@@ -283,6 +296,20 @@ object OptimizedSymbolSearch {
     }
 
     private fun determineKind(element: PsiElement): String {
+        // Explicit branch for Python instance attributes and module-level assignments.
+        // PyTargetExpressionImpl's simple class name contains neither "field" nor "property",
+        // so the generic substring matching below would label these as "SYMBOL". Recognising
+        // the interface here lets us emit FIELD (inside a class) or VARIABLE (module-level).
+        val pyClass = pyTargetExpressionClass
+        if (pyClass != null && pyClass.isInstance(element)) {
+            return try {
+                val containingClass = element.javaClass.getMethod("getContainingClass").invoke(element)
+                if (containingClass != null) "FIELD" else "VARIABLE"
+            } catch (_: Exception) {
+                "FIELD" // Instance attributes are far more common than module-level vars
+            }
+        }
+
         val className = element.javaClass.simpleName.lowercase()
         return when {
             // Rust types

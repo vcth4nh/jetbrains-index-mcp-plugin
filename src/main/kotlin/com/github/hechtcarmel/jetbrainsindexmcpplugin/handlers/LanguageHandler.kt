@@ -175,7 +175,8 @@ data class ImplementationData(
     val line: Int,
     val column: Int,
     val kind: String,
-    val language: String
+    val language: String,
+    val qualifiedName: String? = null
 )
 
 /**
@@ -195,7 +196,8 @@ data class CallElementData(
     val line: Int,
     val column: Int,
     val language: String,
-    val children: List<CallElementData>? = null
+    val children: List<CallElementData>? = null,
+    val qualifiedName: String? = null
 )
 
 /**

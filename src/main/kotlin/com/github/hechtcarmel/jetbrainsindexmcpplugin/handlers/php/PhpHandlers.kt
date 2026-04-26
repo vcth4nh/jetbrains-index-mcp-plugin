@@ -8,6 +8,7 @@ import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiReference
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.ReferencesSearch
 import com.intellij.psi.util.PsiTreeUtil
@@ -284,6 +285,64 @@ abstract class BasePhpHandler<T> : LanguageHandler<T> {
      */
     protected fun findContainingCallable(element: PsiElement): PsiElement? {
         return findContainingMethod(element) ?: findContainingFunction(element)
+    }
+
+    /**
+     * Resolves a method PSI element from a usage position. Returns null if [element]
+     * is neither a method declaration nor a method reference resolvable to a method.
+     *
+     * Mirrors JavaImplementationsHandler.resolveMethod: at a usage like `$obj->method()`,
+     * the leaf token is the identifier; walk parents looking for a Reference and resolve it.
+     * Falls back to syntactic walk via [findContainingMethod] for declaration sites.
+     */
+    protected fun resolveMethod(element: PsiElement): PsiElement? {
+        var current: PsiElement? = element
+        var depth = 0
+        while (current != null && depth < 4) {
+            val ref = (current as? PsiReference) ?: current.reference
+            if (ref != null) {
+                val resolved = try { ref.resolve() } catch (_: Exception) { null }
+                if (resolved != null && isPhpMethodLike(resolved)) return resolved
+            }
+            current = current.parent
+            depth++
+        }
+        // Fall back to syntactic walk (works at declaration sites).
+        return findContainingMethod(element)
+    }
+
+    /**
+     * Resolves a class/interface/trait PSI element from a usage position.
+     *
+     * Mirrors JavaImplementationsHandler.resolveClass: tries reference resolution first
+     * to handle usages like type-hints, falls back to [findContainingPhpClass] otherwise.
+     */
+    protected fun resolveClass(element: PsiElement): PsiElement? {
+        var current: PsiElement? = element
+        var depth = 0
+        while (current != null && depth < 4) {
+            val ref = (current as? PsiReference) ?: current.reference
+            if (ref != null) {
+                val resolved = try { ref.resolve() } catch (_: Exception) { null }
+                if (resolved != null && isPhpClassLike(resolved)) return resolved
+            }
+            current = current.parent
+            depth++
+        }
+        return findContainingPhpClass(element)
+    }
+
+    private fun isPhpMethodLike(element: PsiElement): Boolean {
+        val name = element.javaClass.name
+        return name.contains("Method") || name.contains("Function")
+    }
+
+    private fun isPhpClassLike(element: PsiElement): Boolean {
+        val name = element.javaClass.name
+        return name.contains("PhpClass") ||
+            name.contains("ClassImpl") ||
+            name.contains("Trait") ||
+            name.contains("Interface")
     }
 
     /**
@@ -624,15 +683,15 @@ class PhpImplementationsHandler : BasePhpHandler<List<ImplementationData>>(), Im
         LOG.debug("Finding implementations for element at ${element.containingFile?.name}")
         val searchScope = createNavigationSearchScope(project, scope)
 
-        // Check if it's a method
-        val method = findContainingMethod(element)
+        // Try reference resolution first (handles usage positions like `$obj->method()`).
+        val method = resolveMethod(element)
         if (method != null) {
             LOG.debug("Finding method implementations for ${getName(method)}")
             return findMethodImplementations(project, method, searchScope)
         }
 
-        // Check if it's a class/interface
-        val phpClass = findContainingPhpClass(element)
+        // Reference-aware resolution for classes too (handles type-hint usages).
+        val phpClass = resolveClass(element)
         if (phpClass != null) {
             LOG.debug("Finding class implementations for ${getName(phpClass)}")
             return findClassImplementations(project, phpClass, searchScope)
@@ -671,6 +730,7 @@ class PhpImplementationsHandler : BasePhpHandler<List<ImplementationData>>(), Im
                         val className = getName(subclass) ?: ""
                         results.add(ImplementationData(
                             name = if (className.isNotEmpty()) "$className::$methodName" else methodName,
+                            qualifiedName = QualifiedNameUtil.getQualifiedName(overridingMethod),
                             file = getRelativePath(project, file),
                             line = getLineNumber(project, overridingMethod) ?: 0,
                             column = getColumnNumber(project, overridingMethod) ?: 0,
@@ -712,6 +772,7 @@ class PhpImplementationsHandler : BasePhpHandler<List<ImplementationData>>(), Im
                 if (file != null) {
                     results.add(ImplementationData(
                         name = QualifiedNameUtil.getQualifiedName(subclass) ?: getName(subclass) ?: "unknown",
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(subclass),
                         file = getRelativePath(project, file),
                         line = getLineNumber(project, subclass) ?: 0,
                         column = getColumnNumber(project, subclass) ?: 0,
@@ -987,6 +1048,7 @@ class PhpCallHierarchyHandler : BasePhpHandler<CallHierarchyData>(), CallHierarc
 
         return CallElementData(
             name = name,
+            qualifiedName = QualifiedNameUtil.getQualifiedName(callable),
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, callable) ?: 0,
             column = getColumnNumber(project, callable) ?: 0,

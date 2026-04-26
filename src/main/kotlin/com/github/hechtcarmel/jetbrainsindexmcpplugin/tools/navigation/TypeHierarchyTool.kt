@@ -147,7 +147,8 @@ class TypeHierarchyTool : AbstractMcpTool() {
             file = data.file,
             kind = data.kind,
             language = data.language,
-            supertypes = data.supertypes?.map { convertToTypeElement(it) }
+            supertypes = data.supertypes?.map { convertToTypeElement(it) },
+            qualifiedName = data.qualifiedName
         )
     }
 }

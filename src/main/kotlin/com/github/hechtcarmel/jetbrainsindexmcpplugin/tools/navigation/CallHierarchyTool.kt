@@ -158,7 +158,8 @@ class CallHierarchyTool : AbstractMcpTool() {
             line = data.line,
             column = data.column,
             language = data.language,
-            children = data.children?.map { convertToCallElement(it) }
+            children = data.children?.map { convertToCallElement(it) },
+            qualifiedName = data.qualifiedName
         )
     }
 }
