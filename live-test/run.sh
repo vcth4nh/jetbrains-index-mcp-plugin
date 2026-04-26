@@ -61,6 +61,40 @@ url_for() {
     echo "http://127.0.0.1:$port/index-mcp/streamable-http"
 }
 
+# Build a JSON-RPC tools/call request from an input line and project_path
+build_request() {
+    local input_line="$1"
+    local project_path="$2"
+    jq -c --arg pp "$project_path" '{
+        jsonrpc: "2.0",
+        id: 1,
+        method: "tools/call",
+        params: {
+            name: .tool,
+            arguments: (.params + {project_path: $pp})
+        }
+    }' <<< "$input_line"
+}
+
+# POST a JSON-RPC request, return the unwrapped tool result as JSON
+# Echoes the parsed `result.content[0].text` (or the JSON-RPC error object).
+post_and_unwrap() {
+    local url="$1"
+    local request_json="$2"
+    local raw
+    raw="$(curl -sS --fail-with-body --max-time 60 \
+        -X POST "$url" \
+        -H 'Content-Type: application/json' \
+        --data "$request_json")"
+    # If JSON-RPC error: emit the error object verbatim, marker isError:true
+    if jq -e '.error' >/dev/null 2>&1 <<< "$raw"; then
+        jq -c '{jsonrpc_error: .error}' <<< "$raw"
+        return
+    fi
+    # tools/call result: extract content[0].text and parse as JSON
+    jq -c '.result.content[0].text | fromjson' <<< "$raw"
+}
+
 # Discover languages with input.jsonl (inline so `exit 1` reaches the parent shell)
 LANGS=()
 if [ -n "$FLAG_LANG" ]; then
@@ -87,5 +121,21 @@ fi
 
 for lang in "${LANGS[@]}"; do
     url="$(url_for "$lang")"
-    echo "[$lang] would run against $url (no-op so far)"
+    project_path="$LIVE_TEST_ROOT/$lang"
+    input_file="$LIVE_TEST_ROOT/$lang/input.jsonl"
+    echo "[$lang] $url"
+    line_no=0
+    while IFS= read -r line; do
+        line_no=$((line_no + 1))
+        [ -z "$line" ] && continue
+        # --tool filter
+        if [ -n "$FLAG_TOOL" ]; then
+            tool="$(jq -r '.tool' <<< "$line")"
+            [ "$tool" = "$FLAG_TOOL" ] || continue
+        fi
+        request="$(build_request "$line" "$project_path")"
+        result="$(post_and_unwrap "$url" "$request")"
+        id="$(jq -r '.id' <<< "$line")"
+        echo "  [$line_no] $id -> $result"
+    done < "$input_file"
 done
