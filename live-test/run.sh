@@ -140,6 +140,42 @@ if [ ${#LANGS[@]} -eq 0 ]; then
     exit 0
 fi
 
+# Returns 0 if the server is reachable and the project is fully indexed (smart mode).
+# Returns 1 otherwise. Prints a diagnostic on failure.
+check_ready() {
+    local url="$1"
+    local project_path="$2"
+    local req
+    req="$(jq -nc --arg pp "$project_path" '{
+        jsonrpc:"2.0", id:1, method:"tools/call",
+        params:{name:"ide_index_status", arguments:{project_path:$pp}}
+    }')"
+    local raw
+    if ! raw="$(curl -sS --max-time 5 -X POST "$url" -H 'Content-Type: application/json' --data "$req" 2>/dev/null)"; then
+        echo "  PRECHECK: cannot reach $url" >&2
+        return 1
+    fi
+    local text
+    text="$(jq -r '.result.content[0].text // empty' <<< "$raw")"
+    if [ -z "$text" ]; then
+        echo "  PRECHECK: unexpected response from $url: $raw" >&2
+        return 1
+    fi
+    local err
+    err="$(jq -r '.error // empty' <<< "$text")"
+    if [ -n "$err" ]; then
+        echo "  PRECHECK: $err — $(jq -r '.message // empty' <<< "$text")" >&2
+        return 1
+    fi
+    local dumb
+    dumb="$(jq -r '.dumbMode // empty' <<< "$text")"
+    if [ "$dumb" = "true" ]; then
+        echo "  PRECHECK: project is in dumb mode (still indexing)" >&2
+        return 1
+    fi
+    return 0
+}
+
 total_pass=0
 total_fail=0
 for lang in "${LANGS[@]}"; do
@@ -151,6 +187,12 @@ for lang in "${LANGS[@]}"; do
     lang_pass=0
     lang_fail=0
     echo "[$lang] $url"
+
+    if ! check_ready "$url" "$project_path"; then
+        echo "[$lang] SKIPPED (precheck failed)"
+        total_fail=$((total_fail + 1))
+        continue
+    fi
 
     line_no=0
     while IFS= read -r line; do
