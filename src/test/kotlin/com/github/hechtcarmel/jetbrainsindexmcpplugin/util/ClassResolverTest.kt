@@ -33,20 +33,26 @@ class ClassResolverTest : BasePlatformTestCase() {
     }
 
     fun testResolvesPythonClassByFqnWhenPythonPluginPresent() {
-        // Skip if Python plugin isn't loaded.
+        // Skip if Python plugin isn't actually active. Class.forName alone is insufficient —
+        // the headless gradle test runtime can have the class on the classpath without the
+        // language extensions being registered. Verify the registered Language by ID.
+        if (com.intellij.lang.Language.findLanguageByID("Python") == null) return
         try {
             Class.forName("com.jetbrains.python.psi.PyClass")
         } catch (_: ClassNotFoundException) {
             return
         }
 
-        myFixture.configureByText(
+        val pyFile = myFixture.configureByText(
             "noise.py",
             """
             class MyParser:
                 pass
             """.trimIndent()
         )
+        // Final guard: if the fixture didn't actually parse as Python, the language services
+        // aren't initialized for this test run.
+        if (pyFile.language.id != "Python") return
 
         val resolved = ReadAction.compute<com.intellij.psi.PsiElement?, Throwable> {
             ClassResolver.findClassByName(project, "noise.MyParser")

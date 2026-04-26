@@ -2,14 +2,23 @@ package com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.java
 
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.ImplementationData
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.testutil.JAVA_PROJECT_DESCRIPTOR
 import com.intellij.openapi.application.ReadAction
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.testFramework.LightProjectDescriptor
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 
+/**
+ * Overrides [getProjectDescriptor] so the test runtime brings a mock JDK onto the classpath;
+ * `java.lang.Runnable` (and friends) must resolve for the anon-class fixture to bind to its
+ * supertype.
+ */
 class JavaImplementationsHandlerTest : BasePlatformTestCase() {
+
+    override fun getProjectDescriptor(): LightProjectDescriptor = JAVA_PROJECT_DESCRIPTOR
 
     private val handler = JavaImplementationsHandler()
 
