@@ -11,17 +11,8 @@ Run after every plugin version bump.
 - `bash` 4.0+
 - `curl`
 - `jq`
-- The dev plugin installed in each IDE you intend to test against
-- The corresponding fixture project open in that IDE, fully indexed
-
-## Quick start
-
-```bash
-./run.sh                          # runs every language, fails on diff
-./run.sh --bless                  # write expected.jsonl from server output
-./run.sh --language python        # one language only
-./run.sh --tool ide_find_definition   # one tool across all languages
-```
+- The dev plugin installed in each IDE you intend to test against (see below).
+- The corresponding fixture project open in that IDE, fully indexed.
 
 ## Per-IDE fixture setup
 
@@ -34,15 +25,57 @@ Run after every plugin version bump.
 | `php/` | PhpStorm | 29175 |
 | `rust/` | RustRover | 29178 |
 
-Override the port with `--url http://127.0.0.1:PORT/index-mcp/streamable-http`.
+Each fixture is a real IDE-openable project. Open it, wait for indexing,
+then run the harness.
 
-## How tests are organized
+## Quick start
 
-Per fixture directory:
-- `src/` — sample sources (normal patterns + language quirks)
-- `input.jsonl` — one MCP `tools/call` per line: `{id, tool, params}`
-- `expected.jsonl` — server response snapshots, same line index
+```bash
+./run.sh                          # runs every language, fails on diff
+./run.sh --bless                  # rewrite expected.jsonl from server output
+./run.sh --language python        # one language only
+./run.sh --tool ide_find_definition   # one tool across all languages
+./run.sh --url http://127.0.0.1:29170/index-mcp/streamable-http   # override URL
+```
 
-`expected.jsonl` is produced by `./run.sh --bless`. Review the diff carefully
-before committing — every change to a snapshot is either an intentional
-behavior shift (bless and commit) or a regression (file an issue).
+## Version-bump workflow
+
+1. Bump `pluginVersion` in `gradle.properties`.
+2. `./gradlew buildPlugin` and install the resulting ZIP into each IDE
+   (Settings → Plugins → ⚙ → Install Plugin from Disk…).
+3. Restart each IDE (or use the in-IDE plugin reload).
+4. Re-open every fixture; wait for indexing to finish.
+5. Run the harness:
+
+   ```bash
+   ./live-test/run.sh
+   ```
+
+6. If failures appear:
+   - Read each diff carefully. Is the change intentional (matches the
+     CHANGELOG entry for the new version) or a regression?
+   - Intentional: `./live-test/run.sh --bless` and commit alongside the
+     version bump.
+   - Regression: file an issue or revert the change.
+
+## Troubleshooting
+
+- **`PRECHECK: cannot reach …`** — the IDE's MCP server isn't running on
+  the expected port. Check that the dev plugin is installed and enabled,
+  and that the IDE is open. Override the port with `--url` if you've
+  configured a non-default value in Settings → Tools → Index MCP Server.
+- **`PRECHECK: project is in dumb mode`** — wait for indexing to finish
+  in the IDE, then retry.
+- **`MISSING (no expected.jsonl line N)`** — `expected.jsonl` is shorter
+  than `input.jsonl`. Likely you added a new entry to `input.jsonl` and
+  haven't blessed yet. Run `--bless` to regenerate.
+- **All entries `FAIL` after a JDK / language toolchain update** — the
+  toolchain change shifted JDK source line numbers. Re-bless once
+  intentionally.
+
+## Why not in CI?
+
+The harness POSTs to live IDE-hosted servers, so it requires running
+IDEs. CI runners don't carry a desktop IDE. Headless IDE execution
+(`./gradlew runIde`) plus a fixture-loading script could enable this in
+the future; deferred for v1.

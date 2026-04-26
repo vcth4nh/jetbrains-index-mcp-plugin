@@ -19,6 +19,11 @@
 
 ### Added
 - `qualifiedName: String?` field on `ImplementationLocation`, `TypeElement`, and `CallElement` wire models. Carries the strict `QualifiedNameProvider` output (null when no provider handles the element); `name` continues to carry a user-friendly display string.
+- **Live MCP test harness** in `live-test/`. Snapshot-based regression
+  suite covering 8 languages and 10 navigation/intelligence tools via a
+  single bash + curl + jq runner. Run after every version bump:
+  `./live-test/run.sh` (or `--bless` to update snapshots). See
+  `live-test/README.md` for setup.
 
 ### Fixed
 - **`ide_find_implementations` (Java/Kotlin)**: lambda assignments and method references to `@FunctionalInterface` types are now returned alongside class implementations. Previously only `OverridingMethodsSearch`/`ClassInheritorsSearch` were consulted — lambdas were invisible. Now `FunctionalExpressionSearch` is also queried when the target is a functional class or its SAM, matching IntelliJ's Goto-Implementation. Returned with `kind: "LAMBDA"` or `kind: "METHOD_REFERENCE"`.
