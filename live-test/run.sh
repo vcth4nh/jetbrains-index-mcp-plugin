@@ -140,16 +140,22 @@ if [ ${#LANGS[@]} -eq 0 ]; then
     exit 0
 fi
 
+total_pass=0
+total_fail=0
 for lang in "${LANGS[@]}"; do
     url="$(url_for "$lang")"
     project_path="$LIVE_TEST_ROOT/$lang"
     input_file="$LIVE_TEST_ROOT/$lang/input.jsonl"
+    expected_file="$LIVE_TEST_ROOT/$lang/expected.jsonl"
+    bless_tmp="$(mktemp)"
+    lang_pass=0
+    lang_fail=0
     echo "[$lang] $url"
+
     line_no=0
     while IFS= read -r line; do
         line_no=$((line_no + 1))
         [ -z "$line" ] && continue
-        # --tool filter
         if [ -n "$FLAG_TOOL" ]; then
             tool="$(jq -r '.tool' <<< "$line")"
             [ "$tool" = "$FLAG_TOOL" ] || continue
@@ -158,6 +164,45 @@ for lang in "${LANGS[@]}"; do
         raw_result="$(post_and_unwrap "$url" "$request")"
         result="$(normalize "$raw_result" "$project_path")"
         id="$(jq -r '.id' <<< "$line")"
-        echo "  [$line_no] $id -> $result"
+
+        if [ "$FLAG_BLESS" -eq 1 ]; then
+            echo "$result" >> "$bless_tmp"
+            echo "  [$line_no] $id BLESS"
+            lang_pass=$((lang_pass + 1))
+            continue
+        fi
+
+        expected_line=""
+        if [ -f "$expected_file" ]; then
+            expected_line="$(sed -n "${line_no}p" "$expected_file")"
+        fi
+        if [ -z "$expected_line" ]; then
+            echo "  [$line_no] $id MISSING (no expected.jsonl line $line_no — bless?)"
+            lang_fail=$((lang_fail + 1))
+            continue
+        fi
+        expected_norm="$(jq -cS . <<< "$expected_line")"
+        actual_norm="$(jq -cS . <<< "$result")"
+        if [ "$expected_norm" = "$actual_norm" ]; then
+            echo "  [$line_no] $id PASS"
+            lang_pass=$((lang_pass + 1))
+        else
+            echo "  [$line_no] $id FAIL"
+            diff <(jq -S . <<< "$expected_line") <(jq -S . <<< "$result") | sed 's/^/    /'
+            lang_fail=$((lang_fail + 1))
+        fi
     done < "$input_file"
+
+    if [ "$FLAG_BLESS" -eq 1 ]; then
+        mv "$bless_tmp" "$expected_file"
+        echo "[$lang] BLESSED $expected_file"
+    else
+        rm -f "$bless_tmp"
+        echo "[$lang] $lang_pass passed, $lang_fail failed"
+    fi
+    total_pass=$((total_pass + lang_pass))
+    total_fail=$((total_fail + lang_fail))
 done
+
+echo "ALL: $total_pass passed, $total_fail failed"
+[ "$total_fail" -eq 0 ]
