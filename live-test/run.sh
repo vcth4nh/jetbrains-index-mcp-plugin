@@ -17,6 +17,19 @@ declare -A PORT_BY_LANG=(
     [rust]=29178
 )
 
+# Normalization filter: drop noisy fields, sort PSI-result arrays
+read -r -d '' NORMALIZE_FILTER <<'JQ' || true
+walk(
+  if type == "object"
+  then del(.preview, .nextCursor, .stale, .hasMore, .truncated, .totalCollected, .offset, .pageSize)
+       | with_entries(
+           if (.key | IN("usages","references","implementations","subtypes","supertypes","classes","symbols","files","matches"))
+           then .value |= sort_by((.file // ""), (.line // 0), (.column // 0))
+           else . end)
+  else . end
+)
+JQ
+
 # CLI flags
 FLAG_LANG=""
 FLAG_TOOL=""
@@ -95,6 +108,14 @@ post_and_unwrap() {
     jq -c '.result.content[0].text | fromjson' <<< "$raw"
 }
 
+# Normalize a result JSON: apply jq filter, substitute project absolute path with ${PROJECT_ROOT}, sort keys.
+normalize() {
+    local result_json="$1"
+    local project_path="$2"
+    jq -cS "$NORMALIZE_FILTER" <<< "$result_json" \
+        | sed "s|$project_path|\${PROJECT_ROOT}|g"
+}
+
 # Discover languages with input.jsonl (inline so `exit 1` reaches the parent shell)
 LANGS=()
 if [ -n "$FLAG_LANG" ]; then
@@ -134,7 +155,8 @@ for lang in "${LANGS[@]}"; do
             [ "$tool" = "$FLAG_TOOL" ] || continue
         fi
         request="$(build_request "$line" "$project_path")"
-        result="$(post_and_unwrap "$url" "$request")"
+        raw_result="$(post_and_unwrap "$url" "$request")"
+        result="$(normalize "$raw_result" "$project_path")"
         id="$(jq -r '.id' <<< "$line")"
         echo "  [$line_no] $id -> $result"
     done < "$input_file"
