@@ -2,7 +2,7 @@ package com.github.hechtcarmel.jetbrainsindexmcpplugin.constants
 
 object ToolNames {
     // Navigation tools
-    const val FIND_REFERENCES = "ide_find_references"
+    const val FIND_USAGES = "ide_find_usages"
     const val FIND_DEFINITION = "ide_find_definition"
     const val TYPE_HIERARCHY = "ide_type_hierarchy"
     const val CALL_HIERARCHY = "ide_call_hierarchy"
@@ -49,9 +49,9 @@ object ToolNames {
         FIND_DEFINITION,
         FIND_FILE,
         FIND_IMPLEMENTATIONS,
-        FIND_REFERENCES,
         FIND_SUPER_METHODS,
         FIND_SYMBOL,
+        FIND_USAGES,
         GET_ACTIVE_FILE,
         INDEX_STATUS,
         REFACTOR_MOVE,

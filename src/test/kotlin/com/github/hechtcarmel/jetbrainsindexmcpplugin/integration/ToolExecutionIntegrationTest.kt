@@ -21,12 +21,14 @@ import com.intellij.openapi.roots.ModuleRootModificationUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiManager
+import com.intellij.testFramework.IndexingTestUtil
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import javax.tools.ToolProvider
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.buildJsonObject
@@ -465,7 +467,7 @@ class ToolExecutionIntegrationTest : BasePlatformTestCase() {
 
         val expectedTools = listOf(
             // Navigation tools
-            ToolNames.FIND_REFERENCES,
+            ToolNames.FIND_USAGES,
             ToolNames.FIND_DEFINITION,
             ToolNames.TYPE_HIERARCHY,
             ToolNames.CALL_HIERARCHY,
@@ -587,7 +589,56 @@ class ToolExecutionIntegrationTest : BasePlatformTestCase() {
 
         val before = text.substring(0, offset)
         val line = before.count { it == '\n' } + 1
-        val column = offset - before.lastIndexOf('\n').let { if (it == -1) -1 else it } 
+        val column = offset - before.lastIndexOf('\n').let { if (it == -1) -1 else it }
         return line to column
+    }
+
+    fun testFindUsagesToolFindsJavaMethodCallersWithoutEdtAssertion() = runBlocking {
+        // Java method + caller fixture. The method declaration is on PsiMethod,
+        // which is what triggers JavaFindUsagesHandler.processElementUsages
+        // (modal-UI assertion on EDT). The fix routes through findReferencesToHighlight
+        // which doesn't assert EDT.
+        val service = myFixture.addFileToProject(
+            "src/main/java/com/example/Service.java",
+            """
+            package com.example;
+            public class Service {
+                public void doWork() {}
+            }
+            """.trimIndent()
+        )
+        myFixture.addFileToProject(
+            "src/main/java/com/example/Caller.java",
+            """
+            package com.example;
+            public class Caller {
+                void invoke() { new Service().doWork(); }
+            }
+            """.trimIndent()
+        )
+        IndexingTestUtil.waitUntilIndexesAreReady(project)
+
+        val tool = FindUsagesTool()
+        // Position points at `doWork` on line 3 (1-based) of Service.java, on the method name.
+        val args = buildJsonObject {
+            put("file", "src/main/java/com/example/Service.java")
+            put("line", 3)
+            put("column", 17)
+        }
+
+        val result = tool.execute(project, args)
+
+        // (a) No EDT assertion in the response envelope.
+        val text = Json.encodeToString(result)
+        assertFalse(
+            "Result must not contain EDT-assertion error: $text",
+            text.contains("Access is allowed from") || text.contains("Event Dispatch Thread")
+        )
+
+        // (b) Caller is in the usages list.
+        assertTrue(
+            "Caller.java should appear in usages: $text",
+            text.contains("Caller.java")
+        )
     }
 }

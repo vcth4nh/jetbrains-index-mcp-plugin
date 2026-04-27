@@ -25,7 +25,7 @@ Parse the `text` field as JSON for structured data.
 
 ## Navigation Tools
 
-### ide_find_references
+### ide_find_usages
 Find all usages of a symbol (semantic, not text search).
 
 **Target (mutually exclusive):** `file`+`line`+`column` OR `language`+`symbol`

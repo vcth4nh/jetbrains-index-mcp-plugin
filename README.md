@@ -233,7 +233,7 @@ These tools work in all supported JetBrains IDEs.
 
 | Tool | Description |
 |------|-------------|
-| `ide_find_references` | Find all references to a symbol across the entire project |
+| `ide_find_usages` | Find all references to a symbol across the entire project |
 | `ide_find_definition` | Find the definition/declaration location of a symbol |
 | `ide_find_class` | Search for classes/interfaces by name with camelCase/substring/wildcard matching |
 | `ide_find_file` | Search for files by name using IDE's file index |
@@ -303,7 +303,7 @@ When multiple projects are open in a single IDE window, you must specify which p
 
 ```json
 {
-  "name": "ide_find_references",
+  "name": "ide_find_usages",
   "arguments": {
     "project_path": "/Users/dev/myproject",
     "file": "src/Main.kt",

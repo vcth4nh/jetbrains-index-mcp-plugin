@@ -363,7 +363,7 @@ Tests are split into two categories to optimize execution time:
 Tools are organized by IDE availability.
 
 **Universal Tools (All Supported JetBrains IDEs):**
-- `ide_find_references` - Find all usages of a symbol. Supports `language`+`symbol` as alternative to `file`+`line`+`column`.
+- `ide_find_usages` - Find all usages of a symbol. Supports `language`+`symbol` as alternative to `file`+`line`+`column`.
 - `ide_find_definition` - Find symbol definition location. Supports `language`+`symbol` as alternative to `file`+`line`+`column`.
 - `ide_find_class` - Search for classes/interfaces by name with camelCase/substring/wildcard matching
 - `ide_find_file` - Search for files by name using IDE's file index
@@ -438,7 +438,7 @@ Symbol search across all languages uses `OptimizedSymbolSearch` (in `handlers/Op
 ### Pagination
 
 The plugin supports cursor-based pagination for search tools that return flat result lists:
-`ide_find_references`, `ide_search_text`, `ide_find_class`, `ide_find_file`, `ide_find_symbol`, `ide_find_implementations`.
+`ide_find_usages`, `ide_search_text`, `ide_find_class`, `ide_find_file`, `ide_find_symbol`, `ide_find_implementations`.
 
 **Key components:**
 - `PaginationService` (`server/PaginationService.kt`): Application-level light service managing cursor cache

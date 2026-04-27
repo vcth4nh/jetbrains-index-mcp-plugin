@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### Breaking
+- **`ide_find_references` is renamed to `ide_find_usages`.** Aligns with the IntelliJ Platform's terminology (`FindUsagesHandler`, `FindUsagesHandlerFactory`) and the IDE's "Find Usages" action. Schema, parameters, and return shape are unchanged. Clients with hard-coded `ide_find_references` calls must update.
 - **`qualifiedName` field in MCP tool responses now matches IntelliJ's "Copy Reference" output.** All sites that produced `qualifiedName` now delegate to the platform's `QualifiedNameProvider` extension point — the same API "Copy Reference" uses. This eliminates per-language divergence: no more reflective probing, no per-language wrappers, no direct PSI property access at FQN-producing sites, no hand-rolled string concatenation. Affected tools: `ide_find_symbol`, `ide_find_class`, `ide_find_definition`, `ide_type_hierarchy`, `ide_call_hierarchy`, `ide_find_implementations`, `ide_find_super_methods`.
 
   Per-language wire changes:
@@ -21,6 +22,7 @@
 - `qualifiedName: String?` field on `ImplementationLocation`, `TypeElement`, and `CallElement` wire models. Carries the strict `QualifiedNameProvider` output (null when no provider handles the element); `name` continues to carry a user-friendly display string.
 
 ### Fixed
+- **`ide_find_usages`**: now returns the same result set as the IDE's Find Usages action by routing through `FindUsagesHandlerFactory`. Previously called `ReferencesSearch.search` directly, which missed equivalent declarations — most visibly, PyCharm stdlib symbols (`divmod`, `len`, `print`, etc.) returned 0 references when the target resolved to the legacy `python_stubs/` skeleton because user code binds to the typeshed `.pyi`. Per-language handlers expand the search to the equivalence class (skeleton ↔ typeshed for Python, `.class` ↔ source for Java, light-classes for Kotlin). Falls back to `ReferencesSearch` when no handler claims the element (e.g., Markdown).
 - **`ide_find_implementations` (Java/Kotlin)**: lambda assignments and method references to `@FunctionalInterface` types are now returned alongside class implementations. Previously only `OverridingMethodsSearch`/`ClassInheritorsSearch` were consulted — lambdas were invisible. Now `FunctionalExpressionSearch` is also queried when the target is a functional class or its SAM, matching IntelliJ's Goto-Implementation. Returned with `kind: "LAMBDA"` or `kind: "METHOD_REFERENCE"`.
 - **`ide_find_implementations`, `ide_type_hierarchy`**: anonymous classes and enum-constant initializers no longer surface as `name="unknown"`. Display names now use IntelliJ's `ClassPresentationUtil.getNameForClass` ("Anonymous in `enclosingFn()`", "Enum constant 'X' in 'Y'") — matching IDE Find Usages / Type Hierarchy tool window output.
 - **`ide_find_implementations`**: enum-constant override methods on abstract methods no longer return `name="null.method"`. The class-qualifier portion now uses `ClassPresentationUtil.getNameForClass`.

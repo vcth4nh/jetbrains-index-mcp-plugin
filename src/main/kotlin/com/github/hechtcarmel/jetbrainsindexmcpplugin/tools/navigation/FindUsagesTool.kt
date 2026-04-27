@@ -6,6 +6,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ToolNames
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.UsageTypes
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScopeResolver
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.FindUsagesHandlerSearch
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.PaginationService
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.ProjectResolver
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
@@ -26,6 +27,7 @@ import com.intellij.psi.SmartPointerManager
 import com.intellij.psi.search.searches.ReferencesSearch
 import com.intellij.psi.util.PsiModificationTracker
 import com.intellij.util.Processor
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.serialization.json.JsonObject
@@ -51,7 +53,7 @@ class FindUsagesTool : AbstractMcpTool() {
         }
     }
 
-    override val name = ToolNames.FIND_REFERENCES
+    override val name = ToolNames.FIND_USAGES
 
     override val description = """
         Find all references to a symbol across the project. Use when you need to understand how a class, method, field, or variable is used before modifying or removing it.
@@ -128,31 +130,32 @@ class FindUsagesTool : AbstractMcpTool() {
             val totalFound = AtomicInteger(0)
             val totalCountLimit = collectLimit * 10
             val searchScope = BuiltInSearchScopeResolver.resolveGlobalScope(project, scope)
+            val seenLocationKeys = ConcurrentHashMap.newKeySet<String>()
 
-            try {
-                ReferencesSearch.search(targetElement, searchScope).forEach(Processor { reference ->
-                    ProgressManager.checkCanceled()
-
-                    val refElement = reference.element
+            val collectRef: (PsiElement) -> Boolean = { refElement ->
+                ProgressManager.checkCanceled()
+                if (!refElement.isValid) {
+                    true
+                } else {
                     val refFile = refElement.containingFile?.virtualFile
-                    if (refFile != null && searchScope.contains(refFile)) {
-                        val total = totalFound.incrementAndGet()
+                    val document = refElement.containingFile?.let {
+                        PsiDocumentManager.getInstance(project).getDocument(it)
+                    }
+                    if (refFile != null && document != null && searchScope.contains(refFile)) {
+                        val lineNumber = document.getLineNumber(refElement.textOffset) + 1
+                        val columnNumber = refElement.textOffset -
+                            document.getLineStartOffset(lineNumber - 1) + 1
+                        val key = "${getRelativePath(project, refFile)}:$lineNumber:$columnNumber"
 
-                        if (total <= collectLimit) {
-                            val document = PsiDocumentManager.getInstance(project)
-                                .getDocument(refElement.containingFile)
-                            if (document != null) {
-                                val lineNumber = document.getLineNumber(refElement.textOffset) + 1
-                                val columnNumber = refElement.textOffset -
-                                    document.getLineStartOffset(lineNumber - 1) + 1
-
+                        if (seenLocationKeys.add(key)) {
+                            val total = totalFound.incrementAndGet()
+                            if (total <= collectLimit) {
                                 val lineText = document.getText(
                                     TextRange(
                                         document.getLineStartOffset(lineNumber - 1),
                                         document.getLineEndOffset(lineNumber - 1)
                                     )
                                 ).trim()
-
                                 usages.add(UsageLocation(
                                     file = getRelativePath(project, refFile),
                                     line = lineNumber,
@@ -162,13 +165,29 @@ class FindUsagesTool : AbstractMcpTool() {
                                     astPath = PsiUtils.getAstPath(refElement)
                                 ))
                             }
+                            total < totalCountLimit
+                        } else {
+                            true
                         }
-
-                        total < totalCountLimit
                     } else {
                         true
                     }
-                })
+                }
+            }
+
+            try {
+                val handlerProcessed = FindUsagesHandlerSearch.processReferences(
+                    project = project,
+                    element = targetElement,
+                    scope = searchScope,
+                    processor = Processor { refElement -> collectRef(refElement) }
+                )
+
+                if (!handlerProcessed) {
+                    ReferencesSearch.search(targetElement, searchScope).forEach(Processor { reference ->
+                        collectRef(reference.element)
+                    })
+                }
             } catch (e: LinkageError) {
                 LOG.warn("Reference search failed for ${targetElement.javaClass.name}", e)
                 return@suspendingReadAction null to createErrorResult(searchInfrastructureErrorMessage(e))
@@ -241,42 +260,68 @@ class FindUsagesTool : AbstractMcpTool() {
         val newResults = ConcurrentLinkedQueue<PaginationService.SerializedResult>()
         val count = AtomicInteger(0)
         val searchScope = BuiltInSearchScopeResolver.resolveGlobalScope(project, scope)
+        val seenLocationKeys = ConcurrentHashMap.newKeySet<String>()
+        seenLocationKeys.addAll(seenKeys)
+
+        val collectRef: (PsiElement) -> Boolean = { refElement ->
+            ProgressManager.checkCanceled()
+            if (!refElement.isValid) {
+                true
+            } else {
+                val refFile = refElement.containingFile?.virtualFile
+                val document = refElement.containingFile?.let {
+                    PsiDocumentManager.getInstance(project).getDocument(it)
+                }
+                if (refFile != null && document != null && searchScope.contains(refFile)) {
+                    val lineNumber = document.getLineNumber(refElement.textOffset) + 1
+                    val columnNumber = refElement.textOffset -
+                        document.getLineStartOffset(lineNumber - 1) + 1
+                    val key = "${getRelativePath(project, refFile)}:$lineNumber:$columnNumber"
+
+                    if (seenLocationKeys.add(key)) {
+                        val slot = count.incrementAndGet()
+                        if (slot <= limit) {
+                            val lineText = document.getText(
+                                TextRange(
+                                    document.getLineStartOffset(lineNumber - 1),
+                                    document.getLineEndOffset(lineNumber - 1)
+                                )
+                            ).trim()
+                            val usage = UsageLocation(
+                                file = getRelativePath(project, refFile),
+                                line = lineNumber,
+                                column = columnNumber,
+                                context = lineText,
+                                type = classifyUsage(refElement),
+                                astPath = PsiUtils.getAstPath(refElement)
+                            )
+                            newResults.add(
+                                PaginationService.SerializedResult(key, json.encodeToJsonElement(usage))
+                            )
+                        }
+                        slot < limit
+                    } else {
+                        true
+                    }
+                } else {
+                    true
+                }
+            }
+        }
 
         try {
-            ReferencesSearch.search(targetElement, searchScope).forEach(Processor { reference ->
-                ProgressManager.checkCanceled()
-                val refElement = reference.element
-                val refFile = refElement.containingFile?.virtualFile
-                if (refFile != null && searchScope.contains(refFile)) {
-                    val document = PsiDocumentManager.getInstance(project).getDocument(refElement.containingFile)
-                    if (document != null) {
-                        val lineNumber = document.getLineNumber(refElement.textOffset) + 1
-                        val columnNumber = refElement.textOffset - document.getLineStartOffset(lineNumber - 1) + 1
-                        val key = "${getRelativePath(project, refFile)}:$lineNumber:$columnNumber"
+            val handlerProcessed = FindUsagesHandlerSearch.processReferences(
+                project = project,
+                element = targetElement,
+                scope = searchScope,
+                processor = Processor { refElement -> collectRef(refElement) }
+            )
 
-                        if (key !in seenKeys) {
-                            val slot = count.incrementAndGet()
-                            if (slot <= limit) {
-                                val lineText = document.getText(
-                                    TextRange(document.getLineStartOffset(lineNumber - 1), document.getLineEndOffset(lineNumber - 1))
-                                ).trim()
-                                val usage = UsageLocation(
-                                    file = getRelativePath(project, refFile),
-                                    line = lineNumber,
-                                    column = columnNumber,
-                                    context = lineText,
-                                    type = classifyUsage(refElement),
-                                    astPath = PsiUtils.getAstPath(refElement)
-                                )
-                                newResults.add(PaginationService.SerializedResult(key, json.encodeToJsonElement(usage)))
-                            }
-                            slot < limit
-                        } else {
-                            true
-                        }
-                    } else true
-                } else true
-            })
+            if (!handlerProcessed) {
+                ReferencesSearch.search(targetElement, searchScope).forEach(Processor { reference ->
+                    collectRef(reference.element)
+                })
+            }
         } catch (e: LinkageError) {
             LOG.warn("Reference search pagination failed for ${targetElement.javaClass.name}", e)
             throw IllegalStateException(searchInfrastructureErrorMessage(e), e)

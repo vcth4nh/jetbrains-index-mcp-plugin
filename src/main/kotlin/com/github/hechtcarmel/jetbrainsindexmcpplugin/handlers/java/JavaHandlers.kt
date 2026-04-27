@@ -698,7 +698,7 @@ class JavaCallHierarchyHandler : BaseJavaHandler<CallHierarchyData>(), CallHiera
             // has a compiler-added `Continuation` parameter that never appears in Kotlin source call
             // sites. This causes MethodReferencesSearch to miss all callers of suspend funs in
             // concrete classes. ReferencesSearch on the KtNamedFunction resolves this — it is the
-            // same approach used by ide_find_references (FindUsagesTool), which always works.
+            // same approach used by ide_find_usages (FindUsagesTool), which always works.
             // Deduplication via seenKeys prevents double-counting when both searches find the same ref.
             // Note: do NOT guard this with `if (allReferences.isEmpty())`. That original guard caused
             // the fix to be silently skipped whenever MethodReferencesSearch returned any result
