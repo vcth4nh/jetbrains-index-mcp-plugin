@@ -1,0 +1,24 @@
+{"astPath":["Circle","Circle"],"column":18,"file":"src/main/kotlin/demo/Normal.kt","line":13,"symbolName":"radius"}
+{"astPath":[],"column":12,"file":"src/main/kotlin/demo/Normal.kt","line":18,"symbolName":"Rectangle"}
+{"astPath":[],"column":5,"file":"src/main/kotlin/demo/Normal.kt","line":37,"symbolName":"makeDefaultShapes"}
+{"tool_error_text":"No named element at position"}
+{"totalCount":0,"usages":[]}
+{"totalCount":0,"usages":[]}
+{"implementations":[],"totalCount":0}
+{"implementations":[],"totalCount":0}
+{"implementations":[],"totalCount":0}
+{"hierarchy":[],"method":{"column":18,"containingClass":"demo.Circle","file":"src/main/kotlin/demo/Normal.kt","language":"Kotlin","line":14,"name":"area","signature":"area(): double"},"totalCount":0}
+{"hierarchy":[],"method":{"column":18,"containingClass":"demo.Rectangle","file":"src/main/kotlin/demo/Normal.kt","language":"Kotlin","line":19,"name":"area","signature":"area(): double"},"totalCount":0}
+{"element":{"file":"src/main/kotlin/demo/Normal.kt","kind":"CLASS","language":"Kotlin","name":"demo.Square","qualifiedName":"demo.Square","supertypes":null},"subtypes":[],"supertypes":[]}
+{"element":{"file":"src/main/kotlin/demo/Normal.kt","kind":"CLASS","language":"Kotlin","name":"demo.Rectangle","qualifiedName":"demo.Rectangle","supertypes":null},"subtypes":[],"supertypes":[]}
+{"element":{"file":"src/main/kotlin/demo/Normal.kt","kind":"ABSTRACT_CLASS","language":"Kotlin","name":"demo.Shape","qualifiedName":"demo.Shape","supertypes":null},"subtypes":[],"supertypes":[]}
+{"tool_error_text":"No method/function found at position"}
+{"calls":[],"element":{"children":null,"column":18,"file":"src/main/kotlin/demo/Normal.kt","language":"Kotlin","line":8,"name":"demo.Shape.area()","qualifiedName":"demo.Shape#area"}}
+{"classes":[],"query":"Shape","totalCount":0}
+{"classes":[],"query":"Coercer","totalCount":0}
+{"query":"area","symbols":[],"totalCount":0}
+{"query":"quirkLambda","symbols":[],"totalCount":0}
+{"file":"src/main/kotlin/demo/Normal.kt","language":"kotlin","structure":"Normal.kt\n\ninterface Drawable (line 3)\n  fun draw () (line 4)\nclass Shape (line 7)\n  fun area () (line 8)\n  fun describe () (line 10)\nclass Circle : Shape(), Drawable (line 13)\n  fun area () (line 14)\n  fun draw () (line 15)\nclass Rectangle : Shape(), Drawable (line 18)\n  fun area () (line 19)\n  fun draw () (line 20)\nclass Square : Rectangle(side, side) (line 23)\nclass ShapeCollection (line 25)\n  val shapes MutableList<Shape> (line 26)\n  fun add (shape: Shape) (line 28)\n  fun totalArea () (line 32)\n  fun largest () (line 34)\nfun makeDefaultShapes () (line 37)"}
+{"file":"src/main/kotlin/demo/Quirks.kt","language":"kotlin","structure":"Quirks.kt\n\nfun quirkLambda (x: String) (line 3)\nfun quirkFunctionRef (x: String) (line 8)\nfun quirkApply (x: String) (line 13)\nfun quirkLet (x: String?) (line 17)\nfun quirkWith (x: String) (line 21)\nfun quirkRun (x: String) (line 25)\nfun coerceTo (default: Int) (line 27)\nfun quirkExtensionFn (x: String) (line 29)\nfun quirkWhen (mode: String, x: String) (line 31)\nclass Coercion (line 37)\n  fun apply (x: String) (line 38)\n  object IntCoerce (line 39)\n  object AbsCoerce (line 40)\nfun quirkSealed (c: Coercion, x: String) (line 43)\nclass Coercer (line 45)\n  fun coerce (x: String) (line 46)\nfun quirkDataClass (x: String) (line 49)\nfun quirkDispatchMap (key: String, x: String) (line 51)\nfun quirkInfix (x: String) (line 59)\nfun coerceFirst () (line 61)"}
+{"analysisFresh":false,"analysisMessage":"File is not eligible for IDE diagnostics analysis. Intentions are unavailable because the file is not open in an editor.","analysisTimedOut":false,"buildErrorCount":null,"buildErrors":null,"buildErrorsTruncated":null,"buildTimestamp":null,"buildWarningCount":null,"intentionCount":0,"intentions":[],"problemCount":0,"problems":[],"testResults":null,"testResultsTruncated":null,"testSummary":null}
+{"analysisFresh":false,"analysisMessage":"File is not eligible for IDE diagnostics analysis. Intentions are unavailable because the file is not open in an editor.","analysisTimedOut":false,"buildErrorCount":null,"buildErrors":null,"buildErrorsTruncated":null,"buildTimestamp":null,"buildWarningCount":null,"intentionCount":0,"intentions":[],"problemCount":0,"problems":[],"testResults":null,"testResultsTruncated":null,"testSummary":null}

@@ -1,8 +1,8 @@
 {"id":"def-circle-area",          "tool":"ide_find_definition",      "params":{"file":"src/normal.js","line":17,"column":5}}
 {"id":"def-rectangle-area",       "tool":"ide_find_definition",      "params":{"file":"src/normal.js","line":27,"column":5}}
-{"id":"def-makeDefaultShapes",    "tool":"ide_find_definition",      "params":{"file":"src/normal.js","line":59,"column":10}}
-{"id":"refs-area-from-totalArea", "tool":"ide_find_references",      "params":{"file":"src/normal.js","line":47,"column":42}}
-{"id":"refs-shapes-field",        "tool":"ide_find_references",      "params":{"file":"src/normal.js","line":42,"column":14}}
+{"id":"def-makeDefaultShapes",    "tool":"ide_find_definition",      "params":{"file":"src/normal.js","line":56,"column":10}}
+{"id":"refs-area-from-totalArea", "tool":"ide_find_references",      "params":{"file":"src/normal.js","line":8,"column":5}}
+{"id":"refs-shapes-field",        "tool":"ide_find_references",      "params":{"file":"src/normal.js","line":39,"column":14}}
 {"id":"refs-shape-class",         "tool":"ide_find_references",      "params":{"file":"src/normal.js","line":7,"column":7}}
 {"id":"impls-shape-area",         "tool":"ide_find_implementations", "params":{"file":"src/normal.js","line":8,"column":5}}
 {"id":"super-circle-area",        "tool":"ide_find_super_methods",   "params":{"file":"src/normal.js","line":17,"column":5}}
@@ -10,7 +10,7 @@
 {"id":"type-hier-square",         "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.js","line":31,"column":7}}
 {"id":"type-hier-rectangle",      "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.js","line":21,"column":7}}
 {"id":"type-hier-shape",          "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.js","line":7,"column":7}}
-{"id":"call-hier-makeDefault",    "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.js","line":59,"column":10,"direction":"callees","maxDepth":2}}
+{"id":"call-hier-makeDefault",    "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.js","line":56,"column":10,"direction":"callees","maxDepth":2}}
 {"id":"call-hier-area-callers",   "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.js","line":8,"column":5,"direction":"callers","maxDepth":2}}
 {"id":"find-class-Shape",         "tool":"ide_find_class",           "params":{"query":"Shape"}}
 {"id":"find-class-Rectangle",     "tool":"ide_find_class",           "params":{"query":"Rectangle"}}
