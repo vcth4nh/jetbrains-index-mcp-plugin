@@ -8,9 +8,7 @@ Run after every plugin version bump.
 
 ## Requirements
 
-- `bash` 4.0+
-- `curl`
-- `jq`
+- Python 3.10+ (stdlib only — no third-party deps)
 - The dev plugin installed in each IDE you intend to test against (see below).
 - The corresponding fixture project open in that IDE, fully indexed.
 
@@ -31,11 +29,11 @@ then run the harness.
 ## Quick start
 
 ```bash
-./run.sh                          # runs every language, fails on diff
-./run.sh --bless                  # rewrite expected.jsonl from server output
-./run.sh --language python        # one language only
-./run.sh --tool ide_find_definition   # one tool across all languages
-./run.sh --url http://127.0.0.1:29170/index-mcp/streamable-http   # override URL
+./run.py                          # runs every language, fails on diff
+./run.py --bless                  # rewrite expected.jsonl from server output
+./run.py --language python        # one language only
+./run.py --tool ide_find_definition   # one tool across all languages
+./run.py --url http://127.0.0.1:29170/index-mcp/streamable-http   # override URL
 ```
 
 ## Version-bump workflow

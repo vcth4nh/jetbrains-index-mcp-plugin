@@ -1,0 +1,13 @@
+# IDE-generated artifacts in fixture projects
+*/gradle/
+*/gradlew
+*/gradlew.bat
+*/.gradle/
+*/build/
+*/target/
+*/Cargo.lock
+*/node_modules/
+*/.idea/
+*/__pycache__/
+*/dist/
+*/vendor/
