@@ -5,6 +5,8 @@
 .kotlin
 .qodana
 build
+bin
 tmp
 .claude
+docs/superpowers
 local.properties
