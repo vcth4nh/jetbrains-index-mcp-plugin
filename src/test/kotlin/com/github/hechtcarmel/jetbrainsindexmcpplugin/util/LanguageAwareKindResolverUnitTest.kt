@@ -36,4 +36,12 @@ class LanguageAwareKindResolverUnitTest : TestCase() {
         assertEquals("PROPERTY", LanguageAwareKindResolver.fallbackKindFromClassName("KtPropertyImpl"))
         assertEquals("CONSTANT", LanguageAwareKindResolver.fallbackKindFromClassName("PhpConstantImpl"))
     }
+
+    fun testFallbackKindFromClassName_phpEnum_returnsEnum() {
+        // PHP enums share the PhpClassImpl PSI class — the fallback substring matcher
+        // catches the "enum" keyword in any synthetic / stub class name. This test
+        // documents the regression-protection contract for the PHP enum fix path.
+        assertEquals("ENUM", LanguageAwareKindResolver.fallbackKindFromClassName("PhpEnumImpl"))
+        assertEquals("ENUM", LanguageAwareKindResolver.fallbackKindFromClassName("BackedEnumStub"))
+    }
 }

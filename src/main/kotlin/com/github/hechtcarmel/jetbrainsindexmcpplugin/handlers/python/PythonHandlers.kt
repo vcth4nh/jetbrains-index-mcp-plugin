@@ -955,15 +955,46 @@ class PythonStructureHandler : BasePythonHandler<List<StructureNode>>(), Structu
         )
     }
 
-    private fun extractFunctionStructure(pyFunction: PsiElement, project: Project): StructureNode {
-        val name = getName(pyFunction) ?: "unknown"
+    /**
+     * Walks `parent.children` recursively, dispatching on element type:
+     * - PyFunction child → recurse into extractFunctionStructure, do NOT descend further.
+     * - PyClass child    → recurse into extractClassStructure, do NOT descend further.
+     * - Otherwise        → recurse through child's own children.
+     *
+     * Mirrors PyCharm's PyStructureViewElement.getElementChildren visitor pattern:
+     * descends through non-worthy container nodes (PyStatementList, PyIfPart,
+     * PyWithStatement, PyExpressionStatement) and stops at worthy boundaries
+     * (PyFunction, PyClass) — so a "def foo()" buried inside "if x:" still surfaces.
+     */
+    private fun collectNestedDefinitions(
+        parent: PsiElement,
+        project: Project,
+        out: MutableList<StructureNode>
+    ) {
+        for (child in parent.children) {
+            when {
+                isPyFunction(child) -> out.add(extractFunctionStructure(child, project))
+                isPyClass(child) -> out.add(extractClassStructure(child, project))
+                else -> collectNestedDefinitions(child, project, out)
+            }
+        }
+    }
 
+    private fun extractFunctionStructure(pyFunction: PsiElement, project: Project): StructureNode {
+        val children = mutableListOf<StructureNode>()
+        try {
+            collectNestedDefinitions(pyFunction, project, children)
+        } catch (e: Exception) {
+            LOG.warn("Failed to extract Python function structure children: ${e.message}")
+        }
+        val name = getName(pyFunction) ?: "unknown"
         return StructureNode(
             name = name,
             kind = StructureKind.FUNCTION,
             modifiers = getPythonModifiers(pyFunction),
             signature = buildFunctionSignature(pyFunction),
-            line = getLineNumber(project, pyFunction) ?: 0
+            line = getLineNumber(project, pyFunction) ?: 0,
+            children = children.sortedBy { it.line }
         )
     }
 

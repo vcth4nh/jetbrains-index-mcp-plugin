@@ -3,6 +3,7 @@ package com.github.hechtcarmel.jetbrainsindexmcpplugin.util
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
+import com.intellij.psi.util.PsiTreeUtil
 
 /**
  * Single source of truth for classifying a PSI element into a language-aware
@@ -69,12 +70,15 @@ object LanguageAwareKindResolver {
         return try {
             val isInterface = phpClass.getMethod("isInterface").invoke(element) as? Boolean == true
             val isTrait = phpClass.getMethod("isTrait").invoke(element) as? Boolean == true
+            val isEnum = phpClass.getMethod("isEnum").invoke(element) as? Boolean == true
             val isAbstract = phpClass.getMethod("isAbstract").invoke(element) as? Boolean == true
-            // Order matters: interface and trait take priority over abstract. An abstract
-            // interface still reports INTERFACE; an abstract trait still reports TRAIT.
+            // Order matters: interface/trait/enum are mutually exclusive declaration forms
+            // and take priority over abstract. PHP forbids abstract enums at the language
+            // level, so isEnum-before-isAbstract is also a defensive correctness guard.
             when {
                 isInterface -> "INTERFACE"
                 isTrait -> "TRAIT"
+                isEnum -> "ENUM"
                 isAbstract -> "ABSTRACT_CLASS"
                 else -> "CLASS"
             }
@@ -88,11 +92,19 @@ object LanguageAwareKindResolver {
         val typeSpec = goTypeSpecClass ?: return fallbackKindFromClassName(element.javaClass.simpleName)
         if (!typeSpec.isInstance(element)) return fallbackKindFromClassName(element.javaClass.simpleName)
         return try {
-            val specType = typeSpec.getMethod("getSpecType").invoke(element) as? PsiElement
-                ?: return fallbackKindFromClassName(element.javaClass.simpleName)
+            // PSI tree is GoTypeSpec -> GoSpecType -> GoStructType | GoInterfaceType.
+            // Walk past the GoSpecType wrapper directly via PsiTreeUtil — works on stubs
+            // without AST inflation, no resolve, no reflection on the wrapper.
+            val structClass = goStructTypeClass
+            val interfaceClass = goInterfaceTypeClass
+            @Suppress("UNCHECKED_CAST")
             when {
-                goInterfaceTypeClass?.isInstance(specType) == true -> "INTERFACE"
-                goStructTypeClass?.isInstance(specType) == true -> "STRUCT"
+                interfaceClass != null && PsiTreeUtil.findChildOfType(
+                    element, interfaceClass as Class<out PsiElement>
+                ) != null -> "INTERFACE"
+                structClass != null && PsiTreeUtil.findChildOfType(
+                    element, structClass as Class<out PsiElement>
+                ) != null -> "STRUCT"
                 else -> "CLASS"
             }
         } catch (e: Exception) {

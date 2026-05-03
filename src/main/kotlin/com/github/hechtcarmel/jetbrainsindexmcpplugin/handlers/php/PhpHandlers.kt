@@ -430,6 +430,18 @@ abstract class BasePhpHandler<T> : LanguageHandler<T> {
     }
 
     /**
+     * Checks if a PhpClass is an enum via reflection.
+     */
+    protected fun isEnum(phpClass: PsiElement): Boolean {
+        return try {
+            val method = phpClass.javaClass.getMethod("isEnum")
+            method.invoke(phpClass) as? Boolean ?: false
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
      * Gets the containing class of a method via reflection.
      */
     protected fun getContainingClass(method: PsiElement): PsiElement? {
@@ -443,11 +455,16 @@ abstract class BasePhpHandler<T> : LanguageHandler<T> {
 
     /**
      * Determines the kind of a PHP class element.
+     *
+     * Order matters: interface/trait/enum are mutually exclusive declaration forms
+     * and take priority over abstract. PHP forbids abstract enums at the language
+     * level, so isEnum-before-isAbstract is also a defensive correctness guard.
      */
     protected fun determineClassKind(element: PsiElement): String {
         return when {
             isInterface(element) -> "INTERFACE"
             isTrait(element) -> "TRAIT"
+            isEnum(element) -> "ENUM"
             isAbstract(element) -> "ABSTRACT_CLASS"
             else -> "CLASS"
         }

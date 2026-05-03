@@ -292,12 +292,22 @@ abstract class BaseGoHandler<T> : LanguageHandler<T> {
 
     /**
      * Determines the kind of a Go type element.
+     *
+     * PSI tree is GoTypeSpec -> GoSpecType -> GoStructType | GoInterfaceType. Walks
+     * past the GoSpecType wrapper directly via PsiTreeUtil — the previous reflective
+     * call to GoTypeSpec.getSpecType() returned the wrapper, not the leaf type, so
+     * isInstance(GoStructType) / isInstance(GoInterfaceType) always failed and every
+     * struct/interface collapsed to "TYPE".
      */
     protected fun determineTypeKind(element: PsiElement): String {
-        val specType = getSpecType(element)
+        @Suppress("UNCHECKED_CAST")
         return when {
-            specType != null && isGoStructType(specType) -> "STRUCT"
-            specType != null && isGoInterfaceType(specType) -> "INTERFACE"
+            goInterfaceTypeClass != null && PsiTreeUtil.findChildOfType(
+                element, goInterfaceTypeClass as Class<out PsiElement>
+            ) != null -> "INTERFACE"
+            goStructTypeClass != null && PsiTreeUtil.findChildOfType(
+                element, goStructTypeClass as Class<out PsiElement>
+            ) != null -> "STRUCT"
             isGoTypeSpec(element) -> "TYPE"
             else -> "TYPE"
         }

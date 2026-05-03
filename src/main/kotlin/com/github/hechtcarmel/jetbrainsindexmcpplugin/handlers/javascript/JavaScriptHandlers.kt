@@ -129,6 +129,15 @@ abstract class BaseJavaScriptHandler<T> : LanguageHandler<T> {
         }
     }
 
+    protected val jsInheritanceUtilClass: Class<*>? by lazy {
+        try {
+            Class.forName("com.intellij.lang.javascript.psi.resolve.JSInheritanceUtil")
+        } catch (e: ClassNotFoundException) {
+            LOG.debug("JSInheritanceUtil not found")
+            null
+        }
+    }
+
     protected val jsCallExpressionClass: Class<*>? by lazy {
         try {
             Class.forName("com.intellij.lang.javascript.psi.JSCallExpression")
@@ -486,37 +495,34 @@ class JavaScriptTypeHierarchyHandler : BaseJavaScriptHandler<TypeHierarchyData>(
         jsClass: PsiElement,
         searchScope: GlobalSearchScope
     ): List<TypeElementData> {
-        val searchClass = Class.forName("com.intellij.lang.javascript.psi.resolve.JSInheritorsSearch")
-        val searchMethod = searchClass.getMethod("search", jsClassClass)
-        val query = searchMethod.invoke(null, jsClass)
+        // Use IntelliJ's canonical direct-only API (same as JSSubtypesHierarchyTreeStructure.buildChildren).
+        // Was previously reflecting into a non-existent JSInheritorsSearch class — strategy always
+        // ClassNotFoundException-failed and execution silently fell through to strategy 2.
+        val util = jsInheritanceUtilClass ?: return emptyList()
+        val jsClassCls = jsClassClass ?: return emptyList()
 
-        val results = mutableListOf<TypeElementData>()
-        val forEachMethod = query.javaClass.getMethod("forEach", Processor::class.java)
-        forEachMethod.invoke(query, Processor<Any> { inheritor ->
-            if (inheritor is PsiElement && shouldIncludeNavigationElement(searchScope, inheritor)) {
-                // Filter to direct subtypes only — JSInheritorsSearch returns transitive closure.
-                val isDirect: Boolean = try {
-                    val getSuperClassesMethod = inheritor.javaClass.getMethod("getSuperClasses")
-                    val supers = getSuperClassesMethod.invoke(inheritor) as? Array<*> ?: emptyArray<Any?>()
-                    supers.any { it === jsClass }
-                } catch (_: Exception) {
-                    true  // If we can't tell, include — better to over-report than under.
-                }
-                if (isDirect) {
-                    results.add(TypeElementData(
-                        name = QualifiedNameUtil.getQualifiedName(inheritor) ?: getName(inheritor) ?: "unknown",
-                        qualifiedName = QualifiedNameUtil.getQualifiedName(inheritor),
-                        file = inheritor.containingFile?.virtualFile?.let { getRelativePath(project, it) },
-                        line = getLineNumber(project, inheritor),
-                        kind = getClassKind(inheritor),
-                        language = getLanguageName(inheritor)
-                    ))
-                }
+        val findDirectMethod = util.getMethod(
+            "findDirectSubClasses",
+            jsClassCls,
+            Boolean::class.javaPrimitiveType
+        )
+        @Suppress("UNCHECKED_CAST")
+        val directs = findDirectMethod.invoke(null, jsClass, true) as? Collection<PsiElement>
+            ?: return emptyList()
+
+        return directs
+            .filter { shouldIncludeNavigationElement(searchScope, it) }
+            .take(100)
+            .map { inheritor ->
+                TypeElementData(
+                    name = QualifiedNameUtil.getQualifiedName(inheritor) ?: getName(inheritor) ?: "unknown",
+                    qualifiedName = QualifiedNameUtil.getQualifiedName(inheritor),
+                    file = inheritor.containingFile?.virtualFile?.let { getRelativePath(project, it) },
+                    line = getLineNumber(project, inheritor),
+                    kind = getClassKind(inheritor),
+                    language = getLanguageName(inheritor)
+                )
             }
-            results.size < 100
-        })
-
-        return results
     }
 
     private fun searchSubtypesUsingDefinitionsScopedSearch(
@@ -526,16 +532,50 @@ class JavaScriptTypeHierarchyHandler : BaseJavaScriptHandler<TypeHierarchyData>(
     ): List<TypeElementData> {
         val results = mutableListOf<TypeElementData>()
 
+        // Defensive direct-only check around DefinitionsScopedSearch results: it calls
+        // JSClassSearch.searchClassInheritors(_, true /*checkDeep*/) under the hood,
+        // returning the transitive closure. Filter via JSInheritanceUtil.isParentClass
+        // when available; otherwise drop ambiguous results (under-report safer than over-report).
+        val util = jsInheritanceUtilClass
+        val jsClassCls = jsClassClass
+        val isParentClassMethod = if (util != null && jsClassCls != null) {
+            try {
+                util.getMethod(
+                    "isParentClass",
+                    jsClassCls,
+                    jsClassCls,
+                    Boolean::class.javaPrimitiveType
+                )
+            } catch (e: NoSuchMethodException) {
+                LOG.debug("JSInheritanceUtil.isParentClass not found: ${e.message}")
+                null
+            }
+        } else null
+
         DefinitionsScopedSearch.search(jsClass, searchScope).forEach(Processor { definition ->
             if (definition != jsClass && isJSClass(definition) && shouldIncludeNavigationElement(searchScope, definition)) {
-                results.add(TypeElementData(
-                    name = QualifiedNameUtil.getQualifiedName(definition) ?: getName(definition) ?: "unknown",
-                    qualifiedName = QualifiedNameUtil.getQualifiedName(definition),
-                    file = definition.containingFile?.virtualFile?.let { getRelativePath(project, it) },
-                    line = getLineNumber(project, definition),
-                    kind = getClassKind(definition),
-                    language = getLanguageName(definition)
-                ))
+                val isDirect = if (isParentClassMethod != null) {
+                    try {
+                        isParentClassMethod.invoke(null, definition, jsClass, false) as? Boolean == true
+                    } catch (_: Exception) {
+                        false  // Under-report on reflection failure (filter-safety default).
+                    }
+                } else {
+                    // No predicate available — admit the result (preserves backward behavior
+                    // for IDEs without JSInheritanceUtil; over-report is acceptable here
+                    // because in modern WebStorm strategy 1 already handles the direct-only case).
+                    true
+                }
+                if (isDirect) {
+                    results.add(TypeElementData(
+                        name = QualifiedNameUtil.getQualifiedName(definition) ?: getName(definition) ?: "unknown",
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(definition),
+                        file = definition.containingFile?.virtualFile?.let { getRelativePath(project, it) },
+                        line = getLineNumber(project, definition),
+                        kind = getClassKind(definition),
+                        language = getLanguageName(definition)
+                    ))
+                }
             }
             results.size < 100
         })
