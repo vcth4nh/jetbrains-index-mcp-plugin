@@ -13,6 +13,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.AbstractMcpTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.FindClassResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.SymbolMatch
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.LanguageAwareKindResolver
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
 import com.intellij.navigation.ChooseByNameContributor
@@ -406,15 +407,7 @@ class FindClassTool : AbstractMcpTool() {
     }
 
     private fun determineKind(element: PsiElement): String {
-        val className = element.javaClass.simpleName.lowercase()
-        return when {
-            className.contains("interface") -> "INTERFACE"
-            className.contains("enum") -> "ENUM"
-            className.contains("class") -> "CLASS"
-            className.contains("struct") -> "STRUCT"
-            className.contains("trait") -> "TRAIT"
-            else -> "CLASS"
-        }
+        return LanguageAwareKindResolver.resolveKind(element)
     }
 
     private fun getLanguageName(element: PsiElement): String {

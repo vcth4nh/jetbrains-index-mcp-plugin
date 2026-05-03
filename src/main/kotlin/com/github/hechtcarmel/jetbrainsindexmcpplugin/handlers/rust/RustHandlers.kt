@@ -134,6 +134,10 @@ abstract class BaseRustHandler<T> : LanguageHandler<T> {
         loadClass("org.rust.lang.core.psi.RsMethodCall")
     }
 
+    protected val rsStructLiteralClass: Class<*>? by lazy {
+        loadClass("org.rust.lang.core.psi.RsStructLiteral")
+    }
+
     protected val rsNamedElementClass: Class<*>? by lazy {
         loadClass("org.rust.lang.core.psi.RsNamedElement")
     }
@@ -369,6 +373,11 @@ class RustTypeHierarchyHandler : BaseRustHandler<TypeHierarchyData>(), TypeHiera
         private const val MAX_HIERARCHY_DEPTH = 50
     }
 
+    private val rsNamedElementIndexClass: Class<*>? by lazy {
+        try { Class.forName("org.rust.lang.core.psi.ext.RsNamedElementIndex") }
+        catch (_: ClassNotFoundException) { null }
+    }
+
     override val languageId = "Rust"
 
     override fun canHandle(element: PsiElement): Boolean {
@@ -486,6 +495,28 @@ class RustTypeHierarchyHandler : BaseRustHandler<TypeHierarchyData>(), TypeHiera
         return supertypes
     }
 
+    /**
+     * Looks up a Rust struct by name via RsNamedElementIndex.
+     *
+     * Used as a fallback when reference resolution fails on an impl's type reference,
+     * to avoid tagging clearly-named types as kind: IMPL. The Rust plugin's index
+     * API surface is not always stable across versions; if reflection fails we
+     * gracefully return null (preserving the original IMPL fallthrough behavior).
+     */
+    private fun lookupStructByName(project: Project, name: String): PsiElement? {
+        val indexClass = rsNamedElementIndexClass ?: return null
+        return try {
+            val getInstanceMethod = indexClass.getMethod("getInstance")
+            val instance = getInstanceMethod.invoke(null)
+            // RsNamedElementIndex.findElementsByName(project, name) returns Collection<RsNamedElement>
+            val findMethod = instance.javaClass.getMethod("findElementsByName", Project::class.java, String::class.java)
+            val results = findMethod.invoke(instance, project, name) as? Collection<*>
+            results?.filterIsInstance<PsiElement>()?.firstOrNull { isRsStruct(it) }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     private fun getImplementingTypes(
         project: Project,
         trait: PsiElement,
@@ -498,11 +529,12 @@ class RustTypeHierarchyHandler : BaseRustHandler<TypeHierarchyData>(), TypeHiera
                 if (isRsImpl(definition) && shouldIncludeNavigationElement(searchScope, definition)) {
                     val typeRef = getTypeReference(definition)
                     if (typeRef != null) {
-                        val resolvedType = resolveReference(typeRef)
-                        val typeName = if (resolvedType != null) {
-                            getName(resolvedType) ?: typeRef.text?.trim()
-                        } else {
-                            typeRef.text?.trim()
+                        var resolvedType = resolveReference(typeRef)
+                        val typeName = resolvedType?.let { getName(it) } ?: typeRef.text?.trim()
+
+                        // Fallback: if reference resolution failed but we have a name, look up the struct.
+                        if (resolvedType == null && typeName != null) {
+                            resolvedType = lookupStructByName(project, typeName)
                         }
 
                         if (typeName != null) {
@@ -926,14 +958,14 @@ class RustCallHierarchyHandler : BaseRustHandler<CallHierarchyData>(), CallHiera
         val callees = mutableListOf<CallElementData>()
 
         try {
-            // Find RsCallExpr and RsMethodCall within the function
-            listOfNotNull(rsCallExprClass, rsMethodCallClass).forEach { callClass ->
+            // Find RsCallExpr, RsMethodCall, and RsStructLiteral (struct constructor) within the function
+            listOfNotNull(rsCallExprClass, rsMethodCallClass, rsStructLiteralClass).forEach { callClass ->
                 @Suppress("UNCHECKED_CAST")
                 val calls = PsiTreeUtil.findChildrenOfType(function, callClass as Class<out PsiElement>)
 
                 calls.take(MAX_RESULTS_PER_LEVEL).forEach { callExpr ->
                     val resolved = resolveCallExpression(callExpr)
-                    if (resolved != null && isRsFunction(resolved)) {
+                    if (resolved != null && (isRsFunction(resolved) || isRsStruct(resolved))) {
                         val children = if (depth > 1) {
                             findCalleesRecursive(project, resolved, depth - 1, visited, stackDepth + 1, searchScope)
                         } else null
@@ -1019,6 +1051,20 @@ class RustCallHierarchyHandler : BaseRustHandler<CallHierarchyData>(), CallHiera
                 }
             } catch (e: Exception) {
                 LOG.debug("References resolution failed: ${e.message}")
+            }
+
+            // Strategy 5: For RsStructLiteral, resolve via the struct path (e.g. `Point { x, y }`)
+            if (rsStructLiteralClass?.isInstance(callExpr) == true) {
+                try {
+                    val pathMethod = callExpr.javaClass.getMethod("getPath")
+                    val path = pathMethod.invoke(callExpr) as? PsiElement
+                    if (path != null) {
+                        val resolved = resolveReference(path)
+                        if (resolved != null && (isRsFunction(resolved) || isRsStruct(resolved))) return resolved
+                    }
+                } catch (e: Exception) {
+                    LOG.debug("Struct literal path resolution failed: ${e.message}")
+                }
             }
 
             null

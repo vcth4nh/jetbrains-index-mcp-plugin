@@ -92,11 +92,15 @@ object TreeFormatter {
 
         return when (kind) {
             StructureKind.CLASS -> "class"
+            StructureKind.ABSTRACT_CLASS -> "abstract class"
+            StructureKind.DATA_CLASS -> "data class"
+            StructureKind.SEALED_CLASS -> "sealed class"
             StructureKind.INTERFACE -> "interface"
             StructureKind.ENUM -> "enum"
             StructureKind.ANNOTATION -> "@interface"
             StructureKind.RECORD -> "record"
             StructureKind.OBJECT -> "object"
+            StructureKind.STRUCT -> "struct"
             StructureKind.TRAIT -> "trait"
             StructureKind.CONSTRUCTOR -> "constructor"
             StructureKind.NAMESPACE -> "namespace"

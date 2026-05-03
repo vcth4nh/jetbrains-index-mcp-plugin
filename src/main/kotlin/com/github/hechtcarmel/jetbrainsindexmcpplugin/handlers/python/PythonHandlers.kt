@@ -661,7 +661,7 @@ class PythonCallHierarchyHandler : BasePythonHandler<CallHierarchyData>(), CallH
 
             callExpressions.take(MAX_RESULTS_PER_LEVEL).forEach { callExpr ->
                 val calledFunction = resolveCallExpression(callExpr)
-                if (calledFunction != null && isPyFunction(calledFunction)) {
+                if (calledFunction != null && (isPyFunction(calledFunction) || isPyClass(calledFunction))) {
                     val children = if (depth > 1) {
                         findCalleesRecursive(project, calledFunction, depth - 1, visited, stackDepth + 1, searchScope)
                     } else null
@@ -901,14 +901,14 @@ class PythonStructureHandler : BasePythonHandler<List<StructureNode>>(), Structu
     }
 
     /**
-     * Check if an element is a top-level element (not nested inside a class).
+     * Check if an element is a top-level element (not nested inside a class or function).
      */
     private fun isTopLevel(element: PsiElement, file: PsiFile): Boolean {
         // Walk up the tree from element to file, checking if we pass through a PyClass
         var current: PsiElement? = element.parent
         while (current != null && current != file) {
-            if (isPyClass(current)) {
-                return false // Nested inside a class
+            if (isPyClass(current) || isPyFunction(current)) {
+                return false // Nested inside a class or function
             }
             current = current.parent
         }

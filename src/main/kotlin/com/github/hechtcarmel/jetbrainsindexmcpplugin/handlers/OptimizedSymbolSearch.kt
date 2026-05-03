@@ -1,5 +1,6 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers
 
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.LanguageAwareKindResolver
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
 import com.intellij.navigation.ChooseByNameContributor
@@ -297,46 +298,59 @@ object OptimizedSymbolSearch {
 
     private fun determineKind(element: PsiElement): String {
         // Explicit branch for Python instance attributes and module-level assignments.
-        // PyTargetExpressionImpl's simple class name contains neither "field" nor "property",
-        // so the generic substring matching below would label these as "SYMBOL". Recognising
-        // the interface here lets us emit FIELD (inside a class) or VARIABLE (module-level).
         val pyClass = pyTargetExpressionClass
         if (pyClass != null && pyClass.isInstance(element)) {
             return try {
                 val containingClass = element.javaClass.getMethod("getContainingClass").invoke(element)
                 if (containingClass != null) "FIELD" else "VARIABLE"
             } catch (_: Exception) {
-                "FIELD" // Instance attributes are far more common than module-level vars
+                "FIELD"
             }
         }
-
-        val className = element.javaClass.simpleName.lowercase()
-        return when {
-            // Rust types
-            className.contains("structitem") -> "STRUCT"
-            className.contains("traititem") -> "TRAIT"
-            className.contains("enumitem") -> "ENUM"
-            className.contains("implitem") -> "IMPL"
-            className.contains("moditem") -> "MODULE"
-            // Common types
-            className.contains("class") -> "CLASS"
-            className.contains("interface") -> "INTERFACE"
-            className.contains("enum") -> "ENUM"
-            className.contains("struct") -> "STRUCT"
-            className.contains("trait") -> "TRAIT"
-            className.contains("method") -> "METHOD"
-            className.contains("function") -> "FUNCTION"
-            className.contains("field") -> "FIELD"
-            className.contains("variable") -> "VARIABLE"
-            className.contains("property") -> "PROPERTY"
-            className.contains("constant") -> "CONSTANT"
-            else -> "SYMBOL"
-        }
+        return LanguageAwareKindResolver.resolveKind(element)
     }
 
     private fun getContainerName(element: PsiElement): String? {
+        // Go: method receiver is a sibling, not an ancestor
+        if (element.language.id == "go") {
+            try {
+                val methodDeclClass = Class.forName("com.goide.psi.GoMethodDeclaration")
+                if (methodDeclClass.isInstance(element)) {
+                    val receiver = methodDeclClass.getMethod("getReceiver").invoke(element) ?: return null
+                    val type = receiver.javaClass.getMethod("getType").invoke(receiver) as? PsiElement ?: return null
+                    return type.text?.removePrefix("*")?.trim()
+                }
+            } catch (_: ClassNotFoundException) {
+                // GoLand not loaded — fall through to generic walk
+            } catch (_: Exception) {
+                // Any reflection failure — fall through
+            }
+        }
+
+        // Rust: walk to nearest RsImplItem / RsTraitItem / RsModItem
+        if (element.language.id == "Rust") {
+            try {
+                val implItemClass = try { Class.forName("org.rust.lang.core.psi.RsImplItem") } catch (_: ClassNotFoundException) { null }
+                val traitItemClass = try { Class.forName("org.rust.lang.core.psi.RsTraitItem") } catch (_: ClassNotFoundException) { null }
+                val modItemClass = try { Class.forName("org.rust.lang.core.psi.RsModItem") } catch (_: ClassNotFoundException) { null }
+                var current: PsiElement? = element.parent
+                while (current != null) {
+                    if (implItemClass?.isInstance(current) == true ||
+                        traitItemClass?.isInstance(current) == true ||
+                        modItemClass?.isInstance(current) == true
+                    ) {
+                        val nameMethod = current.javaClass.getMethod("getName")
+                        return nameMethod.invoke(current) as? String
+                    }
+                    current = current.parent
+                }
+            } catch (_: Exception) {
+                // fall through to generic walk
+            }
+        }
+
+        // Generic parent-walk fallback (existing behavior)
         return try {
-            // Try to find containing class/type
             var parent = element.parent
             while (parent != null) {
                 val parentClassName = parent.javaClass.simpleName.lowercase()
@@ -359,4 +373,23 @@ object OptimizedSymbolSearch {
     // Delegated to shared SearchMatchUtils.createNameFilter
     private fun createNameFilter(pattern: String, matcher: MinusculeMatcher): (String) -> Boolean =
         com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.createNameFilter(pattern, "substring", matcher)
+}
+
+/**
+ * Maps PSI language id to the display name used on the wire. Shared with
+ * FileStructureTool so file_structure responses don't expose lowercase
+ * "kotlin" while every other tool reports "Kotlin".
+ */
+internal fun displayLanguageName(languageId: String): String {
+    return when (languageId) {
+        "JAVA" -> "Java"
+        "kotlin" -> "Kotlin"
+        "Python" -> "Python"
+        "JavaScript", "ECMAScript 6", "JSX Harmony" -> "JavaScript"
+        "TypeScript", "TypeScript JSX" -> "TypeScript"
+        "go" -> "Go"
+        "PHP" -> "PHP"
+        "Rust" -> "Rust"
+        else -> languageId
+    }
 }

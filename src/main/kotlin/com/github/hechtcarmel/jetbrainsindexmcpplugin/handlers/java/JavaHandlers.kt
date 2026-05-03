@@ -587,6 +587,10 @@ class JavaImplementationsHandler : BaseJavaHandler<List<ImplementationData>>(), 
                     enclosingMethod?.let { append(" in ").append(it.name).append("()") }
                     enclosingClass?.let { append(" in ").append(ClassPresentationUtil.getNameForClass(it, true)) }
                 }
+                val resolvedQname: String? = if (funExpr is PsiMethodReferenceExpression) {
+                    val resolved = funExpr.resolve() as? PsiElement
+                    resolved?.let { QualifiedNameUtil.getQualifiedName(it) }
+                } else null  // lambda has no FQN
                 results.add(ImplementationData(
                     name = name,
                     file = getRelativePath(project, file),
@@ -594,7 +598,7 @@ class JavaImplementationsHandler : BaseJavaHandler<List<ImplementationData>>(), 
                     column = getColumnNumber(project, funExpr) ?: 0,
                     kind = kind,
                     language = "Java",
-                    qualifiedName = null
+                    qualifiedName = resolvedQname
                 ))
                 results.size < limit
             })
@@ -765,10 +769,15 @@ class JavaCallHierarchyHandler : BaseJavaHandler<CallHierarchyData>(), CallHiera
         try {
             // Try Java PSI first (works for Java methods that have a body)
             method.body?.let { body ->
-                PsiTreeUtil.findChildrenOfType(body, PsiMethodCallExpression::class.java)
+                PsiTreeUtil.findChildrenOfType(body, PsiCall::class.java)
                     .take(MAX_RESULTS_PER_LEVEL)
-                    .forEach { methodCall ->
-                        val calledMethod = methodCall.resolveMethod()
+                    .forEach { call ->
+                        val calledMethod: PsiMethod? = when (call) {
+                            is PsiMethodCallExpression -> call.resolveMethod()
+                            is PsiNewExpression -> call.resolveConstructor()
+                            // PsiEnumConstant also implements PsiCall; resolveMethod() returns the enum constructor.
+                            else -> call.resolveMethod()
+                        }
                         if (calledMethod != null) {
                             val children = if (depth > 1) {
                                 findCalleesRecursive(project, calledMethod, depth - 1, visited, stackDepth + 1, searchScope)
@@ -787,17 +796,22 @@ class JavaCallHierarchyHandler : BaseJavaHandler<CallHierarchyData>(), CallHiera
                             }
                         } else {
                             // Fallback: can't resolve method, but report the call expression text
-                            val callText = methodCall.methodExpression.referenceName ?: methodCall.text.take(50)
-                            val unresolvedElement = CallElementData(
-                                name = "$callText(...) [unresolved]",
-                                file = "unknown",
-                                line = 0,
-                                column = 0,
-                                language = "Java",
-                                children = null
-                            )
-                            if (callees.none { it.name == unresolvedElement.name }) {
-                                callees.add(unresolvedElement)
+                            // Only applies to PsiMethodCallExpression — PsiNewExpression with null
+                            // constructor is skipped silently (e.g., array creation (no constructor)
+                            // or unresolvable type).
+                            if (call is PsiMethodCallExpression) {
+                                val callText = call.methodExpression.referenceName ?: call.text.take(50)
+                                val unresolvedElement = CallElementData(
+                                    name = "$callText(...) [unresolved]",
+                                    file = "unknown",
+                                    line = 0,
+                                    column = 0,
+                                    language = "Java",
+                                    children = null
+                                )
+                                if (callees.none { it.name == unresolvedElement.name }) {
+                                    callees.add(unresolvedElement)
+                                }
                             }
                         }
                     }
@@ -840,16 +854,18 @@ class JavaCallHierarchyHandler : BaseJavaHandler<CallHierarchyData>(), CallHiera
         for (callExpr in callExpressions) {
             if (callees.size >= MAX_RESULTS_PER_LEVEL) break
 
-            // Resolve the call expression's reference to find the called method
-            val calledMethod = callExpr.references
-                .asSequence()
-                .mapNotNull { ref ->
-                    try { ref.resolve() } catch (_: Exception) { null }
-                }
-                .filterIsInstance<PsiMethod>()
-                .firstOrNull()
-                // Fallback: try resolving via the callExpression's calleeExpression
-                ?: resolveKotlinCalleeFromExpression(callExpr)
+            // Resolve the call expression's reference to find the called method.
+            // Preserve "first PsiMethod across all refs wins" semantics, then fall back
+            // to a class's primary constructor (e.g. `StringBuilder()` resolves to PsiClass)
+            // so callees include `new`-style invocations.
+            val calledMethod: PsiMethod? = run {
+                val resolutions = callExpr.references.asSequence()
+                    .mapNotNull { ref -> try { ref.resolve() } catch (_: Exception) { null } }
+                    .toList()
+                resolutions.filterIsInstance<PsiMethod>().firstOrNull()
+                    ?: resolutions.filterIsInstance<PsiClass>().firstOrNull()?.constructors?.firstOrNull()
+                    ?: resolveKotlinCalleeFromExpression(callExpr)
+            }
 
             if (calledMethod != null) {
                 val children = if (depth > 1) {
@@ -1454,17 +1470,19 @@ class KotlinStructureHandler : BaseJavaHandler<List<StructureNode>>(), Structure
 
     private fun getClassKind(ktClass: PsiElement): StructureKind {
         return try {
-            val isInterfaceMethod = ktClass.javaClass.getMethod("isInterface")
-            val isInterface = isInterfaceMethod.invoke(ktClass) as? Boolean == true
-            val isEnumMethod = ktClass.javaClass.getMethod("isEnum")
-            val isEnum = isEnumMethod.invoke(ktClass) as? Boolean == true
-            val isDataMethod = ktClass.javaClass.getMethod("isData")
-            val isData = isDataMethod.invoke(ktClass) as? Boolean == true
+            val cls = ktClass.javaClass
+            val isInterface = (cls.getMethod("isInterface").invoke(ktClass) as? Boolean) == true
+            val isEnum = (cls.getMethod("isEnum").invoke(ktClass) as? Boolean) == true
+            val isData = (cls.getMethod("isData").invoke(ktClass) as? Boolean) == true
+            val isSealed = (cls.getMethod("isSealed").invoke(ktClass) as? Boolean) == true
+            val isAnnotation = (cls.getMethod("isAnnotation").invoke(ktClass) as? Boolean) == true
 
             when {
                 isInterface -> StructureKind.INTERFACE
+                isAnnotation -> StructureKind.ANNOTATION
                 isEnum -> StructureKind.ENUM
-                isData -> StructureKind.CLASS
+                isData -> StructureKind.DATA_CLASS
+                isSealed -> StructureKind.SEALED_CLASS
                 else -> StructureKind.CLASS
             }
         } catch (e: Exception) {
@@ -1472,11 +1490,26 @@ class KotlinStructureHandler : BaseJavaHandler<List<StructureNode>>(), Structure
         }
     }
 
-    @Suppress("UNUSED_PARAMETER")
     private fun getKotlinModifiers(element: PsiElement): List<String> {
-        // TODO: Extract Kotlin modifiers (public, private, suspend, etc.)
-        // Currently returns empty list as Kotlin modifier API is complex
-        return emptyList()
+        return try {
+            val getModifierListMethod = element.javaClass.getMethod("getModifierList")
+            val modifierList = getModifierListMethod.invoke(element) as? PsiElement ?: return emptyList()
+            // Pragmatic heuristic: split modifier-list text on whitespace and filter to known
+            // Kotlin modifier keywords. Annotation arguments containing modifier words
+            // (e.g., @JvmName("open ...")) are a theoretical false-positive source but rare
+            // in practice. A full KtModifierList.allChildren walk via reflection would be
+            // more accurate but requires more reflection plumbing.
+            val text = modifierList.text ?: return emptyList()
+            val keywords = setOf(
+                "abstract", "sealed", "data", "open", "override", "infix", "inline",
+                "suspend", "companion", "private", "protected", "public", "internal",
+                "final", "vararg", "tailrec", "operator", "lateinit", "noinline", "crossinline",
+                "out", "in", "reified", "actual", "expect", "external"
+            )
+            text.split(Regex("\\s+")).filter { it in keywords }.distinct()
+        } catch (_: Exception) {
+            emptyList()
+        }
     }
 
     private fun buildKotlinClassSignature(ktClass: PsiElement): String {
@@ -1489,8 +1522,17 @@ class KotlinStructureHandler : BaseJavaHandler<List<StructureNode>>(), Structure
                 val entries = getEntriesMethod.invoke(superTypeList) as? List<*> ?: emptyList<Any?>()
 
                 if (entries.isNotEmpty()) {
-                    val names = entries.mapNotNull {
-                        (it as? PsiElement)?.text
+                    val names = entries.mapNotNull { entry ->
+                        if (entry !is PsiElement) return@mapNotNull null
+                        // KtSuperTypeCallEntry has getTypeReference(); plain KtSuperTypeEntry too.
+                        try {
+                            val getTypeRefMethod = entry.javaClass.getMethod("getTypeReference")
+                            val typeRef = getTypeRefMethod.invoke(entry) as? PsiElement
+                            typeRef?.text?.trim()
+                        } catch (_: Exception) {
+                            // Fallback: full text
+                            entry.text?.trim()
+                        }
                     }
                     return ": ${names.joinToString(", ")}"
                 }
@@ -1526,7 +1568,7 @@ class KotlinStructureHandler : BaseJavaHandler<List<StructureNode>>(), Structure
         return try {
             val getReturnTypeReferenceMethod = property.javaClass.getMethod("getTypeReference")
             val typeRef = getReturnTypeReferenceMethod.invoke(property) as? PsiElement
-            typeRef?.text ?: ""
+            typeRef?.text?.let { ": $it" } ?: ""
         } catch (_: Exception) {
             ""
         }
