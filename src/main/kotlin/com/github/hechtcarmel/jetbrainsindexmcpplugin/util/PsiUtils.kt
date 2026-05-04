@@ -32,22 +32,18 @@ object PsiUtils {
     private const val DEFAULT_PARENT_SEARCH_DEPTH = 3
 
     /**
-     * Resolves the target element from a position.
+     * Resolves the target element from a position, mirroring what the IDE's Ctrl+Click does
+     * (see `GotoDeclarationAction.findTargetElementsNoVS`).
      *
-     * Order of attempts (mirrors what the IDE's Ctrl+Click does — see
-     * `GotoDeclarationAction.findTargetElementsNoVS`):
+     * Order of attempts:
      * 1. Iterate `GotoDeclarationHandler.EP_NAME.extensionList`. Languages register handlers
-     *    here for special navigation rules (e.g. constructor calls → class). Use the first
-     *    non-empty result.
-     * 2. `element.reference?.resolve()` — direct reference resolution.
-     * 3. Walk the parent chain looking for a reference (some PSI structures put the reference
-     *    on a parent rather than the leaf identifier).
-     * 4. As a last resort, [findNamedElement] when the caret is actually on a declaration's
-     *    name identifier (cursor on `foo` in `def foo()`, etc.). For comments/whitespace/
-     *    literals, return null so callers can report "no symbol at position".
+     *    here for special navigation rules (e.g. constructor calls → class declaration in
+     *    Java, or `int(x)` → `int.__new__` in Python). Use the first non-empty result.
+     * 2. Fall back to [resolveReferenceTarget] — pure reference-system resolution.
      *
-     * Each attempt's result also goes through [PythonDefinitionResolver.refineResolvedTarget]
-     * so Python skeleton↔typeshed swaps and similar refinements always apply.
+     * Use this for `find_definition` (Ctrl+Click semantics). For `find_usages` use
+     * [resolveReferenceTarget] instead, so the search anchor is the user-intuitive entity
+     * rather than the navigation target (which can differ per language).
      *
      * @param element The leaf PSI element at a position (from `psiFile.findElementAt(offset)`)
      * @return The resolved target element (declaration), or null if resolution fails
@@ -60,7 +56,34 @@ object PsiUtils {
             if (refined != null) return refined
         }
 
-        // 2. Direct reference on the leaf.
+        // 2. Reference-system fallback (the chain `find_usages` uses directly).
+        return resolveReferenceTarget(element)
+    }
+
+    /**
+     * Resolves the target element from a position using reference-system semantics ONLY,
+     * skipping the [GotoDeclarationHandler] step that [resolveTargetElement] tries first.
+     *
+     * Used by `find_usages` so the search anchor is the user-intuitive entity (the class for
+     * `new Foo()`, the variable for `fn = int`, etc.) rather than the navigation target
+     * (constructor / `__init__` / class declaration — different per language). This mirrors
+     * the IDE's Find Usages action (Alt+F7), which uses different element-resolution flags
+     * than Ctrl+Click — `TargetElementUtil.FIND_TARGET_FLAGS` does not invoke
+     * `GotoDeclarationHandler` extensions.
+     *
+     * Order:
+     * 1. `element.reference?.resolve()` — direct reference resolution.
+     * 2. Walk the parent chain looking for a reference (some PSI structures put the reference
+     *    on a parent rather than the leaf identifier).
+     * 3. Python refinement with no resolved target (handles edge cases inside
+     *    [PythonDefinitionResolver]).
+     * 4. As a last resort, [findNamedElement] when the caret is actually on a declaration's
+     *    name identifier. For comments/whitespace/literals, return null.
+     *
+     * Each attempt's result goes through [PythonDefinitionResolver.refineResolvedTarget].
+     */
+    fun resolveReferenceTarget(element: PsiElement): PsiElement? {
+        // 1. Direct reference on the leaf.
         val reference = element.reference
         if (reference != null) {
             val resolved = reference.resolve()
@@ -68,7 +91,7 @@ object PsiUtils {
             if (refined != null) return refined
         }
 
-        // 3. Walk up parent chain looking for references.
+        // 2. Walk up parent chain looking for references.
         val parentReference = findReferenceInParent(element)
         if (parentReference != null) {
             val resolved = parentReference.resolve()
@@ -78,7 +101,7 @@ object PsiUtils {
 
         PythonDefinitionResolver.refineResolvedTarget(element, null)?.let { return it }
 
-        // 4. Cursor-on-declaration-identifier fallback only — bug B.1 fix.
+        // 3. Cursor-on-declaration-identifier fallback only — bug B.1 fix.
         if (!isOnDeclarationIdentifier(element)) return null
         return findNamedElement(element)
     }

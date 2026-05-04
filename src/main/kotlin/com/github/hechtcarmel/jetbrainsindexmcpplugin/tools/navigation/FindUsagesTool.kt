@@ -122,8 +122,15 @@ class FindUsagesTool : AbstractMcpTool() {
 
             // Symbol-based resolution returns the declaration directly (PsiNamedElement).
             // Position-based resolution returns a leaf token that needs reference resolution.
+            // We deliberately use resolveReferenceTarget (not resolveTargetElement) — the
+            // GotoDeclarationHandler step would redirect e.g. `new Foo()` cursors to the
+            // constructor / __init__ / class-declaration depending on language, narrowing the
+            // search anchor and dropping legitimate references (type annotations, variable
+            // assignments, etc.). This matches the IDE's Find Usages action (Alt+F7), which
+            // uses TargetElementUtil.FIND_TARGET_FLAGS — those flags do not invoke
+            // GotoDeclarationHandler extensions.
             val targetElement = element as? PsiNamedElement
-                ?: (PsiUtils.resolveTargetElement(element)
+                ?: (PsiUtils.resolveReferenceTarget(element)
                     ?: return@suspendingReadAction null to createErrorResult(ErrorMessages.NO_NAMED_ELEMENT))
 
             val usages = ConcurrentLinkedQueue<UsageLocation>()
