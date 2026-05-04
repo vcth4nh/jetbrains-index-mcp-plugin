@@ -11,10 +11,10 @@
 {"id":"def-drawable-draw-decl",      "tool":"ide_find_definition",      "params":{"file":"src/normal.rs","line":2,"column":8}}
 {"id":"def-cross-mod-helper",       "tool":"ide_find_definition",      "params":{"file":"src/extra.rs","line":7,"column":12}}
 {"id":"def-cross-file-Circle",      "tool":"ide_find_definition",      "params":{"file":"src/extra.rs","line":11,"column":20}}
-{"id":"refs-area-from-total",     "tool":"ide_find_references",      "params":{"file":"src/normal.rs","line":84,"column":38}}
-{"id":"refs-shapes-field",        "tool":"ide_find_references",      "params":{"file":"src/normal.rs","line":71,"column":9}}
-{"id":"refs-shape-trait",         "tool":"ide_find_references",      "params":{"file":"src/normal.rs","line":5,"column":11}}
-{"id":"refs-circle-radius",          "tool":"ide_find_references",      "params":{"file":"src/normal.rs","line":14,"column":9}}
+{"id":"refs-area-from-total",     "tool":"ide_find_usages",      "params":{"file":"src/normal.rs","line":84,"column":38}}
+{"id":"refs-shapes-field",        "tool":"ide_find_usages",      "params":{"file":"src/normal.rs","line":71,"column":9}}
+{"id":"refs-shape-trait",         "tool":"ide_find_usages",      "params":{"file":"src/normal.rs","line":5,"column":11}}
+{"id":"refs-circle-radius",          "tool":"ide_find_usages",      "params":{"file":"src/normal.rs","line":14,"column":9}}
 {"id":"impls-shape-area",         "tool":"ide_find_implementations", "params":{"file":"src/normal.rs","line":6,"column":8}}
 {"id":"impls-drawable-draw",      "tool":"ide_find_implementations", "params":{"file":"src/normal.rs","line":2,"column":8}}
 {"id":"impls-coercer",            "tool":"ide_find_implementations", "params":{"file":"src/quirks.rs","line":29,"column":11}}

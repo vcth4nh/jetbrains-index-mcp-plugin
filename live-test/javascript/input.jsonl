@@ -8,9 +8,9 @@
 {"id":"def-quirks-parseint-optional",    "tool":"ide_find_definition",      "params":{"file":"src/quirks.js","line":71,"column":20}}
 {"id":"def-quirks-proxy-call",           "tool":"ide_find_definition",      "params":{"file":"src/quirks.js","line":82,"column":18}}
 {"id":"def-quirks-proxy-call-source",    "tool":"ide_find_definition",      "params":{"file":"src/quirks.js","line":80,"column":31}}
-{"id":"refs-area-from-totalArea", "tool":"ide_find_references",      "params":{"file":"src/normal.js","line":8,"column":5}}
-{"id":"refs-shapes-field",        "tool":"ide_find_references",      "params":{"file":"src/normal.js","line":39,"column":14}}
-{"id":"refs-shape-class",         "tool":"ide_find_references",      "params":{"file":"src/normal.js","line":7,"column":7}}
+{"id":"refs-area-from-totalArea", "tool":"ide_find_usages",      "params":{"file":"src/normal.js","line":8,"column":5}}
+{"id":"refs-shapes-field",        "tool":"ide_find_usages",      "params":{"file":"src/normal.js","line":39,"column":14}}
+{"id":"refs-shape-class",         "tool":"ide_find_usages",      "params":{"file":"src/normal.js","line":7,"column":7}}
 {"id":"impls-shape-area-direct-overrides-only","tool":"ide_find_implementations","params":{"file":"src/normal.js","line":8,"column":5}}
 {"id":"impls-Drawable-draw",             "tool":"ide_find_implementations", "params":{"file":"src/normal.js","line":4,"column":5}}
 {"id":"super-circle-area",        "tool":"ide_find_super_methods",   "params":{"file":"src/normal.js","line":17,"column":5}}

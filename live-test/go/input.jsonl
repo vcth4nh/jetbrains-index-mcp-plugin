@@ -7,11 +7,11 @@
 {"id":"def-quirks-type-switch-s",  "tool":"ide_find_definition", "params":{"file":"quirks.go","line":121,"column":24}}
 {"id":"def-quirks-iface-dispatch", "tool":"ide_find_definition", "params":{"file":"quirks.go","line":66,"column":11}}
 {"id":"def-drawable-draw",        "tool":"ide_find_definition", "params":{"file":"normal.go","line":6,"column":2}}
-{"id":"refs-area-from-totalArea","tool":"ide_find_references", "params":{"file":"normal.go","line":57,"column":12}}
-{"id":"refs-shapes-field",       "tool":"ide_find_references", "params":{"file":"normal.go","line":47,"column":2}}
-{"id":"refs-shape-iface",        "tool":"ide_find_references", "params":{"file":"normal.go","line":47,"column":11}}
-{"id":"refs-drawable-draw",      "tool":"ide_find_references", "params":{"file":"normal.go","line":6,"column":2}}
-{"id":"refs-shape-collection-add","tool":"ide_find_references","params":{"file":"normal.go","line":50,"column":28}}
+{"id":"refs-area-from-totalArea","tool":"ide_find_usages", "params":{"file":"normal.go","line":57,"column":12}}
+{"id":"refs-shapes-field",       "tool":"ide_find_usages", "params":{"file":"normal.go","line":47,"column":2}}
+{"id":"refs-shape-iface",        "tool":"ide_find_usages", "params":{"file":"normal.go","line":47,"column":11}}
+{"id":"refs-drawable-draw",      "tool":"ide_find_usages", "params":{"file":"normal.go","line":6,"column":2}}
+{"id":"refs-shape-collection-add","tool":"ide_find_usages","params":{"file":"normal.go","line":50,"column":28}}
 {"id":"type-hier-Circle",        "tool":"ide_type_hierarchy",  "params":{"file":"normal.go","line":18,"column":6}}
 {"id":"type-hier-Rectangle",     "tool":"ide_type_hierarchy",  "params":{"file":"normal.go","line":29,"column":6}}
 {"id":"type-hier-Square",        "tool":"ide_type_hierarchy",  "params":{"file":"normal.go","line":40,"column":6}}

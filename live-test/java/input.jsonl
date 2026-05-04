@@ -7,10 +7,10 @@
 {"id":"def-quirkVar-coerce",      "tool":"ide_find_definition",      "params":{"file":"src/main/java/demo/Quirks.java","line":18,"column":16}}
 {"id":"def-Point-record-decl",   "tool":"ide_find_definition",      "params":{"file":"src/main/java/demo/Modern.java","line":4,"column":19}}
 {"id":"def-Animal-sealed-decl",  "tool":"ide_find_definition",      "params":{"file":"src/main/java/demo/Modern.java","line":8,"column":29}}
-{"id":"refs-area-from-totalArea", "tool":"ide_find_references",      "params":{"file":"src/main/java/demo/Normal.java","line":72,"column":22}}
-{"id":"refs-shapes-field",        "tool":"ide_find_references",      "params":{"file":"src/main/java/demo/Normal.java","line":63,"column":33}}
-{"id":"refs-shape-class",         "tool":"ide_find_references",      "params":{"file":"src/main/java/demo/Normal.java","line":10,"column":16}}
-{"id":"refs-Circle-ctor",         "tool":"ide_find_references",      "params":{"file":"src/main/java/demo/Normal.java","line":21,"column":5}}
+{"id":"refs-area-from-totalArea", "tool":"ide_find_usages",      "params":{"file":"src/main/java/demo/Normal.java","line":72,"column":22}}
+{"id":"refs-shapes-field",        "tool":"ide_find_usages",      "params":{"file":"src/main/java/demo/Normal.java","line":63,"column":33}}
+{"id":"refs-shape-class",         "tool":"ide_find_usages",      "params":{"file":"src/main/java/demo/Normal.java","line":10,"column":16}}
+{"id":"refs-Circle-ctor",         "tool":"ide_find_usages",      "params":{"file":"src/main/java/demo/Normal.java","line":21,"column":5}}
 {"id":"impls-shape-area",         "tool":"ide_find_implementations", "params":{"file":"src/main/java/demo/Normal.java","line":11,"column":21}}
 {"id":"impls-drawable-draw",       "tool":"ide_find_implementations", "params":{"file":"src/main/java/demo/Normal.java","line":7,"column":12}}
 {"id":"impls-functional-Coerce",  "tool":"ide_find_implementations", "params":{"file":"src/main/java/demo/Quirks.java","line":64,"column":15}}

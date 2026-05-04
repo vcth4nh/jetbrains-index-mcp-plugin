@@ -6,11 +6,11 @@
 {"id":"def-promoted-property",    "tool":"ide_find_definition",      "params":{"file":"src/Quirks.php","line":75,"column":20}}
 {"id":"def-Status-enum-decl",     "tool":"ide_find_definition",      "params":{"file":"src/Modern.php","line":4,"column":6}}
 {"id":"def-Status-Active-usage",  "tool":"ide_find_definition",      "params":{"file":"src/Modern.php","line":22,"column":20}}
-{"id":"refs-area-from-totalArea", "tool":"ide_find_references",      "params":{"file":"src/Normal.php","line":9,"column":30}}
-{"id":"refs-shapes-field",        "tool":"ide_find_references",      "params":{"file":"src/Normal.php","line":48,"column":18}}
-{"id":"refs-shape-class",         "tool":"ide_find_references",      "params":{"file":"src/Normal.php","line":8,"column":16}}
-{"id":"refs-Quirks-class",        "tool":"ide_find_references",      "params":{"file":"src/Quirks.php","line":4,"column":7}}
-{"id":"refs-Status-enum",         "tool":"ide_find_references",      "params":{"file":"src/Modern.php","line":4,"column":6}}
+{"id":"refs-area-from-totalArea", "tool":"ide_find_usages",      "params":{"file":"src/Normal.php","line":9,"column":30}}
+{"id":"refs-shapes-field",        "tool":"ide_find_usages",      "params":{"file":"src/Normal.php","line":48,"column":18}}
+{"id":"refs-shape-class",         "tool":"ide_find_usages",      "params":{"file":"src/Normal.php","line":8,"column":16}}
+{"id":"refs-Quirks-class",        "tool":"ide_find_usages",      "params":{"file":"src/Quirks.php","line":4,"column":7}}
+{"id":"refs-Status-enum",         "tool":"ide_find_usages",      "params":{"file":"src/Modern.php","line":4,"column":6}}
 {"id":"impls-shape-area",         "tool":"ide_find_implementations", "params":{"file":"src/Normal.php","line":9,"column":30}}
 {"id":"impls-drawable-draw",      "tool":"ide_find_implementations", "params":{"file":"src/Normal.php","line":5,"column":21}}
 {"id":"impls-coercer",            "tool":"ide_find_implementations", "params":{"file":"src/Quirks.php","line":79,"column":11}}
