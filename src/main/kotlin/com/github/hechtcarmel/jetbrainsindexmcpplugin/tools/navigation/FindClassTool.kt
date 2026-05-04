@@ -1,11 +1,12 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation
 
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.createMatcher
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.createNameFilter
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScopeResolver
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ParamNames
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ToolNames
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScopeResolver
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.PopupFaithfulClassSearch
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.createMatcher
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.createNameFilter
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.PaginationService
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.ProjectResolver
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
@@ -16,36 +17,30 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.LanguageAwareKindResolver
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
-import com.intellij.navigation.ChooseByNameContributor
-import com.intellij.navigation.ChooseByNameContributorEx
 import com.intellij.navigation.NavigationItem
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNamedElement
-import com.intellij.psi.codeStyle.MinusculeMatcher
-import com.intellij.psi.codeStyle.NameUtil
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiModificationTracker
-import com.intellij.util.indexing.FindSymbolParameters
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
-import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 /**
  * Tool for searching classes and interfaces by name.
  *
- * Uses CLASS_EP_NAME index for class-only lookups.
- *
- * Equivalent to IntelliJ's "Go to Class" (Ctrl+N / Cmd+O).
+ * Drives the headless Go to Class popup stack via [PopupFaithfulClassSearch], so matching and
+ * ranking follow IntelliJ's own Go to Class popup (Ctrl+N / Cmd+O).
  */
 @Suppress("unused")
 class FindClassTool : AbstractMcpTool() {
@@ -54,11 +49,6 @@ class FindClassTool : AbstractMcpTool() {
         private val LOG = logger<FindClassTool>()
         private const val DEFAULT_PAGE_SIZE = 25
         private const val MAX_PAGE_SIZE = PaginationService.MAX_PAGE_SIZE
-        // processNames may emit names from broader scope (including libraries/JDK) even when
-        // we search in project scope. Short/common patterns like "Tool" would fill a small buffer
-        // with library class names (e.g., "Toolkit", "ToolProvider") before reaching project classes.
-        // Use a generous limit so project classes are always collected.
-        private const val MAX_NAME_COLLECTION_LIMIT = 5000
     }
 
     override val name = ToolNames.FIND_CLASS
@@ -129,14 +119,7 @@ class FindClassTool : AbstractMcpTool() {
 
         val cursorToken = suspendingReadAction {
             val searchScope = resolveSearchScope(project, scope)
-
-            val matcher = createMatcher(query, matchMode)
-            val nameFilter = createNameFilter(query, matchMode, matcher)
-            val classes = searchClasses(project, query, searchScope, scope, collectLimit, nameFilter, matcher, languageFilter)
-
-            val sortedClasses = classes
-                .distinctBy { "${it.file}:${it.line}:${it.column}:${it.name}" }
-                .sortedByDescending { matcher.matchingDegree(it.name) }
+            val classes = searchAndConvertClasses(project, query, searchScope, collectLimit, languageFilter, matchMode)
 
             val searchExtender: suspend (Set<String>, Int) -> List<PaginationService.SerializedResult> = { seenKeys, limit ->
                 suspendingReadAction {
@@ -144,7 +127,7 @@ class FindClassTool : AbstractMcpTool() {
                 }
             }
 
-            val serializedResults = sortedClasses.map { cls ->
+            val serializedResults = classes.map { cls ->
                 PaginationService.SerializedResult(
                     key = "${cls.file}:${cls.line}:${cls.column}:${cls.name}",
                     data = json.encodeToJsonElement(cls)
@@ -179,10 +162,9 @@ class FindClassTool : AbstractMcpTool() {
     }
 
     /**
-     * Re-executes the search to collect more results beyond the initial cache.
-     * This re-scans from the beginning, skipping already-seen keys — O(total_results) per extension.
-     * This is unavoidable: IntelliJ's search APIs (ReferencesSearch, PsiSearchHelper, etc.)
-     * don't support offset-based iteration or resumption.
+     * Re-executes the popup-backed search to collect more results beyond the initial cache.
+     * Skips already-seen keys in the caller's cache — O(total_results) per extension because
+     * the popup APIs don't support offset-based iteration.
      */
     private fun extendSearchClasses(
         project: Project,
@@ -194,13 +176,9 @@ class FindClassTool : AbstractMcpTool() {
         limit: Int
     ): List<PaginationService.SerializedResult> {
         val searchScope = resolveSearchScope(project, scope)
-        val matcher = createMatcher(query, matchMode)
-        val nameFilter = createNameFilter(query, matchMode, matcher)
-        val classes = searchClasses(project, query, searchScope, scope, limit + seenKeys.size, nameFilter, matcher, languageFilter)
+        val classes = searchAndConvertClasses(project, query, searchScope, limit + seenKeys.size, languageFilter, matchMode)
 
-        return classes
-            .distinctBy { "${it.file}:${it.line}:${it.column}:${it.name}" }
-            .sortedByDescending { matcher.matchingDegree(it.name) }
+        return classes.asSequence()
             .filter { cls -> "${cls.file}:${cls.line}:${cls.column}:${cls.name}" !in seenKeys }
             .take(limit)
             .map { cls ->
@@ -209,114 +187,60 @@ class FindClassTool : AbstractMcpTool() {
                     data = json.encodeToJsonElement(cls)
                 )
             }
+            .toList()
     }
 
     /**
-     * Search for classes using CLASS_EP_NAME index.
+     * Drive the headless Go to Class popup stack and convert results to [SymbolMatch].
+     *
+     * Owns the over-fetch loop: [PopupFaithfulClassSearch] returns NavigationItems, some of
+     * which get filtered out by [convertToSymbolMatch] (scope mismatch), the matchMode filter
+     * (popup matches substring/camelCase by default; "prefix" and "exact" narrow further),
+     * the language filter, and dedup. When that happens, we re-request with a larger limit,
+     * doubling each iteration up to a cap of `max(limit * 8, limit + 200)`, until we have
+     * enough results, the popup exhausts, or we hit the cap.
+     *
+     * Failures from the popup search log at WARN with diagnostic context (pattern, scope,
+     * popupLimit) and propagate to the caller. [ProcessCanceledException] propagates without
+     * logging — IDE cancellation is not an error.
      */
-    private fun searchClasses(
+    private fun searchAndConvertClasses(
         project: Project,
         pattern: String,
-        searchScope: GlobalSearchScope,
-        scope: BuiltInSearchScope,
+        scope: GlobalSearchScope,
         limit: Int,
-        nameFilter: (String) -> Boolean,
-        matcher: MinusculeMatcher,
-        languageFilter: String? = null
+        languageFilter: String?,
+        matchMode: String
     ): List<SymbolMatch> {
-        val results = mutableListOf<SymbolMatch>()
-        val seen = mutableSetOf<String>()
-
-        // Use CLASS_EP_NAME for class-only search
-        val contributors = ChooseByNameContributor.CLASS_EP_NAME.extensionList
-
-        for (contributor in contributors) {
-            if (results.size >= limit) break
-
-            try {
-                processContributor(contributor, project, pattern, searchScope, scope, limit, nameFilter, matcher, results, seen, languageFilter)
+        if (pattern.isBlank()) return emptyList()
+        val matcher = createMatcher(pattern, matchMode)
+        val nameFilter = createNameFilter(pattern, matchMode, matcher)
+        var popupLimit = limit
+        val popupLimitCap = maxOf(limit * 8, limit + 200)
+        while (true) {
+            val popupResults = try {
+                PopupFaithfulClassSearch.search(project, pattern, scope, popupLimit)
+            } catch (e: ProcessCanceledException) {
+                throw e
             } catch (e: Exception) {
-                LOG.debug("Contributor ${contributor.javaClass.simpleName} failed for pattern '$pattern'", e)
-            }
-        }
-
-        return results
-    }
-
-    private fun processContributor(
-        contributor: ChooseByNameContributor,
-        project: Project,
-        pattern: String,
-        searchScope: GlobalSearchScope,
-        scope: BuiltInSearchScope,
-        limit: Int,
-        nameFilter: (String) -> Boolean,
-        matcher: MinusculeMatcher,
-        results: MutableList<SymbolMatch>,
-        seen: MutableSet<String>,
-        languageFilter: String? = null
-    ) {
-        if (contributor is ChooseByNameContributorEx) {
-            // Modern API with Processor pattern
-            val matchingNames = mutableListOf<String>()
-
-            contributor.processNames(
-                { name ->
-                    if (nameFilter(name)) {
-                        matchingNames.add(name)
-                    }
-                    matchingNames.size < MAX_NAME_COLLECTION_LIMIT
-                },
-                searchScope,
-                null
-            )
-
-            for (name in matchingNames) {
-                if (results.size >= limit) break
-
-                val params = FindSymbolParameters.wrap(pattern, searchScope)
-                contributor.processElementsWithName(
-                    name,
-                    { item ->
-                        if (results.size >= limit) return@processElementsWithName false
-
-                        val symbolMatch = convertToSymbolMatch(item, project, searchScope)
-                        if (symbolMatch != null &&
-                            (languageFilter == null || symbolMatch.language.equals(languageFilter, ignoreCase = true))) {
-                            val key = "${symbolMatch.file}:${symbolMatch.line}:${symbolMatch.column}:${symbolMatch.name}"
-                            if (key !in seen) {
-                                seen.add(key)
-                                results.add(symbolMatch)
-                            }
-                        }
-                        true
-                    },
-                    params
+                LOG.warn(
+                    "Class search failed: pattern='$pattern' scope=${scope.javaClass.simpleName} popupLimit=$popupLimit",
+                    e
                 )
+                throw e
             }
-        } else {
-            // Legacy API
-            val names = contributor.getNames(project, scope == BuiltInSearchScope.PROJECT_AND_LIBRARIES)
-            val matchingNames = names.filter { nameFilter(it) }
-
-            for (name in matchingNames) {
-                if (results.size >= limit) break
-
-                val items = contributor.getItemsByName(name, pattern, project, scope == BuiltInSearchScope.PROJECT_AND_LIBRARIES)
-                for (item in items) {
-                    if (results.size >= limit) break
-
-                    val symbolMatch = convertToSymbolMatch(item, project, searchScope)
-                    if (symbolMatch != null &&
-                        (languageFilter == null || symbolMatch.language.equals(languageFilter, ignoreCase = true))) {
-                        val key = "${symbolMatch.file}:${symbolMatch.line}:${symbolMatch.column}:${symbolMatch.name}"
-                        if (key !in seen) {
-                            seen.add(key)
-                            results.add(symbolMatch)
-                        }
-                    }
-                }
+            val results = popupResults.candidates
+                .mapNotNull { convertToSymbolMatch(it.item, project, scope) }
+                .filter { nameFilter(it.name) }
+                .filter { sym -> languageFilter == null || sym.language.equals(languageFilter, ignoreCase = true) }
+                .distinctBy { "${it.file}:${it.line}:${it.column}:${it.name}" }
+            if (results.size >= limit ||
+                popupResults.candidates.size < popupLimit ||
+                popupLimit >= popupLimitCap
+            ) {
+                return results.take(limit)
             }
+            popupLimit = minOf(popupLimitCap, popupLimit * 2)
         }
     }
 
@@ -424,11 +348,4 @@ class FindClassTool : AbstractMcpTool() {
         }
     }
 
-    // Provided by SearchMatchUtils — this local alias preserves call-site compatibility
-    private fun createMatcher(pattern: String, matchMode: String = "substring"): MinusculeMatcher =
-        com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.createMatcher(pattern, matchMode)
-
-    // Provided by SearchMatchUtils
-    private fun createNameFilter(pattern: String, matchMode: String, matcher: MinusculeMatcher): (String) -> Boolean =
-        com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.createNameFilter(pattern, matchMode, matcher)
 }
