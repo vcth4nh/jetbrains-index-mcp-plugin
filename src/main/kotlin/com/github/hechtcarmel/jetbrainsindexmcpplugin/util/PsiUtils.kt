@@ -1,5 +1,7 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.util
 
+import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.OrderEnumerator
 import com.intellij.openapi.util.SystemInfo
@@ -21,6 +23,8 @@ import java.nio.file.Path
 
 object PsiUtils {
 
+    private val LOG = logger<PsiUtils>()
+
     /**
      * Default depth for searching parent chain for references.
      * 3 levels covers common cases: identifier -> expression -> call expression.
@@ -28,24 +32,35 @@ object PsiUtils {
     private const val DEFAULT_PARENT_SEARCH_DEPTH = 3
 
     /**
-     * Resolves the target element from a position, using semantic reference resolution.
+     * Resolves the target element from a position.
      *
-     * This is the correct way to find what a position "refers to":
-     * 1. First tries `element.reference.resolve()` to follow references semantically
-     * 2. If no direct reference, walks up parent chain looking for references
-     * 3. Falls back to [findNamedElement] for declarations (when cursor is ON a declaration)
+     * Order of attempts (mirrors what the IDE's Ctrl+Click does — see
+     * `GotoDeclarationAction.findTargetElementsNoVS`):
+     * 1. Iterate `GotoDeclarationHandler.EP_NAME.extensionList`. Languages register handlers
+     *    here for special navigation rules (e.g. constructor calls → class). Use the first
+     *    non-empty result.
+     * 2. `element.reference?.resolve()` — direct reference resolution.
+     * 3. Walk the parent chain looking for a reference (some PSI structures put the reference
+     *    on a parent rather than the leaf identifier).
+     * 4. As a last resort, [findNamedElement] when the caret is actually on a declaration's
+     *    name identifier (cursor on `foo` in `def foo()`, etc.). For comments/whitespace/
+     *    literals, return null so callers can report "no symbol at position".
      *
-     * **Why this matters:**
-     * When the cursor is on a method call like `myService.doWork()`, the leaf element
-     * is the identifier "doWork". Using [findNamedElement] would walk up the tree and
-     * find the *containing* method, not the *referenced* method. This function correctly
-     * resolves through the reference system to find the actual `doWork` method declaration.
+     * Each attempt's result also goes through [PythonDefinitionResolver.refineResolvedTarget]
+     * so Python skeleton↔typeshed swaps and similar refinements always apply.
      *
      * @param element The leaf PSI element at a position (from `psiFile.findElementAt(offset)`)
      * @return The resolved target element (declaration), or null if resolution fails
      */
     fun resolveTargetElement(element: PsiElement): PsiElement? {
-        // Try direct reference first
+        // 1. Ask each registered GotoDeclarationHandler — same EP the IDE's Ctrl+Click iterates.
+        val gotoTarget = resolveViaGotoDeclarationHandler(element)
+        if (gotoTarget != null) {
+            val refined = PythonDefinitionResolver.refineResolvedTarget(element, gotoTarget)
+            if (refined != null) return refined
+        }
+
+        // 2. Direct reference on the leaf.
         val reference = element.reference
         if (reference != null) {
             val resolved = reference.resolve()
@@ -53,8 +68,7 @@ object PsiUtils {
             if (refined != null) return refined
         }
 
-        // Walk up parent chain looking for references (handles cases where
-        // the leaf element doesn't have a reference but its parent does)
+        // 3. Walk up parent chain looking for references.
         val parentReference = findReferenceInParent(element)
         if (parentReference != null) {
             val resolved = parentReference.resolve()
@@ -64,13 +78,33 @@ object PsiUtils {
 
         PythonDefinitionResolver.refineResolvedTarget(element, null)?.let { return it }
 
-        // Fallback: only walk to enclosing named ancestor if the caret is actually on a
-        // declaration's name identifier (the ONE case where syntactic walk is semantically
-        // justified — cursor on `foo` in `def foo()`, `fun foo()`, `public int foo()`, etc.).
-        // For comments, whitespace, literals, and keywords, return null so callers can report
-        // "no symbol at position" — bug B.1 fix.
+        // 4. Cursor-on-declaration-identifier fallback only — bug B.1 fix.
         if (!isOnDeclarationIdentifier(element)) return null
         return findNamedElement(element)
+    }
+
+    /**
+     * Iterates `GotoDeclarationHandler.EP_NAME.extensionList` and returns the first non-empty
+     * target list's first element. Returns null if no handler claims the element. Handler
+     * exceptions are logged at debug and treated as "no result" so a single misbehaving plugin
+     * doesn't block the whole resolution chain.
+     *
+     * Editor is passed as null — most handlers tolerate this for headless usage.
+     */
+    private fun resolveViaGotoDeclarationHandler(element: PsiElement): PsiElement? {
+        val offset = element.textOffset
+        for (handler in GotoDeclarationHandler.EP_NAME.extensionList) {
+            val targets = try {
+                handler.getGotoDeclarationTargets(element, offset, null)
+            } catch (_: Throwable) {
+                LOG.debug("GotoDeclarationHandler ${handler.javaClass.simpleName} threw; skipping")
+                continue
+            }
+            if (!targets.isNullOrEmpty()) {
+                return targets.first()
+            }
+        }
+        return null
     }
 
     /**
