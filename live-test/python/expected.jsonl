@@ -1,17 +1,17 @@
-{"astPath":[],"column":7,"file":"src/normal.py","line":19,"symbolName":"Circle"}
-{"astPath":[],"column":7,"file":"src/normal.py","line":19,"symbolName":"Circle"}
+{"astPath":["Circle"],"column":9,"file":"src/normal.py","line":20,"symbolName":"__init__"}
+{"astPath":["Circle"],"column":9,"file":"src/normal.py","line":20,"symbolName":"__init__"}
 {"astPath":["Rectangle"],"column":9,"file":"src/normal.py","line":35,"symbolName":"area"}
 {"astPath":["Shape"],"column":9,"file":"src/normal.py","line":15,"symbolName":"describe"}
 {"astPath":[],"column":5,"file":"src/normal.py","line":63,"symbolName":"make_default_shapes"}
 {"astPath":[],"column":7,"file":"/home/ubuntu/.local/share/JetBrains/Toolbox/apps/pycharm/plugins/python-ce/helpers/typeshed/stdlib/builtins.pyi","line":255,"symbolName":"int"}
-{"astPath":[],"column":7,"file":"/home/ubuntu/.local/share/JetBrains/Toolbox/apps/pycharm/plugins/python-ce/helpers/typeshed/stdlib/builtins.pyi","line":242,"symbolName":"super"}
-{"astPath":[],"column":5,"file":"/home/ubuntu/.local/share/JetBrains/Toolbox/apps/pycharm/plugins/python-ce/helpers/typeshed/stdlib/abc.pyi","line":30,"symbolName":"abstractmethod"}
+{"astPath":["super"],"column":9,"file":"/home/ubuntu/.local/share/JetBrains/Toolbox/apps/pycharm/plugins/python-ce/helpers/typeshed/stdlib/builtins.pyi","line":244,"symbolName":"__init__"}
+{"astPath":[],"column":5,"file":"/home/ubuntu/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/lib/python3.11/abc.py","line":7,"symbolName":"abstractmethod"}
 {"astPath":[],"column":7,"file":"/home/ubuntu/.local/share/JetBrains/Toolbox/apps/pycharm/plugins/python-ce/helpers/typeshed/stdlib/builtins.pyi","line":255,"symbolName":"int"}
+{"astPath":["int"],"column":9,"file":"/home/ubuntu/.local/share/JetBrains/Toolbox/apps/pycharm/plugins/python-ce/helpers/typeshed/stdlib/builtins.pyi","line":257,"symbolName":"__new__"}
 {"astPath":[],"column":7,"file":"/home/ubuntu/.local/share/JetBrains/Toolbox/apps/pycharm/plugins/python-ce/helpers/typeshed/stdlib/builtins.pyi","line":255,"symbolName":"int"}
-{"astPath":[],"column":7,"file":"/home/ubuntu/.local/share/JetBrains/Toolbox/apps/pycharm/plugins/python-ce/helpers/typeshed/stdlib/builtins.pyi","line":255,"symbolName":"int"}
-{"astPath":["quirk_name_rebinding"],"column":5,"file":"src/quirks.py","line":12,"symbolName":"fn"}
+{"astPath":["int"],"column":9,"file":"/home/ubuntu/.local/share/JetBrains/Toolbox/apps/pycharm/plugins/python-ce/helpers/typeshed/stdlib/builtins.pyi","line":257,"symbolName":"__new__"}
 {"astPath":["quirk_walrus"],"column":9,"file":"src/quirks.py","line":69,"symbolName":"result"}
-{"astPath":["quirk_multiple_assignment"],"column":9,"file":"src/quirks.py","line":99,"symbolName":"b"}
+{"astPath":["int"],"column":9,"file":"/home/ubuntu/.local/share/JetBrains/Toolbox/apps/pycharm/plugins/python-ce/helpers/typeshed/stdlib/builtins.pyi","line":257,"symbolName":"__new__"}
 {"astPath":["quirk_nested_return"],"column":9,"file":"src/quirks.py","line":80,"symbolName":"get_coercer"}
 {"totalCount":3,"usages":[{"astPath":["Shape","describe"],"column":51,"context":"return f\"{type(self).__name__} with area {self.area()}\"","file":"src/normal.py","line":16,"type":"REFERENCE"},{"astPath":["ShapeCollection","total_area"],"column":20,"context":"return sum(s.area() for s in self.shapes)","file":"src/normal.py","line":55,"type":"REFERENCE"},{"astPath":["ShapeCollection","largest","key"],"column":47,"context":"return max(self.shapes, key=lambda s: s.area())","file":"src/normal.py","line":60,"type":"REFERENCE"}]}
 {"totalCount":5,"usages":[{"astPath":["ShapeCollection","__init__"],"column":14,"context":"self.shapes: list[Shape] = []","file":"src/normal.py","line":49,"type":"REFERENCE"},{"astPath":["ShapeCollection","add"],"column":9,"context":"self.shapes.append(shape)","file":"src/normal.py","line":52,"type":"REFERENCE"},{"astPath":["ShapeCollection","total_area"],"column":38,"context":"return sum(s.area() for s in self.shapes)","file":"src/normal.py","line":55,"type":"REFERENCE"},{"astPath":["ShapeCollection","largest"],"column":16,"context":"if not self.shapes:","file":"src/normal.py","line":58,"type":"REFERENCE"},{"astPath":["ShapeCollection","largest"],"column":20,"context":"return max(self.shapes, key=lambda s: s.area())","file":"src/normal.py","line":60,"type":"REFERENCE"}]}

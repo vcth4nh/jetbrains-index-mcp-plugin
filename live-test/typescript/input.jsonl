@@ -29,3 +29,7 @@
 {"id":"find-symbol-qLambda",      "tool":"ide_find_symbol",          "params":{"query":"qLambda"}}
 {"id":"file-structure-normal",    "tool":"ide_file_structure",       "params":{"file":"src/normal.ts"}}
 {"id":"file-structure-quirks",    "tool":"ide_file_structure",       "params":{"file":"src/quirks.ts"}}
+{"id":"def-Circle-via-new-call",            "tool":"ide_find_definition",  "params":{"file":"src/normal.ts","line":56,"column":17}}
+{"id":"def-Rectangle-via-new-call",         "tool":"ide_find_definition",  "params":{"file":"src/normal.ts","line":56,"column":34}}
+{"id":"def-TypedCoercer-via-new-generic",   "tool":"ide_find_definition",  "params":{"file":"src/quirks.ts","line":57,"column":16}}
+{"id":"refs-Circle-via-new-call-site",      "tool":"ide_find_usages",      "params":{"file":"src/normal.ts","line":56,"column":17}}

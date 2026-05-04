@@ -27,3 +27,6 @@
 {"id":"find-symbol-qRebind",      "tool":"ide_find_symbol",          "params":{"query":"qRebind"}}
 {"id":"file-structure-normal",    "tool":"ide_file_structure",       "params":{"file":"src/normal.js"}}
 {"id":"file-structure-quirks",    "tool":"ide_file_structure",       "params":{"file":"src/quirks.js"}}
+{"id":"def-Circle-via-new-call",       "tool":"ide_find_definition",  "params":{"file":"src/normal.js","line":57,"column":17}}
+{"id":"def-Rectangle-via-new-call",    "tool":"ide_find_definition",  "params":{"file":"src/normal.js","line":57,"column":34}}
+{"id":"refs-Circle-via-new-call-site", "tool":"ide_find_usages",      "params":{"file":"src/normal.js","line":57,"column":17}}
