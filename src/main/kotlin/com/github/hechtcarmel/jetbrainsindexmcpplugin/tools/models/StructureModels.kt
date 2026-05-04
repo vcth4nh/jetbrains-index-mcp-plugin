@@ -28,7 +28,7 @@ data class StructureNode(
 @Serializable
 enum class StructureKind {
     // Type declarations
-    CLASS, INTERFACE, ENUM, ANNOTATION, RECORD, OBJECT, TRAIT,
+    CLASS, ABSTRACT_CLASS, DATA_CLASS, SEALED_CLASS, INTERFACE, ENUM, ANNOTATION, RECORD, OBJECT, STRUCT, TRAIT,
 
     // Members
     METHOD, FIELD, PROPERTY, CONSTRUCTOR,

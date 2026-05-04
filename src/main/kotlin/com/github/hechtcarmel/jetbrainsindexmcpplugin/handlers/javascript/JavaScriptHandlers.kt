@@ -11,7 +11,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiNamedElement
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.DefinitionsScopedSearch
 import com.intellij.psi.search.searches.ReferencesSearch
@@ -130,6 +129,15 @@ abstract class BaseJavaScriptHandler<T> : LanguageHandler<T> {
         }
     }
 
+    protected val jsInheritanceUtilClass: Class<*>? by lazy {
+        try {
+            Class.forName("com.intellij.lang.javascript.psi.resolve.JSInheritanceUtil")
+        } catch (e: ClassNotFoundException) {
+            LOG.debug("JSInheritanceUtil not found")
+            null
+        }
+    }
+
     protected val jsCallExpressionClass: Class<*>? by lazy {
         try {
             Class.forName("com.intellij.lang.javascript.psi.JSCallExpression")
@@ -139,17 +147,12 @@ abstract class BaseJavaScriptHandler<T> : LanguageHandler<T> {
         }
     }
 
-    protected val jsNamedElementClass: Class<*>? by lazy {
+    protected val jsNewExpressionClass: Class<*>? by lazy {
         try {
-            Class.forName("com.intellij.lang.javascript.psi.JSNamedElement")
+            Class.forName("com.intellij.lang.javascript.psi.JSNewExpression")
         } catch (e: ClassNotFoundException) {
-            try {
-                // Fallback to base PsiNamedElement
-                PsiNamedElement::class.java
-            } catch (e2: Exception) {
-                LOG.debug("JSNamedElement not found")
-                null
-            }
+            LOG.debug("JSNewExpression not found")
+            null
         }
     }
 
@@ -158,6 +161,38 @@ abstract class BaseJavaScriptHandler<T> : LanguageHandler<T> {
             Class.forName("com.intellij.lang.javascript.psi.JSVariable")
         } catch (e: ClassNotFoundException) {
             LOG.debug("JSVariable not found")
+            null
+        }
+    }
+
+    protected val jsObjectLiteralExpressionClass: Class<*>? by lazy {
+        try {
+            Class.forName("com.intellij.lang.javascript.psi.JSObjectLiteralExpression")
+        } catch (_: ClassNotFoundException) {
+            null
+        }
+    }
+
+    protected val jsPropertyClass: Class<*>? by lazy {
+        try {
+            Class.forName("com.intellij.lang.javascript.psi.JSProperty")
+        } catch (_: ClassNotFoundException) {
+            null
+        }
+    }
+
+    protected val jsAssignmentExpressionClass: Class<*>? by lazy {
+        try {
+            Class.forName("com.intellij.lang.javascript.psi.JSAssignmentExpression")
+        } catch (_: ClassNotFoundException) {
+            null
+        }
+    }
+
+    protected val jsFunctionExpressionClass: Class<*>? by lazy {
+        try {
+            Class.forName("com.intellij.lang.javascript.psi.JSFunctionExpression")
+        } catch (_: ClassNotFoundException) {
             null
         }
     }
@@ -212,13 +247,6 @@ abstract class BaseJavaScriptHandler<T> : LanguageHandler<T> {
      */
     protected fun isJSVariable(element: PsiElement): Boolean {
         return jsVariableClass?.isInstance(element) == true
-    }
-
-    /**
-     * Checks if element is a JSNamedElement using reflection.
-     */
-    protected fun isJSNamedElement(element: PsiElement): Boolean {
-        return jsNamedElementClass?.isInstance(element) == true
     }
 
     /**
@@ -467,27 +495,34 @@ class JavaScriptTypeHierarchyHandler : BaseJavaScriptHandler<TypeHierarchyData>(
         jsClass: PsiElement,
         searchScope: GlobalSearchScope
     ): List<TypeElementData> {
-        val searchClass = Class.forName("com.intellij.lang.javascript.psi.resolve.JSInheritorsSearch")
-        val searchMethod = searchClass.getMethod("search", jsClassClass)
-        val query = searchMethod.invoke(null, jsClass)
+        // Use IntelliJ's canonical direct-only API (same as JSSubtypesHierarchyTreeStructure.buildChildren).
+        // Was previously reflecting into a non-existent JSInheritorsSearch class — strategy always
+        // ClassNotFoundException-failed and execution silently fell through to strategy 2.
+        val util = jsInheritanceUtilClass ?: return emptyList()
+        val jsClassCls = jsClassClass ?: return emptyList()
 
-        val results = mutableListOf<TypeElementData>()
-        val forEachMethod = query.javaClass.getMethod("forEach", Processor::class.java)
-        forEachMethod.invoke(query, Processor<Any> { inheritor ->
-            if (inheritor is PsiElement && shouldIncludeNavigationElement(searchScope, inheritor)) {
-                results.add(TypeElementData(
+        val findDirectMethod = util.getMethod(
+            "findDirectSubClasses",
+            jsClassCls,
+            Boolean::class.javaPrimitiveType
+        )
+        @Suppress("UNCHECKED_CAST")
+        val directs = findDirectMethod.invoke(null, jsClass, true) as? Collection<PsiElement>
+            ?: return emptyList()
+
+        return directs
+            .filter { shouldIncludeNavigationElement(searchScope, it) }
+            .take(100)
+            .map { inheritor ->
+                TypeElementData(
                     name = QualifiedNameUtil.getQualifiedName(inheritor) ?: getName(inheritor) ?: "unknown",
                     qualifiedName = QualifiedNameUtil.getQualifiedName(inheritor),
                     file = inheritor.containingFile?.virtualFile?.let { getRelativePath(project, it) },
                     line = getLineNumber(project, inheritor),
                     kind = getClassKind(inheritor),
                     language = getLanguageName(inheritor)
-                ))
+                )
             }
-            results.size < 100
-        })
-
-        return results
     }
 
     private fun searchSubtypesUsingDefinitionsScopedSearch(
@@ -497,16 +532,50 @@ class JavaScriptTypeHierarchyHandler : BaseJavaScriptHandler<TypeHierarchyData>(
     ): List<TypeElementData> {
         val results = mutableListOf<TypeElementData>()
 
+        // Defensive direct-only check around DefinitionsScopedSearch results: it calls
+        // JSClassSearch.searchClassInheritors(_, true /*checkDeep*/) under the hood,
+        // returning the transitive closure. Filter via JSInheritanceUtil.isParentClass
+        // when available; otherwise drop ambiguous results (under-report safer than over-report).
+        val util = jsInheritanceUtilClass
+        val jsClassCls = jsClassClass
+        val isParentClassMethod = if (util != null && jsClassCls != null) {
+            try {
+                util.getMethod(
+                    "isParentClass",
+                    jsClassCls,
+                    jsClassCls,
+                    Boolean::class.javaPrimitiveType
+                )
+            } catch (e: NoSuchMethodException) {
+                LOG.debug("JSInheritanceUtil.isParentClass not found: ${e.message}")
+                null
+            }
+        } else null
+
         DefinitionsScopedSearch.search(jsClass, searchScope).forEach(Processor { definition ->
             if (definition != jsClass && isJSClass(definition) && shouldIncludeNavigationElement(searchScope, definition)) {
-                results.add(TypeElementData(
-                    name = QualifiedNameUtil.getQualifiedName(definition) ?: getName(definition) ?: "unknown",
-                    qualifiedName = QualifiedNameUtil.getQualifiedName(definition),
-                    file = definition.containingFile?.virtualFile?.let { getRelativePath(project, it) },
-                    line = getLineNumber(project, definition),
-                    kind = getClassKind(definition),
-                    language = getLanguageName(definition)
-                ))
+                val isDirect = if (isParentClassMethod != null) {
+                    try {
+                        isParentClassMethod.invoke(null, definition, jsClass, false) as? Boolean == true
+                    } catch (_: Exception) {
+                        false  // Under-report on reflection failure (filter-safety default).
+                    }
+                } else {
+                    // No predicate available — admit the result (preserves backward behavior
+                    // for IDEs without JSInheritanceUtil; over-report is acceptable here
+                    // because in modern WebStorm strategy 1 already handles the direct-only case).
+                    true
+                }
+                if (isDirect) {
+                    results.add(TypeElementData(
+                        name = QualifiedNameUtil.getQualifiedName(definition) ?: getName(definition) ?: "unknown",
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(definition),
+                        file = definition.containingFile?.virtualFile?.let { getRelativePath(project, it) },
+                        line = getLineNumber(project, definition),
+                        kind = getClassKind(definition),
+                        language = getLanguageName(definition)
+                    ))
+                }
             }
             results.size < 100
         })
@@ -893,13 +962,21 @@ class JavaScriptCallHierarchyHandler : BaseJavaScriptHandler<CallHierarchyData>(
 
         val callees = mutableListOf<CallElementData>()
         try {
-            val jsCallExpr = jsCallExpressionClass ?: return emptyList()
-            @Suppress("UNCHECKED_CAST")
-            val callExpressions = PsiTreeUtil.findChildrenOfType(jsFunction, jsCallExpr as Class<out PsiElement>)
+            val callClasses = listOfNotNull(jsCallExpressionClass, jsNewExpressionClass)
+            if (callClasses.isEmpty()) return emptyList()
+            val callExpressions = callClasses.flatMap { cls ->
+                @Suppress("UNCHECKED_CAST")
+                PsiTreeUtil.findChildrenOfType(jsFunction, cls as Class<out PsiElement>)
+            }
 
             callExpressions.take(MAX_RESULTS_PER_LEVEL).forEach { callExpr ->
+                // Only accept JSClass results when the original call site is `new Foo(...)`
+                // (JSNewExpression). A plain JSCallExpression resolving to a class would
+                // surface the class itself, which is not a real callee.
+                val acceptClass = jsNewExpressionClass?.isInstance(callExpr) == true
                 val calledFunction = resolveCallExpression(callExpr)
-                if (calledFunction != null && isJSFunction(calledFunction)) {
+                if (calledFunction != null &&
+                    (isJSFunction(calledFunction) || (acceptClass && isJSClass(calledFunction)))) {
                     val children = if (depth > 1) {
                         findCalleesRecursive(project, calledFunction, depth - 1, visited, stackDepth + 1, searchScope)
                     } else null
@@ -1158,6 +1235,22 @@ class JavaScriptStructureHandler : BaseJavaScriptHandler<List<StructureNode>>(),
 
     override val languageId = "JavaScript"
 
+    private val typeScriptTypeAliasClass: Class<*>? by lazy {
+        try {
+            Class.forName("com.intellij.lang.javascript.psi.ecma6.TypeScriptTypeAlias")
+        } catch (_: ClassNotFoundException) {
+            null
+        }
+    }
+
+    private val typeScriptEnumClass: Class<*>? by lazy {
+        try {
+            Class.forName("com.intellij.lang.javascript.psi.ecma6.TypeScriptEnum")
+        } catch (_: ClassNotFoundException) {
+            null
+        }
+    }
+
     override fun canHandle(element: PsiElement): Boolean {
         return isAvailable() && isJavaScriptLanguage(element)
     }
@@ -1206,7 +1299,15 @@ class JavaScriptStructureHandler : BaseJavaScriptHandler<List<StructureNode>>(),
                 @Suppress("UNCHECKED_CAST")
                 val variables = PsiTreeUtil.findChildrenOfType(file, jsVariableClass as Class<PsiElement>)
                 variables?.forEach { jsVariable ->
-                    if (isTopLevel(jsVariable, file)) {
+                    if (!isTopLevel(jsVariable, file)) return@forEach
+                    val isFunctionInitializer: Boolean = try {
+                        val getInitializerMethod = jsVariable.javaClass.getMethod("getInitializer")
+                        val init = getInitializerMethod.invoke(jsVariable)
+                        init != null && jsFunctionExpressionClass?.isInstance(init) == true
+                    } catch (_: Exception) {
+                        false
+                    }
+                    if (!isFunctionInitializer) {
                         structure.add(extractVariableStructure(jsVariable, project))
                     }
                 }
@@ -1224,9 +1325,10 @@ class JavaScriptStructureHandler : BaseJavaScriptHandler<List<StructureNode>>(),
     private fun isTopLevel(element: PsiElement, file: PsiFile): Boolean {
         var current: PsiElement? = element.parent
         while (current != null && current != file) {
-            if (isJSClass(current) || isJSFunction(current)) {
-                return false
-            }
+            if (isJSClass(current) || isJSFunction(current)) return false
+            if (jsObjectLiteralExpressionClass?.isInstance(current) == true) return false
+            if (jsPropertyClass?.isInstance(current) == true) return false
+            if (jsAssignmentExpressionClass?.isInstance(current) == true) return false
             current = current.parent
         }
         return true
@@ -1275,7 +1377,12 @@ class JavaScriptStructureHandler : BaseJavaScriptHandler<List<StructureNode>>(),
         }
 
         val name = getName(jsClass) ?: "unknown"
-        val kind = if (getClassKind(jsClass) == "INTERFACE") StructureKind.INTERFACE else StructureKind.CLASS
+        val kind = when {
+            typeScriptTypeAliasClass?.isInstance(jsClass) == true -> StructureKind.TYPE_ALIAS
+            typeScriptEnumClass?.isInstance(jsClass) == true -> StructureKind.ENUM
+            getClassKind(jsClass) == "INTERFACE" -> StructureKind.INTERFACE
+            else -> StructureKind.CLASS
+        }
 
         return StructureNode(
             name = name,
@@ -1355,6 +1462,9 @@ class JavaScriptStructureHandler : BaseJavaScriptHandler<List<StructureNode>>(),
                 if (isStaticMethod.invoke(attrList, "abstract") as? Boolean == true) {
                     modifiers.add("abstract")
                 }
+                if (isStaticMethod.invoke(attrList, "readonly") as? Boolean == true) {
+                    modifiers.add("readonly")
+                }
             } catch (_: Exception) {
                 // hasModifier not available
             }
@@ -1366,13 +1476,26 @@ class JavaScriptStructureHandler : BaseJavaScriptHandler<List<StructureNode>>(),
 
     private fun buildClassSignature(jsClass: PsiElement): String {
         return try {
-            val superClasses = getSuperClasses(jsClass)
-            if (superClasses != null && superClasses.isNotEmpty()) {
-                val names = superClasses.filterIsInstance<PsiElement>().mapNotNull {
-                    QualifiedNameUtil.getQualifiedName(it) ?: getName(it)
+            val parts = mutableListOf<String>()
+            val superClasses = getSuperClasses(jsClass)?.filterIsInstance<PsiElement>().orEmpty()
+            if (superClasses.isNotEmpty()) {
+                val names = superClasses.mapNotNull { QualifiedNameUtil.getQualifiedName(it) ?: getName(it) }
+                if (names.isNotEmpty()) parts.add("extends ${names.joinToString(", ")}")
+            }
+            // implements: only present on TypeScriptClass
+            try {
+                val getImplementedInterfacesMethod = jsClass.javaClass.getMethod("getImplementedInterfaces")
+                val impls = getImplementedInterfacesMethod.invoke(jsClass) as? Array<*>
+                if (impls != null && impls.isNotEmpty()) {
+                    val implNames = impls.filterIsInstance<PsiElement>().mapNotNull {
+                        QualifiedNameUtil.getQualifiedName(it) ?: getName(it)
+                    }
+                    if (implNames.isNotEmpty()) parts.add("implements ${implNames.joinToString(", ")}")
                 }
-                if (names.isNotEmpty()) "extends ${names.joinToString(", ")}" else ""
-            } else ""
+            } catch (_: Exception) {
+                // getImplementedInterfaces not available → not a TS class
+            }
+            parts.joinToString(" ")
         } catch (_: Exception) {
             ""
         }
