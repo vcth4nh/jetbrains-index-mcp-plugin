@@ -7,25 +7,25 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import java.lang.reflect.Method
 
 /**
- * Verifies that [OptimizedSymbolSearch.determineKind] (accessed via reflection, as the method
+ * Verifies that [SymbolDataConverter.determineKind] (accessed via reflection, as the method
  * is private) correctly classifies Python instance attributes as "FIELD" and module-level
  * assignments as "VARIABLE" when the Python plugin is present.
  *
  * Skips silently when the Python plugin is not loaded in the current test environment.
  */
-class OptimizedSymbolSearchPythonKindTest : BasePlatformTestCase() {
+class SymbolDataConverterPythonKindTest : BasePlatformTestCase() {
 
     /**
-     * Retrieve the private `determineKind` method from [OptimizedSymbolSearch] so that
+     * Retrieve the private `determineKind` method from [SymbolDataConverter] so that
      * we can call it directly without going through the full symbol-search pipeline.
      */
     private fun getDetermineKindMethod(): Method {
-        return OptimizedSymbolSearch::class.java.getDeclaredMethod("determineKind", PsiElement::class.java)
+        return SymbolDataConverter::class.java.getDeclaredMethod("determineKind", PsiElement::class.java)
             .also { it.isAccessible = true }
     }
 
     private fun invokeKind(method: Method, element: PsiElement): String =
-        method.invoke(OptimizedSymbolSearch, element) as String
+        method.invoke(SymbolDataConverter, element) as String
 
     fun testPyTargetExpressionInstanceAttrIsField() {
         // Skip if Python plugin isn't loaded in this test environment.

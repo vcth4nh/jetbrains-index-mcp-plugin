@@ -422,7 +422,6 @@ class ToolsUnitTest : TestCase() {
 
     /**
      * `ide_find_symbol` delegates to the platform's Go to Symbol popup stack (via
-     * [com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.OptimizedSymbolSearch] and
      * [com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.PopupFaithfulSymbolSearch]),
      * which works in any JetBrains IDE regardless of whether the plugin registers a
      * language-specific handler. The tool should therefore always be registered.

@@ -1,6 +1,8 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers
 
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.LanguageAwareKindResolver
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
 import com.intellij.navigation.NavigationItem
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
@@ -15,10 +17,21 @@ import com.intellij.psi.search.GlobalSearchScope
  *  - The element's containing file is outside [scope]
  *  - The element's language doesn't match [languageFilter] (case-insensitive)
  *  - The element has no extractable name
- *
- * Pure code motion from `OptimizedSymbolSearch.convertToSymbolData()` and its private helpers.
  */
 internal object SymbolDataConverter {
+
+    /**
+     * Loaded once per JVM — null when the Python plugin is absent.
+     * Used by [determineKind] to recognise PyTargetExpression elements without
+     * a compile-time dependency on the Python plugin.
+     */
+    private val pyTargetExpressionClass: Class<*>? by lazy {
+        try {
+            Class.forName("com.jetbrains.python.psi.PyTargetExpression")
+        } catch (_: ClassNotFoundException) {
+            null
+        }
+    }
 
     fun convert(
         item: NavigationItem,
@@ -64,13 +77,7 @@ internal object SymbolDataConverter {
             }
         } ?: return null
 
-        val directQualifiedName = try {
-            val method = targetElement.javaClass.getMethod("getQualifiedName")
-            method.invoke(targetElement) as? String
-        } catch (e: Exception) {
-            null
-        }
-        val qualifiedName = directQualifiedName ?: buildQualifiedNameFromContainer(targetElement, name)
+        val qualifiedName = QualifiedNameUtil.getQualifiedName(targetElement)
 
         val line = getLineNumber(project, targetElement) ?: 1
         val kind = determineKind(targetElement)
@@ -86,25 +93,6 @@ internal object SymbolDataConverter {
             containerName = containerName,
             language = language
         )
-    }
-
-    private fun buildQualifiedNameFromContainer(element: PsiElement, name: String): String? {
-        var parent = element.parent
-
-        while (parent != null) {
-            try {
-                val method = parent.javaClass.getMethod("getQualifiedName")
-                val parentQualifiedName = method.invoke(parent) as? String
-                if (!parentQualifiedName.isNullOrBlank()) {
-                    return "$parentQualifiedName.$name"
-                }
-            } catch (_: Exception) {
-                // Ignore and continue walking up the PSI tree.
-            }
-            parent = parent.parent
-        }
-
-        return null
     }
 
     private fun getLanguageName(element: PsiElement): String {
@@ -135,33 +123,60 @@ internal object SymbolDataConverter {
     }
 
     private fun determineKind(element: PsiElement): String {
-        val className = element.javaClass.simpleName.lowercase()
-        return when {
-            // Rust types
-            className.contains("structitem") -> "STRUCT"
-            className.contains("traititem") -> "TRAIT"
-            className.contains("enumitem") -> "ENUM"
-            className.contains("implitem") -> "IMPL"
-            className.contains("moditem") -> "MODULE"
-            // Common types
-            className.contains("class") -> "CLASS"
-            className.contains("interface") -> "INTERFACE"
-            className.contains("enum") -> "ENUM"
-            className.contains("struct") -> "STRUCT"
-            className.contains("trait") -> "TRAIT"
-            className.contains("method") -> "METHOD"
-            className.contains("function") -> "FUNCTION"
-            className.contains("field") -> "FIELD"
-            className.contains("variable") -> "VARIABLE"
-            className.contains("property") -> "PROPERTY"
-            className.contains("constant") -> "CONSTANT"
-            else -> "SYMBOL"
+        // Explicit branch for Python instance attributes and module-level assignments.
+        val pyClass = pyTargetExpressionClass
+        if (pyClass != null && pyClass.isInstance(element)) {
+            return try {
+                val containingClass = element.javaClass.getMethod("getContainingClass").invoke(element)
+                if (containingClass != null) "FIELD" else "VARIABLE"
+            } catch (_: Exception) {
+                "FIELD"
+            }
         }
+        return LanguageAwareKindResolver.resolveKind(element)
     }
 
     private fun getContainerName(element: PsiElement): String? {
+        // Go: method receiver is a sibling, not an ancestor
+        if (element.language.id == "go") {
+            try {
+                val methodDeclClass = Class.forName("com.goide.psi.GoMethodDeclaration")
+                if (methodDeclClass.isInstance(element)) {
+                    val receiver = methodDeclClass.getMethod("getReceiver").invoke(element) ?: return null
+                    val type = receiver.javaClass.getMethod("getType").invoke(receiver) as? PsiElement ?: return null
+                    return type.text?.removePrefix("*")?.trim()
+                }
+            } catch (_: ClassNotFoundException) {
+                // GoLand not loaded — fall through to generic walk
+            } catch (_: Exception) {
+                // Any reflection failure — fall through
+            }
+        }
+
+        // Rust: walk to nearest RsImplItem / RsTraitItem / RsModItem
+        if (element.language.id == "Rust") {
+            try {
+                val implItemClass = try { Class.forName("org.rust.lang.core.psi.RsImplItem") } catch (_: ClassNotFoundException) { null }
+                val traitItemClass = try { Class.forName("org.rust.lang.core.psi.RsTraitItem") } catch (_: ClassNotFoundException) { null }
+                val modItemClass = try { Class.forName("org.rust.lang.core.psi.RsModItem") } catch (_: ClassNotFoundException) { null }
+                var current: PsiElement? = element.parent
+                while (current != null) {
+                    if (implItemClass?.isInstance(current) == true ||
+                        traitItemClass?.isInstance(current) == true ||
+                        modItemClass?.isInstance(current) == true
+                    ) {
+                        val nameMethod = current.javaClass.getMethod("getName")
+                        return nameMethod.invoke(current) as? String
+                    }
+                    current = current.parent
+                }
+            } catch (_: Exception) {
+                // fall through to generic walk
+            }
+        }
+
+        // Generic parent-walk fallback (existing behavior)
         return try {
-            // Try to find containing class/type
             var parent = element.parent
             while (parent != null) {
                 val parentClassName = parent.javaClass.simpleName.lowercase()

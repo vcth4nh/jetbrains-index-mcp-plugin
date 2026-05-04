@@ -6,8 +6,7 @@ import com.intellij.psi.codeStyle.NameUtil
 /**
  * Shared utilities for symbol/file search matching and path filtering.
  *
- * Used by both [OptimizedSymbolSearch] (handler layer) and the navigation
- * tools (FindClassTool, FindFileTool) to avoid duplication.
+ * Used by the navigation tools (FindClassTool, FindFileTool) to avoid duplication.
  */
 
 /**
