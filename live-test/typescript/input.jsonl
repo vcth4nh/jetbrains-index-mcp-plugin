@@ -1,9 +1,15 @@
 {"id":"def-circle-area",          "tool":"ide_find_definition",      "params":{"file":"src/normal.ts","line":17,"column":5}}
 {"id":"def-rectangle-area",       "tool":"ide_find_definition",      "params":{"file":"src/normal.ts","line":25,"column":5}}
 {"id":"def-makeDefaultShapes",    "tool":"ide_find_definition",      "params":{"file":"src/normal.ts","line":55,"column":17}}
+{"id":"def-quirks-parseint-from-typed-lambda","tool":"ide_find_definition","params":{"file":"src/quirks.ts","line":3,"column":12}}
+{"id":"def-quirks-parseint-arg-cast",         "tool":"ide_find_definition","params":{"file":"src/quirks.ts","line":39,"column":19}}
+{"id":"def-T-typeparam-use",                  "tool":"ide_find_definition","params":{"file":"src/quirks.ts","line":53,"column":15}}
 {"id":"refs-area-from-totalArea", "tool":"ide_find_references",      "params":{"file":"src/normal.ts","line":6,"column":14}}
 {"id":"refs-shapes-field",        "tool":"ide_find_references",      "params":{"file":"src/normal.ts","line":36,"column":14}}
 {"id":"refs-shape-class",         "tool":"ide_find_references",      "params":{"file":"src/normal.ts","line":5,"column":23}}
+{"id":"refs-Coercer-interface",               "tool":"ide_find_references","params":{"file":"src/quirks.ts","line":42,"column":18}}
+{"id":"refs-aliasedCoerce",                   "tool":"ide_find_references","params":{"file":"src/quirks.ts","line":62,"column":14}}
+{"id":"refs-Drawable-class",      "tool":"ide_find_references",      "params":{"file":"src/normal.ts","line":1,"column":18}}
 {"id":"impls-shape-area",         "tool":"ide_find_implementations", "params":{"file":"src/normal.ts","line":6,"column":14}}
 {"id":"impls-drawable-draw",      "tool":"ide_find_implementations", "params":{"file":"src/normal.ts","line":2,"column":5}}
 {"id":"impls-coercer",            "tool":"ide_find_implementations", "params":{"file":"src/quirks.ts","line":42,"column":18}}
@@ -12,16 +18,14 @@
 {"id":"type-hier-square",         "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.ts","line":29,"column":14}}
 {"id":"type-hier-rectangle",      "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.ts","line":21,"column":14}}
 {"id":"type-hier-shape",          "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.ts","line":5,"column":23}}
+{"id":"type-hier-TypedCoercer",               "tool":"ide_type_hierarchy","params":{"file":"src/quirks.ts","line":52,"column":14}}
+{"id":"type-hier-Drawable",       "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.ts","line":1,"column":18}}
 {"id":"call-hier-makeDefault",    "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.ts","line":55,"column":17,"direction":"callees","maxDepth":2}}
 {"id":"call-hier-area-callers",   "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.ts","line":6,"column":14,"direction":"callers","maxDepth":2}}
 {"id":"find-class-Shape",         "tool":"ide_find_class",           "params":{"query":"Shape"}}
 {"id":"find-class-Coercer",       "tool":"ide_find_class",           "params":{"query":"Coercer"}}
+{"id":"find-class-Drawable",      "tool":"ide_find_class",           "params":{"query":"Drawable"}}
 {"id":"find-symbol-area",         "tool":"ide_find_symbol",          "params":{"query":"area"}}
 {"id":"find-symbol-qLambda",      "tool":"ide_find_symbol",          "params":{"query":"qLambda"}}
 {"id":"file-structure-normal",    "tool":"ide_file_structure",       "params":{"file":"src/normal.ts"}}
 {"id":"file-structure-quirks",    "tool":"ide_file_structure",       "params":{"file":"src/quirks.ts"}}
-{"id":"def-quirks-parseint-from-typed-lambda","tool":"ide_find_definition","params":{"file":"src/quirks.ts","line":2,"column":53}}
-{"id":"def-quirks-parseint-from-as-cast",     "tool":"ide_find_definition","params":{"file":"src/quirks.ts","line":39,"column":19}}
-{"id":"refs-Coercer-interface",               "tool":"ide_find_references","params":{"file":"src/quirks.ts","line":42,"column":18}}
-{"id":"type-hier-TypedCoercer",               "tool":"ide_type_hierarchy","params":{"file":"src/quirks.ts","line":52,"column":14}}
-{"id":"refs-aliasedCoerce",                   "tool":"ide_find_references","params":{"file":"src/quirks.ts","line":62,"column":14}}

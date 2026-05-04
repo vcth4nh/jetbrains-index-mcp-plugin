@@ -1,20 +1,25 @@
 {"id":"def-circle-area",         "tool":"ide_find_definition", "params":{"file":"normal.go","line":23,"column":18}}
 {"id":"def-rectangle-area",      "tool":"ide_find_definition", "params":{"file":"normal.go","line":34,"column":20}}
 {"id":"def-MakeDefaultShapes",   "tool":"ide_find_definition", "params":{"file":"normal.go","line":72,"column":6}}
-{"id":"refs-area-from-totalArea","tool":"ide_find_references", "params":{"file":"normal.go","line":57,"column":12}}
-{"id":"refs-shapes-field",       "tool":"ide_find_references", "params":{"file":"normal.go","line":47,"column":2}}
-{"id":"refs-shape-iface",        "tool":"ide_find_references", "params":{"file":"normal.go","line":47,"column":11}}
-{"id":"type-hier-Circle",        "tool":"ide_type_hierarchy",  "params":{"file":"normal.go","line":18,"column":6}}
-{"id":"type-hier-Rectangle",     "tool":"ide_type_hierarchy",  "params":{"file":"normal.go","line":29,"column":6}}
-{"id":"type-hier-Square",        "tool":"ide_type_hierarchy",  "params":{"file":"normal.go","line":40,"column":6}}
-{"id":"call-hier-MakeDefault",   "tool":"ide_call_hierarchy",  "params":{"file":"normal.go","line":72,"column":6,"direction":"callees","maxDepth":2}}
-{"id":"call-hier-area-callers",  "tool":"ide_call_hierarchy",  "params":{"file":"normal.go","line":23,"column":18,"direction":"callers","maxDepth":2}}
-{"id":"find-class-Shape",        "tool":"ide_find_class",      "params":{"query":"Shape"}}
-{"id":"find-class-Rectangle",    "tool":"ide_find_class",      "params":{"query":"Rectangle"}}
-{"id":"find-symbol-Area",        "tool":"ide_find_symbol",     "params":{"query":"Area"}}
-{"id":"find-symbol-qFnVar",      "tool":"ide_find_symbol",     "params":{"query":"qFnVar"}}
 {"id":"def-quirks-fnvar-resolve",  "tool":"ide_find_definition", "params":{"file":"quirks.go","line":12,"column":10}}
 {"id":"def-quirks-method-value",   "tool":"ide_find_definition", "params":{"file":"quirks.go","line":91,"column":10}}
 {"id":"def-quirks-method-expr",    "tool":"ide_find_definition", "params":{"file":"quirks.go","line":97,"column":19}}
 {"id":"def-quirks-type-switch-s",  "tool":"ide_find_definition", "params":{"file":"quirks.go","line":121,"column":24}}
 {"id":"def-quirks-iface-dispatch", "tool":"ide_find_definition", "params":{"file":"quirks.go","line":66,"column":11}}
+{"id":"def-drawable-draw",        "tool":"ide_find_definition", "params":{"file":"normal.go","line":6,"column":2}}
+{"id":"refs-area-from-totalArea","tool":"ide_find_references", "params":{"file":"normal.go","line":57,"column":12}}
+{"id":"refs-shapes-field",       "tool":"ide_find_references", "params":{"file":"normal.go","line":47,"column":2}}
+{"id":"refs-shape-iface",        "tool":"ide_find_references", "params":{"file":"normal.go","line":47,"column":11}}
+{"id":"refs-drawable-draw",      "tool":"ide_find_references", "params":{"file":"normal.go","line":6,"column":2}}
+{"id":"refs-shape-collection-add","tool":"ide_find_references","params":{"file":"normal.go","line":50,"column":28}}
+{"id":"type-hier-Circle",        "tool":"ide_type_hierarchy",  "params":{"file":"normal.go","line":18,"column":6}}
+{"id":"type-hier-Rectangle",     "tool":"ide_type_hierarchy",  "params":{"file":"normal.go","line":29,"column":6}}
+{"id":"type-hier-Square",        "tool":"ide_type_hierarchy",  "params":{"file":"normal.go","line":40,"column":6}}
+{"id":"type-hier-baseShape",     "tool":"ide_type_hierarchy",  "params":{"file":"normal.go","line":14,"column":6}}
+{"id":"call-hier-MakeDefault",   "tool":"ide_call_hierarchy",  "params":{"file":"normal.go","line":72,"column":6,"direction":"callees","maxDepth":2}}
+{"id":"call-hier-area-callers",  "tool":"ide_call_hierarchy",  "params":{"file":"normal.go","line":23,"column":18,"direction":"callers","maxDepth":2}}
+{"id":"find-class-Shape",        "tool":"ide_find_class",      "params":{"query":"Shape"}}
+{"id":"find-class-Rectangle",    "tool":"ide_find_class",      "params":{"query":"Rectangle"}}
+{"id":"find-class-Drawable",     "tool":"ide_find_class",      "params":{"query":"Drawable"}}
+{"id":"find-symbol-Area",        "tool":"ide_find_symbol",     "params":{"query":"Area"}}
+{"id":"find-symbol-qFnVar",      "tool":"ide_find_symbol",     "params":{"query":"qFnVar"}}

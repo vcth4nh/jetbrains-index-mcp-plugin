@@ -1,27 +1,38 @@
 {"id":"def-circle-area",          "tool":"ide_find_definition",      "params":{"file":"src/main/kotlin/demo/Normal.kt","line":14,"column":18}}
 {"id":"def-rectangle-area",       "tool":"ide_find_definition",      "params":{"file":"src/main/kotlin/demo/Normal.kt","line":19,"column":18}}
 {"id":"def-makeDefaultShapes",    "tool":"ide_find_definition",      "params":{"file":"src/main/kotlin/demo/Normal.kt","line":37,"column":5}}
+{"id":"def-extension-coerceTo",   "tool":"ide_find_definition",      "params":{"file":"src/main/kotlin/demo/Quirks.kt","line":29,"column":42}}
+{"id":"def-infix-coerceFirst",    "tool":"ide_find_definition",      "params":{"file":"src/main/kotlin/demo/Quirks.kt","line":59,"column":43}}
+{"id":"def-companion-create-call",    "tool":"ide_find_definition",      "params":{"file":"src/main/kotlin/demo/Modern.kt","line":23,"column":21}}
+{"id":"def-companion-DEFAULT-LIMIT",  "tool":"ide_find_definition",      "params":{"file":"src/main/kotlin/demo/Modern.kt","line":25,"column":20}}
+{"id":"def-suspend-fetchValue-call",  "tool":"ide_find_definition",      "params":{"file":"src/main/kotlin/demo/Modern.kt","line":17,"column":13}}
 {"id":"refs-area-from-totalArea", "tool":"ide_find_references",      "params":{"file":"src/main/kotlin/demo/Normal.kt","line":32,"column":49}}
 {"id":"refs-shapes-field",        "tool":"ide_find_references",      "params":{"file":"src/main/kotlin/demo/Normal.kt","line":26,"column":9}}
 {"id":"refs-shape-class",         "tool":"ide_find_references",      "params":{"file":"src/main/kotlin/demo/Normal.kt","line":7,"column":16}}
+{"id":"refs-Circle-radius",       "tool":"ide_find_references",      "params":{"file":"src/main/kotlin/demo/Normal.kt","line":13,"column":18}}
+{"id":"refs-coerceFirst-callsite","tool":"ide_find_references",      "params":{"file":"src/main/kotlin/demo/Quirks.kt","line":61,"column":29}}
 {"id":"impls-shape-area",         "tool":"ide_find_implementations", "params":{"file":"src/main/kotlin/demo/Normal.kt","line":8,"column":18}}
 {"id":"impls-drawable-draw",      "tool":"ide_find_implementations", "params":{"file":"src/main/kotlin/demo/Normal.kt","line":4,"column":9}}
 {"id":"impls-coercion",           "tool":"ide_find_implementations", "params":{"file":"src/main/kotlin/demo/Quirks.kt","line":37,"column":14}}
+{"id":"impls-Coercion-apply",     "tool":"ide_find_implementations", "params":{"file":"src/main/kotlin/demo/Quirks.kt","line":38,"column":18}}
 {"id":"super-circle-area",        "tool":"ide_find_super_methods",   "params":{"file":"src/main/kotlin/demo/Normal.kt","line":14,"column":18}}
 {"id":"super-rectangle-area",     "tool":"ide_find_super_methods",   "params":{"file":"src/main/kotlin/demo/Normal.kt","line":19,"column":18}}
+{"id":"super-Circle-draw-from-Drawable","tool":"ide_find_super_methods","params":{"file":"src/main/kotlin/demo/Normal.kt","line":15,"column":18}}
 {"id":"type-hier-square",         "tool":"ide_type_hierarchy",       "params":{"file":"src/main/kotlin/demo/Normal.kt","line":23,"column":7}}
 {"id":"type-hier-rectangle",      "tool":"ide_type_hierarchy",       "params":{"file":"src/main/kotlin/demo/Normal.kt","line":18,"column":12}}
 {"id":"type-hier-shape",          "tool":"ide_type_hierarchy",       "params":{"file":"src/main/kotlin/demo/Normal.kt","line":7,"column":16}}
+{"id":"type-hier-Coercion-sealed","tool":"ide_type_hierarchy",       "params":{"file":"src/main/kotlin/demo/Quirks.kt","line":37,"column":14}}
 {"id":"call-hier-makeDefault",    "tool":"ide_call_hierarchy",       "params":{"file":"src/main/kotlin/demo/Normal.kt","line":37,"column":5,"direction":"callees","maxDepth":2}}
 {"id":"call-hier-area-callers",   "tool":"ide_call_hierarchy",       "params":{"file":"src/main/kotlin/demo/Normal.kt","line":8,"column":18,"direction":"callers","maxDepth":2}}
+{"id":"call-hier-quirkApply-callees","tool":"ide_call_hierarchy",    "params":{"file":"src/main/kotlin/demo/Quirks.kt","line":13,"column":5,"direction":"callees","maxDepth":2}}
+{"id":"call-hier-quirkLet-callees",  "tool":"ide_call_hierarchy",    "params":{"file":"src/main/kotlin/demo/Quirks.kt","line":17,"column":5,"direction":"callees","maxDepth":2}}
+{"id":"call-hier-quirkWith-callees", "tool":"ide_call_hierarchy",    "params":{"file":"src/main/kotlin/demo/Quirks.kt","line":21,"column":5,"direction":"callees","maxDepth":2}}
+{"id":"call-hier-computeTotal-callees","tool":"ide_call_hierarchy",       "params":{"file":"src/main/kotlin/demo/Modern.kt","line":16,"column":13,"direction":"callees","maxDepth":2}}
 {"id":"find-class-Shape",         "tool":"ide_find_class",           "params":{"query":"Shape"}}
 {"id":"find-class-Coercer",       "tool":"ide_find_class",           "params":{"query":"Coercer"}}
+{"id":"find-class-Counter",       "tool":"ide_find_class",           "params":{"query":"Counter"}}
 {"id":"find-symbol-area",         "tool":"ide_find_symbol",          "params":{"query":"area"}}
 {"id":"find-symbol-quirkLambda",  "tool":"ide_find_symbol",          "params":{"query":"quirkLambda"}}
+{"id":"find-symbol-fetchValue",   "tool":"ide_find_symbol",          "params":{"query":"fetchValue"}}
 {"id":"file-structure-Normal",    "tool":"ide_file_structure",       "params":{"file":"src/main/kotlin/demo/Normal.kt"}}
 {"id":"file-structure-Quirks",    "tool":"ide_file_structure",       "params":{"file":"src/main/kotlin/demo/Quirks.kt"}}
-{"id":"def-extension-coerceTo",   "tool":"ide_find_definition",      "params":{"file":"src/main/kotlin/demo/Quirks.kt","line":29,"column":42}}
-{"id":"def-infix-coerceFirst",    "tool":"ide_find_definition",      "params":{"file":"src/main/kotlin/demo/Quirks.kt","line":59,"column":43}}
-{"id":"type-hier-Coercion-sealed","tool":"ide_type_hierarchy",       "params":{"file":"src/main/kotlin/demo/Quirks.kt","line":37,"column":14}}
-{"id":"refs-Circle-radius",       "tool":"ide_find_references",      "params":{"file":"src/main/kotlin/demo/Normal.kt","line":13,"column":18}}
-{"id":"call-hier-quirkApply-callees","tool":"ide_call_hierarchy",    "params":{"file":"src/main/kotlin/demo/Quirks.kt","line":13,"column":5,"direction":"callees","maxDepth":2}}

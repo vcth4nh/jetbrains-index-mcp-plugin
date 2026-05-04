@@ -70,6 +70,10 @@ class Quirks {
     public static function qCoerceUsage(Coercer $c, string $x): int {
         return $c->coerce($x);
     }
+
+    public static function qPromotedRead(\Demo\Circle $c): float {
+        return $c->radius;
+    }
 }
 
 interface Coercer {
