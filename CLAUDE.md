@@ -49,7 +49,9 @@ src/
 │   │   ├── handlers/                   # Language-specific handlers
 │   │   │   ├── LanguageHandler.kt      # Handler interfaces & data classes
 │   │   │   ├── LanguageHandlerRegistry.kt # Data-driven handler registry
-│   │   │   ├── OptimizedSymbolSearch.kt # Symbol search using platform APIs
+│   │   │   ├── PopupFaithfulSymbolSearch.kt # Headless wrapper around IDE's Go to Symbol popup model
+│   │   │   ├── SymbolDataConverter.kt # Convert IDE NavigationItem to our SymbolData wire format
+│   │   │   ├── LanguageDisplayName.kt  # Maps PSI language id → display name (Java, Kotlin, …)
 │   │   │   ├── java/JavaHandlers.kt    # Java/Kotlin handlers
 │   │   │   ├── python/PythonHandlers.kt # Python handlers (reflection)
 │   │   │   ├── javascript/JavaScriptHandlers.kt # JS/TS handlers (reflection)
@@ -428,11 +430,13 @@ The plugin uses a language handler pattern for multi-IDE support:
 
 **Reflection Pattern:** Python, JavaScript, Go, PHP, and Rust handlers use reflection to avoid compile-time dependencies on language-specific plugins. This prevents `NoClassDefFoundError` in IDEs without those plugins.
 
-### Optimized Symbol Search
+### Symbol Search
 
-Symbol search across all languages uses `OptimizedSymbolSearch` (in `handlers/OptimizedSymbolSearch.kt`):
-- Leverages IntelliJ's "Go to Symbol" APIs (`ChooseByNameContributor`)
-- Uses `MinusculeMatcher` for CamelCase, substring, and typo-tolerant matching
+Symbol search across all languages drives IntelliJ's headless "Go to Symbol" popup stack via `PopupFaithfulSymbolSearch` (in `handlers/PopupFaithfulSymbolSearch.kt`):
+- Wraps `GotoSymbolModel2` + `ChooseByNameModelEx` — the same APIs as IntelliJ's own Ctrl+Alt+Shift+N popup
+- Inherits the IDE's parallel execution, dumb-mode safety, cancellation, proximity-aware sorting, and qualified-query support (e.g. `BasicSolver.run`)
+- `FindSymbolTool` owns the over-fetch loop and converts NavigationItems to wire-format `SymbolData` via `SymbolDataConverter`
+- `SymbolDataConverter` delegates `kind` classification to `LanguageAwareKindResolver` (with a Python-specific PyTargetExpression branch) and qualified names to `QualifiedNameUtil`
 - Supports language filtering (e.g., `languageFilter = setOf("Java", "Kotlin")`)
 
 ### Pagination
