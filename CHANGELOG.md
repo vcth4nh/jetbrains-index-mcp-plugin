@@ -58,6 +58,7 @@
 - `qualifiedName` for Go and Rust elements now populates where it was previously null. Clients filtering on `qualifiedName != null` will see new entries.
 - `ide_call_hierarchy` callee responses include constructor invocations across Java, Kotlin, JS/TS, Python, and Rust where they were previously silently dropped.
 - `ide_file_structure` for Kotlin reports `data class` / `sealed class` / `object` / `annotation` kinds with modifiers (was `CLASS` only) and emits `language: "Kotlin"` (was `"kotlin"`).
+- Internal refactor of symbol search: deleted `OptimizedSymbolSearch` (~395 LOC). `FindSymbolTool` now drives the headless Go-to-Symbol popup directly via `PopupFaithfulSymbolSearch`. `NavigationItem`→`SymbolData` conversion lives in a focused `SymbolDataConverter`; the top-level `displayLanguageName` mapping moves to its own `LanguageDisplayName.kt`. Removed the legacy contributor-iteration fallback path; `PopupFaithfulSymbolSearch` failures now surface as tool errors (with diagnostic context logged at WARN) rather than silently degrading to a less-correct re-implementation of IDE infrastructure. No user-visible behavior change.
 
 ### Documentation
 - `ide_find_symbol` description now notes that override methods are collapsed to the topmost super (matches IntelliJ's "Go to Symbol" popup) — for all overrides, use `ide_find_implementations`.
