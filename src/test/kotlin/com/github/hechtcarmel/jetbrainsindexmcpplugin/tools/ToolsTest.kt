@@ -21,21 +21,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.SchemaConstants
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScopeResolver
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageHandlerRegistry
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.OptimizedSymbolSearch
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SymbolData
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.createMatcher
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.createNameFilter
-import com.intellij.navigation.ChooseByNameContributor
-import com.intellij.navigation.NavigationItem
-import com.intellij.openapi.roots.ModuleRootModificationUtil
-import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiManager
-import com.intellij.psi.codeStyle.MinusculeMatcher
-import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.testFramework.IndexingTestUtil
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
-import java.nio.file.Files
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
@@ -366,76 +352,6 @@ class ToolsTest : BasePlatformTestCase() {
             listOf("project_files", "project_and_libraries", "project_production_files", "project_test_files"),
             errorJson["supportedValues"]?.jsonArray?.map { it.jsonPrimitive.content }
         )
-    }
-
-    fun testOptimizedSymbolSearchLegacyContributorHonorsProjectFilesScope() {
-        val projectFile = myFixture.addFileToProject(
-            "legacy/ProjectScopeSymbol.java",
-            """
-            package legacy;
-
-            public class ProjectScopeSymbol {}
-            """.trimIndent()
-        )
-
-        val libraryRoot = Files.createTempDirectory("legacy-contributor-lib")
-        val libraryPackageDir = Files.createDirectories(libraryRoot.resolve("legacy"))
-        val libraryPath = libraryPackageDir.resolve("LibraryScopeSymbol.java")
-        Files.writeString(
-            libraryPath,
-            """
-            package legacy;
-
-            public class LibraryScopeSymbol {}
-            """.trimIndent()
-        )
-
-        val libraryRootVFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(libraryRoot)
-        val libraryFileVFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(libraryPath)
-        assertNotNull("Expected library root in temp dir", libraryRootVFile)
-        assertNotNull("Expected library file in temp dir", libraryFileVFile)
-
-        ModuleRootModificationUtil.addModuleLibrary(
-            module,
-            "legacy-contributor-library",
-            emptyList(),
-            listOf(libraryRootVFile!!.url)
-        )
-        IndexingTestUtil.waitUntilIndexesAreReady(project)
-
-        val libraryFile = PsiManager.getInstance(project).findFile(libraryFileVFile!!)
-        assertNotNull("Expected library PSI file", libraryFile)
-
-        val projectSymbol = projectFile.children.filterIsInstance<PsiClass>().firstOrNull { it.name == "ProjectScopeSymbol" }
-        val librarySymbol = libraryFile!!.children.filterIsInstance<PsiClass>().firstOrNull { it.name == "LibraryScopeSymbol" }
-        assertNotNull("Expected project symbol", projectSymbol)
-        assertNotNull("Expected library symbol", librarySymbol)
-
-        val contributor = LegacyContributor(
-            mapOf(
-                "ProjectScopeSymbol" to arrayOf<NavigationItem>(projectSymbol!!),
-                "LibraryScopeSymbol" to arrayOf<NavigationItem>(librarySymbol!!)
-            )
-        )
-        val scope = BuiltInSearchScopeResolver.resolveGlobalScope(project, BuiltInSearchScope.PROJECT_FILES)
-        assertTrue("Project file should be inside project_files scope", scope.contains(projectFile.virtualFile))
-        assertFalse("Library file should be outside project_files scope", scope.contains(libraryFile.virtualFile))
-        val matcher = createMatcher("ScopeSymbol", "substring")
-        val results = mutableListOf<SymbolData>()
-        val seen = mutableSetOf<String>()
-
-        invokeLegacySymbolContributor(
-            contributor = contributor,
-            pattern = "ScopeSymbol",
-            scope = scope,
-            languageFilter = null,
-            nameFilter = { true },
-            matcher = matcher,
-            results = results,
-            seen = seen
-        )
-
-        assertEquals(listOf("ProjectScopeSymbol"), results.map { it.name })
     }
 
     // Intelligence Tools Tests
@@ -773,46 +689,4 @@ class ToolsTest : BasePlatformTestCase() {
         }
     }
 
-    private fun invokeLegacySymbolContributor(
-        contributor: ChooseByNameContributor,
-        pattern: String,
-        scope: GlobalSearchScope,
-        languageFilter: Set<String>?,
-        nameFilter: (String) -> Boolean,
-        matcher: MinusculeMatcher,
-        results: MutableList<SymbolData>,
-        seen: MutableSet<String>
-    ) {
-        val method = OptimizedSymbolSearch::class.java.declaredMethods.first {
-            it.name == "processContributor" && it.parameterCount == 10
-        }
-        method.isAccessible = true
-        method.invoke(
-            OptimizedSymbolSearch,
-            contributor,
-            project,
-            pattern,
-            scope,
-            10,
-            languageFilter,
-            nameFilter,
-            matcher,
-            results,
-            seen
-        )
-    }
-
-    class LegacyContributor(
-        private val itemsByName: Map<String, Array<NavigationItem>>
-    ) : ChooseByNameContributor {
-        override fun getNames(project: com.intellij.openapi.project.Project, includeNonProjectItems: Boolean): Array<String> =
-            itemsByName.keys.toTypedArray()
-
-        override fun getItemsByName(
-            name: String,
-            pattern: String,
-            project: com.intellij.openapi.project.Project,
-            includeNonProjectItems: Boolean
-        ): Array<NavigationItem> = itemsByName[name] ?: emptyArray()
-    }
 }

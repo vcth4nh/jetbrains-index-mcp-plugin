@@ -4,8 +4,9 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ParamNames
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ToolNames
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScopeResolver
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.OptimizedSymbolSearch
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.PopupFaithfulSymbolSearch
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SymbolData
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SymbolDataConverter
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.PaginationService
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.ProjectResolver
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
@@ -14,7 +15,10 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.FindSymbolRes
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.SymbolMatch
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.Project
+import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiModificationTracker
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonElement
@@ -28,12 +32,13 @@ import kotlinx.serialization.json.put
 /**
  * Tool for searching code symbols by name.
  *
- * Works in any supported JetBrains IDE. Delegates to the headless Go to Symbol popup stack via
- * [OptimizedSymbolSearch], so matching and ranking follow IntelliJ's own Go to Symbol popup.
+ * Works in any supported JetBrains IDE. Drives the headless Go to Symbol popup stack via
+ * [PopupFaithfulSymbolSearch], so matching and ranking follow IntelliJ's own Go to Symbol popup.
  */
 class FindSymbolTool : AbstractMcpTool() {
 
     companion object {
+        private val LOG = logger<FindSymbolTool>()
         private const val DEFAULT_PAGE_SIZE = 25
         private const val MAX_PAGE_SIZE = PaginationService.MAX_PAGE_SIZE
     }
@@ -109,7 +114,7 @@ class FindSymbolTool : AbstractMcpTool() {
         val token = suspendingReadAction {
             val searchScope = BuiltInSearchScopeResolver.resolveGlobalScope(project, scope)
             val nativeLanguageFilter = languageFilter?.takeIf { it.isNotBlank() }?.let { setOf(it) }
-            val symbols = OptimizedSymbolSearch.search(
+            val symbols = searchAndConvertSymbols(
                 project = project,
                 pattern = query,
                 scope = searchScope,
@@ -160,6 +165,54 @@ class FindSymbolTool : AbstractMcpTool() {
     }
 
     /**
+     * Drive the headless Go to Symbol popup stack and convert results to [SymbolData].
+     *
+     * Owns the over-fetch loop: [PopupFaithfulSymbolSearch] returns NavigationItems, some of
+     * which get filtered out by [SymbolDataConverter] (scope mismatch, language mismatch,
+     * dedup). When that happens, we re-request with a larger limit, doubling each iteration up
+     * to a cap of `max(limit * 8, limit + 200)`, until we have enough results, the popup
+     * exhausts, or we hit the cap.
+     *
+     * Failures from the popup search log at WARN with diagnostic context (pattern, scope,
+     * popupLimit) and propagate to the caller. [ProcessCanceledException] propagates without
+     * logging — IDE cancellation is not an error.
+     */
+    private fun searchAndConvertSymbols(
+        project: Project,
+        pattern: String,
+        scope: GlobalSearchScope,
+        limit: Int,
+        languageFilter: Set<String>?
+    ): List<SymbolData> {
+        if (pattern.isBlank()) return emptyList()
+        var popupLimit = limit
+        val popupLimitCap = maxOf(limit * 8, limit + 200)
+        while (true) {
+            val popupResults = try {
+                PopupFaithfulSymbolSearch.search(project, pattern, scope, popupLimit)
+            } catch (e: ProcessCanceledException) {
+                throw e
+            } catch (e: Exception) {
+                LOG.warn(
+                    "Symbol search failed: pattern='$pattern' scope=${scope.javaClass.simpleName} popupLimit=$popupLimit",
+                    e
+                )
+                throw e
+            }
+            val results = popupResults.candidates
+                .mapNotNull { SymbolDataConverter.convert(it.item, project, scope, languageFilter) }
+                .distinctBy { "${it.file}:${it.line}:${it.column}:${it.name}" }
+            if (results.size >= limit ||
+                popupResults.candidates.size < popupLimit ||
+                popupLimit >= popupLimitCap
+            ) {
+                return results.take(limit)
+            }
+            popupLimit = minOf(popupLimitCap, popupLimit * 2)
+        }
+    }
+
+    /**
      * Re-executes the popup-backed search to collect more results beyond the initial cache.
      * Skips already-seen keys in the caller's cache — O(total_results) per extension because
      * the popup APIs don't support offset-based iteration.
@@ -174,7 +227,7 @@ class FindSymbolTool : AbstractMcpTool() {
     ): List<PaginationService.SerializedResult> {
         val searchScope = BuiltInSearchScopeResolver.resolveGlobalScope(project, scope)
         val nativeLanguageFilter = languageFilter?.takeIf { it.isNotBlank() }?.let { setOf(it) }
-        val symbols = OptimizedSymbolSearch.search(
+        val symbols = searchAndConvertSymbols(
             project = project,
             pattern = query,
             scope = searchScope,
