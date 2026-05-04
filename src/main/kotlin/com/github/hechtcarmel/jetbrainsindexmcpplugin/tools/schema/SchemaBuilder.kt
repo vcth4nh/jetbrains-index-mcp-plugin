@@ -114,6 +114,15 @@ class SchemaBuilder private constructor() {
         if (required) requiredFields.add(name)
     }
 
+    fun stringArrayProperty(name: String, description: String, required: Boolean = false) = apply {
+        properties[name] = buildJsonObject {
+            put(SchemaConstants.TYPE, "array")
+            putJsonObject("items") { put(SchemaConstants.TYPE, SchemaConstants.TYPE_STRING) }
+            put(SchemaConstants.DESCRIPTION, description)
+        }
+        if (required) requiredFields.add(name)
+    }
+
     fun build(): JsonObject = buildJsonObject {
         put(SchemaConstants.TYPE, SchemaConstants.TYPE_OBJECT)
         putJsonObject(SchemaConstants.PROPERTIES) {

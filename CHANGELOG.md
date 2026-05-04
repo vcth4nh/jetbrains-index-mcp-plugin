@@ -24,6 +24,15 @@
 - `LanguageAwareKindResolver` utility centralizes `kind` classification across `FindClassTool` and `OptimizedSymbolSearch`, replacing duplicated substring-matching with language-aware PSI-API dispatch (PHP interface/trait/abstract via `PhpClass.isInterface/isTrait/isAbstract`, Java records/abstracts via `PsiClass.isRecord/hasModifierProperty("abstract")`, Go structs/interfaces via `GoTypeSpec.getSpecType`).
 - `QualifiedNameUtil` now has reflective fallbacks for Go (builds `package.Function` / `package.Receiver.Method` from `GoFile.getPackageName` + `GoMethodDeclaration.getReceiver()`) and Rust (walks `RsNamedElement` ancestors, prepends `crate`, joins with `::`). Pure-logic formatters extracted for unit testability.
 - **`ide_file_structure` now supports any language with a registered `PsiStructureViewFactory`.** Previously gated on five hand-written per-language handlers (Java, Kotlin, Python, JS/TS, Markdown); now also works in Go, PHP, Rust, and any other language whose plugin registers a structure-view factory. The tool no longer requires a language plugin gate — registered as a universal tool.
+- **`ide_file_structure` `show` parameter** for selecting which categories (filters / node providers / groupers) are visible. Drives the IDE's structure-view machinery via `TreeModelWrapper` + `SmartTreeStructure` so language-registered toggles work unchanged. Per-language filters available (* = on by default):
+  - python: `fields*`, `inherited`
+  - java / kotlin: `inherited`, `non_public*`, `properties*`
+  - javascript / typescript: `fields*`, `inherited`, `inherited_from_object*`
+  - php: `anonymous_classes`, `inherited`, `lambdas*`, `constants*`, `includes*`, `private_members*`, `properties*`, `protected_members*`
+  - go: `package_structure*`, `private_members*`
+  - rust: (no filters)
+
+  Defaults are tuned for agent code-reading (e.g. `non_public` and `private_members` are on so agents see implementation details, not just public APIs) — they may differ from the IDE's UI defaults. Omit `show` for defaults, pass `show: ["..."]` for explicit control, or `show: []` to disable everything.
 
 ### Fixed
 - **`serverInfo.version` in the MCP `initialize` response now reflects the actual installed plugin version.** Previously hardcoded as a `const val` literal in `McpConstants.kt` (frozen at `4.10.4`), it now reads from the loaded `PluginDescriptor` (`PluginManagerCore.getPlugin(...).version`), which Gradle patches from `gradle.properties.pluginVersion` via `plugin.xml`. The constant `SERVER_VERSION` retains its name and call sites for compatibility but is now lazily resolved.
