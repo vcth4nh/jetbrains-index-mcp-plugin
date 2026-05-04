@@ -13,3 +13,8 @@
 {"classes":[{"column":6,"containerName":null,"file":"normal.go","kind":"CLASS","language":"Go","line":29,"name":"Rectangle","qualifiedName":null}],"query":"Rectangle","totalCount":1}
 {"query":"Area","symbols":[{"column":2,"containerName":null,"file":"normal.go","kind":"METHOD","language":"Go","line":10,"name":"Area","qualifiedName":null},{"column":17,"containerName":null,"file":"normal.go","kind":"METHOD","language":"Go","line":23,"name":"Area","qualifiedName":null},{"column":20,"containerName":null,"file":"normal.go","kind":"METHOD","language":"Go","line":34,"name":"Area","qualifiedName":null},{"column":28,"containerName":null,"file":"normal.go","kind":"METHOD","language":"Go","line":54,"name":"TotalArea","qualifiedName":null}],"totalCount":4}
 {"query":"qFnVar","symbols":[{"column":6,"containerName":null,"file":"quirks.go","kind":"FUNCTION","language":"Go","line":10,"name":"qFnVar","qualifiedName":null}],"totalCount":1}
+{"astPath":["qFnVar"],"column":2,"file":"quirks.go","line":11,"symbolName":"fn"}
+{"astPath":[],"column":19,"file":"quirks.go","line":56,"symbolName":"Coerce"}
+{"astPath":[],"column":19,"file":"quirks.go","line":56,"symbolName":"Coerce"}
+{"astPath":["qTypeSwitch"],"column":9,"file":"quirks.go","line":119,"symbolName":"s"}
+{"astPath":["Coercer"],"column":2,"file":"quirks.go","line":51,"symbolName":"Coerce"}

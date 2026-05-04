@@ -16,3 +16,8 @@
 {"id":"find-class-Coercer",       "tool":"ide_find_class",           "params":{"query":"Coercer"}}
 {"id":"find-symbol-area",         "tool":"ide_find_symbol",          "params":{"query":"area"}}
 {"id":"find-symbol-q_closure",    "tool":"ide_find_symbol",          "params":{"query":"q_closure"}}
+{"id":"def-trait-object-coerce",     "tool":"ide_find_definition",      "params":{"file":"src/quirks.rs","line":47,"column":11}}
+{"id":"impls-generic-bound-coercer", "tool":"ide_find_implementations", "params":{"file":"src/quirks.rs","line":50,"column":27}}
+{"id":"def-enum-variant-coerce-int", "tool":"ide_find_definition",      "params":{"file":"src/quirks.rs","line":74,"column":25}}
+{"id":"refs-circle-radius",          "tool":"ide_find_references",      "params":{"file":"src/normal.rs","line":14,"column":9}}
+{"id":"def-q-question-mark-parse",   "tool":"ide_find_definition",      "params":{"file":"src/quirks.rs","line":97,"column":21}}

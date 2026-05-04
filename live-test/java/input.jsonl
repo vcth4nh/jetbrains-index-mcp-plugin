@@ -24,3 +24,8 @@
 {"id":"def-parse-stringint-overload","tool":"ide_find_definition",   "params":{"file":"src/main/java/demo/Quirks.java","line":95,"column":30}}
 {"id":"find-symbol-parse",        "tool":"ide_find_symbol",          "params":{"query":"parse"}}
 {"id":"call-hier-parse-string-callers","tool":"ide_call_hierarchy",  "params":{"file":"src/main/java/demo/Quirks.java","line":86,"column":23,"direction":"callers","maxDepth":2}}
+{"id":"impls-Coerce-via-lambda",  "tool":"ide_find_implementations", "params":{"file":"src/main/java/demo/Quirks.java","line":67,"column":9}}
+{"id":"impls-CoerceMode-apply",   "tool":"ide_find_implementations", "params":{"file":"src/main/java/demo/Quirks.java","line":74,"column":22}}
+{"id":"type-hier-CoerceMode",     "tool":"ide_type_hierarchy",       "params":{"file":"src/main/java/demo/Quirks.java","line":71,"column":10}}
+{"id":"super-Circle-draw",        "tool":"ide_find_super_methods",   "params":{"file":"src/main/java/demo/Normal.java","line":31,"column":19}}
+{"id":"refs-Circle-ctor",         "tool":"ide_find_references",      "params":{"file":"src/main/java/demo/Normal.java","line":21,"column":5}}

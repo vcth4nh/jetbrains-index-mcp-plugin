@@ -18,3 +18,8 @@
 {"id":"find-symbol-qRebind",      "tool":"ide_find_symbol",          "params":{"query":"qRebind"}}
 {"id":"file-structure-normal",    "tool":"ide_file_structure",       "params":{"file":"src/normal.js"}}
 {"id":"file-structure-quirks",    "tool":"ide_file_structure",       "params":{"file":"src/quirks.js"}}
+{"id":"def-quirks-parseint-rebind",      "tool":"ide_find_definition",      "params":{"file":"src/quirks.js","line":6,"column":12}}
+{"id":"def-quirks-parseint-destructured","tool":"ide_find_definition",      "params":{"file":"src/quirks.js","line":37,"column":12}}
+{"id":"def-quirks-parseint-optional",    "tool":"ide_find_definition",      "params":{"file":"src/quirks.js","line":71,"column":20}}
+{"id":"def-quirks-proxy-call",           "tool":"ide_find_definition",      "params":{"file":"src/quirks.js","line":82,"column":18}}
+{"id":"impls-Drawable-draw",             "tool":"ide_find_implementations", "params":{"file":"src/normal.js","line":4,"column":5}}

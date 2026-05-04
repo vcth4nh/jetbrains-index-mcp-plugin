@@ -13,3 +13,8 @@
 {"id":"find-class-Rectangle",    "tool":"ide_find_class",      "params":{"query":"Rectangle"}}
 {"id":"find-symbol-Area",        "tool":"ide_find_symbol",     "params":{"query":"Area"}}
 {"id":"find-symbol-qFnVar",      "tool":"ide_find_symbol",     "params":{"query":"qFnVar"}}
+{"id":"def-quirks-fnvar-resolve",  "tool":"ide_find_definition", "params":{"file":"quirks.go","line":12,"column":10}}
+{"id":"def-quirks-method-value",   "tool":"ide_find_definition", "params":{"file":"quirks.go","line":91,"column":10}}
+{"id":"def-quirks-method-expr",    "tool":"ide_find_definition", "params":{"file":"quirks.go","line":97,"column":19}}
+{"id":"def-quirks-type-switch-s",  "tool":"ide_find_definition", "params":{"file":"quirks.go","line":121,"column":24}}
+{"id":"def-quirks-iface-dispatch", "tool":"ide_find_definition", "params":{"file":"quirks.go","line":66,"column":11}}

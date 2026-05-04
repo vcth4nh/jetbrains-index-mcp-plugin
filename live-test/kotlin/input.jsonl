@@ -20,3 +20,8 @@
 {"id":"find-symbol-quirkLambda",  "tool":"ide_find_symbol",          "params":{"query":"quirkLambda"}}
 {"id":"file-structure-Normal",    "tool":"ide_file_structure",       "params":{"file":"src/main/kotlin/demo/Normal.kt"}}
 {"id":"file-structure-Quirks",    "tool":"ide_file_structure",       "params":{"file":"src/main/kotlin/demo/Quirks.kt"}}
+{"id":"def-extension-coerceTo",   "tool":"ide_find_definition",      "params":{"file":"src/main/kotlin/demo/Quirks.kt","line":29,"column":42}}
+{"id":"def-infix-coerceFirst",    "tool":"ide_find_definition",      "params":{"file":"src/main/kotlin/demo/Quirks.kt","line":59,"column":43}}
+{"id":"type-hier-Coercion-sealed","tool":"ide_type_hierarchy",       "params":{"file":"src/main/kotlin/demo/Quirks.kt","line":37,"column":14}}
+{"id":"refs-Circle-radius",       "tool":"ide_find_references",      "params":{"file":"src/main/kotlin/demo/Normal.kt","line":13,"column":18}}
+{"id":"call-hier-quirkApply-callees","tool":"ide_call_hierarchy",    "params":{"file":"src/main/kotlin/demo/Quirks.kt","line":13,"column":5,"direction":"callees","maxDepth":2}}

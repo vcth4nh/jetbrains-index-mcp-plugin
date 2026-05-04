@@ -26,3 +26,8 @@
 {"astPath":[],"column":7,"file":"/home/ubuntu/.local/share/JetBrains/Toolbox/apps/pycharm/plugins/python-ce/helpers/typeshed/stdlib/builtins.pyi","line":255,"symbolName":"int"}
 {"astPath":[],"column":7,"file":"/home/ubuntu/.local/share/JetBrains/Toolbox/apps/pycharm/plugins/python-ce/helpers/typeshed/stdlib/builtins.pyi","line":255,"symbolName":"int"}
 {"astPath":["quirk_list_indexing"],"column":5,"file":"src/quirks.py","line":37,"symbolName":"funcs"}
+{"astPath":["quirk_name_rebinding"],"column":5,"file":"src/quirks.py","line":12,"symbolName":"fn"}
+{"astPath":["quirk_walrus"],"column":9,"file":"src/quirks.py","line":69,"symbolName":"result"}
+{"astPath":["quirk_multiple_assignment"],"column":9,"file":"src/quirks.py","line":99,"symbolName":"b"}
+{"astPath":["quirk_nested_return"],"column":9,"file":"src/quirks.py","line":80,"symbolName":"get_coercer"}
+{"totalCount":4,"usages":[{"astPath":["Circle","__init__"],"column":14,"context":"self.radius = radius","file":"src/normal.py","line":21,"type":"REFERENCE"},{"astPath":["Circle","area"],"column":26,"context":"return 3.14159 * self.radius * self.radius","file":"src/normal.py","line":24,"type":"REFERENCE"},{"astPath":["Circle","area"],"column":40,"context":"return 3.14159 * self.radius * self.radius","file":"src/normal.py","line":24,"type":"REFERENCE"},{"astPath":["Circle","draw"],"column":28,"context":"return f\"circle r={self.radius}\"","file":"src/normal.py","line":27,"type":"REFERENCE"}]}

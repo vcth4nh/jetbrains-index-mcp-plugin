@@ -19,3 +19,8 @@
 {"id":"find-symbol-area",         "tool":"ide_find_symbol",          "params":{"query":"area"}}
 {"id":"find-symbol-qNameRebind",  "tool":"ide_find_symbol",          "params":{"query":"qNameRebind"}}
 {"id":"impls-coerce-at-usage",    "tool":"ide_find_implementations", "params":{"file":"src/Quirks.php","line":71,"column":20}}
+{"id":"def-match-coerce",         "tool":"ide_find_definition",      "params":{"file":"src/Quirks.php","line":67,"column":17}}
+{"id":"def-self-class",           "tool":"ide_find_definition",      "params":{"file":"src/Quirks.php","line":33,"column":22}}
+{"id":"refs-Quirks-class",        "tool":"ide_find_references",      "params":{"file":"src/Quirks.php","line":4,"column":7}}
+{"id":"super-Circle-draw",        "tool":"ide_find_super_methods",   "params":{"file":"src/Normal.php","line":23,"column":21}}
+{"id":"def-promoted-property",    "tool":"ide_find_definition",      "params":{"file":"src/Normal.php","line":17,"column":55}}

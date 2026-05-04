@@ -26,3 +26,8 @@
 {"id":"def-dict-dispatch-int",      "tool":"ide_find_definition",      "params":{"file":"src/quirks.py","line":27,"column":26}}
 {"id":"def-lambda-wrap-int",        "tool":"ide_find_definition",      "params":{"file":"src/quirks.py","line":32,"column":24}}
 {"id":"def-list-indexing-int",      "tool":"ide_find_definition",      "params":{"file":"src/quirks.py","line":38,"column":12}}
+{"id":"def-quirk-rebound-fn",       "tool":"ide_find_definition",      "params":{"file":"src/quirks.py","line":13,"column":12}}
+{"id":"def-walrus-result",          "tool":"ide_find_definition",      "params":{"file":"src/quirks.py","line":70,"column":16}}
+{"id":"def-multiple-assign-b",      "tool":"ide_find_definition",      "params":{"file":"src/quirks.py","line":100,"column":19}}
+{"id":"def-nested-return-fn",       "tool":"ide_find_definition",      "params":{"file":"src/quirks.py","line":82,"column":12}}
+{"id":"refs-circle-radius",         "tool":"ide_find_references",      "params":{"file":"src/normal.py","line":21,"column":14}}

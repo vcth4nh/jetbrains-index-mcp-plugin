@@ -20,3 +20,8 @@
 {"id":"find-symbol-qLambda",      "tool":"ide_find_symbol",          "params":{"query":"qLambda"}}
 {"id":"file-structure-normal",    "tool":"ide_file_structure",       "params":{"file":"src/normal.ts"}}
 {"id":"file-structure-quirks",    "tool":"ide_file_structure",       "params":{"file":"src/quirks.ts"}}
+{"id":"def-quirks-parseint-from-typed-lambda","tool":"ide_find_definition","params":{"file":"src/quirks.ts","line":2,"column":53}}
+{"id":"def-quirks-parseint-from-as-cast",     "tool":"ide_find_definition","params":{"file":"src/quirks.ts","line":39,"column":19}}
+{"id":"refs-Coercer-interface",               "tool":"ide_find_references","params":{"file":"src/quirks.ts","line":42,"column":18}}
+{"id":"type-hier-TypedCoercer",               "tool":"ide_type_hierarchy","params":{"file":"src/quirks.ts","line":52,"column":14}}
+{"id":"refs-aliasedCoerce",                   "tool":"ide_find_references","params":{"file":"src/quirks.ts","line":62,"column":14}}
