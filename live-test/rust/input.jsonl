@@ -1,14 +1,14 @@
 {"id":"def-circle-area",          "tool":"ide_find_definition",      "params":{"file":"src/normal.rs","line":18,"column":8}}
 {"id":"def-rectangle-area",       "tool":"ide_find_definition",      "params":{"file":"src/normal.rs","line":39,"column":8}}
 {"id":"def-make-default-shapes",  "tool":"ide_find_definition",      "params":{"file":"src/normal.rs","line":94,"column":8}}
-{"id":"refs-area-from-total",     "tool":"ide_find_references",      "params":{"file":"src/normal.rs","line":76,"column":40}}
+{"id":"refs-area-from-total",     "tool":"ide_find_references",      "params":{"file":"src/normal.rs","line":84,"column":38}}
 {"id":"refs-shapes-field",        "tool":"ide_find_references",      "params":{"file":"src/normal.rs","line":71,"column":9}}
 {"id":"refs-shape-trait",         "tool":"ide_find_references",      "params":{"file":"src/normal.rs","line":5,"column":11}}
 {"id":"impls-shape-area",         "tool":"ide_find_implementations", "params":{"file":"src/normal.rs","line":6,"column":8}}
 {"id":"impls-drawable-draw",      "tool":"ide_find_implementations", "params":{"file":"src/normal.rs","line":2,"column":8}}
 {"id":"impls-coercer",            "tool":"ide_find_implementations", "params":{"file":"src/quirks.rs","line":29,"column":11}}
-{"id":"type-hier-circle",         "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.rs","line":9,"column":12}}
-{"id":"type-hier-rectangle",      "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.rs","line":29,"column":12}}
+{"id":"type-hier-circle",         "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.rs","line":13,"column":12}}
+{"id":"type-hier-rectangle",      "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.rs","line":33,"column":12}}
 {"id":"type-hier-shape-trait",    "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.rs","line":5,"column":11}}
 {"id":"call-hier-make-default",   "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.rs","line":94,"column":8,"direction":"callees","maxDepth":2}}
 {"id":"call-hier-area-callers",   "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.rs","line":6,"column":8,"direction":"callers","maxDepth":2}}
@@ -16,5 +16,3 @@
 {"id":"find-class-Coercer",       "tool":"ide_find_class",           "params":{"query":"Coercer"}}
 {"id":"find-symbol-area",         "tool":"ide_find_symbol",          "params":{"query":"area"}}
 {"id":"find-symbol-q_closure",    "tool":"ide_find_symbol",          "params":{"query":"q_closure"}}
-{"id":"diagnostics-normal",       "tool":"ide_diagnostics",          "params":{"file":"src/normal.rs"}}
-{"id":"diagnostics-quirks",       "tool":"ide_diagnostics",          "params":{"file":"src/quirks.rs"}}

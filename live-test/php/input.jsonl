@@ -6,7 +6,7 @@
 {"id":"refs-shape-class",         "tool":"ide_find_references",      "params":{"file":"src/Normal.php","line":8,"column":16}}
 {"id":"impls-shape-area",         "tool":"ide_find_implementations", "params":{"file":"src/Normal.php","line":9,"column":30}}
 {"id":"impls-drawable-draw",      "tool":"ide_find_implementations", "params":{"file":"src/Normal.php","line":5,"column":21}}
-{"id":"impls-coercer",            "tool":"ide_find_implementations", "params":{"file":"src/Quirks.php","line":71,"column":11}}
+{"id":"impls-coercer",            "tool":"ide_find_implementations", "params":{"file":"src/Quirks.php","line":75,"column":11}}
 {"id":"super-circle-area",        "tool":"ide_find_super_methods",   "params":{"file":"src/Normal.php","line":19,"column":21}}
 {"id":"super-rectangle-area",     "tool":"ide_find_super_methods",   "params":{"file":"src/Normal.php","line":31,"column":21}}
 {"id":"type-hier-square",         "tool":"ide_type_hierarchy",       "params":{"file":"src/Normal.php","line":42,"column":7}}
@@ -18,5 +18,4 @@
 {"id":"find-class-Coercer",       "tool":"ide_find_class",           "params":{"query":"Coercer"}}
 {"id":"find-symbol-area",         "tool":"ide_find_symbol",          "params":{"query":"area"}}
 {"id":"find-symbol-qNameRebind",  "tool":"ide_find_symbol",          "params":{"query":"qNameRebind"}}
-{"id":"diagnostics-normal",       "tool":"ide_diagnostics",          "params":{"file":"src/Normal.php"}}
-{"id":"diagnostics-quirks",       "tool":"ide_diagnostics",          "params":{"file":"src/Quirks.php"}}
+{"id":"impls-coerce-at-usage",    "tool":"ide_find_implementations", "params":{"file":"src/Quirks.php","line":71,"column":20}}

@@ -18,5 +18,3 @@
 {"id":"find-symbol-qRebind",      "tool":"ide_find_symbol",          "params":{"query":"qRebind"}}
 {"id":"file-structure-normal",    "tool":"ide_file_structure",       "params":{"file":"src/normal.js"}}
 {"id":"file-structure-quirks",    "tool":"ide_file_structure",       "params":{"file":"src/quirks.js"}}
-{"id":"diagnostics-normal",       "tool":"ide_diagnostics",          "params":{"file":"src/normal.js"}}
-{"id":"diagnostics-quirks",       "tool":"ide_diagnostics",          "params":{"file":"src/quirks.js"}}

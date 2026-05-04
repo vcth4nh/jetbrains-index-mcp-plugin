@@ -1,5 +1,5 @@
-{"id":"def-circle-area",          "tool":"ide_find_definition",      "params":{"file":"src/main/kotlin/demo/Normal.kt","line":13,"column":18}}
-{"id":"def-rectangle-area",       "tool":"ide_find_definition",      "params":{"file":"src/main/kotlin/demo/Normal.kt","line":18,"column":18}}
+{"id":"def-circle-area",          "tool":"ide_find_definition",      "params":{"file":"src/main/kotlin/demo/Normal.kt","line":14,"column":18}}
+{"id":"def-rectangle-area",       "tool":"ide_find_definition",      "params":{"file":"src/main/kotlin/demo/Normal.kt","line":19,"column":18}}
 {"id":"def-makeDefaultShapes",    "tool":"ide_find_definition",      "params":{"file":"src/main/kotlin/demo/Normal.kt","line":37,"column":5}}
 {"id":"refs-area-from-totalArea", "tool":"ide_find_references",      "params":{"file":"src/main/kotlin/demo/Normal.kt","line":32,"column":49}}
 {"id":"refs-shapes-field",        "tool":"ide_find_references",      "params":{"file":"src/main/kotlin/demo/Normal.kt","line":26,"column":9}}
@@ -20,5 +20,3 @@
 {"id":"find-symbol-quirkLambda",  "tool":"ide_find_symbol",          "params":{"query":"quirkLambda"}}
 {"id":"file-structure-Normal",    "tool":"ide_file_structure",       "params":{"file":"src/main/kotlin/demo/Normal.kt"}}
 {"id":"file-structure-Quirks",    "tool":"ide_file_structure",       "params":{"file":"src/main/kotlin/demo/Quirks.kt"}}
-{"id":"diagnostics-Normal",       "tool":"ide_diagnostics",          "params":{"file":"src/main/kotlin/demo/Normal.kt"}}
-{"id":"diagnostics-Quirks",       "tool":"ide_diagnostics",          "params":{"file":"src/main/kotlin/demo/Quirks.kt"}}

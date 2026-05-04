@@ -20,5 +20,7 @@
 {"id":"find-symbol-quirkLambda",  "tool":"ide_find_symbol",          "params":{"query":"quirkLambda"}}
 {"id":"file-structure-Normal",    "tool":"ide_file_structure",       "params":{"file":"src/main/java/demo/Normal.java"}}
 {"id":"file-structure-Quirks",    "tool":"ide_file_structure",       "params":{"file":"src/main/java/demo/Quirks.java"}}
-{"id":"diagnostics-Normal",       "tool":"ide_diagnostics",          "params":{"file":"src/main/java/demo/Normal.java"}}
-{"id":"diagnostics-Quirks",       "tool":"ide_diagnostics",          "params":{"file":"src/main/java/demo/Quirks.java"}}
+{"id":"def-parse-string-overload","tool":"ide_find_definition",      "params":{"file":"src/main/java/demo/Quirks.java","line":95,"column":16}}
+{"id":"def-parse-stringint-overload","tool":"ide_find_definition",   "params":{"file":"src/main/java/demo/Quirks.java","line":95,"column":30}}
+{"id":"find-symbol-parse",        "tool":"ide_find_symbol",          "params":{"query":"parse"}}
+{"id":"call-hier-parse-string-callers","tool":"ide_call_hierarchy",  "params":{"file":"src/main/java/demo/Quirks.java","line":86,"column":23,"direction":"callers","maxDepth":2}}

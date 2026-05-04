@@ -82,4 +82,16 @@ public class Quirks {
         Supplier<Integer> supplier = () -> Integer.parseInt(x);
         return supplier.get();
     }
+
+    public static int parse(String s) {
+        return Integer.parseInt(s);
+    }
+
+    public static int parse(String s, int radix) {
+        return Integer.parseInt(s, radix);
+    }
+
+    public static int parseUsage() {
+        return parse("42") + parse("ff", 16);
+    }
 }

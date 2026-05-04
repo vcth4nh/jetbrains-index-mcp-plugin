@@ -165,6 +165,7 @@ def run_language(
 
     input_path = project_path / "input.jsonl"
     expected_path = project_path / "expected.jsonl"
+    output_path = project_path / "output.jsonl"
     inputs = [
         json.loads(line)
         for line in input_path.read_text().splitlines()
@@ -177,16 +178,16 @@ def run_language(
     if not bless and expected_path.is_file():
         expected_lines = expected_path.read_text().splitlines()
 
-    new_lines: list[str] = []
+    output_lines: list[str] = []
     passed = failed = 0
     for i, entry in enumerate(inputs):
         eid = entry.get("id", f"#{i + 1}")
         request = build_request(entry, str(project_path))
         result = normalize(post_jsonrpc(url, request), str(project_path))
         serialized = json.dumps(result, sort_keys=True, separators=(",", ":"))
+        output_lines.append(serialized)
 
         if bless:
-            new_lines.append(serialized)
             print(f"  [{i + 1}] {eid} BLESS")
             passed += 1
             continue
@@ -212,8 +213,10 @@ def run_language(
                 print(f"    {line}")
             failed += 1
 
+    body = "\n".join(output_lines) + ("\n" if output_lines else "")
+    output_path.write_text(body)
+
     if bless:
-        body = "\n".join(new_lines) + ("\n" if new_lines else "")
         expected_path.write_text(body)
         print(f"[{lang}] BLESSED {expected_path}")
     else:

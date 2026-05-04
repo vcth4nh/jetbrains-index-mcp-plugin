@@ -66,6 +66,10 @@ class Quirks {
         };
         return $fn($x);
     }
+
+    public static function qCoerceUsage(Coercer $c, string $x): int {
+        return $c->coerce($x);
+    }
 }
 
 interface Coercer {
