@@ -18,7 +18,6 @@
     <li><b>Go</b> - GoLand, IntelliJ IDEA Ultimate with Go plugin</li>
     <li><b>PHP</b> - PhpStorm, IntelliJ IDEA Ultimate with PHP plugin</li>
     <li><b>Rust</b> - RustRover, IntelliJ IDEA Ultimate with Rust plugin, CLion</li>
-    <li><b>Markdown</b> - heading outlines in file structure via the bundled Markdown plugin</li>
 </ul>
 
 <h3>Universal Tools (All Supported IDEs)</h3>
@@ -37,6 +36,7 @@
     <li><b>Read File</b> - Read file content by path or qualified name, including library sources (disabled by default)</li>
     <li><b>Open File</b> - Open a file in the editor with optional navigation (disabled by default)</li>
     <li><b>Get Active File</b> - Get currently active editor file(s) with cursor position (disabled by default)</li>
+    <li><b>File Structure</b> - View hierarchical file structure like IDE's Structure view, for any language with a registered structure-view factory (disabled by default)</li>
 </ul>
 
 <h3>Extended Tools (Language-Aware)</h3>
@@ -46,7 +46,6 @@
     <li><b>Call Hierarchy</b> - Trace method/function call relationships (Java, Kotlin, Python, JS/TS, Go, PHP, Rust)</li>
     <li><b>Find Implementations</b> - Discover all implementations of interfaces and abstract methods (Java, Kotlin, Python, JS/TS, PHP, Rust)</li>
     <li><b>Find Super Methods</b> - Navigate through method override hierarchies (Java, Kotlin, Python, JS/TS, PHP)</li>
-    <li><b>File Structure</b> - View hierarchical file structure like IDE's Structure view (Java, Kotlin, Python, JS/TS, Markdown) (disabled by default)</li>
 </ul>
 
 <h3>Refactoring Tools</h3>

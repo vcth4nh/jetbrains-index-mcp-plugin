@@ -7,6 +7,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.settings.McpSettings
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.editor.GetActiveFileTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.editor.OpenFileTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.intelligence.GetDiagnosticsTool
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FileStructureTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindClassTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindDefinitionTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindFileTool
@@ -206,14 +207,12 @@ class ToolRegistry {
         val implementationLangs = LanguageHandlerRegistry.getSupportedLanguagesForImplementations()
         val callHierarchyLangs = LanguageHandlerRegistry.getSupportedLanguagesForCallHierarchy()
         val superMethodsLangs = LanguageHandlerRegistry.getSupportedLanguagesForSuperMethods()
-        val structureLangs = LanguageHandlerRegistry.getSupportedLanguagesForStructure()
         val symbolReferenceLangs = LanguageHandlerRegistry.getSupportedLanguagesForSymbolReference()
 
         LOG.info("Language support - TypeHierarchy: $typeHierarchyLangs, " +
             "Implementations: $implementationLangs, " +
             "CallHierarchy: $callHierarchyLangs, " +
             "SuperMethods: $superMethodsLangs, " +
-            "Structure: $structureLangs, " +
             "SymbolReference: $symbolReferenceLangs")
     }
 
@@ -227,6 +226,7 @@ class ToolRegistry {
         // Navigation tools (universal)
         register(FindUsagesTool())
         register(FindDefinitionTool())
+        register(FileStructureTool())
 
         // Intelligence tools
         register(GetDiagnosticsTool())
@@ -266,7 +266,6 @@ class ToolRegistry {
         ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindImplementationsTool") { LanguageHandlerRegistry.hasImplementationsHandlers() },
         ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.CallHierarchyTool") { LanguageHandlerRegistry.hasCallHierarchyHandlers() },
         ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindSuperMethodsTool") { LanguageHandlerRegistry.hasSuperMethodsHandlers() },
-        ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FileStructureTool") { LanguageHandlerRegistry.hasStructureHandlers() },
     )
 
     /**
