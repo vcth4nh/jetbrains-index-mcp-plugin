@@ -1,0 +1,14 @@
+# IDE / editor metadata
+.idea/
+.vscode/
+.claude/
+.fleet/
+.zed/
+*.iml
+
+# OS / editor scratch
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~

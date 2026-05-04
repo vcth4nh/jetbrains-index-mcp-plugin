@@ -19,6 +19,7 @@
   Closes #3.
 
 ### Added
+- **Live MCP test harness** in `live-test/`. Snapshot-based regression suite covering 8 languages (Python, Java, Kotlin, JavaScript, TypeScript, Go, PHP, Rust) and 10 navigation/intelligence tools. `live-test/run.py` POSTs `tools/call` requests to running JetBrains IDE MCP servers and diffs JSON responses against per-language `expected.jsonl` files. Run with `./live-test/run.py` (or `--bless` to update snapshots). See `live-test/README.md` for setup.
 - `qualifiedName: String?` field on `ImplementationLocation`, `TypeElement`, and `CallElement` wire models. Carries the strict `QualifiedNameProvider` output (null when no provider handles the element); `name` continues to carry a user-friendly display string.
 - `LanguageAwareKindResolver` utility centralizes `kind` classification across `FindClassTool` and `OptimizedSymbolSearch`, replacing duplicated substring-matching with language-aware PSI-API dispatch (PHP interface/trait/abstract via `PhpClass.isInterface/isTrait/isAbstract`, Java records/abstracts via `PsiClass.isRecord/hasModifierProperty("abstract")`, Go structs/interfaces via `GoTypeSpec.getSpecType`).
 - `QualifiedNameUtil` now has reflective fallbacks for Go (builds `package.Function` / `package.Receiver.Method` from `GoFile.getPackageName` + `GoMethodDeclaration.getReceiver()`) and Rust (walks `RsNamedElement` ancestors, prepends `crate`, joins with `::`). Pure-logic formatters extracted for unit testability.
