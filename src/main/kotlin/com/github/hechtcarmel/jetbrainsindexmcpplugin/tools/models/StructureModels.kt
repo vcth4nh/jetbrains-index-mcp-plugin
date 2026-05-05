@@ -3,19 +3,29 @@ package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models
 import kotlinx.serialization.Serializable
 
 /**
- * One node in the file structure tree, mirroring the IDE's Structure view.
+ * One node in the file structure tree.
  *
- * @property name The presentable text the IDE would show in its Structure tool window
- *                (e.g. `myMethod(String, int): boolean`, `MyClass`).
- * @property signature Optional supplementary text the IDE attaches to the presentation
- *                     (`ItemPresentation.locationString` — e.g. `extends Foo`, `throws X`).
+ * Rendered by `TreeFormatter` as: `<kind?> <modifiers...> <name>[ <signature>] (line N)`.
+ * Per-language decorators (`tools/navigation/structure/*NodeDecorator.kt`) populate these
+ * fields from the underlying PSI element. When no decorator handles a value, only `name`
+ * is filled and the line collapses to `<name> (line N)`.
+ *
+ * @property name Bare identifier — class name, method name, field name, etc.
+ * @property kind Element kind keyword (e.g. `class`, `interface`, `method`, `field`,
+ *   `constructor`, `def`, `fun`). Null when unknown.
+ * @property modifiers Explicit modifiers in source order (`public`, `private`,
+ *   `final`, `abstract`, `open`, `override`, …). Empty when none.
+ * @property signature Optional suffix — return type + params for methods, type for
+ *   fields, `extends X implements Y` for classes, etc.
  * @property line 1-based line number where the underlying PSI element is defined.
- * @property children Child nodes from the IDE's `StructureViewTreeElement.children`.
+ * @property children Child nodes, recursively decorated.
  */
 @Serializable
 data class StructureNode(
     val name: String,
-    val signature: String?,
+    val kind: String? = null,
+    val modifiers: List<String> = emptyList(),
+    val signature: String? = null,
     val line: Int,
     val children: List<StructureNode> = emptyList()
 )
@@ -24,7 +34,7 @@ data class StructureNode(
  * Output model for the file structure tool.
  *
  * @property file The file path relative to project root.
- * @property language The language ID (e.g., `JAVA`, `Python`, `kotlin`).
+ * @property language The display language name (e.g., `Java`, `Python`, `Kotlin`).
  * @property structure The formatted tree string.
  */
 @Serializable

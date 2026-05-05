@@ -3,7 +3,10 @@ package com.github.hechtcarmel.jetbrainsindexmcpplugin.util
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.StructureNode
 
 /**
- * Format a tree of [StructureNode]s as a 2-space-indented text tree.
+ * Renders a tree of [StructureNode]s as a 2-space-indented text tree.
+ *
+ * Per-line format: `<kind> <modifiers...> <name>[ <signature>] (line N)`.
+ * Empty fields are silently omitted; the order is preserved for readability.
  */
 object TreeFormatter {
 
@@ -17,8 +20,12 @@ object TreeFormatter {
 
     private fun formatNode(node: StructureNode, indent: Int, output: MutableList<String>) {
         val indentStr = "  ".repeat(indent)
-        val signature = if (!node.signature.isNullOrBlank()) " ${node.signature}" else ""
-        output.add("$indentStr${node.name}$signature (line ${node.line})")
+        val parts = mutableListOf<String>()
+        node.kind?.takeIf { it.isNotBlank() }?.let { parts.add(it) }
+        parts.addAll(node.modifiers)
+        parts.add(node.name)
+        node.signature?.takeIf { it.isNotBlank() }?.let { parts.add(it) }
+        output.add("$indentStr${parts.joinToString(" ")} (line ${node.line})")
         node.children.forEach { formatNode(it, indent + 1, output) }
     }
 }
