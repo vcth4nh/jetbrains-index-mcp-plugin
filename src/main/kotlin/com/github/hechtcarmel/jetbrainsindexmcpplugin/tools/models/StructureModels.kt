@@ -4,20 +4,17 @@ import kotlinx.serialization.Serializable
 
 // One node in the file structure tree.
 //
-// TreeFormatter renders each node as: kind modifiers name signature (line N).
-// Per-language decorators in tools/navigation/structure populate kind, modifiers,
-// and signature from the underlying PSI element. Unknown values are omitted.
-//
-// name        bare identifier (class name, method name, field name, etc.)
-// kind        element keyword like class / interface / method / field / def / fun
-// modifiers   explicit source-order modifiers (public, private, final, abstract, ...)
-// signature   suffix text such as method params, field type, or "extends X implements Y"
-// line        1-based source line where the underlying PSI element begins
-// children    nested nodes, recursively decorated
+// TreeFormatter renders each node as: modifiers name signature (line N).
+// modifiers   source-order tokens from the element's modifier list (e.g. public, private,
+//             abstract, final, override, suspend, data, sealed). Empty when the language
+//             has no modifier concept (Go, Markdown) or the element carries none.
+// name        IDE's ItemPresentation.presentableText for the element.
+// signature   IDE's ItemPresentation.locationString (return type, qualifier, etc.).
+// line        1-based source line where the underlying PSI element begins.
+// children    nested nodes, recursively decorated.
 @Serializable
 data class StructureNode(
     val name: String,
-    val kind: String? = null,
     val modifiers: List<String> = emptyList(),
     val signature: String? = null,
     val line: Int,

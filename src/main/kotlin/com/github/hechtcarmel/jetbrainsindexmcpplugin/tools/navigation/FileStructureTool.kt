@@ -5,8 +5,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResu
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.AbstractMcpTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.FileStructureResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.StructureNode
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.structure.NodeDecorator
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.structure.NodeDecorators
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.structure.UniversalModifiers
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.TreeFormatter
 import com.intellij.ide.structureView.StructureViewModel
@@ -55,20 +54,26 @@ class FileStructureTool : AbstractMcpTool() {
           show (optional) - List of filter names to enable. Omit to use language defaults.
                             If provided, only these filters are active; anything not listed is
                             hidden, even if it'd be on by default.
+          sort (optional) - Sort order. Default: declaration order (with language-specific kind
+                            grouping where applicable). 'visibility' groups public/exported
+                            members before non-public ones. Has no effect for Python and JS/TS,
+                            which don't ship a visibility sorter.
 
         Available filters per language (* = on by default):
           python:                   fields*, inherited
-          java / kotlin:            inherited, non_public*, properties*
+          java:                     anonymous_classes, fields*, inherited, lambdas*, non_public*
+          kotlin:                   inherited, non_public*, properties*
           javascript / typescript:  fields*, inherited, inherited_from_object*
           php:                      anonymous_classes, inherited, lambdas*, constants*, includes*,
                                     private_members*, properties*, protected_members*
           go:                       package_structure*, private_members*
-          rust:                     (no filters)
+          rust:                     macro_expanded
 
         Examples:
           {"file": "src/main.py"}                                   - language defaults
           {"file": "src/main.py", "show": ["fields", "inherited"]}  - explicit (both visible)
           {"file": "src/main.py", "show": []}                       - hide every filterable category (minimum)
+          {"file": "Foo.java", "sort": "visibility"}                - public members first
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
@@ -79,6 +84,12 @@ class FileStructureTool : AbstractMcpTool() {
             "Optional list of filter names to enable. See tool description for per-language filter names. " +
                 "Omit to use language defaults. Pass an explicit array to override.",
         )
+        .enumProperty(
+            "sort",
+            "Optional sort order. Default: declaration order. 'visibility' groups public/exported " +
+                "members before non-public. No-op for Python and JS/TS.",
+            listOf("visibility"),
+        )
         .build()
 
     override suspend fun doExecute(project: Project, arguments: JsonObject): ToolCallResult {
@@ -88,6 +99,7 @@ class FileStructureTool : AbstractMcpTool() {
         val showOverride: Set<String>? = (arguments["show"] as? JsonArray)
             ?.mapNotNull { it.jsonPrimitive.contentOrNull }
             ?.toSet()
+        val sortOrder: String? = arguments["sort"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotBlank() }
 
         return suspendingReadAction {
             val psiFile = getPsiFile(project, file)
@@ -98,7 +110,7 @@ class FileStructureTool : AbstractMcpTool() {
                     "No structure view available for language '${psiFile.language.id}'."
                 )
 
-            val nodes = extractStructure(builder, psiFile, project, showOverride)
+            val nodes = extractStructure(builder, psiFile, project, showOverride, sortOrder)
 
             if (nodes.isEmpty()) {
                 return@suspendingReadAction createSuccessResult(
@@ -121,11 +133,11 @@ class FileStructureTool : AbstractMcpTool() {
         psiFile: PsiFile,
         project: Project,
         showOverride: Set<String>?,
+        sortOrder: String?,
     ): List<StructureNode> {
         // Canonicalize JS/TS dialect ids ("ECMAScript 6", "JSX Harmony", "TypeScript JSX")
         // through `displayLanguageName` so the MATCHERS / DEFAULTS lookup hits a single key.
         val canonicalKey = displayLanguageName(psiFile.language.id).lowercase()
-        val decorator = NodeDecorators.forLanguage(canonicalKey)
 
         if (builder !is TreeBasedStructureViewBuilder) {
             // Fallback: full StructureView (rare). No filter support here.
@@ -134,7 +146,6 @@ class FileStructureTool : AbstractMcpTool() {
                 return walkAbstractTreeNode(
                     SmartTreeStructure(project, view.treeModel).rootElement as AbstractTreeNode<*>,
                     project,
-                    decorator,
                 )
             } finally {
                 Disposer.dispose(view)
@@ -144,12 +155,12 @@ class FileStructureTool : AbstractMcpTool() {
         val model = builder.createStructureViewModel(/* editor = */ null)
         try {
             val effectiveShow = showOverride ?: DEFAULTS[canonicalKey] ?: emptySet()
-            val activeIdeNames = computeActiveIdeNames(model, canonicalKey, effectiveShow)
+            val activeIdeNames = computeActiveIdeNames(model, canonicalKey, effectiveShow, sortOrder)
             val owner = ShowBasedActionsOwner(activeIdeNames)
             val wrappedModel = TreeModelWrapper(model, owner)
             val structure = SmartTreeStructure(project, wrappedModel)
             val root = structure.rootElement as? AbstractTreeNode<*> ?: return emptyList()
-            return walkAbstractTreeNode(root, project, decorator)
+            return walkAbstractTreeNode(root, project)
         } finally {
             Disposer.dispose(model)
         }
@@ -168,31 +179,49 @@ class FileStructureTool : AbstractMcpTool() {
      *
      * - For node providers and groupers (and the rare non-reverted filter): being "active"
      *   means the action runs and ADDS / TRANSFORMS nodes. Listing in `show` should activate.
+     *
+     * - For sorters: hidden sorters (`isVisible() == false`) always apply silently. Visible
+     *   sorters apply only when active. The `sort` argument names a single visible sorter to
+     *   activate; we match it by pattern across `model.sorters`.
      */
     private fun computeActiveIdeNames(
         model: StructureViewModel,
         languageId: String,
         show: Set<String>,
+        sort: String?,
     ): Set<String> {
-        val matchers = MATCHERS[languageId] ?: return emptySet()
         val active = mutableSetOf<String>()
-        val allActions: Sequence<TreeAction> = sequence {
-            yieldAll(model.filters.asSequence())
-            (model as? ProvidingTreeModel)?.nodeProviders?.let { yieldAll(it) }
-            yieldAll(model.groupers.asSequence())
-        }
-        for (action in allActions) {
-            val ideName = action.name
-            val matched = matchers.firstOrNull { matcher ->
-                matcher.patterns.any { ideName.contains(it, ignoreCase = true) }
-            } ?: continue
-            val isHideFilter = action is com.intellij.ide.util.treeView.smartTree.Filter && action.isReverted()
-            val shouldBeActive = if (isHideFilter) {
-                matched.normalized !in show
-            } else {
-                matched.normalized in show
+        val matchers = MATCHERS[languageId]
+        if (matchers != null) {
+            val allActions: Sequence<TreeAction> = sequence {
+                yieldAll(model.filters.asSequence())
+                (model as? ProvidingTreeModel)?.nodeProviders?.let { yieldAll(it) }
+                yieldAll(model.groupers.asSequence())
             }
-            if (shouldBeActive) active.add(ideName)
+            for (action in allActions) {
+                val ideName = action.name
+                val matched = matchers.firstOrNull { matcher ->
+                    matcher.patterns.any { ideName.contains(it, ignoreCase = true) }
+                } ?: continue
+                val isHideFilter = action is com.intellij.ide.util.treeView.smartTree.Filter && action.isReverted()
+                val shouldBeActive = if (isHideFilter) {
+                    matched.normalized !in show
+                } else {
+                    matched.normalized in show
+                }
+                if (shouldBeActive) active.add(ideName)
+            }
+        }
+        if (sort != null) {
+            val patterns = SORTER_PATTERNS[sort]
+            if (patterns != null) {
+                for (sorter in model.sorters) {
+                    val ideName = sorter.name
+                    if (patterns.any { ideName.contains(it, ignoreCase = true) }) {
+                        active.add(ideName)
+                    }
+                }
+            }
         }
         return active
     }
@@ -200,14 +229,12 @@ class FileStructureTool : AbstractMcpTool() {
     private fun walkAbstractTreeNode(
         node: AbstractTreeNode<*>,
         project: Project,
-        decorator: NodeDecorator,
     ): List<StructureNode> =
-        node.children.mapNotNull { walkChildNode(it, project, decorator) }
+        node.children.mapNotNull { walkChildNode(it, project) }
 
     private fun walkChildNode(
         node: AbstractTreeNode<*>,
         project: Project,
-        decorator: NodeDecorator,
     ): StructureNode? {
         val (rawValue, presentation, line) = when (val value = node.value) {
             is StructureViewTreeElement -> {
@@ -217,17 +244,13 @@ class FileStructureTool : AbstractMcpTool() {
             is Group -> Triple<Any?, _, _>(value, value.presentation, 1)
             else -> return null
         }
-        val decorated = decorator.decorate(rawValue, presentation)
-            ?: com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.structure.DefaultNodeDecorator
-                .decorate(rawValue, presentation)
-            ?: return null
+        val name = presentation.presentableText?.takeIf { it.isNotBlank() } ?: return null
         return StructureNode(
-            name = decorated.name,
-            kind = decorated.kind,
-            modifiers = decorated.modifiers,
-            signature = decorated.signature,
+            name = name,
+            modifiers = UniversalModifiers.extract(rawValue),
+            signature = presentation.locationString?.takeIf { it.isNotBlank() },
             line = line,
-            children = walkAbstractTreeNode(node, project, decorator),
+            children = walkAbstractTreeNode(node, project),
         )
     }
 
@@ -267,7 +290,9 @@ class FileStructureTool : AbstractMcpTool() {
             ),
             "java" to listOf(
                 FilterCategoryMatcher("non_public", listOf("NON_PUBLIC", "non.public")),
-                FilterCategoryMatcher("properties", listOf("PROPERTIES", "PROPERT")),
+                FilterCategoryMatcher("anonymous_classes", listOf("ANONYMOUS")),
+                FilterCategoryMatcher("lambdas", listOf("LAMBDA")),
+                FilterCategoryMatcher("fields", listOf("FIELD")),
                 FilterCategoryMatcher("inherited", listOf("INHERITED")),
             ),
             "kotlin" to listOf(
@@ -299,11 +324,25 @@ class FileStructureTool : AbstractMcpTool() {
                 FilterCategoryMatcher("package_structure", listOf("PACKAGE")),
                 FilterCategoryMatcher("private_members", listOf("PRIVATE")),
             ),
+            "rust" to listOf(
+                FilterCategoryMatcher("macro_expanded", listOf("MACRO_EXPANDED")),
+            ),
+        )
+
+        // Sorter name patterns indexed by user-facing key. Patterns match across all
+        // languages because the IDE settled on a small handful of conventional ids:
+        //   Java/PHP  → VISIBILITY_SORTER
+        //   Kotlin    → KOTLIN_VISIBILITY_SORTER
+        //   Go        → EXPORTABILITY_SORTER (Go's flavor of "visibility")
+        //   Rust      → STRUCTURE_VIEW_VISIBILITY_SORTER
+        // Python and JS/TS don't ship a visibility sorter, so 'visibility' is a no-op there.
+        private val SORTER_PATTERNS: Map<String, List<String>> = mapOf(
+            "visibility" to listOf("VISIBILITY", "EXPORTABILITY"),
         )
 
         private val DEFAULTS: Map<String, Set<String>> = mapOf(
             "python" to setOf("fields"),
-            "java" to setOf("non_public", "properties"),
+            "java" to setOf("non_public", "fields", "lambdas"),
             "kotlin" to setOf("non_public", "properties"),
             "javascript" to setOf("fields", "inherited_from_object"),
             "typescript" to setOf("fields", "inherited_from_object"),
