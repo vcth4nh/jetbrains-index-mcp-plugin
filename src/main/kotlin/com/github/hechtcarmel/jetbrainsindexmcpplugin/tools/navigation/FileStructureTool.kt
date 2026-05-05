@@ -65,8 +65,8 @@ class FileStructureTool : AbstractMcpTool() {
 
         Examples:
           {"file": "src/main.py"}                                   - language defaults
-          {"file": "src/main.py", "show": ["fields", "inherited"]}  - explicit
-          {"file": "src/main.py", "show": []}                       - all filters off
+          {"file": "src/main.py", "show": ["fields", "inherited"]}  - explicit (both visible)
+          {"file": "src/main.py", "show": []}                       - hide every filterable category (minimum)
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
@@ -147,6 +147,20 @@ class FileStructureTool : AbstractMcpTool() {
         }
     }
 
+    /**
+     * Decide which IDE action names should report `isActionActive == true` to `TreeModelWrapper`.
+     *
+     * `TreeModelWrapper.getFilters()` returns filters whose name is "active" — those are the
+     * filters that get APPLIED. `Filter.isVisible(elem) == false` then HIDES that element. So:
+     *
+     * - For a hide-style filter (i.e. `Filter` with `isReverted() == true`, the standard
+     *   convention for "Show X" toggles): the filter is APPLIED → category HIDDEN. Our `show`
+     *   list names the categories the user wants VISIBLE, so we mark the filter active iff
+     *   the category is *not* in `show` (active = applied = hidden).
+     *
+     * - For node providers and groupers (and the rare non-reverted filter): being "active"
+     *   means the action runs and ADDS / TRANSFORMS nodes. Listing in `show` should activate.
+     */
     private fun computeActiveIdeNames(
         model: StructureViewModel,
         languageId: String,
@@ -164,7 +178,13 @@ class FileStructureTool : AbstractMcpTool() {
             val matched = matchers.firstOrNull { matcher ->
                 matcher.patterns.any { ideName.contains(it, ignoreCase = true) }
             } ?: continue
-            if (matched.normalized in show) active.add(ideName)
+            val isHideFilter = action is com.intellij.ide.util.treeView.smartTree.Filter && action.isReverted()
+            val shouldBeActive = if (isHideFilter) {
+                matched.normalized !in show
+            } else {
+                matched.normalized in show
+            }
+            if (shouldBeActive) active.add(ideName)
         }
         return active
     }
