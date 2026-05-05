@@ -5,6 +5,8 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResu
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.AbstractMcpTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.FileStructureResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.StructureNode
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.structure.NodeDecorator
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.structure.NodeDecorators
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.TreeFormatter
 import com.intellij.ide.structureView.StructureViewModel
@@ -120,6 +122,11 @@ class FileStructureTool : AbstractMcpTool() {
         project: Project,
         showOverride: Set<String>?,
     ): List<StructureNode> {
+        // Canonicalize JS/TS dialect ids ("ECMAScript 6", "JSX Harmony", "TypeScript JSX")
+        // through `displayLanguageName` so the MATCHERS / DEFAULTS lookup hits a single key.
+        val canonicalKey = displayLanguageName(psiFile.language.id).lowercase()
+        val decorator = NodeDecorators.forLanguage(canonicalKey)
+
         if (builder !is TreeBasedStructureViewBuilder) {
             // Fallback: full StructureView (rare). No filter support here.
             val view = builder.createStructureView(/* fileEditor = */ null, project)
@@ -127,6 +134,7 @@ class FileStructureTool : AbstractMcpTool() {
                 return walkAbstractTreeNode(
                     SmartTreeStructure(project, view.treeModel).rootElement as AbstractTreeNode<*>,
                     project,
+                    decorator,
                 )
             } finally {
                 Disposer.dispose(view)
@@ -135,16 +143,13 @@ class FileStructureTool : AbstractMcpTool() {
 
         val model = builder.createStructureViewModel(/* editor = */ null)
         try {
-            // Canonicalize JS/TS dialect ids ("ECMAScript 6", "JSX Harmony", "TypeScript JSX")
-            // through `displayLanguageName` so the MATCHERS / DEFAULTS lookup hits a single key.
-            val canonicalKey = displayLanguageName(psiFile.language.id).lowercase()
             val effectiveShow = showOverride ?: DEFAULTS[canonicalKey] ?: emptySet()
             val activeIdeNames = computeActiveIdeNames(model, canonicalKey, effectiveShow)
             val owner = ShowBasedActionsOwner(activeIdeNames)
             val wrappedModel = TreeModelWrapper(model, owner)
             val structure = SmartTreeStructure(project, wrappedModel)
             val root = structure.rootElement as? AbstractTreeNode<*> ?: return emptyList()
-            return walkAbstractTreeNode(root, project)
+            return walkAbstractTreeNode(root, project, decorator)
         } finally {
             Disposer.dispose(model)
         }
@@ -192,30 +197,37 @@ class FileStructureTool : AbstractMcpTool() {
         return active
     }
 
-    private fun walkAbstractTreeNode(node: AbstractTreeNode<*>, project: Project): List<StructureNode> =
-        node.children.mapNotNull { walkChildNode(it, project) }
+    private fun walkAbstractTreeNode(
+        node: AbstractTreeNode<*>,
+        project: Project,
+        decorator: NodeDecorator,
+    ): List<StructureNode> =
+        node.children.mapNotNull { walkChildNode(it, project, decorator) }
 
-    private fun walkChildNode(node: AbstractTreeNode<*>, project: Project): StructureNode? {
-        val (name, signature, line) = when (val value = node.value) {
+    private fun walkChildNode(
+        node: AbstractTreeNode<*>,
+        project: Project,
+        decorator: NodeDecorator,
+    ): StructureNode? {
+        val (rawValue, presentation, line) = when (val value = node.value) {
             is StructureViewTreeElement -> {
-                val pres = value.presentation
-                val rawName = pres.presentableText?.takeIf { it.isNotBlank() } ?: return null
-                val sig = pres.locationString?.takeIf { it.isNotBlank() }
                 val l = (value.value as? PsiElement)?.let { lineOf(project, it) } ?: 1
-                Triple(rawName, sig, l)
+                Triple<Any?, _, _>(value.value, value.presentation, l)
             }
-            is Group -> {
-                val pres = value.presentation
-                val rawName = pres.presentableText?.takeIf { it.isNotBlank() } ?: return null
-                Triple(rawName, pres.locationString?.takeIf { it.isNotBlank() }, 1)
-            }
+            is Group -> Triple<Any?, _, _>(value, value.presentation, 1)
             else -> return null
         }
+        val decorated = decorator.decorate(rawValue, presentation)
+            ?: com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.structure.DefaultNodeDecorator
+                .decorate(rawValue, presentation)
+            ?: return null
         return StructureNode(
-            name = name,
-            signature = signature,
+            name = decorated.name,
+            kind = decorated.kind,
+            modifiers = decorated.modifiers,
+            signature = decorated.signature,
             line = line,
-            children = walkAbstractTreeNode(node, project),
+            children = walkAbstractTreeNode(node, project, decorator),
         )
     }
 

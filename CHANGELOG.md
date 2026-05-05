@@ -4,6 +4,9 @@
 
 ## [Unreleased]
 
+### Changed
+- **`ide_file_structure` formatted-string output now restores explicit kind labels, modifiers, and inheritance / signature suffixes** (e.g. `class abstract Shape (line 10)`, `field private final radius double (line 19)`, `method public draw String () (line 31)`, `def __init__ (self, radius) (line 20)`, `fun override area () (line 14)`). The IDE walker still drives the tree shape (so `show` filters / providers / groupers continue to work); a new per-language `NodeDecorator` reads the underlying PSI element to recover the explicit prefixes. Decorators live in `tools/navigation/structure/` and cover Java, Kotlin, Python, JS/TS, PHP, Go, Rust. Languages without a dedicated decorator fall back to IDE-presentation text (no kind/modifier prefix).
+
 ### Breaking
 - **`ide_find_references` is renamed to `ide_find_usages`.** Aligns with the IntelliJ Platform's terminology (`FindUsagesHandler`, `FindUsagesHandlerFactory`) and the IDE's "Find Usages" action. Schema, parameters, and return shape are unchanged. Clients with hard-coded `ide_find_references` calls must update.
 - **`qualifiedName` field in MCP tool responses now matches IntelliJ's "Copy Reference" output.** All sites that produced `qualifiedName` now delegate to the platform's `QualifiedNameProvider` extension point — the same API "Copy Reference" uses. This eliminates per-language divergence: no more reflective probing, no per-language wrappers, no direct PSI property access at FQN-producing sites, no hand-rolled string concatenation. Affected tools: `ide_find_symbol`, `ide_find_class`, `ide_find_definition`, `ide_type_hierarchy`, `ide_call_hierarchy`, `ide_find_implementations`, `ide_find_super_methods`.
