@@ -44,3 +44,5 @@
 {"id":"def-Point-via-new-record-call", "tool":"ide_find_definition",  "params":{"file":"src/main/java/demo/Modern.java","line":21,"column":23}}
 {"id":"def-ArrayList-via-new-jdk-call","tool":"ide_find_definition",  "params":{"file":"src/main/java/demo/Normal.java","line":88,"column":34}}
 {"id":"refs-Circle-via-new-call-site", "tool":"ide_find_usages",      "params":{"file":"src/main/java/demo/Normal.java","line":89,"column":24}}
+{"id":"index-status",             "tool":"ide_index_status",         "params":{}}
+{"id":"diagnostics-Quirks-errors","tool":"ide_diagnostics",          "params":{"file":"src/main/java/demo/Quirks.java","severity":"errors"}}

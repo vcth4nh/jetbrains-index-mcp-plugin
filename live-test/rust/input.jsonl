@@ -30,3 +30,6 @@
 {"id":"find-symbol-area",         "tool":"ide_find_symbol",          "params":{"query":"area"}}
 {"id":"find-symbol-q_closure",    "tool":"ide_find_symbol",          "params":{"query":"q_closure"}}
 {"id":"find-symbol-extra-function", "tool":"ide_find_symbol",          "params":{"query":"extra_function"}}
+{"id":"file-structure-normal",    "tool":"ide_file_structure",       "params":{"file":"src/normal.rs"}}
+{"id":"file-structure-quirks",    "tool":"ide_file_structure",       "params":{"file":"src/quirks.rs"}}
+{"id":"file-structure-extra",     "tool":"ide_file_structure",       "params":{"file":"src/extra.rs"}}
