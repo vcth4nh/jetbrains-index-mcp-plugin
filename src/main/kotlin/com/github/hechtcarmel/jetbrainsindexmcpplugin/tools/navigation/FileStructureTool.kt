@@ -135,8 +135,11 @@ class FileStructureTool : AbstractMcpTool() {
 
         val model = builder.createStructureViewModel(/* editor = */ null)
         try {
-            val effectiveShow = showOverride ?: DEFAULTS[psiFile.language.id.lowercase()] ?: emptySet()
-            val activeIdeNames = computeActiveIdeNames(model, psiFile.language.id.lowercase(), effectiveShow)
+            // Canonicalize JS/TS dialect ids ("ECMAScript 6", "JSX Harmony", "TypeScript JSX")
+            // through `displayLanguageName` so the MATCHERS / DEFAULTS lookup hits a single key.
+            val canonicalKey = displayLanguageName(psiFile.language.id).lowercase()
+            val effectiveShow = showOverride ?: DEFAULTS[canonicalKey] ?: emptySet()
+            val activeIdeNames = computeActiveIdeNames(model, canonicalKey, effectiveShow)
             val owner = ShowBasedActionsOwner(activeIdeNames)
             val wrappedModel = TreeModelWrapper(model, owner)
             val structure = SmartTreeStructure(project, wrappedModel)
