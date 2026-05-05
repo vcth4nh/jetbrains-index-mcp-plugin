@@ -2,24 +2,18 @@ package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models
 
 import kotlinx.serialization.Serializable
 
-/**
- * One node in the file structure tree.
- *
- * Rendered by `TreeFormatter` as: `<kind?> <modifiers...> <name>[ <signature>] (line N)`.
- * Per-language decorators (`tools/navigation/structure/*NodeDecorator.kt`) populate these
- * fields from the underlying PSI element. When no decorator handles a value, only `name`
- * is filled and the line collapses to `<name> (line N)`.
- *
- * @property name Bare identifier — class name, method name, field name, etc.
- * @property kind Element kind keyword (e.g. `class`, `interface`, `method`, `field`,
- *   `constructor`, `def`, `fun`). Null when unknown.
- * @property modifiers Explicit modifiers in source order (`public`, `private`,
- *   `final`, `abstract`, `open`, `override`, …). Empty when none.
- * @property signature Optional suffix — return type + params for methods, type for
- *   fields, `extends X implements Y` for classes, etc.
- * @property line 1-based line number where the underlying PSI element is defined.
- * @property children Child nodes, recursively decorated.
- */
+// One node in the file structure tree.
+//
+// TreeFormatter renders each node as: kind modifiers name signature (line N).
+// Per-language decorators in tools/navigation/structure populate kind, modifiers,
+// and signature from the underlying PSI element. Unknown values are omitted.
+//
+// name        bare identifier (class name, method name, field name, etc.)
+// kind        element keyword like class / interface / method / field / def / fun
+// modifiers   explicit source-order modifiers (public, private, final, abstract, ...)
+// signature   suffix text such as method params, field type, or "extends X implements Y"
+// line        1-based source line where the underlying PSI element begins
+// children    nested nodes, recursively decorated
 @Serializable
 data class StructureNode(
     val name: String,
@@ -30,13 +24,7 @@ data class StructureNode(
     val children: List<StructureNode> = emptyList()
 )
 
-/**
- * Output model for the file structure tool.
- *
- * @property file The file path relative to project root.
- * @property language The display language name (e.g., `Java`, `Python`, `Kotlin`).
- * @property structure The formatted tree string.
- */
+// Output model returned by the file_structure tool.
 @Serializable
 data class FileStructureResult(
     val file: String,
