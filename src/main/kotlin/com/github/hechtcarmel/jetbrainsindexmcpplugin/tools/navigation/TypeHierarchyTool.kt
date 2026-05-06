@@ -114,7 +114,12 @@ class TypeHierarchyTool : AbstractMcpTool() {
                 convertDescriptorToTypeElement(it, subResult.resolver, recurseSupertypes = false, remainingDepth = 0)
             }
 
-            val rootTypeElement = buildRootTypeElement(element)
+            // For file/line/column resolution, `element` is a leaf token. Walk up
+            // to the smallest class-like ancestor so `buildRootTypeElement` can
+            // extract its name/qualifiedName. For className resolution, `element`
+            // is already a class — walkUp returns it unchanged.
+            val rootElement = ClassLikePsi.walkUpToClassLike(element) ?: element
+            val rootTypeElement = buildRootTypeElement(rootElement)
                 ?: return@suspendingReadAction createErrorResult("Could not extract class info from element")
 
             createJsonResult(TypeHierarchyResult(

@@ -213,9 +213,10 @@ internal object ClassLikePsi {
     fun describeMethodName(element: PsiElement): String? {
         if (!isMethodLike(element)) return null
         val name = (element as? com.intellij.psi.PsiNamedElement)?.name ?: return null
-        // Try to find containing class-like ancestor.
+        // Try to find containing class-like ancestor. Prefer the FQN of the class
+        // to match legacy wire format (e.g. `demo.Circle.method(...)` vs `Circle.method(...)`).
         val cls = walkUpToClassLike(element.parent ?: element)
-        val clsName = (cls as? com.intellij.psi.PsiNamedElement)?.name
+        val clsName = cls?.let { describeQualifiedName(it) } ?: (cls as? com.intellij.psi.PsiNamedElement)?.name
         val params = runCatching {
             // PsiMethod-style: getParameterList().getParameters() each has getType().getPresentableText()
             val list = element.javaClass.getMethod("getParameterList").invoke(element)
