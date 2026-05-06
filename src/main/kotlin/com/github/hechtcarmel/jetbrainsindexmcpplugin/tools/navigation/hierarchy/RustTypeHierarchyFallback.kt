@@ -7,14 +7,13 @@ import com.intellij.psi.PsiElement
 
 /**
  * One-off Strategy II fallback: Rust ships no LanguageTypeHierarchy provider
- * (audit 2026-05-04 §3.4 + research-time confirmation). This object wraps the
- * legacy custom-PSI walking algorithm from
- * [com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.rust.RustTypeHierarchyHandler]
- * so the walker can return a uniform [HierarchyNodeDescriptor] tree.
- *
- * Task 6 fills in the algorithm; this is the stub that wires the dispatch hook.
+ * (audit 2026-05-04 §3.4 + research-time confirmation). This object adapts the
+ * relocated [RustTypeHierarchyImpl] (formerly `RustTypeHierarchyHandler`) to the
+ * walker's `Result<HierarchyNodeDescriptor>` return type by synthesizing
+ * descriptors for the algorithm's PSI-element children.
  */
 internal object RustTypeHierarchyFallback {
+
     fun walk(
         project: Project,
         element: PsiElement,
@@ -22,6 +21,30 @@ internal object RustTypeHierarchyFallback {
         scope: BuiltInSearchScope,
         maxDepth: Int
     ): Result<HierarchyNodeDescriptor> {
-        return Result.failure(IllegalStateException("Rust type hierarchy fallback not yet implemented"))
+        if (!kind.isType) {
+            return Result.failure(IllegalStateException("RustTypeHierarchyFallback called with non-type kind: $kind"))
+        }
+        val data = RustTypeHierarchyImpl().getTypeHierarchy(element, project, scope)
+            ?: return Result.failure(IllegalStateException("Rust type hierarchy: could not extract class info"))
+
+        val rootDescriptor = SyntheticDescriptor(project, element)
+        val children = when (kind) {
+            HierarchyKind.SUPERTYPES -> data.supertypes
+            HierarchyKind.SUBTYPES -> data.subtypes
+            else -> error("unreachable")  // guarded by isType check above
+        }
+        rootDescriptor.setCachedChildren(
+            children
+                .mapNotNull { entry -> entry.psi?.let { SyntheticDescriptor(project, it) } }
+                .toTypedArray<Any>()
+        )
+        return Result.success(rootDescriptor)
     }
+
+    /**
+     * Concrete [HierarchyNodeDescriptor] subclass for synthesizing nodes from a
+     * raw [PsiElement] — used because [HierarchyNodeDescriptor] is abstract.
+     */
+    private class SyntheticDescriptor(project: Project, psi: PsiElement) :
+        HierarchyNodeDescriptor(project, /* parentDescriptor = */ null, psi, /* isBase = */ true)
 }

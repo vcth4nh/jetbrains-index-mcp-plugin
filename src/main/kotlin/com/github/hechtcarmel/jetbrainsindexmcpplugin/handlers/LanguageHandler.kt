@@ -161,7 +161,8 @@ data class TypeElementData(
     val line: Int?,
     val kind: String,
     val language: String,
-    val supertypes: List<TypeElementData>? = null
+    val supertypes: List<TypeElementData>? = null,
+    val psi: PsiElement? = null
 )
 
 /**
