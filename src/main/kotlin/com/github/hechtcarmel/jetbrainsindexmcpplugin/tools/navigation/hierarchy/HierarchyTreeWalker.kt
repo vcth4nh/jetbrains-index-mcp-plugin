@@ -63,11 +63,18 @@ internal object HierarchyTreeWalker {
         val provider = when {
             kind.isCall -> LanguageCallHierarchy.INSTANCE.forLanguage(language)
             else -> LanguageTypeHierarchy.INSTANCE.forLanguage(language)
-        } ?: return Result.failure(
-            IllegalStateException(
-                "No ${if (kind.isCall) "call" else "type"} hierarchy provider for language: ${language.id}"
+        }
+        if (provider == null) {
+            // Strategy II fallback: Rust type hierarchy has no IDE provider.
+            if (kind.isType && language.id.equals("Rust", ignoreCase = true)) {
+                return RustTypeHierarchyFallback.walk(project, element, kind, scope, maxDepth)
+            }
+            return Result.failure(
+                IllegalStateException(
+                    "No ${if (kind.isCall) "call" else "type"} hierarchy provider for language: ${language.id}"
+                )
             )
-        )
+        }
 
         val target = resolveTarget(provider, project, element)
             ?: return Result.failure(IllegalStateException("Provider rejected element for $kind"))
