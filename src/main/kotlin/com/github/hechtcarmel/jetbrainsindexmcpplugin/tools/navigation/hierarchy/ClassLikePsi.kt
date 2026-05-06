@@ -117,23 +117,12 @@ internal object ClassLikePsi {
 
     /**
      * Returns the qualifiedName for a class-like element, or null if not extractable.
-     * Uses each language's native qualified-name accessor where available.
+     * Delegates to [com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil]
+     * which knows per-language conventions (Rust `crate::Foo`, Go `pkg.Foo`,
+     * PHP `\Ns\Foo`, Java FQN, Kotlin FqName via the platform's QualifiedNameProvider EP).
      */
-    fun describeQualifiedName(element: PsiElement): String? {
-        // Most class-like APIs across languages expose `getQualifiedName(): String?` —
-        // PsiClass, KtClassOrObject (via fqName), PyClass (via qualifiedName),
-        // JSClass, PhpClass, GoTypeSpec all support it. We invoke reflectively
-        // and fall through on any failure.
-        return runCatching {
-            val m = element.javaClass.getMethod("getQualifiedName")
-            m.invoke(element) as? String
-        }.getOrNull()
-            ?: runCatching {
-                // Kotlin uses `getFqName()` returning FqName
-                val m = element.javaClass.getMethod("getFqName")
-                m.invoke(element)?.toString()
-            }.getOrNull()
-    }
+    fun describeQualifiedName(element: PsiElement): String? =
+        com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil.getQualifiedName(element)
 
     private fun kotlinKind(element: PsiElement): String {
         // KtClass.isInterface, isEnum, etc. — but KtObjectDeclaration is "OBJECT".

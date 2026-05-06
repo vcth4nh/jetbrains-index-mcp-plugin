@@ -171,7 +171,7 @@ class CallHierarchyTool : AbstractMcpTool() {
             file = ProjectUtils.getRelativePath(psi.project, virtualFile),
             line = line,
             column = column,
-            language = psi.language.displayName,
+            language = com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.displayLanguageName(psi.language.id),
             children = if (children.isEmpty()) null else children,
             qualifiedName = describeQualifiedName(psi)
         )

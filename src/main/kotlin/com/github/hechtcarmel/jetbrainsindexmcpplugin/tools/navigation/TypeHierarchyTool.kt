@@ -104,14 +104,23 @@ class TypeHierarchyTool : AbstractMcpTool() {
 
             val supertypeDescriptors = superResult.root.cachedChildren
                 ?.filterIsInstance<HierarchyNodeDescriptor>().orEmpty()
-            val subtypeDescriptors = subResult.root.cachedChildren
-                ?.filterIsInstance<HierarchyNodeDescriptor>().orEmpty()
+            // Flatten subtypes recursively. The IDE returns a tree (e.g. Shape → Rectangle → Square),
+            // but our wire format expects a flat list of all descendants at the top level. Walk the
+            // descriptor tree and collect each subtype with `supertypes = null`.
+            val subtypes = mutableListOf<TypeElement>()
+            fun collectSubtypes(desc: HierarchyNodeDescriptor) {
+                convertDescriptorToTypeElement(desc, subResult.resolver, recurseSupertypes = false, remainingDepth = 0)
+                    ?.let { subtypes.add(it) }
+                desc.cachedChildren
+                    ?.filterIsInstance<HierarchyNodeDescriptor>()
+                    ?.forEach { collectSubtypes(it) }
+            }
+            subResult.root.cachedChildren
+                ?.filterIsInstance<HierarchyNodeDescriptor>()
+                ?.forEach { collectSubtypes(it) }
 
             val supertypes = supertypeDescriptors.mapNotNull {
                 convertDescriptorToTypeElement(it, superResult.resolver, recurseSupertypes = true, remainingDepth = maxDepth)
-            }
-            val subtypes = subtypeDescriptors.mapNotNull {
-                convertDescriptorToTypeElement(it, subResult.resolver, recurseSupertypes = false, remainingDepth = 0)
             }
 
             // For file/line/column resolution, `element` is a leaf token. Walk up
@@ -188,7 +197,7 @@ class TypeHierarchyTool : AbstractMcpTool() {
             name = name,
             file = virtualFile?.let { ProjectUtils.getRelativePath(psi.project, it) },
             kind = ClassLikePsi.describeKind(psi),
-            language = psi.language.displayName,
+            language = com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.displayLanguageName(psi.language.id),
             supertypes = supertypes,
             qualifiedName = ClassLikePsi.describeQualifiedName(psi)
         )
@@ -201,7 +210,7 @@ class TypeHierarchyTool : AbstractMcpTool() {
             name = name,
             file = virtualFile?.let { ProjectUtils.getRelativePath(psi.project, it) },
             kind = ClassLikePsi.describeKind(psi),
-            language = psi.language.displayName,
+            language = com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.displayLanguageName(psi.language.id),
             supertypes = null,
             qualifiedName = ClassLikePsi.describeQualifiedName(psi)
         )
