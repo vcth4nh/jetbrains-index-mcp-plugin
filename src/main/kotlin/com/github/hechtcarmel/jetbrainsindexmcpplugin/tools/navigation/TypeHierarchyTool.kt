@@ -91,26 +91,28 @@ class TypeHierarchyTool : AbstractMcpTool() {
             // Two walker calls: supertypes (recurse up to maxDepth) and subtypes (flat list).
             val maxDepth = 5
 
-            val supertypeDescriptors = HierarchyTreeWalker
+            val superResult = HierarchyTreeWalker
                 .walk(project, element, HierarchyKind.SUPERTYPES, scope, maxDepth)
                 .getOrElse {
                     return@suspendingReadAction createErrorResult(it.message ?: "Failed to build supertype hierarchy")
                 }
-                .cachedChildren
-                ?.filterIsInstance<HierarchyNodeDescriptor>()
-                .orEmpty()
-
-            val subtypeDescriptors = HierarchyTreeWalker
+            val subResult = HierarchyTreeWalker
                 .walk(project, element, HierarchyKind.SUBTYPES, scope, maxDepth)
                 .getOrElse {
                     return@suspendingReadAction createErrorResult(it.message ?: "Failed to build subtype hierarchy")
                 }
-                .cachedChildren
-                ?.filterIsInstance<HierarchyNodeDescriptor>()
-                .orEmpty()
 
-            val supertypes = supertypeDescriptors.mapNotNull { convertDescriptorToTypeElement(it, recurseSupertypes = true, remainingDepth = maxDepth) }
-            val subtypes = subtypeDescriptors.mapNotNull { convertDescriptorToTypeElement(it, recurseSupertypes = false, remainingDepth = 0) }
+            val supertypeDescriptors = superResult.root.cachedChildren
+                ?.filterIsInstance<HierarchyNodeDescriptor>().orEmpty()
+            val subtypeDescriptors = subResult.root.cachedChildren
+                ?.filterIsInstance<HierarchyNodeDescriptor>().orEmpty()
+
+            val supertypes = supertypeDescriptors.mapNotNull {
+                convertDescriptorToTypeElement(it, superResult.resolver, recurseSupertypes = true, remainingDepth = maxDepth)
+            }
+            val subtypes = subtypeDescriptors.mapNotNull {
+                convertDescriptorToTypeElement(it, subResult.resolver, recurseSupertypes = false, remainingDepth = 0)
+            }
 
             val rootTypeElement = buildRootTypeElement(element)
                 ?: return@suspendingReadAction createErrorResult("Could not extract class info from element")
@@ -162,17 +164,18 @@ class TypeHierarchyTool : AbstractMcpTool() {
      */
     private fun convertDescriptorToTypeElement(
         descriptor: HierarchyNodeDescriptor,
+        resolver: com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.LogicalElementResolver,
         recurseSupertypes: Boolean,
         remainingDepth: Int
     ): TypeElement? {
-        val psi = descriptor.psiElement ?: return null
+        val psi = resolver.resolve(descriptor) ?: return null
         val name = (psi as? PsiNamedElement)?.name ?: psi.text.take(60)
         val virtualFile = psi.containingFile?.virtualFile
 
         val supertypes = if (recurseSupertypes && remainingDepth > 0) {
             descriptor.cachedChildren
                 ?.filterIsInstance<HierarchyNodeDescriptor>()
-                ?.mapNotNull { convertDescriptorToTypeElement(it, recurseSupertypes = true, remainingDepth = remainingDepth - 1) }
+                ?.mapNotNull { convertDescriptorToTypeElement(it, resolver, recurseSupertypes = true, remainingDepth = remainingDepth - 1) }
                 ?.takeIf { it.isNotEmpty() }
         } else null
 

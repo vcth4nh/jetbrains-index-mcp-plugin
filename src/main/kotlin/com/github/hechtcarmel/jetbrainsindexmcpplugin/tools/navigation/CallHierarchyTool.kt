@@ -110,11 +110,11 @@ class CallHierarchyTool : AbstractMcpTool() {
 
             ProgressManager.checkCanceled()
 
-            val rootDescriptor = HierarchyTreeWalker.walk(project, element, kind, scope, depth).getOrElse {
+            val walkResult = HierarchyTreeWalker.walk(project, element, kind, scope, depth).getOrElse {
                 return@suspendingReadAction createErrorResult(it.message ?: "Failed to build call hierarchy")
             }
 
-            val rootCallElement = convertDescriptorToCallElement(rootDescriptor, depth)
+            val rootCallElement = convertDescriptorToCallElement(walkResult.root, walkResult.resolver, depth)
                 ?: return@suspendingReadAction createErrorResult(
                     if (isSymbolMode) "No method/function found for the specified symbol"
                     else "No method/function found at position"
@@ -150,9 +150,10 @@ class CallHierarchyTool : AbstractMcpTool() {
      */
     private fun convertDescriptorToCallElement(
         descriptor: HierarchyNodeDescriptor,
+        resolver: com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.LogicalElementResolver,
         remainingDepth: Int
     ): CallElement? {
-        val psi = descriptor.psiElement ?: return null
+        val psi = resolver.resolve(descriptor) ?: return null
         val virtualFile = psi.containingFile?.virtualFile ?: return null
         val document = PsiDocumentManager.getInstance(psi.project)
             .getDocument(psi.containingFile) ?: return null
@@ -162,7 +163,7 @@ class CallHierarchyTool : AbstractMcpTool() {
 
         val children = if (remainingDepth <= 0) emptyList() else descriptor.cachedChildren
             ?.filterIsInstance<HierarchyNodeDescriptor>()
-            ?.mapNotNull { convertDescriptorToCallElement(it, remainingDepth - 1) }
+            ?.mapNotNull { convertDescriptorToCallElement(it, resolver, remainingDepth - 1) }
             ?: emptyList()
 
         return CallElement(
@@ -176,9 +177,25 @@ class CallHierarchyTool : AbstractMcpTool() {
         )
     }
 
-    /** Best-effort element name. */
-    private fun describeElementName(psi: PsiElement): String =
-        (psi as? PsiNamedElement)?.name ?: psi.text.take(60)
+    /**
+     * Best-effort element name. For PsiMethod formats as `ClassName.methodName(paramTypes)`
+     * to match the legacy handler's wire format (callers/tests match on the qualified
+     * method-call shape, not just the bare method name).
+     */
+    private fun describeElementName(psi: PsiElement): String {
+        if (psi is com.intellij.psi.PsiMethod) {
+            return buildString {
+                psi.containingClass?.name?.let { append(it).append(".") }
+                append(psi.name)
+                append("(")
+                append(psi.parameterList.parameters.joinToString(", ") {
+                    runCatching { it.type.presentableText }.getOrDefault("?")
+                })
+                append(")")
+            }
+        }
+        return (psi as? PsiNamedElement)?.name ?: psi.text.take(60)
+    }
 
     /** Best-effort fully-qualified name (Java/Kotlin shape). Returns null for languages where it doesn't apply. */
     private fun describeQualifiedName(psi: PsiElement): String? {

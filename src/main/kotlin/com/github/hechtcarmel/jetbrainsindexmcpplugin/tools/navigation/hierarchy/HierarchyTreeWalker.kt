@@ -1,7 +1,6 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy
 
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ThreadingUtils
 import com.intellij.ide.hierarchy.CallHierarchyBrowserBase
 import com.intellij.ide.hierarchy.HierarchyBrowserBaseEx
 import com.intellij.ide.hierarchy.HierarchyNodeDescriptor
@@ -25,6 +24,56 @@ enum class HierarchyKind {
 
     val isCall: Boolean get() = this == CALLERS || this == CALLEES
     val isType: Boolean get() = this == SUPERTYPES || this == SUBTYPES
+}
+
+/**
+ * Resolves the "logical element" represented by a [HierarchyNodeDescriptor].
+ * This abstraction is needed because `HierarchyNodeDescriptor.psiElement` may
+ * point at the call site (e.g. a `PsiReferenceExpression`) rather than the
+ * containing method — the IDE's per-language browsers expose
+ * `getElementFromDescriptor(descriptor)` for this. See [BrowserBackedResolver].
+ */
+internal interface LogicalElementResolver {
+    fun resolve(descriptor: HierarchyNodeDescriptor): PsiElement?
+}
+
+/** Walker output: the populated descriptor tree plus a resolver to extract logical elements. */
+internal class HierarchyWalkResult(
+    val root: HierarchyNodeDescriptor,
+    val resolver: LogicalElementResolver
+)
+
+/**
+ * [LogicalElementResolver] that delegates to a `HierarchyBrowserBase`'s `protected`
+ * `getElementFromDescriptor(descriptor)` method via reflection. Each language's
+ * browser knows the right way to extract the logical element from its own descriptor
+ * type (e.g. Java's CallHierarchyBrowser returns `descriptor.getEnclosingElement()`
+ * for a call hierarchy node, which is the calling method, not the call site).
+ */
+internal class BrowserBackedResolver(private val browser: HierarchyBrowserBaseEx) : LogicalElementResolver {
+    private val getElementMethod: java.lang.reflect.Method? = run {
+        var c: Class<*>? = browser.javaClass
+        while (c != null) {
+            try {
+                return@run c.getDeclaredMethod("getElementFromDescriptor", HierarchyNodeDescriptor::class.java)
+                    .apply { isAccessible = true }
+            } catch (_: NoSuchMethodException) {
+                c = c.superclass
+            }
+        }
+        null
+    }
+
+    override fun resolve(descriptor: HierarchyNodeDescriptor): PsiElement? {
+        val method = getElementMethod ?: return descriptor.psiElement
+        return runCatching { method.invoke(browser, descriptor) as? PsiElement }
+            .getOrNull() ?: descriptor.psiElement
+    }
+}
+
+/** Resolver that just reads `descriptor.psiElement` — used by the Rust fallback which builds synthetic descriptors with the right element. */
+internal object IdentityElementResolver : LogicalElementResolver {
+    override fun resolve(descriptor: HierarchyNodeDescriptor): PsiElement? = descriptor.psiElement
 }
 
 /**
@@ -58,7 +107,7 @@ internal object HierarchyTreeWalker {
         kind: HierarchyKind,
         scope: BuiltInSearchScope,
         maxDepth: Int
-    ): Result<HierarchyNodeDescriptor> {
+    ): Result<HierarchyWalkResult> {
         val language = element.language
         val provider = when {
             kind.isCall -> LanguageCallHierarchy.INSTANCE.forLanguage(language)
@@ -79,22 +128,23 @@ internal object HierarchyTreeWalker {
         val target = resolveTarget(provider, project, element)
             ?: return Result.failure(IllegalStateException("Provider rejected element for $kind"))
 
-        val browser = createBrowserOnEdt(provider, target)
+        val browser = createBrowserHeadless(provider, target)
             ?: return Result.failure(IllegalStateException("createHierarchyBrowser returned non-HierarchyBrowserBaseEx"))
 
         val typeName = typeStringFor(kind)
+
+        // Per-language tree structures read scope-type via `browser.getCurrentScopeType()`,
+        // which itself reads `myCurrentSheet.get().myScope`. A freshly-constructed browser
+        // has no current sheet, so the scope would default to SCOPE_ALL. Reflectively poke
+        // the sheet for our `typeName` to install our chosen scope before invoking
+        // createHierarchyTreeStructure.
+        applyBrowserScope(browser, typeName, HierarchyScopeMapping.toIdeScopeType(scope))
+
         val structure = invokeCreateHierarchyTreeStructure(browser, typeName, target)
             ?: return Result.failure(IllegalStateException("Browser refused element ${element.text} for $kind"))
 
-        // Walker doesn't apply scope itself; the IDE's per-language tree structures
-        // read scope-type via `browser.getCurrentScopeType()`. Browsers default to
-        // SCOPE_ALL when uninitialized; the language-specific scope behaviour is
-        // covered by tree structures themselves. Documented in HierarchyScopeMapping.
-        // (Future improvement: set browser scope reflectively before calling
-        // createHierarchyTreeStructure if scope fidelity becomes a measured gap.)
-
         walkRecursive(structure, structure.baseDescriptor, maxDepth, mutableSetOf())
-        return Result.success(structure.baseDescriptor)
+        return Result.success(HierarchyWalkResult(structure.baseDescriptor, BrowserBackedResolver(browser)))
     }
 
     private fun resolveTarget(provider: Any, project: Project, element: PsiElement): PsiElement? {
@@ -115,17 +165,54 @@ internal object HierarchyTreeWalker {
         return coerced ?: element
     }
 
-    private fun createBrowserOnEdt(provider: Any, target: PsiElement): HierarchyBrowserBaseEx? {
+    private fun createBrowserHeadless(provider: Any, target: PsiElement): HierarchyBrowserBaseEx? {
         // HierarchyProvider.createHierarchyBrowser(PsiElement): HierarchyBrowser
+        //
+        // Called from inside a read action. The IDE's deadlock-prevention guard rejects
+        // `invokeAndWait` from a read action, so we cannot switch to EDT here. Instead
+        // we construct the browser on the calling thread. This works in practice because
+        // (a) the per-language browser ctors just call super(project, element); (b) the
+        // platform `HierarchyBrowserBaseEx` ctor allocates Swing components but does not
+        // display them — Swing tolerates off-EDT construction of unmounted JComponents.
+        // The reflective `createHierarchyTreeStructure` call later is read-action-safe.
         val createBrowser = runCatching {
             provider.javaClass.getMethod("createHierarchyBrowser", PsiElement::class.java)
         }.getOrElse {
             LOG.warn("createHierarchyBrowser method not found on ${provider.javaClass.name}", it)
             return null
         }
-        return ThreadingUtils.runOnEdtAndWait {
-            runCatching { createBrowser.invoke(provider, target) }.getOrNull() as? HierarchyBrowserBaseEx
-        }
+        return runCatching { createBrowser.invoke(provider, target) as? HierarchyBrowserBaseEx }
+            .onFailure { LOG.warn("createHierarchyBrowser invocation failed", it) }
+            .getOrNull()
+    }
+
+    /**
+     * Reflectively configures the browser's "current sheet" with the requested
+     * scope type-string so per-language tree structures read it via
+     * [HierarchyBrowserBaseEx.getCurrentScopeType] when their constructor runs.
+     *
+     * Best-effort: silently no-ops if the IDE's private field shape changes.
+     * The fallback is the browser's default scope (SCOPE_ALL).
+     */
+    private fun applyBrowserScope(
+        browser: HierarchyBrowserBaseEx,
+        typeName: String,
+        scopeStr: String
+    ) {
+        runCatching {
+            val baseClass = generateSequence(browser.javaClass as Class<*>) { it.superclass }
+                .firstOrNull { it.simpleName == "HierarchyBrowserBaseEx" } ?: return
+            val sheetMapField = baseClass.getDeclaredField("myType2Sheet").apply { isAccessible = true }
+            @Suppress("UNCHECKED_CAST")
+            val sheets = sheetMapField.get(browser) as? Map<String, Any> ?: return
+            val sheet = sheets[typeName] ?: return
+            val scopeField = sheet.javaClass.getDeclaredField("myScope").apply { isAccessible = true }
+            scopeField.set(sheet, scopeStr)
+            val currentSheetField = baseClass.getDeclaredField("myCurrentSheet").apply { isAccessible = true }
+            @Suppress("UNCHECKED_CAST")
+            val currentSheetRef = currentSheetField.get(browser) as? java.util.concurrent.atomic.AtomicReference<Any>
+            currentSheetRef?.set(sheet)
+        }.onFailure { LOG.warn("Failed to set hierarchy browser scope reflectively (typeName=$typeName, scope=$scopeStr)", it) }
     }
 
     private fun typeStringFor(kind: HierarchyKind): String = when (kind) {

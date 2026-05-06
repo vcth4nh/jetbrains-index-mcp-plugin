@@ -20,7 +20,7 @@ internal object RustTypeHierarchyFallback {
         kind: HierarchyKind,
         scope: BuiltInSearchScope,
         maxDepth: Int
-    ): Result<HierarchyNodeDescriptor> {
+    ): Result<HierarchyWalkResult> {
         if (!kind.isType) {
             return Result.failure(IllegalStateException("RustTypeHierarchyFallback called with non-type kind: $kind"))
         }
@@ -38,7 +38,8 @@ internal object RustTypeHierarchyFallback {
                 .mapNotNull { entry -> entry.psi?.let { SyntheticDescriptor(project, it) } }
                 .toTypedArray<Any>()
         )
-        return Result.success(rootDescriptor)
+        // Synthetic descriptors carry the right PSI element directly, so use the identity resolver.
+        return Result.success(HierarchyWalkResult(rootDescriptor, IdentityElementResolver))
     }
 
     /**
