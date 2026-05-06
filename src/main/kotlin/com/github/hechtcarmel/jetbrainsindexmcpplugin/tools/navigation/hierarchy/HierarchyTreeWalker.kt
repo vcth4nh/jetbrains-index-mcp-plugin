@@ -14,6 +14,7 @@ import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
+import com.intellij.util.concurrency.annotations.RequiresReadLock
 import java.lang.reflect.Method
 
 enum class HierarchyKind {
@@ -50,6 +51,7 @@ internal object HierarchyTreeWalker {
      *
      * MUST be called from a read action.
      */
+    @RequiresReadLock
     fun walk(
         project: Project,
         element: PsiElement,
@@ -108,7 +110,12 @@ internal object HierarchyTreeWalker {
 
     private fun createBrowserOnEdt(provider: Any, target: PsiElement): HierarchyBrowserBaseEx? {
         // HierarchyProvider.createHierarchyBrowser(PsiElement): HierarchyBrowser
-        val createBrowser = provider.javaClass.getMethod("createHierarchyBrowser", PsiElement::class.java)
+        val createBrowser = runCatching {
+            provider.javaClass.getMethod("createHierarchyBrowser", PsiElement::class.java)
+        }.getOrElse {
+            LOG.warn("createHierarchyBrowser method not found on ${provider.javaClass.name}", it)
+            return null
+        }
         return ThreadingUtils.runOnEdtAndWait {
             runCatching { createBrowser.invoke(provider, target) }.getOrNull() as? HierarchyBrowserBaseEx
         }
@@ -170,15 +177,12 @@ internal object HierarchyTreeWalker {
             }
             visited.add(psi)
         }
-        val children = runCatching { structure.getChildElements(node) }
+        val descriptorChildren = runCatching { structure.getChildElements(node) }
             .getOrDefault(emptyArray<Any>())
             .filterIsInstance<HierarchyNodeDescriptor>()
-            .toTypedArray<Any>()
-        node.cachedChildren = children
-        for (child in children) {
-            if (child is HierarchyNodeDescriptor) {
-                walkRecursive(structure, child, depthLeft - 1, visited)
-            }
+        node.cachedChildren = descriptorChildren.toTypedArray<Any>()
+        for (child in descriptorChildren) {
+            walkRecursive(structure, child, depthLeft - 1, visited)
         }
     }
 }
