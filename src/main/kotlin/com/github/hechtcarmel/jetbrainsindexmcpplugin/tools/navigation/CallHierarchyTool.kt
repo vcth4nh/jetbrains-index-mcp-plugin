@@ -4,18 +4,23 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ErrorMessages
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ParamNames
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScopeResolver
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.CallElementData
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageHandlerRegistry
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.AbstractMcpTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.CallElement
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.CallHierarchyResult
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.HierarchyKind
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.HierarchyTreeWalker
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PsiUtils
+import com.intellij.ide.hierarchy.HierarchyNodeDescriptor
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
-import kotlinx.serialization.json.JsonObject
+import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiNamedElement
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -28,7 +33,7 @@ import kotlinx.serialization.json.put
  *
  * Supports: Java, Kotlin, Python, JavaScript, TypeScript, PHP, Rust
  *
- * Delegates to language-specific handlers via [LanguageHandlerRegistry].
+ * Delegates to the IDE's LanguageCallHierarchy extension point via [HierarchyTreeWalker].
  */
 class CallHierarchyTool : AbstractMcpTool() {
 
@@ -80,54 +85,44 @@ class CallHierarchyTool : AbstractMcpTool() {
         } catch (_: IllegalStateException) {
             return createInvalidScopeError(rawScope)
         }
-        if (direction !in listOf("callers", "callees")) {
-            return createErrorResult("direction must be 'callers' or 'callees'")
+        val kind = when (direction) {
+            "callers" -> HierarchyKind.CALLERS
+            "callees" -> HierarchyKind.CALLEES
+            else -> return createErrorResult("direction must be 'callers' or 'callees'")
         }
 
         requireSmartMode(project)
 
         return suspendingReadAction {
-            ProgressManager.checkCanceled() // Allow cancellation
+            ProgressManager.checkCanceled()
 
             val element = resolveElementFromArguments(project, arguments, allowLibraryFilesForPosition = true).getOrElse {
                 return@suspendingReadAction createErrorResult(it.message ?: ErrorMessages.COULD_NOT_RESOLVE_SYMBOL)
             }
 
             // Tool-layer gate: reject position-based invocations where the caret is not on a
-            // resolvable navigation target (comment, whitespace, literal). Uses the full
-            // resolveTargetElement chain to include parent-reference lookup — required so
-            // real call sites like `obj.foo()` (where the leaf `.foo` has no direct reference
-            // but the parent PsiReferenceExpression does) are still accepted. Symbol-mode
-            // invocations (language+symbol) return a PsiNamedElement directly and bypass the
-            // check.
+            // resolvable navigation target (comment, whitespace, literal). Symbol-mode
+            // invocations bypass the check.
             val isSymbolMode = arguments[ParamNames.LANGUAGE] != null
             if (!isSymbolMode && PsiUtils.resolveTargetElement(element) == null) {
                 return@suspendingReadAction createErrorResult("No method/function found at position")
             }
 
-            // Find appropriate handler for this element's language
-            val handler = LanguageHandlerRegistry.getCallHierarchyHandler(element)
-            if (handler == null) {
-                return@suspendingReadAction createErrorResult(
-                    "No call hierarchy handler available for language: ${element.language.id}. " +
-                    "Supported languages: ${LanguageHandlerRegistry.getSupportedLanguagesForCallHierarchy()}"
-                )
+            ProgressManager.checkCanceled()
+
+            val rootDescriptor = HierarchyTreeWalker.walk(project, element, kind, scope, depth).getOrElse {
+                return@suspendingReadAction createErrorResult(it.message ?: "Failed to build call hierarchy")
             }
 
-            ProgressManager.checkCanceled() // Allow cancellation before heavy operation
-
-            val hierarchyData = handler.getCallHierarchy(element, project, direction, depth, scope)
-            if (hierarchyData == null) {
-                return@suspendingReadAction createErrorResult(
+            val rootCallElement = convertDescriptorToCallElement(rootDescriptor, depth)
+                ?: return@suspendingReadAction createErrorResult(
                     if (isSymbolMode) "No method/function found for the specified symbol"
                     else "No method/function found at position"
                 )
-            }
 
-            // Convert handler result to tool result
             createJsonResult(CallHierarchyResult(
-                element = convertToCallElement(hierarchyData.element),
-                calls = hierarchyData.calls.map { convertToCallElement(it) }
+                element = rootCallElement.copy(children = null),
+                calls = rootCallElement.children ?: emptyList()
             ))
         }
     }
@@ -149,17 +144,49 @@ class CallHierarchyTool : AbstractMcpTool() {
         })
 
     /**
-     * Converts handler CallElementData to tool CallElement.
+     * Converts an IDE [HierarchyNodeDescriptor] tree (as returned by [HierarchyTreeWalker])
+     * into our wire-format [CallElement] tree. Recursive; bounded by [remainingDepth].
+     * Returns null if the descriptor's PSI element couldn't be resolved or has no source location.
      */
-    private fun convertToCallElement(data: CallElementData): CallElement {
+    private fun convertDescriptorToCallElement(
+        descriptor: HierarchyNodeDescriptor,
+        remainingDepth: Int
+    ): CallElement? {
+        val psi = descriptor.psiElement ?: return null
+        val virtualFile = psi.containingFile?.virtualFile ?: return null
+        val document = PsiDocumentManager.getInstance(psi.project)
+            .getDocument(psi.containingFile) ?: return null
+        val offset = psi.textRange?.startOffset ?: return null
+        val line = document.getLineNumber(offset) + 1
+        val column = offset - document.getLineStartOffset(line - 1) + 1
+
+        val children = if (remainingDepth <= 0) emptyList() else descriptor.cachedChildren
+            ?.filterIsInstance<HierarchyNodeDescriptor>()
+            ?.mapNotNull { convertDescriptorToCallElement(it, remainingDepth - 1) }
+            ?: emptyList()
+
         return CallElement(
-            name = data.name,
-            file = data.file,
-            line = data.line,
-            column = data.column,
-            language = data.language,
-            children = data.children?.map { convertToCallElement(it) },
-            qualifiedName = data.qualifiedName
+            name = describeElementName(psi),
+            file = ProjectUtils.getRelativePath(psi.project, virtualFile),
+            line = line,
+            column = column,
+            language = psi.language.displayName,
+            children = if (children.isEmpty()) null else children,
+            qualifiedName = describeQualifiedName(psi)
         )
+    }
+
+    /** Best-effort element name. */
+    private fun describeElementName(psi: PsiElement): String =
+        (psi as? PsiNamedElement)?.name ?: psi.text.take(60)
+
+    /** Best-effort fully-qualified name (Java/Kotlin shape). Returns null for languages where it doesn't apply. */
+    private fun describeQualifiedName(psi: PsiElement): String? {
+        if (psi is com.intellij.psi.PsiMethod) {
+            val cls = psi.containingClass?.qualifiedName ?: return null
+            return "$cls#${psi.name}"
+        }
+        if (psi is com.intellij.psi.PsiClass) return psi.qualifiedName
+        return null
     }
 }
