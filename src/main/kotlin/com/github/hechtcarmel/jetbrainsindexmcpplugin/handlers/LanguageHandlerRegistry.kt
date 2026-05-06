@@ -34,9 +34,7 @@ object LanguageHandlerRegistry {
     private val LOG = logger<LanguageHandlerRegistry>()
 
     // Handler registries by type
-    private val typeHierarchyHandlers = ConcurrentHashMap<String, TypeHierarchyHandler>()
     private val implementationsHandlers = ConcurrentHashMap<String, ImplementationsHandler>()
-    private val callHierarchyHandlers = ConcurrentHashMap<String, CallHierarchyHandler>()
     private val symbolReferenceHandlers = ConcurrentHashMap<String, SymbolReferenceHandler>()
     private val superMethodsHandlers = ConcurrentHashMap<String, SuperMethodsHandler>()
 
@@ -61,9 +59,7 @@ object LanguageHandlerRegistry {
         }
 
         LOG.info("Language handlers registered: " +
-            "TypeHierarchy=${typeHierarchyHandlers.size}, " +
             "Implementations=${implementationsHandlers.size}, " +
-            "CallHierarchy=${callHierarchyHandlers.size}, " +
             "SymbolReference=${symbolReferenceHandlers.size}, " +
             "SuperMethods=${superMethodsHandlers.size}")
     }
@@ -73,9 +69,7 @@ object LanguageHandlerRegistry {
      */
     @Synchronized
     fun clear() {
-        typeHierarchyHandlers.clear()
         implementationsHandlers.clear()
-        callHierarchyHandlers.clear()
         symbolReferenceHandlers.clear()
         superMethodsHandlers.clear()
         initialized = false
@@ -83,19 +77,9 @@ object LanguageHandlerRegistry {
 
     // Registration methods
 
-    fun registerTypeHierarchyHandler(handler: TypeHierarchyHandler) {
-        typeHierarchyHandlers[handler.languageId] = handler
-        LOG.info("Registered TypeHierarchyHandler for ${handler.languageId}")
-    }
-
     fun registerImplementationsHandler(handler: ImplementationsHandler) {
         implementationsHandlers[handler.languageId] = handler
         LOG.info("Registered ImplementationsHandler for ${handler.languageId}")
-    }
-
-    fun registerCallHierarchyHandler(handler: CallHierarchyHandler) {
-        callHierarchyHandlers[handler.languageId] = handler
-        LOG.info("Registered CallHierarchyHandler for ${handler.languageId}")
     }
 
     fun registerSymbolReferenceHandler(handler: SymbolReferenceHandler) {
@@ -111,24 +95,10 @@ object LanguageHandlerRegistry {
     // Handler lookup methods
 
     /**
-     * Gets a type hierarchy handler for the given element.
-     */
-    fun getTypeHierarchyHandler(element: PsiElement): TypeHierarchyHandler? {
-        return findHandler(element, typeHierarchyHandlers)
-    }
-
-    /**
      * Gets an implementations handler for the given element.
      */
     fun getImplementationsHandler(element: PsiElement): ImplementationsHandler? {
         return findHandler(element, implementationsHandlers)
-    }
-
-    /**
-     * Gets a call hierarchy handler for the given element.
-     */
-    fun getCallHierarchyHandler(element: PsiElement): CallHierarchyHandler? {
-        return findHandler(element, callHierarchyHandlers)
     }
 
     /**
@@ -141,22 +111,14 @@ object LanguageHandlerRegistry {
     /**
      * Checks if any handlers are available for the given handler type.
      */
-    fun hasTypeHierarchyHandlers(): Boolean = typeHierarchyHandlers.values.any { it.isAvailable() }
     fun hasImplementationsHandlers(): Boolean = implementationsHandlers.values.any { it.isAvailable() }
-    fun hasCallHierarchyHandlers(): Boolean = callHierarchyHandlers.values.any { it.isAvailable() }
     fun hasSuperMethodsHandlers(): Boolean = superMethodsHandlers.values.any { it.isAvailable() }
 
     /**
      * Gets a list of languages that have handlers for the given handler type.
      */
-    fun getSupportedLanguagesForTypeHierarchy(): List<String> =
-        typeHierarchyHandlers.filter { it.value.isAvailable() }.keys.toList()
-
     fun getSupportedLanguagesForImplementations(): List<String> =
         implementationsHandlers.filter { it.value.isAvailable() }.keys.toList()
-
-    fun getSupportedLanguagesForCallHierarchy(): List<String> =
-        callHierarchyHandlers.filter { it.value.isAvailable() }.keys.toList()
 
     fun getSupportedLanguagesForSuperMethods(): List<String> =
         superMethodsHandlers.filter { it.value.isAvailable() }.keys.toList()

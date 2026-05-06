@@ -203,15 +203,12 @@ class ToolRegistry {
     }
 
     private fun logAvailableLanguages() {
-        val typeHierarchyLangs = LanguageHandlerRegistry.getSupportedLanguagesForTypeHierarchy()
         val implementationLangs = LanguageHandlerRegistry.getSupportedLanguagesForImplementations()
-        val callHierarchyLangs = LanguageHandlerRegistry.getSupportedLanguagesForCallHierarchy()
         val superMethodsLangs = LanguageHandlerRegistry.getSupportedLanguagesForSuperMethods()
         val symbolReferenceLangs = LanguageHandlerRegistry.getSupportedLanguagesForSymbolReference()
 
-        LOG.info("Language support - TypeHierarchy: $typeHierarchyLangs, " +
+        LOG.info("Language support (handler-based) - " +
             "Implementations: $implementationLangs, " +
-            "CallHierarchy: $callHierarchyLangs, " +
             "SuperMethods: $superMethodsLangs, " +
             "SymbolReference: $symbolReferenceLangs")
     }
@@ -262,9 +259,9 @@ class ToolRegistry {
     )
 
     private val languageNavigationTools = listOf(
-        ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.TypeHierarchyTool") { LanguageHandlerRegistry.hasTypeHierarchyHandlers() },
+        ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.TypeHierarchyTool") { true },
         ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindImplementationsTool") { LanguageHandlerRegistry.hasImplementationsHandlers() },
-        ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.CallHierarchyTool") { LanguageHandlerRegistry.hasCallHierarchyHandlers() },
+        ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.CallHierarchyTool") { true },
         ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindSuperMethodsTool") { LanguageHandlerRegistry.hasSuperMethodsHandlers() },
     )
 

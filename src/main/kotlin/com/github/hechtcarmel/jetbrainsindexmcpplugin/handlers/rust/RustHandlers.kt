@@ -10,7 +10,6 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.DefinitionsScopedSearch
-import com.intellij.psi.search.searches.ReferencesSearch
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.Processor
 
@@ -65,12 +64,11 @@ object RustHandlers {
             Class.forName("org.rust.lang.core.psi.RsFunction")
 
             registry.registerImplementationsHandler(RustImplementationsHandler())
-            registry.registerCallHierarchyHandler(RustCallHierarchyHandler())
             // Note: SuperMethodsHandler is NOT registered for Rust because Rust uses trait
             // implementations rather than classical inheritance. There are no "super methods"
             // in the OOP sense. Users should use ide_find_definition or ide_type_hierarchy instead.
 
-            LOG.info("Registered Rust handlers (2 handlers - TypeHierarchy uses fallback, SuperMethods not applicable for Rust)")
+            LOG.info("Registered Rust handlers (TypeHierarchy uses platform EP, SuperMethods not applicable for Rust)")
         } catch (e: ClassNotFoundException) {
             LOG.warn("Rust PSI classes not found, skipping registration: ${e.message}")
         } catch (e: Exception) {
@@ -123,22 +121,6 @@ abstract class BaseRustHandler<T> : LanguageHandler<T> {
 
     protected val rsModItemClass: Class<*>? by lazy {
         loadClass("org.rust.lang.core.psi.RsModItem")
-    }
-
-    protected val rsCallExprClass: Class<*>? by lazy {
-        loadClass("org.rust.lang.core.psi.RsCallExpr")
-    }
-
-    protected val rsMethodCallClass: Class<*>? by lazy {
-        loadClass("org.rust.lang.core.psi.RsMethodCall")
-    }
-
-    protected val rsStructLiteralClass: Class<*>? by lazy {
-        loadClass("org.rust.lang.core.psi.RsStructLiteral")
-    }
-
-    protected val rsNamedElementClass: Class<*>? by lazy {
-        loadClass("org.rust.lang.core.psi.RsNamedElement")
     }
 
     private fun loadClass(className: String): Class<*>? {
@@ -502,275 +484,6 @@ class RustImplementationsHandler : BaseRustHandler<List<ImplementationData>>(), 
         }
 
         return results
-    }
-}
-
-/**
- * Rust implementation of [CallHierarchyHandler].
- *
- * Works similarly to other languages - tracks function/method calls.
- */
-class RustCallHierarchyHandler : BaseRustHandler<CallHierarchyData>(), CallHierarchyHandler {
-
-    companion object {
-        private const val MAX_RESULTS_PER_LEVEL = 20
-        private const val MAX_STACK_DEPTH = 50
-    }
-
-    override val languageId = "Rust"
-
-    override fun canHandle(element: PsiElement): Boolean {
-        return isAvailable() && isRustLanguage(element)
-    }
-
-    override fun isAvailable(): Boolean = PluginDetectors.rust.isAvailable && rsFunctionClass != null
-
-    override fun getCallHierarchy(
-        element: PsiElement,
-        project: Project,
-        direction: String,
-        depth: Int,
-        scope: BuiltInSearchScope
-    ): CallHierarchyData? {
-        val function = findContainingRsFunction(element) ?: return null
-        LOG.debug("Getting call hierarchy for ${getName(function)}, direction=$direction, depth=$depth")
-        val searchScope = createNavigationSearchScope(project, scope)
-
-        val visited = mutableSetOf<String>()
-        val calls = if (direction == "callers") {
-            findCallersRecursive(project, function, depth, visited, searchScope = searchScope)
-        } else {
-            findCalleesRecursive(project, function, depth, visited, searchScope = searchScope)
-        }
-
-        LOG.debug("Found ${calls.size} $direction")
-
-        return CallHierarchyData(
-            element = createCallElement(project, function),
-            calls = calls
-        )
-    }
-
-    private fun findCallersRecursive(
-        project: Project,
-        function: PsiElement,
-        depth: Int,
-        visited: MutableSet<String>,
-        stackDepth: Int = 0,
-        searchScope: GlobalSearchScope
-    ): List<CallElementData> {
-        if (stackDepth > MAX_STACK_DEPTH || depth <= 0) return emptyList()
-
-        val key = getFunctionKey(function)
-        if (key in visited) return emptyList()
-        visited.add(key)
-
-        return try {
-            val references = mutableListOf<com.intellij.psi.PsiReference>()
-
-            ReferencesSearch.search(function, searchScope).forEach(Processor { reference ->
-                references.add(reference)
-                references.size < MAX_RESULTS_PER_LEVEL * 2
-            })
-
-            LOG.debug("Found ${references.size} references for ${getName(function)}")
-
-            val results = mutableListOf<CallElementData>()
-            for (reference in references) {
-                if (results.size >= MAX_RESULTS_PER_LEVEL) break
-                val refElement = reference.element
-                val containingFunction = findContainingRsFunction(refElement)
-                if (containingFunction != null && containingFunction != function) {
-                    val children = if (depth > 1) {
-                        findCallersRecursive(project, containingFunction, depth - 1, visited, stackDepth + 1, searchScope)
-                    } else null
-                    if (shouldIncludeNavigationElement(searchScope, containingFunction)) {
-                        results.add(createCallElement(project, containingFunction, children))
-                    } else if (children != null) {
-                        results.addAll(children)
-                    }
-                }
-            }
-            results.distinctBy { it.name + it.file + it.line }.take(MAX_RESULTS_PER_LEVEL)
-        } catch (e: Exception) {
-            LOG.warn("Error finding callers: ${e.message}")
-            emptyList()
-        }
-    }
-
-    private fun findCalleesRecursive(
-        project: Project,
-        function: PsiElement,
-        depth: Int,
-        visited: MutableSet<String>,
-        stackDepth: Int = 0,
-        searchScope: GlobalSearchScope
-    ): List<CallElementData> {
-        if (stackDepth > MAX_STACK_DEPTH || depth <= 0) return emptyList()
-
-        val key = getFunctionKey(function)
-        if (key in visited) return emptyList()
-        visited.add(key)
-
-        val callees = mutableListOf<CallElementData>()
-
-        try {
-            // Find RsCallExpr, RsMethodCall, and RsStructLiteral (struct constructor) within the function
-            listOfNotNull(rsCallExprClass, rsMethodCallClass, rsStructLiteralClass).forEach { callClass ->
-                @Suppress("UNCHECKED_CAST")
-                val calls = PsiTreeUtil.findChildrenOfType(function, callClass as Class<out PsiElement>)
-
-                calls.take(MAX_RESULTS_PER_LEVEL).forEach { callExpr ->
-                    val resolved = resolveCallExpression(callExpr)
-                    if (resolved != null && (isRsFunction(resolved) || isRsStruct(resolved))) {
-                        val children = if (depth > 1) {
-                            findCalleesRecursive(project, resolved, depth - 1, visited, stackDepth + 1, searchScope)
-                        } else null
-                        if (shouldIncludeNavigationElement(searchScope, resolved)) {
-                            val element = createCallElement(project, resolved, children)
-                            if (callees.none { it.name == element.name && it.file == element.file }) {
-                                callees.add(element)
-                            }
-                        } else if (children != null) {
-                            children.forEach { child ->
-                                if (callees.none { it.name == child.name && it.file == child.file }) {
-                                    callees.add(child)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            LOG.debug("Error finding callees: ${e.message}")
-        }
-
-        return callees
-    }
-
-    private fun resolveCallExpression(callExpr: PsiElement): PsiElement? {
-        return try {
-            // Strategy 1: For RsCallExpr, get expr (RsPathExpr) then resolve its path
-            try {
-                val exprMethod = callExpr.javaClass.getMethod("getExpr")
-                val expr = exprMethod.invoke(callExpr) as? PsiElement
-                if (expr != null) {
-                    // Try to get the path from RsPathExpr
-                    try {
-                        val pathMethod = expr.javaClass.getMethod("getPath")
-                        val path = pathMethod.invoke(expr) as? PsiElement
-                        if (path != null) {
-                            val resolved = resolveReference(path)
-                            if (resolved != null && isRsFunction(resolved)) {
-                                return resolved
-                            }
-                        }
-                    } catch (e: NoSuchMethodException) {
-                        // Not an RsPathExpr, try direct resolution
-                        val resolved = resolveReference(expr)
-                        if (resolved != null && isRsFunction(resolved)) {
-                            return resolved
-                        }
-                    }
-                }
-            } catch (e: NoSuchMethodException) {
-                // Not RsCallExpr, might be RsMethodCall
-            }
-
-            // Strategy 2: For RsMethodCall, resolve via reference or identifier
-            try {
-                val identifierMethod = callExpr.javaClass.getMethod("getIdentifier")
-                val identifier = identifierMethod.invoke(callExpr) as? PsiElement
-                if (identifier != null) {
-                    val resolved = resolveReference(identifier)
-                    if (resolved != null && isRsFunction(resolved)) {
-                        return resolved
-                    }
-                }
-            } catch (e: NoSuchMethodException) {
-                // No identifier method
-            }
-
-            // Strategy 3: Try direct reference resolution on the call expression itself
-            val resolved = resolveReference(callExpr)
-            if (resolved != null && isRsFunction(resolved)) {
-                return resolved
-            }
-
-            // Strategy 4: Try getting references array
-            try {
-                val refs = callExpr.references
-                for (ref in refs) {
-                    val target = ref.resolve()
-                    if (target != null && isRsFunction(target)) {
-                        return target
-                    }
-                }
-            } catch (e: Exception) {
-                LOG.debug("References resolution failed: ${e.message}")
-            }
-
-            // Strategy 5: For RsStructLiteral, resolve via the struct path (e.g. `Point { x, y }`)
-            if (rsStructLiteralClass?.isInstance(callExpr) == true) {
-                try {
-                    val pathMethod = callExpr.javaClass.getMethod("getPath")
-                    val path = pathMethod.invoke(callExpr) as? PsiElement
-                    if (path != null) {
-                        val resolved = resolveReference(path)
-                        if (resolved != null && (isRsFunction(resolved) || isRsStruct(resolved))) return resolved
-                    }
-                } catch (e: Exception) {
-                    LOG.debug("Struct literal path resolution failed: ${e.message}")
-                }
-            }
-
-            null
-        } catch (e: Exception) {
-            LOG.debug("Error resolving call expression: ${e.message}")
-            null
-        }
-    }
-
-    private fun getFunctionKey(function: PsiElement): String {
-        val name = getName(function) ?: ""
-        val file = function.containingFile?.virtualFile?.path ?: ""
-        val line = getLineNumber(function.project, function) ?: 0
-        return "$file:$line:$name"
-    }
-
-    private fun createCallElement(
-        project: Project,
-        function: PsiElement,
-        children: List<CallElementData>? = null
-    ): CallElementData {
-        val file = function.containingFile?.virtualFile
-        val name = buildFunctionName(function)
-
-        return CallElementData(
-            name = name,
-            qualifiedName = QualifiedNameUtil.getQualifiedName(function),
-            file = file?.let { getRelativePath(project, it) } ?: "unknown",
-            line = getLineNumber(project, function) ?: 0,
-            column = getColumnNumber(project, function) ?: 0,
-            language = "Rust",
-            children = children?.takeIf { it.isNotEmpty() }
-        )
-    }
-
-    private fun buildFunctionName(function: PsiElement): String {
-        val functionName = getName(function) ?: "unknown"
-
-        // Check if it's a method in an impl block
-        val impl = findContainingRsImpl(function)
-        if (impl != null) {
-            val typeRef = getTypeReference(impl)
-            val typeName = typeRef?.text?.trim()?.substringBefore('<')  // Remove generics for display
-            if (typeName != null) {
-                return "$typeName::$functionName"
-            }
-        }
-
-        return functionName
     }
 }
 

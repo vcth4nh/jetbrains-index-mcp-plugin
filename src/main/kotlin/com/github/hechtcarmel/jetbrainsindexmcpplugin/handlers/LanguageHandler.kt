@@ -60,27 +60,6 @@ interface LanguageHandler<T> {
 }
 
 /**
- * Handler for type hierarchy operations.
- *
- * Provides the inheritance hierarchy (supertypes and subtypes) for a class,
- * interface, or similar type declaration.
- */
-interface TypeHierarchyHandler : LanguageHandler<TypeHierarchyData> {
-    /**
-     * Gets the complete type hierarchy for an element.
-     *
-     * @param element The PSI element (should be a class/interface/type declaration)
-     * @param project The project context
-     * @return The type hierarchy data, or null if the element is not a type
-     */
-    fun getTypeHierarchy(
-        element: PsiElement,
-        project: Project,
-        scope: BuiltInSearchScope = BuiltInSearchScope.PROJECT_FILES
-    ): TypeHierarchyData?
-}
-
-/**
  * Handler for finding implementations.
  *
  * Finds all implementations of an interface, abstract class, or abstract/interface method.
@@ -98,30 +77,6 @@ interface ImplementationsHandler : LanguageHandler<List<ImplementationData>> {
         project: Project,
         scope: BuiltInSearchScope = BuiltInSearchScope.PROJECT_FILES
     ): List<ImplementationData>?
-}
-
-/**
- * Handler for call hierarchy operations.
- *
- * Provides the callers or callees of a method/function.
- */
-interface CallHierarchyHandler : LanguageHandler<CallHierarchyData> {
-    /**
-     * Gets the call hierarchy for a method/function.
-     *
-     * @param element The PSI element (should be a method/function)
-     * @param project The project context
-     * @param direction "callers" or "callees"
-     * @param depth How many levels to traverse
-     * @return The call hierarchy data, or null if the element is not a callable
-     */
-    fun getCallHierarchy(
-        element: PsiElement,
-        project: Project,
-        direction: String,
-        depth: Int,
-        scope: BuiltInSearchScope = BuiltInSearchScope.PROJECT_FILES
-    ): CallHierarchyData?
 }
 
 /**
