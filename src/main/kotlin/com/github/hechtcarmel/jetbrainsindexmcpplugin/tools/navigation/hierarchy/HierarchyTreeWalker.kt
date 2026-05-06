@@ -107,6 +107,20 @@ internal object HierarchyTreeWalker {
         kind: HierarchyKind,
         scope: BuiltInSearchScope,
         maxDepth: Int
+    ): Result<HierarchyWalkResult> = runCatching { walkInner(project, element, kind, scope, maxDepth) }
+        .getOrElse { Result.failure(it) }
+        .let { result ->
+            // Flatten: walkInner returns Result<...>; runCatching wraps any unexpected
+            // throw as Result.failure; combine so callers always see a single Result.
+            result
+        }
+
+    private fun walkInner(
+        project: Project,
+        element: PsiElement,
+        kind: HierarchyKind,
+        scope: BuiltInSearchScope,
+        maxDepth: Int
     ): Result<HierarchyWalkResult> {
         val language = element.language
         val provider = when {
@@ -116,7 +130,8 @@ internal object HierarchyTreeWalker {
         if (provider == null) {
             // Strategy II fallback: Rust type hierarchy has no IDE provider.
             if (kind.isType && language.id.equals("Rust", ignoreCase = true)) {
-                return RustTypeHierarchyFallback.walk(project, element, kind, scope, maxDepth)
+                return runCatching { RustTypeHierarchyFallback.walk(project, element, kind, scope, maxDepth) }
+                    .getOrElse { Result.failure(it) }
             }
             return Result.failure(
                 IllegalStateException(
@@ -125,7 +140,18 @@ internal object HierarchyTreeWalker {
             )
         }
 
-        val target = resolveTarget(provider, project, element)
+        // Walk up the leaf to the natural target type FIRST (each language's
+        // provider.getTarget walks up only when an Editor is in the DataContext;
+        // we're headless, so we have to do it ourselves). This avoids Class
+        // Cast failures inside provider.createHierarchyBrowser when it tries
+        // (PsiClass)leafToken etc.
+        val coercedElement = if (kind.isCall) {
+            ClassLikePsi.walkUpToMethodLike(element) ?: element
+        } else {
+            ClassLikePsi.walkUpToClassLike(element) ?: element
+        }
+
+        val target = resolveTarget(provider, project, coercedElement)
             ?: return Result.failure(IllegalStateException("Provider rejected element for $kind"))
 
         val browser = createBrowserHeadless(provider, target)

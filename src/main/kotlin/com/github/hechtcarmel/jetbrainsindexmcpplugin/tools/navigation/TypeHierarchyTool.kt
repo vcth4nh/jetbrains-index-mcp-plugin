@@ -7,6 +7,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResu
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.AbstractMcpTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.TypeElement
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.TypeHierarchyResult
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.ClassLikePsi
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.HierarchyKind
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.HierarchyTreeWalker
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
@@ -14,7 +15,6 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.intellij.ide.hierarchy.HierarchyNodeDescriptor
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNamedElement
 import kotlinx.serialization.json.JsonElement
@@ -182,10 +182,10 @@ class TypeHierarchyTool : AbstractMcpTool() {
         return TypeElement(
             name = name,
             file = virtualFile?.let { ProjectUtils.getRelativePath(psi.project, it) },
-            kind = describeKind(psi),
+            kind = ClassLikePsi.describeKind(psi),
             language = psi.language.displayName,
             supertypes = supertypes,
-            qualifiedName = (psi as? PsiClass)?.qualifiedName
+            qualifiedName = ClassLikePsi.describeQualifiedName(psi)
         )
     }
 
@@ -195,23 +195,10 @@ class TypeHierarchyTool : AbstractMcpTool() {
         return TypeElement(
             name = name,
             file = virtualFile?.let { ProjectUtils.getRelativePath(psi.project, it) },
-            kind = describeKind(psi),
+            kind = ClassLikePsi.describeKind(psi),
             language = psi.language.displayName,
             supertypes = null,
-            qualifiedName = (psi as? PsiClass)?.qualifiedName
+            qualifiedName = ClassLikePsi.describeQualifiedName(psi)
         )
-    }
-
-    private fun describeKind(psi: PsiElement): String {
-        if (psi is PsiClass) {
-            return when {
-                psi.isInterface -> "interface"
-                psi.isEnum -> "enum"
-                psi.isAnnotationType -> "annotation"
-                psi.isRecord -> "record"
-                else -> "class"
-            }
-        }
-        return "class"
     }
 }

@@ -178,32 +178,27 @@ class CallHierarchyTool : AbstractMcpTool() {
     }
 
     /**
-     * Best-effort element name. For PsiMethod formats as `ClassName.methodName(paramTypes)`
-     * to match the legacy handler's wire format (callers/tests match on the qualified
-     * method-call shape, not just the bare method name).
+     * Best-effort element name. For method-like elements formats as
+     * `ClassName.methodName(paramTypes)` to match the legacy wire format.
+     * Falls back to the bare element name otherwise. Uses [ClassLikePsi]
+     * reflection to avoid compile-time deps on PsiClass/PsiMethod (which
+     * live in the Java plugin and aren't on the classpath in PyCharm,
+     * WebStorm, GoLand, PhpStorm, RustRover etc.).
      */
     private fun describeElementName(psi: PsiElement): String {
-        if (psi is com.intellij.psi.PsiMethod) {
-            return buildString {
-                psi.containingClass?.name?.let { append(it).append(".") }
-                append(psi.name)
-                append("(")
-                append(psi.parameterList.parameters.joinToString(", ") {
-                    runCatching { it.type.presentableText }.getOrDefault("?")
-                })
-                append(")")
-            }
-        }
+        com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.ClassLikePsi
+            .describeMethodName(psi)?.let { return it }
         return (psi as? PsiNamedElement)?.name ?: psi.text.take(60)
     }
 
-    /** Best-effort fully-qualified name (Java/Kotlin shape). Returns null for languages where it doesn't apply. */
+    /**
+     * Best-effort fully-qualified name (`Class#method` or class FQN).
+     * Returns null when no qualified shape can be derived. Uses
+     * [ClassLikePsi] reflection — see [describeElementName] note.
+     */
     private fun describeQualifiedName(psi: PsiElement): String? {
-        if (psi is com.intellij.psi.PsiMethod) {
-            val cls = psi.containingClass?.qualifiedName ?: return null
-            return "$cls#${psi.name}"
-        }
-        if (psi is com.intellij.psi.PsiClass) return psi.qualifiedName
-        return null
+        val cls = com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.ClassLikePsi
+        cls.describeMethodQualifiedName(psi)?.let { return it }
+        return cls.describeQualifiedName(psi)
     }
 }
