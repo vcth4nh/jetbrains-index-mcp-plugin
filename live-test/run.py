@@ -38,7 +38,7 @@ DROP_FIELDS = {
 SORTABLE_ARRAYS = {
     "usages", "references", "implementations", "subtypes", "supertypes",
     "classes", "symbols", "files", "matches",
-    "problems", "intentions", "buildErrors", "testResults", "hierarchy",
+    "problems", "intentions", "buildErrors", "testResults", "hierarchy", "calls",
 }
 
 
