@@ -20,7 +20,7 @@ import com.intellij.psi.PsiElement
  * accidental matches in other languages by rejecting outputs containing `@`, since
  * Java's default `Object.toString()` returns `"ClassName@hashcode"`.
  *
- * Languages without a modifier concept (Python, Go, Markdown) silently return empty.
+ * Languages without a modifier concept (Python, Go) silently return empty.
  *
  * Caveat: Kotlin's `KtModifierList` includes declaration-shape keywords like `data`,
  * `sealed`, `enum`, `annotation` — those will surface as modifiers. That's

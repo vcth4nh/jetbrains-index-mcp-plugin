@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 // TreeFormatter renders each node as: modifiers name signature (line N).
 // modifiers   source-order tokens from the element's modifier list (e.g. public, private,
 //             abstract, final, override, suspend, data, sealed). Empty when the language
-//             has no modifier concept (Go, Markdown) or the element carries none.
+//             has no modifier concept (Go) or the element carries none.
 // name        IDE's ItemPresentation.presentableText for the element.
 // signature   IDE's ItemPresentation.locationString (return type, qualifier, etc.).
 // line        1-based source line where the underlying PSI element begins.
