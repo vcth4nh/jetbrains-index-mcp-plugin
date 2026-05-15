@@ -33,3 +33,21 @@
 {"id":"file-structure-normal",    "tool":"ide_file_structure",       "params":{"file":"src/normal.rs"}}
 {"id":"file-structure-quirks",    "tool":"ide_file_structure",       "params":{"file":"src/quirks.rs"}}
 {"id":"file-structure-extra",     "tool":"ide_file_structure",       "params":{"file":"src/extra.rs"}}
+{"id":"refs-Drawable-trait",         "tool":"ide_find_usages",          "params":{"file":"src/normal.rs","line":1,"column":11}}
+{"id":"refs-Rectangle-struct",       "tool":"ide_find_usages",          "params":{"file":"src/normal.rs","line":33,"column":12}}
+{"id":"refs-Coercer-trait",          "tool":"ide_find_usages",          "params":{"file":"src/quirks.rs","line":28,"column":11}}
+{"id":"impls-Shape-trait",           "tool":"ide_find_implementations", "params":{"file":"src/normal.rs","line":5,"column":11}}
+{"id":"impls-Shape-describe",        "tool":"ide_find_implementations", "params":{"file":"src/normal.rs","line":8,"column":8}}
+{"id":"type-hier-Drawable",          "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.rs","line":1,"column":11}}
+{"id":"type-hier-Square",            "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.rs","line":54,"column":12}}
+{"id":"type-hier-CoerceMode",        "tool":"ide_type_hierarchy",       "params":{"file":"src/quirks.rs","line":66,"column":10}}
+{"id":"call-hier-total-area-callees","tool":"ide_call_hierarchy",       "params":{"file":"src/normal.rs","line":83,"column":12,"direction":"callees","maxDepth":2}}
+{"id":"call-hier-largest-callees",   "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.rs","line":87,"column":12,"direction":"callees","maxDepth":2}}
+{"id":"call-hier-describe-callers",  "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.rs","line":8,"column":8,"direction":"callers","maxDepth":2}}
+{"id":"call-hier-draw-callers",      "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.rs","line":2,"column":8,"direction":"callers","maxDepth":2}}
+{"id":"find-class-Circle",           "tool":"ide_find_class",           "params":{"query":"Circle"}}
+{"id":"find-class-Rectangle",        "tool":"ide_find_class",           "params":{"query":"Rectangle"}}
+{"id":"find-class-Square",           "tool":"ide_find_class",           "params":{"query":"Square"}}
+{"id":"find-symbol-describe",        "tool":"ide_find_symbol",          "params":{"query":"describe"}}
+{"id":"find-symbol-total_area",      "tool":"ide_find_symbol",          "params":{"query":"total_area"}}
+{"id":"find-symbol-draw",            "tool":"ide_find_symbol",          "params":{"query":"draw"}}
