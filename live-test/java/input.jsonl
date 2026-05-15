@@ -46,3 +46,19 @@
 {"id":"refs-Circle-via-new-call-site", "tool":"ide_find_usages",      "params":{"file":"src/main/java/demo/Normal.java","line":89,"column":24}}
 {"id":"index-status",             "tool":"ide_index_status",         "params":{}}
 {"id":"diagnostics-Quirks-errors","tool":"ide_diagnostics",          "params":{"file":"src/main/java/demo/Quirks.java","severity":"errors"}}
+{"id":"refs-Drawable-interface",    "tool":"ide_find_usages",          "params":{"file":"src/main/java/demo/Normal.java","line":6,"column":11}}
+{"id":"refs-Rectangle-class",      "tool":"ide_find_usages",          "params":{"file":"src/main/java/demo/Normal.java","line":36,"column":7}}
+{"id":"super-Rectangle-draw",      "tool":"ide_find_super_methods",   "params":{"file":"src/main/java/demo/Normal.java","line":51,"column":19}}
+{"id":"super-Cat-name",            "tool":"ide_find_super_methods",   "params":{"file":"src/main/java/demo/Modern.java","line":13,"column":33}}
+{"id":"super-Dog-name",            "tool":"ide_find_super_methods",   "params":{"file":"src/main/java/demo/Modern.java","line":17,"column":33}}
+{"id":"type-hier-Drawable",        "tool":"ide_type_hierarchy",       "params":{"file":"src/main/java/demo/Normal.java","line":6,"column":11}}
+{"id":"type-hier-Circle",          "tool":"ide_type_hierarchy",       "params":{"file":"src/main/java/demo/Normal.java","line":18,"column":7}}
+{"id":"call-hier-totalArea-callees","tool":"ide_call_hierarchy",      "params":{"file":"src/main/java/demo/Normal.java","line":69,"column":12,"direction":"callees","maxDepth":2}}
+{"id":"call-hier-describe-callers","tool":"ide_call_hierarchy",       "params":{"file":"src/main/java/demo/Normal.java","line":13,"column":12,"direction":"callers","maxDepth":2}}
+{"id":"call-hier-largest-callees", "tool":"ide_call_hierarchy",       "params":{"file":"src/main/java/demo/Normal.java","line":77,"column":11,"direction":"callees","maxDepth":2}}
+{"id":"find-class-Circle",         "tool":"ide_find_class",           "params":{"query":"Circle"}}
+{"id":"find-class-Square",         "tool":"ide_find_class",           "params":{"query":"Square"}}
+{"id":"find-class-ShapeCollection","tool":"ide_find_class",           "params":{"query":"ShapeCollection"}}
+{"id":"find-symbol-describe",      "tool":"ide_find_symbol",          "params":{"query":"describe"}}
+{"id":"find-symbol-totalArea",     "tool":"ide_find_symbol",          "params":{"query":"totalArea"}}
+{"id":"find-symbol-draw",          "tool":"ide_find_symbol",          "params":{"query":"draw"}}
