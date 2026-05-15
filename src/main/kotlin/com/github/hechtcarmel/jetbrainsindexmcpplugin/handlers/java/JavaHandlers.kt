@@ -44,11 +44,7 @@ object JavaHandlers {
         registry.registerSymbolReferenceHandler(JavaSymbolReferenceHandler())
         registry.registerSuperMethodsHandler(JavaSuperMethodsHandler())
 
-        // Also register for Kotlin (uses same Java PSI under the hood)
-        registry.registerImplementationsHandler(KotlinImplementationsHandler())
-        registry.registerSuperMethodsHandler(KotlinSuperMethodsHandler())
-
-        LOG.info("Registered Java and Kotlin handlers")
+        LOG.info("Registered Java handlers")
     }
 }
 
@@ -533,16 +529,6 @@ class JavaSuperMethodsHandler : BaseJavaHandler<SuperMethodsData>(), SuperMethod
         val returnType = method.returnType?.presentableText ?: "void"
         return "${method.name}($params): $returnType"
     }
-}
-
-// Kotlin handlers delegate to Java handlers since Kotlin uses Java PSI under the hood
-
-class KotlinImplementationsHandler : ImplementationsHandler by JavaImplementationsHandler() {
-    override val languageId = "kotlin"
-}
-
-class KotlinSuperMethodsHandler : SuperMethodsHandler by JavaSuperMethodsHandler() {
-    override val languageId = "kotlin"
 }
 
 /**
