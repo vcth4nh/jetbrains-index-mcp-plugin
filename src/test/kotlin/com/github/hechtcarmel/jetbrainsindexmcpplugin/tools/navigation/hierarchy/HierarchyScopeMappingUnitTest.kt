@@ -6,9 +6,12 @@ import junit.framework.TestCase
 
 class HierarchyScopeMappingUnitTest : TestCase() {
 
-    fun testProjectFilesMapsToScopeProject() {
+    fun testProjectFilesMapsToScopeAll() {
+        // PROJECT_FILES → SCOPE_ALL matches the IDE's own default tab selection
+        // and avoids the JS/TS empty-scope problem when no production source
+        // roots are configured. See HierarchyScopeMapping kdoc.
         assertEquals(
-            HierarchyBrowserBaseEx.SCOPE_PROJECT,
+            HierarchyBrowserBaseEx.SCOPE_ALL,
             HierarchyScopeMapping.toIdeScopeType(BuiltInSearchScope.PROJECT_FILES)
         )
     }

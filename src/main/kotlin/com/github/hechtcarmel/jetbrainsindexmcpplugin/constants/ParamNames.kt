@@ -62,6 +62,9 @@ object ParamNames {
     const val INCLUDE_RAW_OUTPUT = "includeRawOutput"
     const val TIMEOUT_SECONDS = "timeoutSeconds"
 
+    // Lifecycle parameters (install plugin / restart IDE)
+    const val DELAY_SECONDS = "delaySeconds"
+
     // Diagnostics parameters
     const val INCLUDE_BUILD_ERRORS = "includeBuildErrors"
     const val INCLUDE_TEST_RESULTS = "includeTestResults"

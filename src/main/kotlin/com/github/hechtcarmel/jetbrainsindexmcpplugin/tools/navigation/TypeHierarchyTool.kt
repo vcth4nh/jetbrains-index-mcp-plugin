@@ -16,7 +16,6 @@ import com.intellij.ide.hierarchy.HierarchyNodeDescriptor
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiNamedElement
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -123,12 +122,8 @@ class TypeHierarchyTool : AbstractMcpTool() {
                 convertDescriptorToTypeElement(it, superResult.resolver, recurseSupertypes = true, remainingDepth = maxDepth)
             }
 
-            // For file/line/column resolution, `element` is a leaf token. Walk up
-            // to the smallest class-like ancestor so `buildRootTypeElement` can
-            // extract its name/qualifiedName. For className resolution, `element`
-            // is already a class — walkUp returns it unchanged.
             val rootElement = ClassLikePsi.walkUpToClassLike(element) ?: element
-            val rootTypeElement = buildRootTypeElement(rootElement)
+            val rootTypeElement = buildRootTypeElement(superResult.root, rootElement)
                 ?: return@suspendingReadAction createErrorResult("Could not extract class info from element")
 
             createJsonResult(TypeHierarchyResult(
@@ -183,7 +178,6 @@ class TypeHierarchyTool : AbstractMcpTool() {
         remainingDepth: Int
     ): TypeElement? {
         val psi = resolver.resolve(descriptor) ?: return null
-        val name = (psi as? PsiNamedElement)?.name ?: psi.text.take(60)
         val virtualFile = psi.containingFile?.virtualFile
 
         val supertypes = if (recurseSupertypes && remainingDepth > 0) {
@@ -194,7 +188,7 @@ class TypeHierarchyTool : AbstractMcpTool() {
         } else null
 
         return TypeElement(
-            name = name,
+            name = ClassLikePsi.descriptorDisplayName(descriptor, psi),
             file = virtualFile?.let { ProjectUtils.getRelativePath(psi.project, it) },
             kind = ClassLikePsi.describeKind(psi),
             language = com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.displayLanguageName(psi.language.id),
@@ -203,8 +197,10 @@ class TypeHierarchyTool : AbstractMcpTool() {
         )
     }
 
-    private fun buildRootTypeElement(psi: PsiElement): TypeElement? {
-        val name = (psi as? PsiNamedElement)?.name ?: return null
+
+    private fun buildRootTypeElement(descriptor: HierarchyNodeDescriptor, psi: PsiElement): TypeElement? {
+        val name = ClassLikePsi.descriptorDisplayName(descriptor, psi)
+        if (name.isBlank()) return null
         val virtualFile = psi.containingFile?.virtualFile
         return TypeElement(
             name = name,

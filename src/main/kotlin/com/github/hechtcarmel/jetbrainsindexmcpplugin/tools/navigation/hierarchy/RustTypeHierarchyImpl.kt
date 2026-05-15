@@ -198,16 +198,20 @@ internal class RustTypeHierarchyImpl : BaseRustHandler<TypeHierarchyData>() {
                             resolvedType = lookupStructByName(project, typeName)
                         }
 
-                        if (typeName != null) {
-                            val targetElement = resolvedType ?: definition
+                        // Skip the entry when both reference resolution and name lookup
+                        // fail. Falling back to `psi = definition` (the impl block) breaks
+                        // wire format: RsImplItem is not a PsiNamedElement, so downstream
+                        // conversion grabs psi.text and surfaces raw `impl Foo for Bar { … }`
+                        // body source as the entry's name.
+                        if (typeName != null && resolvedType != null) {
                             results.add(TypeElementData(
                                 name = typeName,
-                                qualifiedName = resolvedType?.let { QualifiedNameUtil.getQualifiedName(it) },
-                                file = targetElement.containingFile?.virtualFile?.let { getRelativePath(project, it) },
-                                line = getLineNumber(project, targetElement),
-                                kind = if (resolvedType != null) determineElementKind(resolvedType) else "IMPL",
+                                qualifiedName = QualifiedNameUtil.getQualifiedName(resolvedType),
+                                file = resolvedType.containingFile?.virtualFile?.let { getRelativePath(project, it) },
+                                line = getLineNumber(project, resolvedType),
+                                kind = determineElementKind(resolvedType),
                                 language = "Rust",
-                                psi = resolvedType ?: definition
+                                psi = resolvedType
                             ))
                         }
                     }
@@ -260,23 +264,22 @@ internal class RustTypeHierarchyImpl : BaseRustHandler<TypeHierarchyData>() {
                     val traitRef = getTraitRef(impl)
                     if (traitRef != null) {
                         val resolvedTrait = resolveReference(traitRef)
-                        val traitName = if (resolvedTrait != null) {
-                            getName(resolvedTrait)
-                        } else {
-                            traitRef.text?.trim()
-                        }
-
-                        if (traitName != null && results.none { it.name == traitName }) {
-                            val targetElement = resolvedTrait ?: impl
-                            results.add(TypeElementData(
-                                name = traitName,
-                                qualifiedName = resolvedTrait?.let { QualifiedNameUtil.getQualifiedName(it) },
-                                file = targetElement.containingFile?.virtualFile?.let { getRelativePath(project, it) },
-                                line = getLineNumber(project, targetElement),
-                                kind = "TRAIT",
-                                language = "Rust",
-                                psi = resolvedTrait ?: impl
-                            ))
+                        // Skip if resolution failed — we cannot point the wire-format
+                        // entry at the unnamed RsImplItem block (its text would surface
+                        // as the raw `impl Foo for Bar { … }` source).
+                        if (resolvedTrait != null) {
+                            val traitName = getName(resolvedTrait)
+                            if (traitName != null && results.none { it.name == traitName }) {
+                                results.add(TypeElementData(
+                                    name = traitName,
+                                    qualifiedName = QualifiedNameUtil.getQualifiedName(resolvedTrait),
+                                    file = resolvedTrait.containingFile?.virtualFile?.let { getRelativePath(project, it) },
+                                    line = getLineNumber(project, resolvedTrait),
+                                    kind = "TRAIT",
+                                    language = "Rust",
+                                    psi = resolvedTrait
+                                ))
+                            }
                         }
                     }
                 }
@@ -300,39 +303,43 @@ internal class RustTypeHierarchyImpl : BaseRustHandler<TypeHierarchyData>() {
         val supertypes = mutableListOf<TypeElementData>()
         val subtypes = mutableListOf<TypeElementData>()
 
-        // If implementing a trait, show the trait as a supertype
+        // If implementing a trait, show the trait as a supertype.
+        // Skip if resolution failed: pointing at the impl block leaks raw block source.
         if (traitRef != null) {
             val resolvedTrait = resolveReference(traitRef)
-            val traitName = if (resolvedTrait != null) getName(resolvedTrait) else traitRef.text?.trim()
-            if (traitName != null && (resolvedTrait == null || shouldIncludeNavigationElement(searchScope, resolvedTrait))) {
-                val targetElement = resolvedTrait ?: impl
-                supertypes.add(TypeElementData(
-                    name = traitName,
-                    qualifiedName = resolvedTrait?.let { QualifiedNameUtil.getQualifiedName(it) },
-                    file = targetElement.containingFile?.virtualFile?.let { getRelativePath(project, it) },
-                    line = getLineNumber(project, targetElement),
-                    kind = "TRAIT",
-                    language = "Rust",
-                    psi = resolvedTrait ?: impl
-                ))
+            if (resolvedTrait != null && shouldIncludeNavigationElement(searchScope, resolvedTrait)) {
+                val traitName = getName(resolvedTrait)
+                if (traitName != null) {
+                    supertypes.add(TypeElementData(
+                        name = traitName,
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(resolvedTrait),
+                        file = resolvedTrait.containingFile?.virtualFile?.let { getRelativePath(project, it) },
+                        line = getLineNumber(project, resolvedTrait),
+                        kind = "TRAIT",
+                        language = "Rust",
+                        psi = resolvedTrait
+                    ))
+                }
             }
         }
 
-        // Show the implementing type as a subtype
+        // Show the implementing type as a subtype.
+        // Skip if resolution failed (same reason as above).
         if (typeRef != null) {
             val resolvedType = resolveReference(typeRef)
-            val typeName = if (resolvedType != null) getName(resolvedType) else typeRef.text?.trim()
-            if (typeName != null && (resolvedType == null || shouldIncludeNavigationElement(searchScope, resolvedType))) {
-                val targetElement = resolvedType ?: impl
-                subtypes.add(TypeElementData(
-                    name = typeName,
-                    qualifiedName = resolvedType?.let { QualifiedNameUtil.getQualifiedName(it) },
-                    file = targetElement.containingFile?.virtualFile?.let { getRelativePath(project, it) },
-                    line = getLineNumber(project, targetElement),
-                    kind = if (resolvedType != null) determineElementKind(resolvedType) else "TYPE",
-                    language = "Rust",
-                    psi = resolvedType ?: impl
-                ))
+            if (resolvedType != null && shouldIncludeNavigationElement(searchScope, resolvedType)) {
+                val typeName = getName(resolvedType)
+                if (typeName != null) {
+                    subtypes.add(TypeElementData(
+                        name = typeName,
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(resolvedType),
+                        file = resolvedType.containingFile?.virtualFile?.let { getRelativePath(project, it) },
+                        line = getLineNumber(project, resolvedType),
+                        kind = determineElementKind(resolvedType),
+                        language = "Rust",
+                        psi = resolvedType
+                    ))
+                }
             }
         }
 

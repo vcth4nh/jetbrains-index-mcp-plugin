@@ -17,6 +17,8 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.ReadFileT
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.SearchTextTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.BuildProjectTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.GetIndexStatusTool
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.InstallPluginTool
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.RestartIdeTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.SyncFilesTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.refactoring.MoveFileTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.refactoring.OptimizeImportsTool
@@ -48,6 +50,8 @@ import java.util.concurrent.ConcurrentHashMap
  * - `ide_search_text` - Text search using word index
  * - `ide_diagnostics` - Analyze code for problems and available intentions
  * - `ide_build_project` - Build project using IDE's build system (disabled by default)
+ * - `ide_install_plugin` - Install a locally built plugin .zip into this IDE (disabled by default)
+ * - `ide_restart` - Restart this IDE to load a freshly installed plugin (disabled by default)
  * - `ide_index_status` - Check indexing status
  * - `ide_get_active_file` - Get the currently active file(s) in the editor (disabled by default)
  * - `ide_open_file` - Open a file in the editor (disabled by default)
@@ -232,6 +236,8 @@ class ToolRegistry {
         register(GetIndexStatusTool())
         register(SyncFilesTool())
         register(BuildProjectTool())
+        register(InstallPluginTool())
+        register(RestartIdeTool())
 
         // Refactoring tools (universal - uses platform APIs)
         register(RenameSymbolTool())

@@ -14,6 +14,38 @@ Create an MCP server within an IntelliJ plugin that allows AI coding assistants 
 - Leverage IDE indexes for fast code search and analysis
 - Use code completion and inspection APIs
 
+### Core Design Principle: Mimic the IDE
+
+Every tool should return what the IDE's own action or tool window would show for the
+same input. Delegate to the platform's extension points and presentation APIs rather
+than re-deriving behavior per language:
+
+- Hierarchies → `LanguageCallHierarchy` / `LanguageTypeHierarchy` (drive the IDE's own
+  `HierarchyProvider` browser headlessly), not hand-rolled per-language traversal
+- Qualified names → `QualifiedNameProvider` extension point (same API as "Copy Reference")
+- Display names → the element's own `ItemPresentation` / `ClassPresentationUtil`
+- Find Usages → `FindUsagesHandlerFactory` (the Alt+F7 equivalence class)
+- Search scope → map to the scope string the IDE selects by default for that action
+
+Per-language reflection is a **last resort**, used only where the platform exposes no
+universal API (most notably element `kind` — there is no `PsiElement.getKind()`, so
+class/interface/struct/trait classification is unavoidably language-specific). When the
+IDE's behavior changes between versions, faithfully mirroring it is correct — re-bless
+snapshots rather than re-deriving.
+
+**Escalate, don't decide silently.** Two situations require asking the user rather than
+choosing unilaterally:
+
+1. **Verification needs the IDE.** If correctness can't be judged from code alone —
+   i.e. you can only tell whether output is right by comparing against what the IDE
+   actually shows — surface it and ask the user to confirm against the running IDE.
+   Don't bless a snapshot you can't independently justify.
+2. **Mimic-vs-useful tension.** When faithfully mirroring the IDE (and staying
+   language-agnostic) would withhold information that is genuinely more useful to the
+   calling agent, do not quietly pick one. Present the tradeoff and let the user
+   decide. "Mimic the IDE" is the default, not an absolute — usefulness can override
+   it, but only with explicit sign-off.
+
 ### Technology Stack
 - **Language**: Kotlin (JVM 21)
 - **Build System**: Gradle 9.0 with Kotlin DSL
@@ -41,60 +73,36 @@ Create an MCP server within an IntelliJ plugin that allows AI coding assistants 
 
 ## Project Structure
 
-```
-src/
-├── main/
-│   ├── kotlin/com/github/hechtcarmel/jetbrainsindexmcpplugin/
-│   │   ├── MyBundle.kt                 # Resource bundle accessor
-│   │   ├── handlers/                   # Language-specific handlers
-│   │   │   ├── LanguageHandler.kt      # Handler interfaces & data classes
-│   │   │   ├── LanguageHandlerRegistry.kt # Data-driven handler registry
-│   │   │   ├── PopupFaithfulSymbolSearch.kt # Headless wrapper around IDE's Go to Symbol popup model
-│   │   │   ├── SymbolDataConverter.kt # Convert IDE NavigationItem to our SymbolData wire format
-│   │   │   ├── LanguageDisplayName.kt  # Maps PSI language id → display name (Java, Kotlin, …)
-│   │   │   ├── java/JavaHandlers.kt    # Java/Kotlin handlers
-│   │   │   ├── python/PythonHandlers.kt # Python handlers (reflection)
-│   │   │   ├── javascript/JavaScriptHandlers.kt # JS/TS handlers (reflection)
-│   │   │   ├── go/GoHandlers.kt        # Go handlers (reflection)
-│   │   │   ├── php/PhpHandlers.kt      # PHP handlers (reflection)
-│   │   │   └── rust/RustHandlers.kt    # Rust handlers (reflection)
-│   │   ├── server/                     # MCP server infrastructure
-│   │   │   ├── McpServerService.kt     # App-level service managing server lifecycle
-│   │   │   ├── JsonRpcHandler.kt       # JSON-RPC 2.0 request routing
-│   │   │   ├── ProjectResolver.kt      # Multi-project resolution with workspace support
-│   │   │   ├── models/                 # Protocol models (JsonRpc, MCP)
-│   │   │   └── transport/              # HTTP+SSE transport layer
-│   │   │       ├── KtorMcpServer.kt    # Embedded Ktor CIO server
-│   │   │       ├── KtorSseSessionManager.kt # SSE session management
-│   │   ├── startup/                    # Startup activities
-│   │   ├── tools/                      # MCP tool implementations
-│   │   │   ├── McpTool.kt             # Tool interface
-│   │   │   ├── AbstractMcpTool.kt     # Base class (PSI sync, threading, helpers)
-│   │   │   ├── ToolRegistry.kt        # Data-driven tool registry
-│   │   │   ├── schema/                # Tool schema utilities
-│   │   │   │   └── SchemaBuilder.kt   # Fluent builder for input schemas
-│   │   │   ├── editor/                # Editor interaction tools
-│   │   │   ├── navigation/            # Navigation tools (multi-language)
-│   │   │   ├── intelligence/          # Code analysis tools
-│   │   │   ├── project/               # Project status tools
-│   │   │   └── refactoring/           # Refactoring tools
-│   │   ├── util/                      # Utilities
-│   │   │   ├── PluginDetector.kt      # Generic plugin availability detector
-│   │   │   ├── PluginDetectors.kt     # Registry of all language detectors
-│   │   │   ├── ClassResolver.kt       # Class lookup by FQN (Java, PHP)
-│   │   │   ├── ProjectUtils.kt        # Project/workspace helpers
-│   │   │   ├── PsiUtils.kt            # PSI navigation helpers
-│   │   │   └── ThreadingUtils.kt      # Threading utilities
-│   │   └── ui/                        # Tool window UI
-│   └── resources/
-│       ├── META-INF/
-│       │   ├── plugin.xml              # Plugin configuration
-│       │   └── *-features.xml          # Optional language-specific extensions
-│       └── messages/MyBundle.properties # i18n messages
-└── test/
-    ├── kotlin/                         # Test sources
-    └── testData/                       # Test fixtures
-```
+Package map under `src/main/kotlin/com/github/hechtcarmel/jetbrainsindexmcpplugin/`
+(file list is `ls`-derivable — this documents *purpose*, which is not):
+
+- `server/` — MCP infra: `McpServerService` (app-level lifecycle), `JsonRpcHandler`,
+  `ProjectResolver` (multi-project/workspace), `transport/` (Ktor CIO + SSE), `models/`
+- `tools/` — one class per MCP tool. `AbstractMcpTool` (auto VFS/PSI sync + threading;
+  extend this and implement `doExecute()`), `ToolRegistry` (data-driven registration),
+  `schema/SchemaBuilder` (all tool input schemas). Subpackages: `navigation/`,
+  `intelligence/`, `project/` (incl. `InstallPluginTool`/`RestartIdeTool` dev-loop),
+  `editor/`, `refactoring/`
+- `tools/navigation/hierarchy/` — **IDE extension-point delegation** for
+  `ide_call_hierarchy`/`ide_type_hierarchy`. `HierarchyTreeWalker` drives the IDE's own
+  `HierarchyProvider` browser/tree-structure headlessly; `ClassLikePsi` is the cross-IDE
+  PSI reflection layer (kind/qualifiedName/name without compile-time language deps);
+  `HierarchyScopeMapping`; `RustTypeHierarchyFallback`/`Impl` (Strategy II — RustRover
+  ships no type-hierarchy provider). See "Hierarchy Tools" below.
+- `handlers/` — per-language `LanguageHandler` impls (`ImplementationsHandler`,
+  `SuperMethodsHandler`, `SymbolReferenceHandler` only — hierarchy handlers were
+  removed). `PopupFaithfulSymbolSearch`/`ClassSearch` (headless Go-to-Symbol popup
+  model), `SymbolDataConverter`, `LanguageDisplayName`, `BuiltInSearchScope*`,
+  `FindUsagesHandlerSearch`. `{java,python,javascript,go,php,rust}/` per-language impls
+  (non-Java use reflection to avoid `NoClassDefFoundError`).
+- `util/` — `QualifiedNameUtil` (QualifiedNameProvider EP delegation + Go/Rust
+  fallbacks), `ClassResolver`, `ProjectUtils`, `PsiUtils`, `PluginDetectors`,
+  `ThreadingUtils`
+- `settings/`, `startup/`, `ui/` — config + configurable, startup activities, tool-window UI
+- `resources/META-INF/` — `plugin.xml` + optional `*-features.xml` language extensions
+
+Tests: `src/test/kotlin` (`*UnitTest` = `TestCase`, no platform; `*Test` =
+`BasePlatformTestCase`), fixtures in `src/test/testData/`, live harness in `live-test/`.
 
 ## Architecture Concepts
 
@@ -162,17 +170,6 @@ MCP servers expose:
 - `GET /index-mcp/sse` → Opens SSE stream, sends `endpoint` event with POST URL
 - `POST /index-mcp` → JSON-RPC requests/responses
 
-**Client Configuration** (Cursor, Claude Desktop, etc.):
-```json
-{
-  "mcpServers": {
-    "intellij-index": {
-      "url": "http://127.0.0.1:29170/index-mcp/streamable-http"
-    }
-  }
-}
-```
-Note: Server name and port are IDE-specific. Use the "Install on Coding Agents" button for automatic configuration.
 
 **Port Configuration**: Settings → Tools → Index MCP Server → Server Port (IDE-specific defaults, range: 1024-65535)
 
@@ -275,6 +272,37 @@ override val inputSchema = SchemaBuilder.tool()
 - **Run Tests** - Execute unit tests
 - **Run Verifications** - Run compatibility checks
 
+### Local Plugin Dev Loop (autonomous iterate-and-verify)
+
+The plugin is **not** dynamically reloadable (app-level Ktor service + listeners), so
+every code change requires a build + reinstall + IDE restart. Once the
+`ide_install_plugin` / `ide_restart` tools are loaded in the target IDEs (one-time
+manual bootstrap — install + enable + restart), the full loop runs autonomously over
+MCP with no manual steps:
+
+```
+edit → ./gradlew buildPlugin → ide_install_plugin → ide_restart
+     → poll MCP until back → re-run live-test → compare
+```
+
+**Dev versioning during iteration.** While iterating, set `pluginVersion` to a
+monotonic dev suffix: `5.3.5-dev.01`, `5.3.5-dev.02`, … (increment every build that
+will be installed). Rationale:
+
+- IntelliJ plugin loading treats an equal version string as a **no-op** — reinstalling
+  `5.3.7` over a running `5.3.7` silently keeps the old code (this bit us repeatedly).
+  A distinct version every build guarantees install+restart actually loads the new bits.
+- `serverInfo.version` (from the loaded `PluginDescriptor`, via the MCP `initialize`
+  response) then unambiguously identifies *which iteration* is running — the
+  authoritative check that a restart actually swapped code, not just staged it on disk.
+
+**Real version bump happens once, at the end.** Only after the user confirms the work
+is correct **and** the branch is merged, drop the `-dev.NN` suffix and set the real
+SemVer version per the PR checklist below. Dev-suffixed versions never land on `main`.
+
+**Escalation during the loop:** when verification needs the IDE or hits a
+mimic-vs-useful tradeoff, stop and ask the user (see "Mimic the IDE → Escalate").
+
 ## Plugin Configuration
 
 Key files:
@@ -376,6 +404,8 @@ Tools are organized by IDE availability.
 - `ide_index_status` - Check indexing status (dumb/smart mode)
 - `ide_sync_files` - Force sync IDE's virtual file system and PSI cache with external file changes
 - `ide_build_project` - Build project using IDE's build system (JPS, Gradle, Maven). Returns structured errors/warnings with file locations when available (null counts = no messages captured, not 0). Uses CompilationStatusListener for JPS builds and BuildProgressListener for Gradle/Maven builds. Supports workspace sub-project targeting via `project_path`. (disabled by default)
+- `ide_install_plugin` - Install a locally built plugin distribution (`.zip`) into this IDE's custom plugins directory (`PathManager.getPluginsDir()`), replacing any existing copy. Defaults to the newest `*.zip` in `<project>/build/distributions/`; accepts an explicit `path`. Plain JDK unzip with zip-slip guarding (no `PluginInstaller` internals). Always reports `restartRequired: true`. Pair with `ide_restart`. (disabled by default)
+- `ide_restart` - Restart this IDE via `ApplicationManagerEx.getApplicationEx().restart(true)`, scheduled *after* the response is flushed (`delaySeconds`, default 2, range 0–60) since the plugin's own MCP server dies with the IDE. In remote-dev/`serverMode` the backend relaunches and the thin client reconnects. Used with `ide_install_plugin` for the local plugin dev loop — the plugin is not dynamically reloadable. (disabled by default)
 - `ide_refactor_rename` - Rename a symbol or file across the project with automatic related element renaming (getters/setters, overriding methods). Fully headless, works for ALL languages. Two modes: **symbol rename** (file + line + column + newName) and **file rename** (file + newName, omit line/column). File rename mode works for all file types including binary files (images, etc.) and is especially useful for Android resource files where it updates all XML references. Supports `relatedRenamingStrategy` parameter to control automatic related renames: `"all"` (default), `"none"`, `"accessors_and_tests"`, or `"ask"`.
 - `ide_move_file` - Move a file to a new directory using the IDE's refactoring engine. Automatically updates all references, imports, and package declarations across the project. Supports automatic directory creation and optional reference update toggle.
 - `ide_reformat_code` - Reformat code using project code style (.editorconfig, IDE settings). Supports optional import optimization and code rearrangement. (disabled by default)
@@ -400,35 +430,62 @@ These activate based on available language plugins (Java, Python, JavaScript/Typ
 
 ### Multi-Language Architecture
 
-The plugin uses a language handler pattern for multi-IDE support:
+Two distinct mechanisms — pick by whether the platform exposes a usable extension point
+(see "Mimic the IDE"):
 
-**Core Components:**
-- `LanguageHandler<T>` - Base interface for language-specific handlers
-- `LanguageHandlerRegistry` - Central registry managing all language handlers
-- `PluginDetectors` - Central registry of language plugin availability detectors (runs once at startup)
+**1. IDE extension-point delegation (preferred).** `ide_call_hierarchy` /
+`ide_type_hierarchy` drive the IDE's own machinery — no per-language handlers. See
+"Hierarchy Tools" below. Qualified names everywhere go through `QualifiedNameUtil` →
+`QualifiedNameProvider` EP.
 
-**Language Handlers (in `handlers/` package):**
-- `handlers/java/JavaHandlers.kt` - Direct PSI access for Java/Kotlin
-- `handlers/python/PythonHandlers.kt` - Reflection-based Python PSI access
-- `handlers/javascript/JavaScriptHandlers.kt` - Reflection-based JS/TS PSI access
-- `handlers/go/GoHandlers.kt` - Reflection-based Go PSI access
-- `handlers/php/PhpHandlers.kt` - Reflection-based PHP PSI access
-- `handlers/rust/RustHandlers.kt` - Reflection-based Rust PSI access
+**2. `LanguageHandler` pattern (where no universal EP fits).** Used by
+`ide_find_implementations`, `ide_find_super_methods`, and symbol-reference resolution.
 
-**Handler Types:**
-- `TypeHierarchyHandler` - Type hierarchy lookup
-- `ImplementationsHandler` - Find implementations
-- `CallHierarchyHandler` - Call hierarchy analysis
-- `SymbolReferenceHandler` - Resolve fully qualified symbol references (e.g., `com.example.MyClass#method(String)`) to PSI elements
-- `SuperMethodsHandler` - Method override hierarchy
+- `LanguageHandler<T>` — base interface. Surviving handler types: `ImplementationsHandler`,
+  `SuperMethodsHandler`, `SymbolReferenceHandler`. (`TypeHierarchyHandler` and
+  `CallHierarchyHandler` and their 13 per-language impls were **deleted** when hierarchy
+  moved to EP delegation — commit 421c7df.)
+- `LanguageHandlerRegistry` — central registry; `PluginDetectors` — language-plugin
+  availability (runs once at startup).
+- `handlers/{java,python,javascript,go,php,rust}/*Handlers.kt` — per-language impls.
+  Java/Kotlin via direct PSI; the rest via reflection to avoid compile-time deps on
+  language plugins (prevents `NoClassDefFoundError` in IDEs lacking them).
 
-**Registration Flow:**
-1. `LanguageHandlerRegistry.registerHandlers()` - Registers handlers for available language plugins
-2. `ToolRegistry.registerUniversalTools()` - Registers universal tools including `ide_refactor_rename`, `ide_sync_files`
-3. `ToolRegistry.registerLanguageNavigationTools()` - Registers tools if any language handlers available
-4. `ToolRegistry.registerJavaRefactoringTools()` - Registers `ide_refactor_safe_delete` if Java plugin available
+**Registration flow** (`ToolRegistry`, during `McpServerService` init):
+1. `registerUniversalTools()` — tools that work in every IDE (incl. `ide_refactor_rename`,
+   `ide_sync_files`, the hierarchy tools, `ide_install_plugin`/`ide_restart`)
+2. `registerLanguageNavigationTools()` — handler-backed nav tools when any language
+   handler is available
+3. `registerJavaRefactoringTools()` — `ide_refactor_safe_delete` if Java plugin present
 
-**Reflection Pattern:** Python, JavaScript, Go, PHP, and Rust handlers use reflection to avoid compile-time dependencies on language-specific plugins. This prevents `NoClassDefFoundError` in IDEs without those plugins.
+### Hierarchy Tools (IDE Extension-Point Delegation)
+
+`ide_call_hierarchy` / `ide_type_hierarchy` do **not** re-implement traversal. They drive
+the IDE's own `HierarchyProvider` headlessly so output matches the IDE's Hierarchy tool
+window. Code in `tools/navigation/hierarchy/`:
+
+- **`HierarchyTreeWalker`** — the engine. Resolves `LanguageCallHierarchy` /
+  `LanguageTypeHierarchy` for the element's language, calls `provider.getTarget()` /
+  builds the provider's browser, reflectively invokes the protected
+  `createHierarchyTreeStructure(typeName, element)`, and walks the resulting
+  `HierarchyNodeDescriptor` tree depth-bounded with cycle dedupe. **Strategy I.**
+- **`BrowserBackedResolver`** (in the walker) — resolves each descriptor's logical
+  element, preferring `descriptor.getEnclosingElement()` (the IDE's own "logical owner"
+  notion) over the browser's `getElementFromDescriptor`. Normalizes Rust callers (whose
+  browser returns the call site) to the enclosing method like every other language.
+- **`ClassLikePsi`** — cross-IDE PSI reflection: `kind` (CLASS/INTERFACE/STRUCT/TRAIT/…),
+  qualified/display name, walk-up to class-/method-like. Uses `Class.forName` +
+  `isInstance` so a single binary runs in PyCharm/GoLand/RustRover/etc. without
+  compile-time language-plugin refs. Element `kind` is the one thing with no universal
+  API — classification here is unavoidably per-language.
+- **`HierarchyScopeMapping`** — maps our `BuiltInSearchScope` to the IDE's hierarchy
+  scope strings. `PROJECT_FILES → SCOPE_ALL` deliberately (matches the IDE's
+  default-selected tab; `SCOPE_PROJECT`="Production" yields an empty scope in projects
+  with no production source roots, e.g. JS/TS — which silently emptied callers).
+- **`RustTypeHierarchyFallback` / `RustTypeHierarchyImpl`** — **Strategy II.** RustRover
+  registers a call-hierarchy provider but **no** type-hierarchy provider, so Rust type
+  hierarchy uses a relocated hand-rolled algorithm that synthesizes descriptors. This is
+  the only language without full EP delegation.
 
 ### Symbol Search
 
@@ -532,6 +589,9 @@ Every PR **must** include:
    - **Patch** (3.x.**Y**): Bug fixes, internal refactoring with no behavior change
    - **Minor** (3.**Y**.0): New features, new tools, protocol improvements
    - **Major** (**Y**.0.0): Breaking changes to tool schemas, transport, or client configuration
+   - This is the **final** version. During iteration the version carries a `-dev.NN`
+     suffix (see "Local Plugin Dev Loop"); strip it and set the real SemVer value only
+     once the user confirms and the branch is ready to merge. `-dev.NN` never lands on `main`.
 2. **CHANGELOG.md update** — Add an entry under `## [Unreleased]` following [Keep a Changelog](https://keepachangelog.com) format. Use sections: `Added`, `Changed`, `Fixed`, `Removed`, `Breaking`
 3. Follow existing code patterns and use `SchemaBuilder` for new tool schemas
 4. Add tests for new functionality

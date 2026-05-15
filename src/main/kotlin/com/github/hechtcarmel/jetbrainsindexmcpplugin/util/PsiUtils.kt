@@ -163,8 +163,13 @@ object PsiUtils {
      * [PsiNameIdentifierOwner.getNameIdentifier] as its name token.
      */
     fun isOnDeclarationIdentifier(element: PsiElement): Boolean {
-        val parent = element.parent ?: return false
-        return parent is PsiNameIdentifierOwner && parent.nameIdentifier === element
+        var current: PsiElement? = element.parent
+        while (current != null && current !is PsiFile) {
+            if (current is PsiNameIdentifierOwner && current.nameIdentifier === element) return true
+            if (current is PsiNamedElement && current.name == element.text) return true
+            current = current.parent
+        }
+        return false
     }
 
     fun findElementAtPosition(

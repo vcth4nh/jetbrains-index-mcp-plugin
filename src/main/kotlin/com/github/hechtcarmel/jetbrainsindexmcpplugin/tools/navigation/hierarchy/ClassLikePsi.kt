@@ -1,6 +1,8 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy
 
+import com.intellij.ide.hierarchy.HierarchyNodeDescriptor
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiNamedElement
 
 /**
  * Reflection-based introspection of "class-like" PSI elements across languages.
@@ -41,6 +43,10 @@ internal object ClassLikePsi {
     private val JS_CLASS by lazy { loadClass("com.intellij.lang.javascript.psi.ecmal4.JSClass") }
     private val PHP_CLASS by lazy { loadClass("com.jetbrains.php.lang.psi.elements.PhpClass") }
     private val GO_TYPE_SPEC by lazy { loadClass("com.goide.psi.GoTypeSpec") }
+    // Go marker interfaces — used by goKind() to classify via instanceof rather
+    // than by impl-class simpleName. Survives Impl-class renames in the Go plugin.
+    private val GO_INTERFACE_TYPE by lazy { loadClass("com.goide.psi.GoInterfaceType") }
+    private val GO_STRUCT_TYPE by lazy { loadClass("com.goide.psi.GoStructType") }
     private val RS_TRAIT_ITEM by lazy { loadClass("org.rust.lang.core.psi.RsTraitItem") }
     private val RS_STRUCT_ITEM by lazy { loadClass("org.rust.lang.core.psi.RsStructItem") }
     private val RS_ENUM_ITEM by lazy { loadClass("org.rust.lang.core.psi.RsEnumItem") }
@@ -55,6 +61,41 @@ internal object ClassLikePsi {
 
     fun isClassLike(element: PsiElement): Boolean =
         classLikeTypes.any { it.isInstance(element) }
+
+    /**
+     * Extracts the primary display name from a [HierarchyNodeDescriptor]'s
+     * highlighted text, stripping the grayed-out suffix (file path, module,
+     * package) that the IDE appends for its tree-view UI.
+     *
+     * The IDE's `CompositeAppearance` is built from multiple `TextSection`s,
+     * each with its own `TextAttributes`. The main symbol name uses the first
+     * section's attributes; subsequent sections with *different* attributes
+     * are the grayed suffix (e.g. " in path/file.go", " (module)"). We
+     * collect only sections sharing the first section's attributes.
+     *
+     * Falls back to `PsiNamedElement.name` when the descriptor has no
+     * highlighted text (e.g. synthetic descriptors from the Rust fallback).
+     */
+    fun descriptorDisplayName(descriptor: HierarchyNodeDescriptor, psi: PsiElement): String {
+        val name = runCatching { extractPrimaryText(descriptor) }.getOrNull()
+        if (!name.isNullOrBlank()) return name.trim()
+        return (psi as? PsiNamedElement)?.name ?: psi.text.take(60)
+    }
+
+    private fun extractPrimaryText(descriptor: HierarchyNodeDescriptor): String? {
+        val appearance = descriptor.getHighlightedText() ?: return null
+        val sections = appearance.getSectionsIterator() ?: return null
+        if (!sections.hasNext()) return null
+        val first = sections.next()
+        val primaryAttrs = first.getTextAttributes()
+        val sb = StringBuilder(first.getText())
+        while (sections.hasNext()) {
+            val section = sections.next()
+            if (section.getTextAttributes() != primaryAttrs) break
+            sb.append(section.getText())
+        }
+        return sb.toString()
+    }
 
     /**
      * Walks up the PSI tree from [element] looking for the smallest enclosing
@@ -126,6 +167,10 @@ internal object ClassLikePsi {
 
     private fun kotlinKind(element: PsiElement): String {
         // KtClass.isInterface, isEnum, etc. — but KtObjectDeclaration is "OBJECT".
+        // `abstract` is a modifier, not a dedicated boolean accessor on KtClass;
+        // probe the modifier list's text. (KtUltraLightClass for K2 has
+        // hasModifierProperty("abstract") but those instances flow through the
+        // PSI_CLASS branch in describeKind, not here.)
         val name = element.javaClass.simpleName
         return when {
             invokeBoolean(element, "isAnnotation") -> "ANNOTATION"
@@ -134,9 +179,21 @@ internal object ClassLikePsi {
             invokeBoolean(element, "isData") -> "DATA_CLASS"
             invokeBoolean(element, "isSealed") -> "SEALED_CLASS"
             name == "KtObjectDeclaration" -> "OBJECT"
+            kotlinHasModifier(element, "abstract") -> "ABSTRACT_CLASS"
             else -> "CLASS"
         }
     }
+
+    /**
+     * Returns true if [element]'s modifier list text contains [modifier]. Used for
+     * Kotlin's `abstract` keyword since `KtClass` exposes no `isAbstract()` accessor
+     * (unlike `isData()` / `isSealed()`).
+     */
+    private fun kotlinHasModifier(element: PsiElement, modifier: String): Boolean = runCatching {
+        val modList = element.javaClass.getMethod("getModifierList").invoke(element) as? PsiElement
+        // Match on whole-word boundary so "abstract" doesn't false-positive for, say, "abstracted".
+        modList?.text?.let { text -> Regex("\\b${Regex.escape(modifier)}\\b").containsMatchIn(text) } == true
+    }.getOrDefault(false)
 
     private fun jsKind(element: PsiElement): String =
         if (invokeBoolean(element, "isInterface")) "INTERFACE" else "CLASS"
@@ -150,19 +207,29 @@ internal object ClassLikePsi {
     }
 
     private fun goKind(element: PsiElement): String {
-        // Go: GoTypeSpec wraps a struct or interface or other type.
-        val type = runCatching { element.javaClass.getMethod("getType").invoke(element) as? PsiElement }.getOrNull()
-        val typeName = type?.javaClass?.simpleName ?: ""
+        // GoTypeSpec exposes getSpecType() (NOT getType()), and GoSpecType.getType()
+        // returns a GoType whose concrete impl class is GoStructTypeImpl /
+        // GoInterfaceTypeImpl / GoArrayTypeImpl / etc. Classify via marker
+        // interfaces (GoInterfaceType, GoStructType) rather than impl simpleName
+        // so the check survives Impl-class renames.
+        // The IDE's own check is `((GoTypeSpec)e).getSpecType().getType() instanceof GoInterfaceType`.
+        val specType = runCatching {
+            element.javaClass.getMethod("getSpecType").invoke(element) as? PsiElement
+        }.getOrNull() ?: return "TYPE"
+        val goType = runCatching {
+            specType.javaClass.getMethod("getType").invoke(specType) as? PsiElement
+        }.getOrNull() ?: return "TYPE"
         return when {
-            "Interface" in typeName -> "INTERFACE"
-            "Struct" in typeName -> "STRUCT"
-            else -> "TYPE"
+            GO_INTERFACE_TYPE?.isInstance(goType) == true -> "INTERFACE"
+            GO_STRUCT_TYPE?.isInstance(goType) == true -> "STRUCT"
+            else -> "TYPE"   // alias, function type, array, map, channel, pointer, etc.
         }
     }
 
     private fun invokeBoolean(target: Any, method: String): Boolean = runCatching {
         target.javaClass.getMethod(method).invoke(target) as? Boolean ?: false
     }.getOrDefault(false)
+
 
     // -------------------- method-like helpers --------------------
 
@@ -192,49 +259,5 @@ internal object ClassLikePsi {
             current = current.parent
         }
         return null
-    }
-
-    /**
-     * For a method-like element, returns `ClassName.methodName(paramTypes)`
-     * (legacy wire format). Falls back to the bare element name if class
-     * info isn't available.
-     */
-    fun describeMethodName(element: PsiElement): String? {
-        if (!isMethodLike(element)) return null
-        val name = (element as? com.intellij.psi.PsiNamedElement)?.name ?: return null
-        // Try to find containing class-like ancestor. Prefer the FQN of the class
-        // to match legacy wire format (e.g. `demo.Circle.method(...)` vs `Circle.method(...)`).
-        val cls = walkUpToClassLike(element.parent ?: element)
-        val clsName = cls?.let { describeQualifiedName(it) } ?: (cls as? com.intellij.psi.PsiNamedElement)?.name
-        val params = runCatching {
-            // PsiMethod-style: getParameterList().getParameters() each has getType().getPresentableText()
-            val list = element.javaClass.getMethod("getParameterList").invoke(element)
-            val params = list?.javaClass?.getMethod("getParameters")?.invoke(list) as? Array<*>
-            params?.joinToString(", ") { p ->
-                runCatching {
-                    val type = p?.javaClass?.getMethod("getType")?.invoke(p)
-                    type?.javaClass?.getMethod("getPresentableText")?.invoke(type) as? String ?: "?"
-                }.getOrDefault("?")
-            }
-        }.getOrNull()
-        return buildString {
-            if (clsName != null) append(clsName).append(".")
-            append(name)
-            append("(")
-            if (params != null) append(params)
-            append(")")
-        }
-    }
-
-    /**
-     * For a method-like element, returns `qualifiedClassName#methodName` (legacy
-     * shape). Returns null if no qualified class can be derived.
-     */
-    fun describeMethodQualifiedName(element: PsiElement): String? {
-        if (!isMethodLike(element)) return null
-        val cls = walkUpToClassLike(element.parent ?: element) ?: return null
-        val clsFqn = describeQualifiedName(cls) ?: return null
-        val name = (element as? com.intellij.psi.PsiNamedElement)?.name ?: return null
-        return "$clsFqn#$name"
     }
 }

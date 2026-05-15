@@ -20,6 +20,8 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.SearchTex
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.TypeHierarchyTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.GetIndexStatusTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.BuildProjectTool
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.InstallPluginTool
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.RestartIdeTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.SyncFilesTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.refactoring.MoveFileTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.refactoring.OptimizeImportsTool
@@ -125,6 +127,60 @@ class ToolsUnitTest : TestCase() {
         val tool = registry.getTool(ToolNames.BUILD_PROJECT)
         assertNotNull("ide_build_project should be registered", tool)
         assertEquals(ToolNames.BUILD_PROJECT, tool?.name)
+    }
+
+    fun testInstallPluginToolSchema() {
+        val tool = InstallPluginTool()
+
+        assertEquals(ToolNames.INSTALL_PLUGIN, tool.name)
+        assertNotNull(tool.description)
+
+        val schema = tool.inputSchema
+        assertEquals(SchemaConstants.TYPE_OBJECT, schema[SchemaConstants.TYPE]?.jsonPrimitive?.content)
+
+        val properties = schema[SchemaConstants.PROPERTIES]?.jsonObject
+        assertNotNull(properties)
+
+        assertNotNull("Should have project_path property", properties?.get(ParamNames.PROJECT_PATH))
+        assertNotNull("Should have path property", properties?.get(ParamNames.PATH))
+
+        assertNull("Should not have required array (all params optional)", schema[SchemaConstants.REQUIRED])
+    }
+
+    fun testInstallPluginToolIsRegistered() {
+        val registry = ToolRegistry()
+        registry.registerBuiltInTools()
+
+        val tool = registry.getTool(ToolNames.INSTALL_PLUGIN)
+        assertNotNull("ide_install_plugin should be registered", tool)
+        assertEquals(ToolNames.INSTALL_PLUGIN, tool?.name)
+    }
+
+    fun testRestartIdeToolSchema() {
+        val tool = RestartIdeTool()
+
+        assertEquals(ToolNames.RESTART_IDE, tool.name)
+        assertNotNull(tool.description)
+
+        val schema = tool.inputSchema
+        assertEquals(SchemaConstants.TYPE_OBJECT, schema[SchemaConstants.TYPE]?.jsonPrimitive?.content)
+
+        val properties = schema[SchemaConstants.PROPERTIES]?.jsonObject
+        assertNotNull(properties)
+
+        assertNotNull("Should have project_path property", properties?.get(ParamNames.PROJECT_PATH))
+        assertNotNull("Should have delaySeconds property", properties?.get(ParamNames.DELAY_SECONDS))
+
+        assertNull("Should not have required array (all params optional)", schema[SchemaConstants.REQUIRED])
+    }
+
+    fun testRestartIdeToolIsRegistered() {
+        val registry = ToolRegistry()
+        registry.registerBuiltInTools()
+
+        val tool = registry.getTool(ToolNames.RESTART_IDE)
+        assertNotNull("ide_restart should be registered", tool)
+        assertEquals(ToolNames.RESTART_IDE, tool?.name)
     }
 
     fun testFindUsagesToolSchema() {

@@ -52,7 +52,7 @@ class CallHierarchyTool : AbstractMcpTool() {
         - file + line + column: position-based lookup
         - language + symbol: fully qualified symbol reference (currently supported for Java only)
 
-        Parameters: direction (required): "callers" or "callees". depth (optional, default: 3, max: 5). scope (optional, default: "project_files"; supported: project_files, project_and_libraries, project_production_files, project_test_files).
+        Parameters: direction (required): "callers" or "callees". maxDepth (optional, default: 7, max: 20). scope (optional, default: "project_files"; supported: project_files, project_and_libraries, project_production_files, project_test_files).
 
         Example: {"file": "src/Service.java", "line": 42, "column": 10, "direction": "callers"}
         Example: {"language": "Java", "symbol": "com.example.Service#processRequest(String)", "direction": "callers", "scope": "project_and_libraries"}
@@ -64,19 +64,19 @@ class CallHierarchyTool : AbstractMcpTool() {
         .lineAndColumn(required = false)
         .languageAndSymbol(required = false)
         .enumProperty("direction", "Direction: 'callers' (methods that call this method) or 'callees' (methods this method calls)", listOf("callers", "callees"), required = true)
-        .intProperty("depth", "How many levels deep to traverse the call hierarchy (default: 3, max: 5)")
+        .intProperty("maxDepth", "How many levels deep to traverse the call hierarchy (default: 7, max: 20)")
         .scopeProperty("Search scope. Default: project_files.")
         .build()
 
     companion object {
-        private const val DEFAULT_DEPTH = 3
-        private const val MAX_DEPTH = 5
+        private const val DEFAULT_DEPTH = 7
+        private const val MAX_DEPTH = 20
     }
 
     override suspend fun doExecute(project: Project, arguments: JsonObject): ToolCallResult {
         val direction = arguments["direction"]?.jsonPrimitive?.content
             ?: return createErrorResult("Missing required parameter: direction")
-        val depth = (arguments["depth"]?.jsonPrimitive?.int ?: DEFAULT_DEPTH).coerceIn(1, MAX_DEPTH)
+        val depth = (arguments["maxDepth"]?.jsonPrimitive?.int ?: DEFAULT_DEPTH).coerceIn(1, MAX_DEPTH)
         val rawScope = rawScopeValue(arguments[ParamNames.SCOPE])
         val scope = try {
             BuiltInSearchScopeResolver.parse(arguments, BuiltInSearchScope.PROJECT_FILES)
@@ -167,38 +167,16 @@ class CallHierarchyTool : AbstractMcpTool() {
             ?: emptyList()
 
         return CallElement(
-            name = describeElementName(psi),
+            name = com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.ClassLikePsi
+                .descriptorDisplayName(descriptor, psi),
             file = ProjectUtils.getRelativePath(psi.project, virtualFile),
             line = line,
             column = column,
             language = com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.displayLanguageName(psi.language.id),
             children = if (children.isEmpty()) null else children,
-            qualifiedName = describeQualifiedName(psi)
+            qualifiedName = com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.ClassLikePsi
+                .describeQualifiedName(psi)
         )
     }
 
-    /**
-     * Best-effort element name. For method-like elements formats as
-     * `ClassName.methodName(paramTypes)` to match the legacy wire format.
-     * Falls back to the bare element name otherwise. Uses [ClassLikePsi]
-     * reflection to avoid compile-time deps on PsiClass/PsiMethod (which
-     * live in the Java plugin and aren't on the classpath in PyCharm,
-     * WebStorm, GoLand, PhpStorm, RustRover etc.).
-     */
-    private fun describeElementName(psi: PsiElement): String {
-        com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.ClassLikePsi
-            .describeMethodName(psi)?.let { return it }
-        return (psi as? PsiNamedElement)?.name ?: psi.text.take(60)
-    }
-
-    /**
-     * Best-effort fully-qualified name (`Class#method` or class FQN).
-     * Returns null when no qualified shape can be derived. Uses
-     * [ClassLikePsi] reflection — see [describeElementName] note.
-     */
-    private fun describeQualifiedName(psi: PsiElement): String? {
-        val cls = com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.ClassLikePsi
-        cls.describeMethodQualifiedName(psi)?.let { return it }
-        return cls.describeQualifiedName(psi)
-    }
 }

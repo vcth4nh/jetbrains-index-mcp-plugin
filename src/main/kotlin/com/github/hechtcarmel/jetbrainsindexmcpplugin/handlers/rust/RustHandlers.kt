@@ -261,21 +261,37 @@ abstract class BaseRustHandler<T> : LanguageHandler<T> {
 
     /**
      * Resolves a reference to its target element.
+     *
+     * Tries three strategies in order:
+     *  1. `element.getReference().resolve()` — direct path resolution.
+     *  2. `element.resolve()` — for elements that expose resolve directly.
+     *  3. `element.getPath().getReference().resolve()` — navigates through the
+     *     embedded `RsPath` for wrapper PSI like `RsTraitRef` and
+     *     `RsTypeReference`. These wrappers don't proxy `getReference()` to the
+     *     path, so direct resolution returns null.
+     *
+     * The path-navigation step is what unblocks supertype/subtype resolution
+     * for `impl Trait for Type { ... }` constructs in [RustTypeHierarchyImpl].
      */
     protected fun resolveReference(element: PsiElement): PsiElement? {
-        return try {
-            val referenceMethod = element.javaClass.getMethod("getReference")
-            val reference = referenceMethod.invoke(element) as? com.intellij.psi.PsiReference
-            reference?.resolve()
-        } catch (e: Exception) {
-            // Try resolve() directly if available
-            try {
-                val resolveMethod = element.javaClass.getMethod("resolve")
-                resolveMethod.invoke(element) as? PsiElement
-            } catch (e2: Exception) {
-                null
+        runCatching {
+            val ref = element.javaClass.getMethod("getReference").invoke(element) as? com.intellij.psi.PsiReference
+            ref?.resolve()
+        }.getOrNull()?.let { return it }
+
+        runCatching {
+            element.javaClass.getMethod("resolve").invoke(element) as? PsiElement
+        }.getOrNull()?.let { return it }
+
+        runCatching {
+            val path = element.javaClass.getMethod("getPath").invoke(element) as? PsiElement
+            path?.let { p ->
+                val pathRef = p.javaClass.getMethod("getReference").invoke(p) as? com.intellij.psi.PsiReference
+                pathRef?.resolve()
             }
-        }
+        }.getOrNull()?.let { return it }
+
+        return null
     }
 
     /**

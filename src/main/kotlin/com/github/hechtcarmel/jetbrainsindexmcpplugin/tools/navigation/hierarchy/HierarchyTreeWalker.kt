@@ -44,11 +44,26 @@ internal class HierarchyWalkResult(
 )
 
 /**
- * [LogicalElementResolver] that delegates to a `HierarchyBrowserBase`'s `protected`
- * `getElementFromDescriptor(descriptor)` method via reflection. Each language's
- * browser knows the right way to extract the logical element from its own descriptor
- * type (e.g. Java's CallHierarchyBrowser returns `descriptor.getEnclosingElement()`
- * for a call hierarchy node, which is the calling method, not the call site).
+ * [LogicalElementResolver] used for the IDE-driven path. Resolution order:
+ *
+ * 1. `descriptor.getEnclosingElement()` — the IDE's own notion of the
+ *    "logical owner" of a hierarchy node (e.g. Java/Rust/JS call-hierarchy
+ *    descriptors expose this). Returns the enclosing method/class regardless
+ *    of whether the descriptor's `psiElement` points at a call-site reference.
+ *
+ * 2. Browser's `protected getElementFromDescriptor(descriptor)` — fallback for
+ *    descriptors that don't expose getEnclosingElement directly (e.g. Java's
+ *    type-hierarchy descriptor uses `getPsiClass()` which the browser routes
+ *    to). Each language's browser knows how to extract the logical element
+ *    from its own descriptor type.
+ *
+ * 3. `descriptor.psiElement` — last-resort fallback.
+ *
+ * Rationale: Rust's `RsCallHierarchyBrowser.getElementFromDescriptor()` returns
+ * `descriptor.psiElement` (the call-site reference), while Java's returns
+ * `descriptor.getEnclosingElement()` (the calling method). Preferring
+ * `getEnclosingElement` directly normalises this — Rust callers now point at
+ * the calling fn, matching Java/Kotlin/Python/PHP/Go semantics.
  */
 internal class BrowserBackedResolver(private val browser: HierarchyBrowserBaseEx) : LogicalElementResolver {
     private val getElementMethod: java.lang.reflect.Method? = run {
@@ -65,6 +80,13 @@ internal class BrowserBackedResolver(private val browser: HierarchyBrowserBaseEx
     }
 
     override fun resolve(descriptor: HierarchyNodeDescriptor): PsiElement? {
+        // Prefer descriptor.getEnclosingElement() — uniform "logical owner" across languages.
+        val enclosing = runCatching {
+            descriptor.javaClass.getMethod("getEnclosingElement").invoke(descriptor) as? PsiElement
+        }.getOrNull()
+        if (enclosing != null) return enclosing
+
+        // Fallback: ask the browser.
         val method = getElementMethod ?: return descriptor.psiElement
         return runCatching { method.invoke(browser, descriptor) as? PsiElement }
             .getOrNull() ?: descriptor.psiElement
@@ -169,6 +191,7 @@ internal object HierarchyTreeWalker {
         val structure = invokeCreateHierarchyTreeStructure(browser, typeName, target)
             ?: return Result.failure(IllegalStateException("Browser refused element ${element.text} for $kind"))
 
+        runCatching { structure.baseDescriptor.update() }
         walkRecursive(structure, structure.baseDescriptor, maxDepth, mutableSetOf())
         return Result.success(HierarchyWalkResult(structure.baseDescriptor, BrowserBackedResolver(browser)))
     }
@@ -302,6 +325,9 @@ internal object HierarchyTreeWalker {
             .filterIsInstance<HierarchyNodeDescriptor>()
         node.cachedChildren = descriptorChildren.toTypedArray<Any>()
         for (child in descriptorChildren) {
+            // Trigger the descriptor's presentation update so getHighlightedText()
+            // is populated — the IDE normally does this in the UI tree renderer.
+            runCatching { child.update() }
             walkRecursive(structure, child, depthLeft - 1, visited)
         }
     }

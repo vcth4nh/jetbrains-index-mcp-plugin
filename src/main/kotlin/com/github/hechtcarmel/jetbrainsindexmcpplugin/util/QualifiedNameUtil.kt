@@ -40,15 +40,18 @@ object QualifiedNameUtil {
      * @return qualified name, or null when no provider or fallback handles the element.
      */
     fun getQualifiedName(element: PsiElement): String? {
-        for (provider in QualifiedNameProvider.EP_NAME.extensionList) {
-            try {
-                val result = provider.getQualifiedName(element)
-                if (!result.isNullOrBlank()) return result
-            } catch (e: Exception) {
-                LOG.debug(
-                    "QualifiedNameProvider ${provider.javaClass.simpleName} threw for " +
-                        "${element.javaClass.simpleName}: ${e.message}"
-                )
+        for (candidate in generateSequence(element) { it.parent }.takeWhile { it !is PsiFile }) {
+            for (provider in QualifiedNameProvider.EP_NAME.extensionList) {
+                try {
+                    val adjusted = provider.adjustElementToCopy(candidate) ?: candidate
+                    val result = provider.getQualifiedName(adjusted)
+                    if (!result.isNullOrBlank()) return result
+                } catch (e: Exception) {
+                    LOG.debug(
+                        "QualifiedNameProvider ${provider.javaClass.simpleName} threw for " +
+                            "${candidate.javaClass.simpleName}: ${e.message}"
+                    )
+                }
             }
         }
 

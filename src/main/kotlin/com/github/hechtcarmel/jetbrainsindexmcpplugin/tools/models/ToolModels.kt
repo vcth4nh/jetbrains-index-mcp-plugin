@@ -225,6 +225,26 @@ data class BuildProjectResult(
     val durationMs: Long
 )
 
+// ide_install_plugin output
+@Serializable
+data class InstallPluginResult(
+    val installed: Boolean,
+    val source: String,
+    val pluginDir: String,
+    val pluginId: String? = null,
+    val pluginVersion: String? = null,
+    val restartRequired: Boolean = true,
+    val message: String
+)
+
+// ide_restart output
+@Serializable
+data class RestartIdeResult(
+    val restarting: Boolean,
+    val delaySeconds: Int,
+    val message: String
+)
+
 // ide_find_symbol output
 @Serializable
 data class FindSymbolResult(

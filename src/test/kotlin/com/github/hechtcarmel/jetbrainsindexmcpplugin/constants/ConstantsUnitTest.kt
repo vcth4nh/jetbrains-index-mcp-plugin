@@ -23,6 +23,8 @@ class ConstantsUnitTest : TestCase() {
     fun testToolNamesProjectTools() {
         assertEquals("ide_index_status", ToolNames.INDEX_STATUS)
         assertEquals("ide_build_project", ToolNames.BUILD_PROJECT)
+        assertEquals("ide_install_plugin", ToolNames.INSTALL_PLUGIN)
+        assertEquals("ide_restart", ToolNames.RESTART_IDE)
     }
 
     fun testToolNamesRefactoringTools() {
@@ -61,6 +63,8 @@ class ConstantsUnitTest : TestCase() {
             ToolNames.INDEX_STATUS,
             ToolNames.SYNC_FILES,
             ToolNames.BUILD_PROJECT,
+            ToolNames.INSTALL_PLUGIN,
+            ToolNames.RESTART_IDE,
             ToolNames.REFACTOR_RENAME,
             ToolNames.REFACTOR_SAFE_DELETE,
             ToolNames.REFACTOR_MOVE,
