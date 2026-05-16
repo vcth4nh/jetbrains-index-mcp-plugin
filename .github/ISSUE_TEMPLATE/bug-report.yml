@@ -1,0 +1,103 @@
+name: Bug report
+description: Something is not working
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        #### Thank you for taking the time to report a bug!
+
+        Before opening an issue, please check:
+        - [Existing issues](https://github.com/hechtcarmel/jetbrains-index-mcp-plugin/issues?q=is%3Aissue)
+        - [README / Troubleshooting](https://github.com/hechtcarmel/jetbrains-index-mcp-plugin#readme)
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of what the bug is. Include screenshots if applicable.
+      placeholder: |
+        The tool `ide_find_usages` returns an empty result when...
+
+        [Screenshot if applicable]
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Steps to reproduce the behavior. Include code snippets or MCP tool calls if possible.
+      placeholder: |
+        1. Open a project with the following code:
+           ```java
+           public class Example { ... }
+           ```
+        2. Call the MCP tool:
+           ```bash
+           fastmcp call --server-spec http://127.0.0.1:29170/index-mcp/streamable-http --target ide_find_usages file=Example.java line=1 column=14
+           ```
+        3. See error / unexpected result
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual behavior
+      description: What did you expect to happen, and what actually happened?
+      placeholder: |
+        Expected: 3 usages found (constructor call, field access, import)
+        Actual: 0 usages returned
+    validations:
+      required: true
+  - type: input
+    id: ide-version
+    attributes:
+      label: IDE and version
+      description: Which JetBrains IDE and its version number (Help > About)
+      placeholder: "e.g. IntelliJ IDEA 2025.1.2"
+    validations:
+      required: true
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Plugin version
+      description: Check Settings > Plugins > IDE Index MCP Server for the version
+      placeholder: "e.g. 5.4.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: ide-type
+    attributes:
+      label: IDE type
+      options:
+        - IntelliJ IDEA
+        - PyCharm
+        - WebStorm
+        - GoLand
+        - PhpStorm
+        - RustRover
+        - CLion
+        - Android Studio
+        - Rider
+        - RubyMine
+        - DataGrip
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Paste any relevant IDE logs (Help > Show Log in Explorer) or MCP server error output.
+      render: bash
+    validations:
+      required: false
+  - type: checkboxes
+    id: required-checks
+    attributes:
+      label: Please confirm the following
+      options:
+        - label: I have searched for relevant existing issues before opening this report.
+          required: true
+        - label: I have updated the title field above with a concise description.
+          required: true
