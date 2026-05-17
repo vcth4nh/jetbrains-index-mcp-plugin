@@ -89,12 +89,13 @@ Package map under `src/main/kotlin/com/github/hechtcarmel/jetbrainsindexmcpplugi
   PSI reflection layer (kind/qualifiedName/name without compile-time language deps);
   `HierarchyScopeMapping`; `RustTypeHierarchyFallback`/`Impl` (Strategy II — RustRover
   ships no type-hierarchy provider). See "Hierarchy Tools" below.
-- `handlers/` — per-language `LanguageHandler` impls (`ImplementationsHandler`,
-  `SuperMethodsHandler`, `SymbolReferenceHandler` only — hierarchy handlers were
-  removed). `PopupFaithfulSymbolSearch`/`ClassSearch` (headless Go-to-Symbol popup
-  model), `SymbolDataConverter`, `LanguageDisplayName`, `BuiltInSearchScope*`,
-  `FindUsagesHandlerSearch`. `{java,python,javascript,go,php,rust}/` per-language impls
-  (non-Java use reflection to avoid `NoClassDefFoundError`).
+- `handlers/` — `LanguageService` (abstract base) + `LanguageServiceRegistry` (singleton
+  lookup). Per-language subclasses in `{java,kotlin,python,javascript,go,php,rust}/`
+  provide kind resolution + super methods (non-Java use reflection to avoid
+  `NoClassDefFoundError`). Also: `PopupFaithfulSymbolSearch`/`ClassSearch` (headless
+  Go-to-Symbol popup model), `SymbolDataConverter`, `LanguageDisplayName`,
+  `BuiltInSearchScope*`, `FindUsagesHandlerSearch`, `HandlerDataClasses` (wire-format
+  data classes).
 - `util/` — `QualifiedNameUtil` (QualifiedNameProvider EP delegation + Go/Rust
   fallbacks), `ClassResolver`, `ProjectUtils`, `PsiUtils`, `PluginDetectors`,
   `ThreadingUtils`
@@ -438,25 +439,31 @@ Two distinct mechanisms — pick by whether the platform exposes a usable extens
 "Hierarchy Tools" below. Qualified names everywhere go through `QualifiedNameUtil` →
 `QualifiedNameProvider` EP.
 
-**2. `LanguageHandler` pattern (where no universal EP fits).** Used by
-`ide_find_implementations`, `ide_find_super_methods`, and symbol-reference resolution.
+**2. `LanguageService` OOP hierarchy (where no universal EP fits).** Used for kind
+resolution and `ide_find_super_methods`.
 
-- `LanguageHandler<T>` — base interface. Surviving handler types: `ImplementationsHandler`,
-  `SuperMethodsHandler`, `SymbolReferenceHandler`. (`TypeHierarchyHandler` and
-  `CallHierarchyHandler` and their 13 per-language impls were **deleted** when hierarchy
-  moved to EP delegation — commit 421c7df.)
-- `LanguageHandlerRegistry` — central registry; `PluginDetectors` — language-plugin
-  availability (runs once at startup).
-- `handlers/{java,python,javascript,go,php,rust}/*Handlers.kt` — per-language impls.
-  Java/Kotlin via direct PSI; the rest via reflection to avoid compile-time deps on
-  language plugins (prevents `NoClassDefFoundError` in IDEs lacking them).
+- `LanguageService` — abstract base class with template-method `getKind()` (subclass
+  `resolveKind()` hook → `LanguageFindUsages.getType()` fallback → className fallback).
+  Per-language subclasses override only what the platform gets wrong.
+- `LanguageServiceRegistry` — singleton; maps language IDs → service instances.
+  `getKind(element)` always returns a value. `findSuperMethods(element, project)`
+  delegates to the matching service.
+- `handlers/{java,kotlin,python,javascript,go,php,rust}/*LanguageService.kt` — 7
+  subclasses. Java via direct PSI; the rest via reflection to avoid compile-time deps
+  on language plugins (prevents `NoClassDefFoundError` in IDEs lacking them).
+
+**3. `DefinitionsScopedSearch` EP delegation.** `ide_find_implementations` calls the
+platform's `DefinitionsScopedSearch.search()` directly — the same API behind Ctrl+Alt+B.
+Works for all languages (each plugin registers its own `QueryExecutor`).
 
 **Registration flow** (`ToolRegistry`, during `McpServerService` init):
-1. `registerUniversalTools()` — tools that work in every IDE (incl. `ide_refactor_rename`,
-   `ide_sync_files`, the hierarchy tools, `ide_install_plugin`/`ide_restart`)
-2. `registerLanguageNavigationTools()` — handler-backed nav tools when any language
-   handler is available
-3. `registerJavaRefactoringTools()` — `ide_refactor_safe_delete` if Java plugin present
+1. `LanguageServiceRegistry.registerServices()` — reflectively loads per-language services
+2. `registerUniversalTools()` — tools that work in every IDE (incl. `ide_refactor_rename`,
+   `ide_sync_files`, the hierarchy tools, `ide_find_implementations`,
+   `ide_install_plugin`/`ide_restart`)
+3. `registerLanguageNavigationTools()` — `ide_find_super_methods` (gated by
+   `LanguageServiceRegistry.hasSuperMethodsSupport()`), hierarchy tools
+4. `registerJavaRefactoringTools()` — `ide_refactor_safe_delete` if Java plugin present
 
 ### Hierarchy Tools (IDE Extension-Point Delegation)
 
@@ -473,10 +480,11 @@ window. Code in `tools/navigation/hierarchy/`:
   element, preferring `descriptor.getEnclosingElement()` (the IDE's own "logical owner"
   notion) over the browser's `getElementFromDescriptor`. Normalizes Rust callers (whose
   browser returns the call site) to the enclosing method like every other language.
-- **`ClassLikePsi`** — cross-IDE PSI reflection: `kind` (CLASS/INTERFACE/STRUCT/TRAIT/…),
-  qualified/display name, walk-up to class-/method-like. Uses `Class.forName` +
-  `isInstance` so a single binary runs in PyCharm/GoLand/RustRover/etc. without
-  compile-time language-plugin refs. Element `kind` is the one thing with no universal
+- **`ClassLikePsi`** — cross-IDE PSI reflection: `kind` (delegates to
+  `LanguageServiceRegistry.getKind()`), qualified/display name, walk-up to
+  class-/method-like. Uses `Class.forName` + `isInstance` so a single binary runs in
+  PyCharm/GoLand/RustRover/etc. without compile-time language-plugin refs. Element
+  `kind` is the one thing with no universal
   API — classification here is unavoidably per-language.
 - **`HierarchyScopeMapping`** — maps our `BuiltInSearchScope` to the IDE's hierarchy
   scope strings. `PROJECT_FILES → SCOPE_ALL` deliberately (matches the IDE's
@@ -493,7 +501,7 @@ Symbol search across all languages drives IntelliJ's headless "Go to Symbol" pop
 - Wraps `GotoSymbolModel2` + `ChooseByNameModelEx` — the same APIs as IntelliJ's own Ctrl+Alt+Shift+N popup
 - Inherits the IDE's parallel execution, dumb-mode safety, cancellation, proximity-aware sorting, and qualified-query support (e.g. `BasicSolver.run`)
 - `FindSymbolTool` owns the over-fetch loop and converts NavigationItems to wire-format `SymbolData` via `SymbolDataConverter`
-- `SymbolDataConverter` delegates `kind` classification to `LanguageAwareKindResolver` (with a Python-specific PyTargetExpression branch) and qualified names to `QualifiedNameUtil`
+- `SymbolDataConverter` delegates `kind` classification to `LanguageServiceRegistry.getKind()` and qualified names to `QualifiedNameUtil`
 - Supports language filtering (e.g., `languageFilter = setOf("Java", "Kotlin")`)
 
 ### Pagination

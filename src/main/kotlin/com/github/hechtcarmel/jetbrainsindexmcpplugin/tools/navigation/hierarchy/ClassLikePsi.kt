@@ -1,5 +1,6 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy
 
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry
 import com.intellij.ide.hierarchy.HierarchyNodeDescriptor
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNamedElement
@@ -43,10 +44,6 @@ internal object ClassLikePsi {
     private val JS_CLASS by lazy { loadClass("com.intellij.lang.javascript.psi.ecmal4.JSClass") }
     private val PHP_CLASS by lazy { loadClass("com.jetbrains.php.lang.psi.elements.PhpClass") }
     private val GO_TYPE_SPEC by lazy { loadClass("com.goide.psi.GoTypeSpec") }
-    // Go marker interfaces — used by goKind() to classify via instanceof rather
-    // than by impl-class simpleName. Survives Impl-class renames in the Go plugin.
-    private val GO_INTERFACE_TYPE by lazy { loadClass("com.goide.psi.GoInterfaceType") }
-    private val GO_STRUCT_TYPE by lazy { loadClass("com.goide.psi.GoStructType") }
     private val RS_TRAIT_ITEM by lazy { loadClass("org.rust.lang.core.psi.RsTraitItem") }
     private val RS_STRUCT_ITEM by lazy { loadClass("org.rust.lang.core.psi.RsStructItem") }
     private val RS_ENUM_ITEM by lazy { loadClass("org.rust.lang.core.psi.RsEnumItem") }
@@ -116,44 +113,7 @@ internal object ClassLikePsi {
      * tell — preserves wire-format compatibility.
      */
     fun describeKind(element: PsiElement): String {
-        // Java PsiClass — disambiguate via reflective method invocation.
-        PSI_CLASS?.takeIf { it.isInstance(element) }?.let {
-            val cls = element
-            val isInterface = invokeBoolean(cls, "isInterface")
-            val isEnum = invokeBoolean(cls, "isEnum")
-            val isRecord = invokeBoolean(cls, "isRecord")
-            val isAnnotationType = invokeBoolean(cls, "isAnnotationType")
-            val isAbstract = element.javaClass.simpleName.let { _ ->
-                runCatching {
-                    val m = cls.javaClass.getMethod("hasModifierProperty", String::class.java)
-                    m.invoke(cls, "abstract") as Boolean
-                }.getOrDefault(false)
-            }
-            return when {
-                isAnnotationType -> "ANNOTATION"
-                isInterface -> "INTERFACE"
-                isEnum -> "ENUM"
-                isRecord -> "RECORD"
-                isAbstract -> "ABSTRACT_CLASS"
-                else -> "CLASS"
-            }
-        }
-        // Kotlin
-        if (KT_CLASS_OR_OBJECT?.isInstance(element) == true) return kotlinKind(element)
-        // Python
-        if (PY_CLASS?.isInstance(element) == true) return "CLASS"
-        // JS/TS — JSClass also implements PsiClass on some platforms; we already returned above.
-        if (JS_CLASS?.isInstance(element) == true) return jsKind(element)
-        // PHP — PhpClass implements PsiClass on some platforms; already returned above.
-        if (PHP_CLASS?.isInstance(element) == true) return phpKind(element)
-        // Go
-        if (GO_TYPE_SPEC?.isInstance(element) == true) return goKind(element)
-        // Rust
-        if (RS_TRAIT_ITEM?.isInstance(element) == true) return "TRAIT"
-        if (RS_STRUCT_ITEM?.isInstance(element) == true) return "STRUCT"
-        if (RS_ENUM_ITEM?.isInstance(element) == true) return "ENUM"
-        if (RS_IMPL_ITEM?.isInstance(element) == true) return "IMPL"
-        return "CLASS"
+        return LanguageServiceRegistry.getKind(element)
     }
 
     /**
@@ -164,72 +124,6 @@ internal object ClassLikePsi {
      */
     fun describeQualifiedName(element: PsiElement): String? =
         com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil.getQualifiedName(element)
-
-    private fun kotlinKind(element: PsiElement): String {
-        // KtClass.isInterface, isEnum, etc. — but KtObjectDeclaration is "OBJECT".
-        // `abstract` is a modifier, not a dedicated boolean accessor on KtClass;
-        // probe the modifier list's text. (KtUltraLightClass for K2 has
-        // hasModifierProperty("abstract") but those instances flow through the
-        // PSI_CLASS branch in describeKind, not here.)
-        val name = element.javaClass.simpleName
-        return when {
-            invokeBoolean(element, "isAnnotation") -> "ANNOTATION"
-            invokeBoolean(element, "isInterface") -> "INTERFACE"
-            invokeBoolean(element, "isEnum") -> "ENUM"
-            invokeBoolean(element, "isData") -> "DATA_CLASS"
-            invokeBoolean(element, "isSealed") -> "SEALED_CLASS"
-            name == "KtObjectDeclaration" -> "OBJECT"
-            kotlinHasModifier(element, "abstract") -> "ABSTRACT_CLASS"
-            else -> "CLASS"
-        }
-    }
-
-    /**
-     * Returns true if [element]'s modifier list text contains [modifier]. Used for
-     * Kotlin's `abstract` keyword since `KtClass` exposes no `isAbstract()` accessor
-     * (unlike `isData()` / `isSealed()`).
-     */
-    private fun kotlinHasModifier(element: PsiElement, modifier: String): Boolean = runCatching {
-        val modList = element.javaClass.getMethod("getModifierList").invoke(element) as? PsiElement
-        // Match on whole-word boundary so "abstract" doesn't false-positive for, say, "abstracted".
-        modList?.text?.let { text -> Regex("\\b${Regex.escape(modifier)}\\b").containsMatchIn(text) } == true
-    }.getOrDefault(false)
-
-    private fun jsKind(element: PsiElement): String =
-        if (invokeBoolean(element, "isInterface")) "INTERFACE" else "CLASS"
-
-    private fun phpKind(element: PsiElement): String = when {
-        invokeBoolean(element, "isInterface") -> "INTERFACE"
-        invokeBoolean(element, "isTrait") -> "TRAIT"
-        invokeBoolean(element, "isEnum") -> "ENUM"
-        invokeBoolean(element, "isAbstract") -> "ABSTRACT_CLASS"
-        else -> "CLASS"
-    }
-
-    private fun goKind(element: PsiElement): String {
-        // GoTypeSpec exposes getSpecType() (NOT getType()), and GoSpecType.getType()
-        // returns a GoType whose concrete impl class is GoStructTypeImpl /
-        // GoInterfaceTypeImpl / GoArrayTypeImpl / etc. Classify via marker
-        // interfaces (GoInterfaceType, GoStructType) rather than impl simpleName
-        // so the check survives Impl-class renames.
-        // The IDE's own check is `((GoTypeSpec)e).getSpecType().getType() instanceof GoInterfaceType`.
-        val specType = runCatching {
-            element.javaClass.getMethod("getSpecType").invoke(element) as? PsiElement
-        }.getOrNull() ?: return "TYPE"
-        val goType = runCatching {
-            specType.javaClass.getMethod("getType").invoke(specType) as? PsiElement
-        }.getOrNull() ?: return "TYPE"
-        return when {
-            GO_INTERFACE_TYPE?.isInstance(goType) == true -> "INTERFACE"
-            GO_STRUCT_TYPE?.isInstance(goType) == true -> "STRUCT"
-            else -> "TYPE"   // alias, function type, array, map, channel, pointer, etc.
-        }
-    }
-
-    private fun invokeBoolean(target: Any, method: String): Boolean = runCatching {
-        target.javaClass.getMethod(method).invoke(target) as? Boolean ?: false
-    }.getOrDefault(false)
-
 
     // -------------------- method-like helpers --------------------
 

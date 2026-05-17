@@ -33,19 +33,13 @@ class FindDefinitionTool : AbstractMcpTool() {
 
         Returns: file path, line/column of definition, code preview, and symbol name.
 
-        Target (mutually exclusive):
-        - file + line + column: position-based lookup
-        - language + symbol: fully qualified symbol reference (currently supported for Java only)
-
         Example: {"file": "src/Main.java", "line": 15, "column": 10}
-        Example: {"language": "Java", "symbol": "com.example.MyClass#processData(String)"}
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
         .projectPath()
-        .file(required = false, description = "Project-relative file path, or a dependency/library absolute path or jar:// URL previously returned by the plugin. Required for position-based lookup.")
-        .lineAndColumn(required = false)
-        .languageAndSymbol(required = false)
+        .file(description = "Project-relative file path, or a dependency/library absolute path or jar:// URL previously returned by the plugin.")
+        .lineAndColumn()
         .booleanProperty(ParamNames.FULL_ELEMENT_PREVIEW, "If true, returns the complete element code instead of a preview snippet. Optional, defaults to false.")
         .intProperty(ParamNames.MAX_PREVIEW_LINES, "Maximum lines for fullElementPreview. Truncates large classes/functions. Default: 50, Max: 500. Only used when fullElementPreview=true.")
         .build()

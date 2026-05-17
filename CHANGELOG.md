@@ -5,6 +5,18 @@
 ## [Unreleased]
 
 ### Changed
+- Replaced scattered per-language handler architecture with OOP `LanguageService` hierarchy. Kind resolution unified: single `LanguageServiceRegistry.getKind()` replaces 6+ duplicated implementations (`LanguageAwareKindResolver`, `ClassLikePsi.describeKind()`, and 4 per-handler `determineElementKind()` methods).
+- `ide_find_implementations` now uses `DefinitionsScopedSearch` EP delegation (works for all languages including Go, matching IDE's Ctrl+Alt+B behavior).
+
+### Removed
+- `LanguageHandler` interfaces (`ImplementationsHandler`, `SuperMethodsHandler`, `SymbolReferenceHandler`) and `LanguageHandlerRegistry` — replaced by `LanguageService` / `LanguageServiceRegistry`.
+- `LanguageAwareKindResolver` — absorbed into `LanguageService` subclasses.
+- Per-language handler files (`JavaHandlers`, `PythonHandlers`, `JavaScriptHandlers`, `GoHandlers`, `PhpHandlers`, `RustHandlers`).
+
+### Breaking
+- Tools `ide_find_usages`, `ide_find_definition`, `ide_find_implementations`, `ide_find_super_methods`, `ide_call_hierarchy` no longer accept `language` + `symbol` parameters. Use `file` + `line` + `column` instead.
+
+### Changed
 - **`ide_file_structure` formatted-string output now prefixes each line with explicit modifiers** (e.g. `public abstract Shape (line 10)`, `private final radius (line 19)`, `public draw() String (line 31)`). Modifier extraction is language-agnostic: a single `UniversalModifiers` helper reflectively probes the conventional accessors (`getModifierList` / `getAttributeList` / `getVis`) and splits the resulting source text on whitespace, dropping annotations. Covers Java, Kotlin, PHP, JavaScript, TypeScript, and Rust by default. Python, Go, and Markdown have no modifier concept in their PSI and produce no modifier prefix. Beyond modifiers, the line uses the IDE's own `ItemPresentation.presentableText` (name + signature) and `locationString` (return type / qualifier) verbatim — no per-language decorator code. Caveat: Kotlin's `KtModifierList` includes declaration-shape keywords like `data`, `sealed`, `enum`, `annotation`, so those will surface as modifiers (e.g. `data Point` for `data class Point`); this is grammatically correct in Kotlin and was accepted to keep the extractor language-agnostic.
 
 ### Breaking

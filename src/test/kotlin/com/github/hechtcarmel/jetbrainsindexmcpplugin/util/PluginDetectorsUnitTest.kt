@@ -33,7 +33,6 @@ class PluginDetectorsUnitTest : TestCase() {
         assertNotNull(PluginDetectors.go)
         assertNotNull(PluginDetectors.php)
         assertNotNull(PluginDetectors.rust)
-        assertNotNull(PluginDetectors.markdown)
     }
 
     fun testPluginDetectorsHaveCorrectNames() {
@@ -43,6 +42,5 @@ class PluginDetectorsUnitTest : TestCase() {
         assertEquals("Go", PluginDetectors.go.name)
         assertEquals("PHP", PluginDetectors.php.name)
         assertEquals("Rust", PluginDetectors.rust.name)
-        assertEquals("Markdown", PluginDetectors.markdown.name)
     }
 }

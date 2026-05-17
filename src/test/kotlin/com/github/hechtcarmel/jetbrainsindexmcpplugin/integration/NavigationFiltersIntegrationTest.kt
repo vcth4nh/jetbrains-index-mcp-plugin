@@ -1,6 +1,6 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.integration
 
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageHandlerRegistry
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ContentBlock
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.CallHierarchyResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.FindClassResult
@@ -43,12 +43,12 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
 
     override fun setUp() {
         super.setUp()
-        LanguageHandlerRegistry.registerHandlers()
+        LanguageServiceRegistry.registerServices()
     }
 
     override fun tearDown() {
         try {
-            LanguageHandlerRegistry.clear()
+            LanguageServiceRegistry.clear()
         } finally {
             super.tearDown()
         }

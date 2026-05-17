@@ -1,9 +1,8 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation
 
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ErrorMessages
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ParamNames
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ToolNames
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageHandlerRegistry
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.AbstractMcpTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.MethodInfo
@@ -17,9 +16,9 @@ import kotlinx.serialization.json.JsonObject
 /**
  * Tool for finding super methods across multiple languages.
  *
- * Supports: Java, Kotlin, Python, JavaScript, TypeScript, PHP, Rust
+ * Supports: Java, Kotlin, Python, JavaScript, TypeScript, PHP
  *
- * Delegates to language-specific handlers via [LanguageHandlerRegistry].
+ * Delegates to language-specific services via [LanguageServiceRegistry].
  */
 class FindSuperMethodsTool : AbstractMcpTool() {
 
@@ -34,19 +33,13 @@ class FindSuperMethodsTool : AbstractMcpTool() {
 
         Returns: full hierarchy chain from immediate parent (depth=1) to root, with file locations (line/column) and containing class info.
 
-        Target (mutually exclusive):
-        - file + line + column: position-based lookup (position can be anywhere within the method body)
-        - language + symbol: fully qualified symbol reference (currently supported for Java only)
-
         Example: {"file": "src/UserServiceImpl.java", "line": 25, "column": 10}
-        Example: {"language": "Java", "symbol": "com.example.UserServiceImpl#getUser(String)"}
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
         .projectPath()
-        .file(required = false, description = "Project-relative file path, or a dependency/library absolute path or jar:// URL previously returned by the plugin. Required for position-based lookup.")
-        .lineAndColumn(required = false)
-        .languageAndSymbol(required = false)
+        .file(description = "Project-relative file path, or a dependency/library absolute path or jar:// URL previously returned by the plugin.")
+        .lineAndColumn()
         .build()
 
     override suspend fun doExecute(project: Project, arguments: JsonObject): ToolCallResult {
@@ -59,27 +52,16 @@ class FindSuperMethodsTool : AbstractMcpTool() {
 
             // Tool-layer gate: reject position-based invocations where the caret is not on a
             // resolvable target. See CallHierarchyTool for rationale.
-            val isSymbolMode = arguments[ParamNames.LANGUAGE] != null
-            if (!isSymbolMode && PsiUtils.resolveTargetElement(element) == null) {
+            if (PsiUtils.resolveTargetElement(element) == null) {
                 return@suspendingReadAction createErrorResult(
                     "No method found at position. Ensure the position is within a method declaration or body."
                 )
             }
 
-            // Find appropriate handler for this element's language
-            val handler = LanguageHandlerRegistry.getSuperMethodsHandler(element)
-            if (handler == null) {
-                return@suspendingReadAction createErrorResult(
-                    "No super methods handler available for language: ${element.language.id}. " +
-                    "Supported languages: ${LanguageHandlerRegistry.getSupportedLanguagesForSuperMethods()}"
-                )
-            }
-
-            val superMethodsData = handler.findSuperMethods(element, project)
+            val superMethodsData = LanguageServiceRegistry.findSuperMethods(element, project)
             if (superMethodsData == null) {
                 return@suspendingReadAction createErrorResult(
-                    if (isSymbolMode) "No method found for the specified symbol. Ensure the symbol refers to a method declaration."
-                    else "No method found at position. Ensure the position is within a method declaration or body."
+                    "No method found at position. Ensure the position is within a method declaration or body."
                 )
             }
 
