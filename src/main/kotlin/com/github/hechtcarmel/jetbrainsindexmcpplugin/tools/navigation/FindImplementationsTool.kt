@@ -322,7 +322,7 @@ class FindImplementationsTool : AbstractMcpTool() {
                 .invoke(null, targetClass) as? Boolean ?: false
             if (!isFunctional) return
 
-            val searchMethod = functionalExpressionSearchClass!!.getMethod("search", psiClass, com.intellij.psi.search.GlobalSearchScope::class.java)
+            val searchMethod = functionalExpressionSearchClass!!.getMethod("search", psiClass, com.intellij.psi.search.SearchScope::class.java)
             val query = searchMethod.invoke(null, targetClass, searchScope)
             val forEachMethod = query.javaClass.getMethod("forEach", com.intellij.util.Processor::class.java)
             forEachMethod.invoke(query, com.intellij.util.Processor<PsiElement> { funExpr ->
