@@ -56,6 +56,10 @@ class FindImplementationsTool : AbstractMcpTool() {
         private val rsImplItemClass: Class<*>? by lazy {
             try { Class.forName("org.rust.lang.core.psi.RsImplItem") } catch (_: ClassNotFoundException) { null }
         }
+
+        private val rsFunctionClass: Class<*>? by lazy {
+            try { Class.forName("org.rust.lang.core.psi.RsFunction") } catch (_: ClassNotFoundException) { null }
+        }
     }
 
     override val name = "ide_find_implementations"
@@ -185,6 +189,11 @@ class FindImplementationsTool : AbstractMcpTool() {
         if (rsImplItemClass?.isInstance(element) == true) {
             name = buildRustImplName(element)
             kind = "IMPL"
+        } else if (rsFunctionClass?.isInstance(element) == true) {
+            val namedElement = element as? PsiNamedElement ?: return null
+            val bareName = namedElement.name ?: return null
+            kind = LanguageServiceRegistry.getKind(element)
+            name = if (kind == "METHOD") buildRustMethodName(element, bareName) else bareName
         } else {
             val namedElement = element as? PsiNamedElement ?: return null
             name = namedElement.name ?: return null
@@ -200,6 +209,23 @@ class FindImplementationsTool : AbstractMcpTool() {
             language = displayLanguageName(element.language.id),
             qualifiedName = QualifiedNameUtil.getQualifiedName(element)
         )
+    }
+
+    private fun buildRustMethodName(element: PsiElement, bareName: String): String {
+        return try {
+            var current = element.parent
+            var depth = 0
+            while (current != null && depth < 5) {
+                if (rsImplItemClass?.isInstance(current) == true) {
+                    val typeRef = current.javaClass.getMethod("getTypeReference").invoke(current)
+                    val typeName = typeRef?.let { it.javaClass.getMethod("getText").invoke(it) as? String }?.trim()
+                    if (typeName != null) return "$typeName::$bareName"
+                }
+                current = current.parent
+                depth++
+            }
+            bareName
+        } catch (_: Exception) { bareName }
     }
 
     private fun buildRustImplName(implItem: PsiElement): String {

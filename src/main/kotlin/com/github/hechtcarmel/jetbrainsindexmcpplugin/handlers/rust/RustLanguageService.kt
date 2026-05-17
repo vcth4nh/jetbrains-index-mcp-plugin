@@ -48,7 +48,9 @@ class RustLanguageService : LanguageService() {
     private fun resolveRustFunction(element: PsiElement): String {
         return try {
             val parent = element.parent
-            if (rsImplItem?.isInstance(parent) == true || rsTraitItem?.isInstance(parent) == true) {
+            val grandparent = parent?.parent
+            if (rsImplItem?.isInstance(parent) == true || rsTraitItem?.isInstance(parent) == true ||
+                rsImplItem?.isInstance(grandparent) == true || rsTraitItem?.isInstance(grandparent) == true) {
                 "METHOD"
             } else {
                 "FUNCTION"
