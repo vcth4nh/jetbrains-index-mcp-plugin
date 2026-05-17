@@ -20,6 +20,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiClass
+import com.intellij.psi.presentation.java.ClassPresentationUtil
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
@@ -120,13 +121,10 @@ class FindImplementationsTool : AbstractMcpTool() {
                 return@suspendingReadAction null to createErrorResult(it.message ?: ErrorMessages.COULD_NOT_RESOLVE_SYMBOL)
             }
 
-            // Tool-layer gate: reject position-based invocations where the caret is not on a
-            // resolvable target. See CallHierarchyTool for rationale.
-            if (PsiUtils.resolveTargetElement(element) == null) {
+            val target = PsiUtils.resolveTargetElement(element)
+            if (target == null) {
                 return@suspendingReadAction null to createErrorResult("No method or class found at position")
             }
-
-            val target = PsiUtils.resolveTargetElement(element) ?: element
             val searchScope = BuiltInSearchScopeResolver.resolveGlobalScope(project, scope)
             val collectLimit = maxOf(PaginationService.DEFAULT_OVERCOLLECT, pageSize)
             val results = mutableListOf<ImplementationLocation>()
@@ -196,8 +194,9 @@ class FindImplementationsTool : AbstractMcpTool() {
             name = if (kind == "METHOD") buildRustMethodName(element, bareName) else bareName
         } else {
             val namedElement = element as? PsiNamedElement ?: return null
-            name = namedElement.name ?: return null
+            val bareName = namedElement.name ?: return null
             kind = LanguageServiceRegistry.getKind(element)
+            name = buildQualifiedDisplayName(element, bareName, kind)
         }
 
         return ImplementationLocation(
@@ -209,6 +208,48 @@ class FindImplementationsTool : AbstractMcpTool() {
             language = displayLanguageName(element.language.id),
             qualifiedName = QualifiedNameUtil.getQualifiedName(element)
         )
+    }
+
+    private fun buildQualifiedDisplayName(element: PsiElement, bareName: String, kind: String): String {
+        if (kind != "METHOD" && kind != "FUNCTION") return bareName
+        val containingClass = when (element) {
+            is PsiMethod -> element.containingClass
+            else -> {
+                try {
+                    val m = element.javaClass.getMethod("getContainingClass")
+                    m.invoke(element) as? PsiElement
+                } catch (_: Exception) {
+                    findEnclosingClassLike(element)
+                }
+            }
+        }
+        if (containingClass == null) return bareName
+        val className = when (containingClass) {
+            is PsiClass -> ClassPresentationUtil.getNameForClass(containingClass, true)
+            is PsiNamedElement -> QualifiedNameUtil.getQualifiedName(containingClass) ?: containingClass.name ?: return bareName
+            else -> {
+                try {
+                    val n = containingClass.javaClass.getMethod("getName")
+                    n.invoke(containingClass) as? String ?: return bareName
+                } catch (_: Exception) { return bareName }
+            }
+        }
+        return "$className.$bareName"
+    }
+
+    private fun findEnclosingClassLike(element: PsiElement): PsiElement? {
+        var current = element.parent
+        var depth = 0
+        while (current != null && depth < 10) {
+            if (current is PsiClass) return current
+            val simpleName = current.javaClass.simpleName.lowercase()
+            if (simpleName.contains("class") && !simpleName.contains("list") && !simpleName.contains("classpath")) {
+                return current
+            }
+            current = current.parent
+            depth++
+        }
+        return null
     }
 
     private fun buildRustMethodName(element: PsiElement, bareName: String): String {
@@ -290,6 +331,14 @@ class FindImplementationsTool : AbstractMcpTool() {
 
         val name = buildFunctionalExprName(element)
 
+        val qualifiedName = if (kind == "METHOD_REFERENCE") {
+            try {
+                val resolveMethod = element.javaClass.getMethod("resolve")
+                val resolved = resolveMethod.invoke(element) as? PsiElement
+                resolved?.let { QualifiedNameUtil.getQualifiedName(it) }
+            } catch (_: Exception) { null }
+        } else null
+
         return ImplementationLocation(
             name = name,
             file = ProjectUtils.getToolFilePath(project, file),
@@ -297,7 +346,7 @@ class FindImplementationsTool : AbstractMcpTool() {
             column = column,
             kind = kind,
             language = displayLanguageName(element.language.id),
-            qualifiedName = null
+            qualifiedName = qualifiedName
         )
     }
 
