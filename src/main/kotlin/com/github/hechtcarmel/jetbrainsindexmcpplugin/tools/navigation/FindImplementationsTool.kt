@@ -19,14 +19,10 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiClass
-import com.intellij.psi.presentation.java.ClassPresentationUtil
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiNamedElement
 import com.intellij.psi.search.searches.DefinitionsScopedSearch
-import com.intellij.psi.search.searches.FunctionalExpressionSearch
 import com.intellij.psi.util.PsiModificationTracker
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -50,8 +46,24 @@ class FindImplementationsTool : AbstractMcpTool() {
         private const val DEFAULT_PAGE_SIZE = 100
         private const val MAX_PAGE_SIZE = PaginationService.MAX_PAGE_SIZE
 
+        private val psiClassClass: Class<*>? by lazy {
+            try { Class.forName("com.intellij.psi.PsiClass") } catch (_: ClassNotFoundException) { null }
+        }
+
+        private val psiMethodClass: Class<*>? by lazy {
+            try { Class.forName("com.intellij.psi.PsiMethod") } catch (_: ClassNotFoundException) { null }
+        }
+
+        private val classPresentationUtilClass: Class<*>? by lazy {
+            try { Class.forName("com.intellij.psi.presentation.java.ClassPresentationUtil") } catch (_: ClassNotFoundException) { null }
+        }
+
         private val lambdaUtilClass: Class<*>? by lazy {
             try { Class.forName("com.intellij.psi.LambdaUtil") } catch (_: ClassNotFoundException) { null }
+        }
+
+        private val functionalExpressionSearchClass: Class<*>? by lazy {
+            try { Class.forName("com.intellij.psi.search.searches.FunctionalExpressionSearch") } catch (_: ClassNotFoundException) { null }
         }
 
         private val rsImplItemClass: Class<*>? by lazy {
@@ -213,30 +225,28 @@ class FindImplementationsTool : AbstractMcpTool() {
     private fun buildQualifiedDisplayName(element: PsiElement, bareName: String, kind: String): String {
         if (kind != "METHOD" && kind != "FUNCTION") return bareName
         return try {
-            val containingClass = when (element) {
-                is PsiMethod -> element.containingClass
-                else -> {
-                    try {
-                        val m = element.javaClass.getMethod("getContainingClass")
-                        m.invoke(element) as? PsiElement
-                    } catch (_: Exception) {
-                        findEnclosingClassLike(element)
-                    }
-                }
+            val containingClass = try {
+                val m = element.javaClass.getMethod("getContainingClass")
+                m.invoke(element) as? PsiElement
+            } catch (_: Exception) {
+                findEnclosingClassLike(element)
             } ?: return bareName
 
-            val className = when (containingClass) {
-                is PsiClass -> ClassPresentationUtil.getNameForClass(containingClass, true)
-                is PsiNamedElement -> QualifiedNameUtil.getQualifiedName(containingClass)
-                    ?: containingClass.name ?: return bareName
-                else -> {
-                    try {
-                        val n = containingClass.javaClass.getMethod("getName")
-                        n.invoke(containingClass) as? String ?: return bareName
-                    } catch (_: Exception) { return bareName }
-                }
-            }
-            "$className.$bareName"
+            val className = if (psiClassClass?.isInstance(containingClass) == true && classPresentationUtilClass != null) {
+                try {
+                    val m = classPresentationUtilClass!!.getMethod("getNameForClass", psiClassClass, Boolean::class.javaPrimitiveType)
+                    m.invoke(null, containingClass, true) as? String
+                } catch (_: Exception) { null }
+            } else null
+
+            val resolvedName = className
+                ?: (containingClass as? PsiNamedElement)?.let { QualifiedNameUtil.getQualifiedName(it) ?: it.name }
+                ?: try {
+                    containingClass.javaClass.getMethod("getName").invoke(containingClass) as? String
+                } catch (_: Exception) { null }
+                ?: return bareName
+
+            "$resolvedName.$bareName"
         } catch (e: Exception) {
             LOG.debug("Failed to build qualified name for $bareName: ${e.message}")
             bareName
@@ -247,7 +257,7 @@ class FindImplementationsTool : AbstractMcpTool() {
         var current = element.parent
         var depth = 0
         while (current != null && depth < 10) {
-            if (current is PsiClass) return current
+            if (psiClassClass?.isInstance(current) == true) return current
             val simpleName = current.javaClass.simpleName.lowercase()
             if (simpleName.contains("class") && !simpleName.contains("list") && !simpleName.contains("classpath")) {
                 return current
@@ -296,21 +306,26 @@ class FindImplementationsTool : AbstractMcpTool() {
         results: MutableList<ImplementationLocation>,
         project: Project
     ) {
-        if (lambdaUtilClass == null) return
+        val psiClass = psiClassClass ?: return
+        val psiMethod = psiMethodClass ?: return
+        if (lambdaUtilClass == null || functionalExpressionSearchClass == null) return
         try {
-            val targetClass: PsiClass? = when (target) {
-                is PsiMethod -> target.containingClass
-                is PsiClass -> target
+            val targetClass: Any? = when {
+                psiMethod.isInstance(target) -> target.javaClass.getMethod("getContainingClass").invoke(target)
+                psiClass.isInstance(target) -> target
                 else -> null
             }
-            if (targetClass == null) return
+            if (targetClass == null || !psiClass.isInstance(targetClass)) return
 
             val isFunctional = lambdaUtilClass!!
-                .getMethod("isFunctionalClass", PsiClass::class.java)
+                .getMethod("isFunctionalClass", psiClass)
                 .invoke(null, targetClass) as? Boolean ?: false
             if (!isFunctional) return
 
-            FunctionalExpressionSearch.search(targetClass, searchScope).forEach(com.intellij.util.Processor { funExpr ->
+            val searchMethod = functionalExpressionSearchClass!!.getMethod("search", psiClass, com.intellij.psi.search.GlobalSearchScope::class.java)
+            val query = searchMethod.invoke(null, targetClass, searchScope)
+            val forEachMethod = query.javaClass.getMethod("forEach", com.intellij.util.Processor::class.java)
+            forEachMethod.invoke(query, com.intellij.util.Processor<PsiElement> { funExpr ->
                 val location = convertFunctionalExprToLocation(funExpr, project) ?: return@Processor true
                 results.add(location)
                 results.size < collectLimit
@@ -375,11 +390,13 @@ class FindImplementationsTool : AbstractMcpTool() {
         var current = element.parent
         var depth = 0
         while (current != null && depth < 20) {
-            if (current is PsiMethod) return current.name
+            if (psiMethodClass?.isInstance(current) == true) {
+                return (current as? PsiNamedElement)?.name
+            }
             if (current is PsiNamedElement) {
                 val simpleName = current.javaClass.simpleName.lowercase()
                 if (simpleName.contains("method") || simpleName.contains("function")) {
-                    return (current as PsiNamedElement).name
+                    return current.name
                 }
             }
             current = current.parent
@@ -392,7 +409,9 @@ class FindImplementationsTool : AbstractMcpTool() {
         var current = element.parent
         var depth = 0
         while (current != null && depth < 30) {
-            if (current is PsiClass) return current.qualifiedName ?: current.name
+            if (psiClassClass?.isInstance(current) == true) {
+                return QualifiedNameUtil.getQualifiedName(current) ?: (current as? PsiNamedElement)?.name
+            }
             current = current.parent
             depth++
         }
