@@ -212,29 +212,35 @@ class FindImplementationsTool : AbstractMcpTool() {
 
     private fun buildQualifiedDisplayName(element: PsiElement, bareName: String, kind: String): String {
         if (kind != "METHOD" && kind != "FUNCTION") return bareName
-        val containingClass = when (element) {
-            is PsiMethod -> element.containingClass
-            else -> {
-                try {
-                    val m = element.javaClass.getMethod("getContainingClass")
-                    m.invoke(element) as? PsiElement
-                } catch (_: Exception) {
-                    findEnclosingClassLike(element)
+        return try {
+            val containingClass = when (element) {
+                is PsiMethod -> element.containingClass
+                else -> {
+                    try {
+                        val m = element.javaClass.getMethod("getContainingClass")
+                        m.invoke(element) as? PsiElement
+                    } catch (_: Exception) {
+                        findEnclosingClassLike(element)
+                    }
+                }
+            } ?: return bareName
+
+            val className = when (containingClass) {
+                is PsiClass -> ClassPresentationUtil.getNameForClass(containingClass, true)
+                is PsiNamedElement -> QualifiedNameUtil.getQualifiedName(containingClass)
+                    ?: containingClass.name ?: return bareName
+                else -> {
+                    try {
+                        val n = containingClass.javaClass.getMethod("getName")
+                        n.invoke(containingClass) as? String ?: return bareName
+                    } catch (_: Exception) { return bareName }
                 }
             }
+            "$className.$bareName"
+        } catch (e: Exception) {
+            LOG.debug("Failed to build qualified name for $bareName: ${e.message}")
+            bareName
         }
-        if (containingClass == null) return bareName
-        val className = when (containingClass) {
-            is PsiClass -> ClassPresentationUtil.getNameForClass(containingClass, true)
-            is PsiNamedElement -> QualifiedNameUtil.getQualifiedName(containingClass) ?: containingClass.name ?: return bareName
-            else -> {
-                try {
-                    val n = containingClass.javaClass.getMethod("getName")
-                    n.invoke(containingClass) as? String ?: return bareName
-                } catch (_: Exception) { return bareName }
-            }
-        }
-        return "$className.$bareName"
     }
 
     private fun findEnclosingClassLike(element: PsiElement): PsiElement? {
