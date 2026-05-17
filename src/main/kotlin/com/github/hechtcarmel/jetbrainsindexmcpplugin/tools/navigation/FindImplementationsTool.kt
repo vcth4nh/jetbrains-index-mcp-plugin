@@ -17,11 +17,15 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PsiUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiNamedElement
 import com.intellij.psi.search.searches.DefinitionsScopedSearch
+import com.intellij.psi.search.searches.FunctionalExpressionSearch
 import com.intellij.psi.util.PsiModificationTracker
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -41,8 +45,17 @@ import kotlinx.serialization.json.put
 class FindImplementationsTool : AbstractMcpTool() {
 
     companion object {
+        private val LOG = logger<FindImplementationsTool>()
         private const val DEFAULT_PAGE_SIZE = 100
         private const val MAX_PAGE_SIZE = PaginationService.MAX_PAGE_SIZE
+
+        private val lambdaUtilClass: Class<*>? by lazy {
+            try { Class.forName("com.intellij.psi.LambdaUtil") } catch (_: ClassNotFoundException) { null }
+        }
+
+        private val rsImplItemClass: Class<*>? by lazy {
+            try { Class.forName("org.rust.lang.core.psi.RsImplItem") } catch (_: ClassNotFoundException) { null }
+        }
     }
 
     override val name = "ide_find_implementations"
@@ -119,6 +132,10 @@ class FindImplementationsTool : AbstractMcpTool() {
                 results.size < collectLimit
             })
 
+            if (results.size < collectLimit) {
+                addFunctionalExpressionImpls(target, searchScope, collectLimit, results, project)
+            }
+
             val serializedResults = results.map { impl ->
                 PaginationService.SerializedResult(
                     key = "${impl.file}:${impl.line}:${impl.column}:${impl.name}",
@@ -157,21 +174,148 @@ class FindImplementationsTool : AbstractMcpTool() {
     }
 
     private fun convertToLocation(element: PsiElement, project: Project): ImplementationLocation? {
-        val namedElement = element as? PsiNamedElement ?: return null
         val file = element.containingFile?.virtualFile ?: return null
         val document = PsiDocumentManager.getInstance(project).getDocument(element.containingFile) ?: return null
         val line = document.getLineNumber(element.textOffset) + 1
         val lineStart = document.getLineStartOffset(document.getLineNumber(element.textOffset))
         val column = element.textOffset - lineStart + 1
+
+        val name: String
+        val kind: String
+        if (rsImplItemClass?.isInstance(element) == true) {
+            name = buildRustImplName(element)
+            kind = "IMPL"
+        } else {
+            val namedElement = element as? PsiNamedElement ?: return null
+            name = namedElement.name ?: return null
+            kind = LanguageServiceRegistry.getKind(element)
+        }
+
         return ImplementationLocation(
-            name = namedElement.name ?: return null,
+            name = name,
             file = ProjectUtils.getToolFilePath(project, file),
             line = line,
             column = column,
-            kind = LanguageServiceRegistry.getKind(element),
+            kind = kind,
             language = displayLanguageName(element.language.id),
             qualifiedName = QualifiedNameUtil.getQualifiedName(element)
         )
+    }
+
+    private fun buildRustImplName(implItem: PsiElement): String {
+        return try {
+            val traitRef = implItem.javaClass.getMethod("getTraitRef").invoke(implItem)
+            val typeRef = implItem.javaClass.getMethod("getTypeReference").invoke(implItem)
+            val traitName = traitRef?.let { it.javaClass.getMethod("getText").invoke(it) as? String }
+            val typeName = typeRef?.let { it.javaClass.getMethod("getText").invoke(it) as? String }
+            when {
+                traitName != null && typeName != null -> "impl $traitName for $typeName"
+                typeName != null -> "impl $typeName"
+                else -> "impl"
+            }
+        } catch (_: Exception) { "impl" }
+    }
+
+    private fun addFunctionalExpressionImpls(
+        target: PsiElement,
+        searchScope: com.intellij.psi.search.GlobalSearchScope,
+        collectLimit: Int,
+        results: MutableList<ImplementationLocation>,
+        project: Project
+    ) {
+        if (lambdaUtilClass == null) return
+        try {
+            val targetClass: PsiClass? = when (target) {
+                is PsiMethod -> target.containingClass
+                is PsiClass -> target
+                else -> null
+            }
+            if (targetClass == null) return
+
+            val isFunctional = lambdaUtilClass!!
+                .getMethod("isFunctionalClass", PsiClass::class.java)
+                .invoke(null, targetClass) as? Boolean ?: false
+            if (!isFunctional) return
+
+            FunctionalExpressionSearch.search(targetClass, searchScope).forEach(com.intellij.util.Processor { funExpr ->
+                val location = convertFunctionalExprToLocation(funExpr, project) ?: return@Processor true
+                results.add(location)
+                results.size < collectLimit
+            })
+        } catch (e: Exception) {
+            LOG.debug("FunctionalExpressionSearch failed: ${e.message}")
+        }
+    }
+
+    private fun convertFunctionalExprToLocation(element: PsiElement, project: Project): ImplementationLocation? {
+        val file = element.containingFile?.virtualFile ?: return null
+        val document = PsiDocumentManager.getInstance(project).getDocument(element.containingFile) ?: return null
+        val line = document.getLineNumber(element.textOffset) + 1
+        val lineStart = document.getLineStartOffset(document.getLineNumber(element.textOffset))
+        val column = element.textOffset - lineStart + 1
+
+        val kind = when (element.javaClass.simpleName) {
+            "PsiMethodReferenceExpressionImpl" -> "METHOD_REFERENCE"
+            "PsiLambdaExpressionImpl" -> "LAMBDA"
+            else -> if (element.javaClass.simpleName.contains("MethodRef")) "METHOD_REFERENCE"
+                    else if (element.javaClass.simpleName.contains("Lambda")) "LAMBDA"
+                    else "FUNCTIONAL_EXPRESSION"
+        }
+
+        val name = buildFunctionalExprName(element)
+
+        return ImplementationLocation(
+            name = name,
+            file = ProjectUtils.getToolFilePath(project, file),
+            line = line,
+            column = column,
+            kind = kind,
+            language = displayLanguageName(element.language.id),
+            qualifiedName = null
+        )
+    }
+
+    private fun buildFunctionalExprName(element: PsiElement): String {
+        return try {
+            val methodName = findEnclosingMethodName(element)
+            val className = findEnclosingClassName(element)
+            val exprText = element.text?.take(40) ?: "expression"
+            buildString {
+                append(exprText)
+                if (methodName != null) {
+                    append(" in $methodName()")
+                    if (className != null) append(" in $className")
+                }
+            }
+        } catch (_: Exception) { element.text?.take(40) ?: "expression" }
+    }
+
+    private fun findEnclosingMethodName(element: PsiElement): String? {
+        var current = element.parent
+        var depth = 0
+        while (current != null && depth < 20) {
+            if (current is PsiMethod) return current.name
+            if (current is PsiNamedElement) {
+                val simpleName = current.javaClass.simpleName.lowercase()
+                if (simpleName.contains("method") || simpleName.contains("function")) {
+                    return (current as PsiNamedElement).name
+                }
+            }
+            current = current.parent
+            depth++
+        }
+        return null
+    }
+
+    private fun findEnclosingClassName(element: PsiElement): String? {
+        var current = element.parent
+        var depth = 0
+        while (current != null && depth < 30) {
+            if (current is PsiClass) return current.qualifiedName ?: current.name
+            current = current.parent
+            depth++
+        }
+        return null
     }
 
     private fun rawScopeValue(scopeElement: JsonElement?): String = when (scopeElement) {
