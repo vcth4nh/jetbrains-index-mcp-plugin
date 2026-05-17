@@ -48,21 +48,15 @@ class CallHierarchyTool : AbstractMcpTool() {
 
         Returns: recursive tree with method signatures, file locations (line/column), and nested call relationships.
 
-        Target (mutually exclusive):
-        - file + line + column: position-based lookup
-        - language + symbol: fully qualified symbol reference (currently supported for Java only)
-
-        Parameters: direction (required): "callers" or "callees". maxDepth (optional, default: 7, max: 20). scope (optional, default: "project_files"; supported: project_files, project_and_libraries, project_production_files, project_test_files).
+        Parameters: file + line + column (required), direction (required): "callers" or "callees". maxDepth (optional, default: 7, max: 20). scope (optional, default: "project_files"; supported: project_files, project_and_libraries, project_production_files, project_test_files).
 
         Example: {"file": "src/Service.java", "line": 42, "column": 10, "direction": "callers"}
-        Example: {"language": "Java", "symbol": "com.example.Service#processRequest(String)", "direction": "callers", "scope": "project_and_libraries"}
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
         .projectPath()
-        .file(required = false, description = "Project-relative file path, or a dependency/library absolute path or jar:// URL previously returned by the plugin. Required for position-based lookup.")
-        .lineAndColumn(required = false)
-        .languageAndSymbol(required = false)
+        .file(description = "Project-relative file path, or a dependency/library absolute path or jar:// URL previously returned by the plugin.")
+        .lineAndColumn()
         .enumProperty("direction", "Direction: 'callers' (methods that call this method) or 'callees' (methods this method calls)", listOf("callers", "callees"), required = true)
         .intProperty("maxDepth", "How many levels deep to traverse the call hierarchy (default: 7, max: 20)")
         .scopeProperty("Search scope. Default: project_files.")
@@ -101,10 +95,8 @@ class CallHierarchyTool : AbstractMcpTool() {
             }
 
             // Tool-layer gate: reject position-based invocations where the caret is not on a
-            // resolvable navigation target (comment, whitespace, literal). Symbol-mode
-            // invocations bypass the check.
-            val isSymbolMode = arguments[ParamNames.LANGUAGE] != null
-            if (!isSymbolMode && PsiUtils.resolveTargetElement(element) == null) {
+            // resolvable navigation target (comment, whitespace, literal).
+            if (PsiUtils.resolveTargetElement(element) == null) {
                 return@suspendingReadAction createErrorResult("No method/function found at position")
             }
 
@@ -115,10 +107,7 @@ class CallHierarchyTool : AbstractMcpTool() {
             }
 
             val rootCallElement = convertDescriptorToCallElement(walkResult.root, walkResult.resolver, depth)
-                ?: return@suspendingReadAction createErrorResult(
-                    if (isSymbolMode) "No method/function found for the specified symbol"
-                    else "No method/function found at position"
-                )
+                ?: return@suspendingReadAction createErrorResult("No method/function found at position")
 
             createJsonResult(CallHierarchyResult(
                 element = rootCallElement.copy(children = null),

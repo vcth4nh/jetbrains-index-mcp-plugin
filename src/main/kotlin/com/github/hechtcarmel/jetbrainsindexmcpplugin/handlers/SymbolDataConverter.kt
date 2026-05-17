@@ -1,6 +1,5 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers
 
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.LanguageAwareKindResolver
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
 import com.intellij.navigation.NavigationItem
@@ -19,19 +18,6 @@ import com.intellij.psi.search.GlobalSearchScope
  *  - The element has no extractable name
  */
 internal object SymbolDataConverter {
-
-    /**
-     * Loaded once per JVM — null when the Python plugin is absent.
-     * Used by [determineKind] to recognise PyTargetExpression elements without
-     * a compile-time dependency on the Python plugin.
-     */
-    private val pyTargetExpressionClass: Class<*>? by lazy {
-        try {
-            Class.forName("com.jetbrains.python.psi.PyTargetExpression")
-        } catch (_: ClassNotFoundException) {
-            null
-        }
-    }
 
     fun convert(
         item: NavigationItem,
@@ -123,17 +109,7 @@ internal object SymbolDataConverter {
     }
 
     private fun determineKind(element: PsiElement): String {
-        // Explicit branch for Python instance attributes and module-level assignments.
-        val pyClass = pyTargetExpressionClass
-        if (pyClass != null && pyClass.isInstance(element)) {
-            return try {
-                val containingClass = element.javaClass.getMethod("getContainingClass").invoke(element)
-                if (containingClass != null) "FIELD" else "VARIABLE"
-            } catch (_: Exception) {
-                "FIELD"
-            }
-        }
-        return LanguageAwareKindResolver.resolveKind(element)
+        return LanguageServiceRegistry.getKind(element)
     }
 
     private fun getContainerName(element: PsiElement): String? {

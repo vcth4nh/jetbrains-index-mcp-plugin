@@ -1,6 +1,6 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools
 
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageHandlerRegistry
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.McpServerService
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolDefinition
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.settings.McpSettings
@@ -11,6 +11,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FileStruc
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindClassTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindDefinitionTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindFileTool
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindImplementationsTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindSymbolTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindUsagesTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.ReadFileTool
@@ -183,8 +184,8 @@ class ToolRegistry {
      * - Refactoring tools are only registered when the Java plugin is available
      */
     fun registerBuiltInTools() {
-        // Initialize language handlers first
-        LanguageHandlerRegistry.registerHandlers()
+        // Initialize language services first
+        LanguageServiceRegistry.registerServices()
 
         // Universal tools - work in all JetBrains IDEs
         registerUniversalTools()
@@ -207,14 +208,7 @@ class ToolRegistry {
     }
 
     private fun logAvailableLanguages() {
-        val implementationLangs = LanguageHandlerRegistry.getSupportedLanguagesForImplementations()
-        val superMethodsLangs = LanguageHandlerRegistry.getSupportedLanguagesForSuperMethods()
-        val symbolReferenceLangs = LanguageHandlerRegistry.getSupportedLanguagesForSymbolReference()
-
-        LOG.info("Language support (handler-based) - " +
-            "Implementations: $implementationLangs, " +
-            "SuperMethods: $superMethodsLangs, " +
-            "SymbolReference: $symbolReferenceLangs")
+        LOG.info("Language services initialized")
     }
 
     /**
@@ -252,6 +246,9 @@ class ToolRegistry {
         register(SearchTextTool())
         register(ReadFileTool())
 
+        // Navigation tools (EP-delegated, universal)
+        register(FindImplementationsTool())
+
         // Editor tools (universal, disabled by default)
         register(GetActiveFileTool())
         register(OpenFileTool())
@@ -266,9 +263,8 @@ class ToolRegistry {
 
     private val languageNavigationTools = listOf(
         ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.TypeHierarchyTool") { true },
-        ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindImplementationsTool") { LanguageHandlerRegistry.hasImplementationsHandlers() },
         ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.CallHierarchyTool") { true },
-        ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindSuperMethodsTool") { LanguageHandlerRegistry.hasSuperMethodsHandlers() },
+        ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindSuperMethodsTool") { LanguageServiceRegistry.hasSuperMethodsSupport() },
     )
 
     /**
