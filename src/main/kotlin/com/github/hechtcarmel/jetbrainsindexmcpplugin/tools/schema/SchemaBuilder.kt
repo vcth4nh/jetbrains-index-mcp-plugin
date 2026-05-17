@@ -3,7 +3,6 @@ package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ParamNames
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.SchemaConstants
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageHandlerRegistry
 import kotlinx.serialization.json.*
 
 class SchemaBuilder private constructor() {
@@ -37,33 +36,6 @@ class SchemaBuilder private constructor() {
         if (required) {
             requiredFields.add(ParamNames.LINE)
             requiredFields.add(ParamNames.COLUMN)
-        }
-    }
-
-    fun languageAndSymbol(required: Boolean = true) = apply {
-        val supportedLanguages = LanguageHandlerRegistry.getSupportedLanguageNamesForSymbolReference()
-        properties[ParamNames.LANGUAGE] = buildJsonObject {
-            put(SchemaConstants.TYPE, SchemaConstants.TYPE_STRING)
-            val languageDescription = buildString {
-                append(SchemaConstants.DESC_LANGUAGE)
-                if (supportedLanguages.isEmpty()) {
-                    append(" No symbol reference handlers are currently available.")
-                } else {
-                    append(" Currently supported languages: ${supportedLanguages.joinToString(", ")}.")
-                }
-            }
-            put(SchemaConstants.DESCRIPTION, languageDescription)
-            if (supportedLanguages.isNotEmpty()) {
-                putJsonArray("enum") { supportedLanguages.forEach { add(JsonPrimitive(it)) } }
-            }
-        }
-        properties[ParamNames.SYMBOL] = buildJsonObject {
-            put(SchemaConstants.TYPE, SchemaConstants.TYPE_STRING)
-            put(SchemaConstants.DESCRIPTION, SchemaConstants.DESC_SYMBOL)
-        }
-        if (required) {
-            requiredFields.add(ParamNames.LANGUAGE)
-            requiredFields.add(ParamNames.SYMBOL)
         }
     }
 

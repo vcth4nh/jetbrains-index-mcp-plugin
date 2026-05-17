@@ -5,18 +5,22 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.TypeElementData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.TypeHierarchyData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.createNavigationSearchScope
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.shouldIncludeNavigationElement
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.rust.BaseRustHandler
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PluginDetectors
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.DefinitionsScopedSearch
 import com.intellij.psi.search.searches.ReferencesSearch
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.Processor
 
 /**
- * Relocated algorithm from the former [com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.rust.RustTypeHierarchyHandler].
+ * Relocated algorithm from the former RustTypeHierarchyHandler.
  *
  * Handles Rust-specific type relationships:
  * - **For Traits**: Shows supertraits and implementing types
@@ -25,25 +29,180 @@ import com.intellij.util.Processor
  *
  * Note: Rust does NOT have class inheritance. Composition and trait
  * implementations are the primary mechanisms for code reuse.
+ *
+ * Self-contained: all Rust PSI reflection utilities are inlined here
+ * (previously inherited from BaseRustHandler which was deleted).
  */
-internal class RustTypeHierarchyImpl : BaseRustHandler<TypeHierarchyData>() {
+internal class RustTypeHierarchyImpl {
 
     companion object {
         private const val MAX_HIERARCHY_DEPTH = 50
+        private val LOG = logger<RustTypeHierarchyImpl>()
     }
+
+    // Lazy-loaded Rust PSI classes via reflection
+
+    private val rsStructItemClass: Class<*>? by lazy { loadClass("org.rust.lang.core.psi.RsStructItem") }
+    val rsTraitItemClass: Class<*>? by lazy { loadClass("org.rust.lang.core.psi.RsTraitItem") }
+    private val rsImplItemClass: Class<*>? by lazy { loadClass("org.rust.lang.core.psi.RsImplItem") }
+    private val rsEnumItemClass: Class<*>? by lazy { loadClass("org.rust.lang.core.psi.RsEnumItem") }
+    private val rsFunctionClass: Class<*>? by lazy { loadClass("org.rust.lang.core.psi.RsFunction") }
+    private val rsModItemClass: Class<*>? by lazy { loadClass("org.rust.lang.core.psi.RsModItem") }
 
     private val rsNamedElementIndexClass: Class<*>? by lazy {
-        try { Class.forName("org.rust.lang.core.psi.ext.RsNamedElementIndex") }
-        catch (_: ClassNotFoundException) { null }
+        loadClass("org.rust.lang.core.psi.ext.RsNamedElementIndex")
     }
 
-    override val languageId = "Rust"
+    private fun loadClass(className: String): Class<*>? {
+        return try {
+            Class.forName(className)
+        } catch (_: ClassNotFoundException) {
+            LOG.debug("$className not found")
+            null
+        }
+    }
 
-    override fun canHandle(element: PsiElement): Boolean {
+    // Type checking helpers
+
+    private fun isRustLanguage(element: PsiElement): Boolean = element.language.id == "Rust"
+    private fun isRsTrait(element: PsiElement): Boolean = rsTraitItemClass?.isInstance(element) == true
+    private fun isRsStruct(element: PsiElement): Boolean = rsStructItemClass?.isInstance(element) == true
+    private fun isRsEnum(element: PsiElement): Boolean = rsEnumItemClass?.isInstance(element) == true
+    private fun isRsImpl(element: PsiElement): Boolean = rsImplItemClass?.isInstance(element) == true
+    private fun isRsFunction(element: PsiElement): Boolean = rsFunctionClass?.isInstance(element) == true
+    private fun isRsMod(element: PsiElement): Boolean = rsModItemClass?.isInstance(element) == true
+
+    // Navigation helpers
+
+    private fun findContainingRsTrait(element: PsiElement): PsiElement? {
+        if (isRsTrait(element)) return element
+        val cls = rsTraitItemClass ?: return null
+        @Suppress("UNCHECKED_CAST")
+        return PsiTreeUtil.getParentOfType(element, cls as Class<out PsiElement>)
+    }
+
+    private fun findContainingRsImpl(element: PsiElement): PsiElement? {
+        if (isRsImpl(element)) return element
+        val cls = rsImplItemClass ?: return null
+        @Suppress("UNCHECKED_CAST")
+        return PsiTreeUtil.getParentOfType(element, cls as Class<out PsiElement>)
+    }
+
+    private fun findContainingRsStruct(element: PsiElement): PsiElement? {
+        if (isRsStruct(element)) return element
+        val cls = rsStructItemClass ?: return null
+        @Suppress("UNCHECKED_CAST")
+        return PsiTreeUtil.getParentOfType(element, cls as Class<out PsiElement>)
+    }
+
+    private fun findContainingRsEnum(element: PsiElement): PsiElement? {
+        if (isRsEnum(element)) return element
+        val cls = rsEnumItemClass ?: return null
+        @Suppress("UNCHECKED_CAST")
+        return PsiTreeUtil.getParentOfType(element, cls as Class<out PsiElement>)
+    }
+
+    // Reflection-based API calls
+
+    private fun getName(element: PsiElement): String? {
+        return try {
+            element.javaClass.getMethod("getName").invoke(element) as? String
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun getTraitRef(implItem: PsiElement): PsiElement? {
+        return try {
+            implItem.javaClass.getMethod("getTraitRef").invoke(implItem) as? PsiElement
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun getTypeReference(implItem: PsiElement): PsiElement? {
+        return try {
+            implItem.javaClass.getMethod("getTypeReference").invoke(implItem) as? PsiElement
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun getSuperTraits(traitItem: PsiElement): List<PsiElement>? {
+        return try {
+            @Suppress("UNCHECKED_CAST")
+            traitItem.javaClass.getMethod("getSuperTraits").invoke(traitItem) as? List<PsiElement>
+        } catch (_: Exception) {
+            try {
+                @Suppress("UNCHECKED_CAST")
+                traitItem.javaClass.getMethod("getTypeParamBounds").invoke(traitItem) as? List<PsiElement>
+            } catch (_: Exception) {
+                null
+            }
+        }
+    }
+
+    /**
+     * Resolves a reference to its target element.
+     *
+     * Tries three strategies in order:
+     *  1. `element.getReference().resolve()` -- direct path resolution.
+     *  2. `element.resolve()` -- for elements that expose resolve directly.
+     *  3. `element.getPath().getReference().resolve()` -- navigates through the
+     *     embedded `RsPath` for wrapper PSI like `RsTraitRef` and `RsTypeReference`.
+     */
+    private fun resolveReference(element: PsiElement): PsiElement? {
+        runCatching {
+            val ref = element.javaClass.getMethod("getReference").invoke(element) as? com.intellij.psi.PsiReference
+            ref?.resolve()
+        }.getOrNull()?.let { return it }
+
+        runCatching {
+            element.javaClass.getMethod("resolve").invoke(element) as? PsiElement
+        }.getOrNull()?.let { return it }
+
+        runCatching {
+            val path = element.javaClass.getMethod("getPath").invoke(element) as? PsiElement
+            path?.let { p ->
+                val pathRef = p.javaClass.getMethod("getReference").invoke(p) as? com.intellij.psi.PsiReference
+                pathRef?.resolve()
+            }
+        }.getOrNull()?.let { return it }
+
+        return null
+    }
+
+    // Utility methods
+
+    private fun getRelativePath(project: Project, file: VirtualFile): String {
+        return ProjectUtils.getToolFilePath(project, file)
+    }
+
+    private fun getLineNumber(project: Project, element: PsiElement): Int? {
+        val psiFile = element.containingFile ?: return null
+        val document = PsiDocumentManager.getInstance(project).getDocument(psiFile) ?: return null
+        return document.getLineNumber(element.textOffset) + 1
+    }
+
+    private fun determineElementKind(element: PsiElement): String {
+        return when {
+            isRsTrait(element) -> "TRAIT"
+            isRsStruct(element) -> "STRUCT"
+            isRsEnum(element) -> "ENUM"
+            isRsImpl(element) -> "IMPL"
+            isRsFunction(element) -> "FUNCTION"
+            isRsMod(element) -> "MODULE"
+            else -> "SYMBOL"
+        }
+    }
+
+    // Public API
+
+    fun canHandle(element: PsiElement): Boolean {
         return isAvailable() && isRustLanguage(element)
     }
 
-    override fun isAvailable(): Boolean = PluginDetectors.rust.isAvailable && rsTraitItemClass != null
+    fun isAvailable(): Boolean = PluginDetectors.rust.isAvailable && rsTraitItemClass != null
 
     fun getTypeHierarchy(
         element: PsiElement,
@@ -160,16 +319,13 @@ internal class RustTypeHierarchyImpl : BaseRustHandler<TypeHierarchyData>() {
      * Looks up a Rust struct by name via RsNamedElementIndex.
      *
      * Used as a fallback when reference resolution fails on an impl's type reference,
-     * to avoid tagging clearly-named types as kind: IMPL. The Rust plugin's index
-     * API surface is not always stable across versions; if reflection fails we
-     * gracefully return null (preserving the original IMPL fallthrough behavior).
+     * to avoid tagging clearly-named types as kind: IMPL.
      */
     private fun lookupStructByName(project: Project, name: String): PsiElement? {
         val indexClass = rsNamedElementIndexClass ?: return null
         return try {
             val getInstanceMethod = indexClass.getMethod("getInstance")
             val instance = getInstanceMethod.invoke(null)
-            // RsNamedElementIndex.findElementsByName(project, name) returns Collection<RsNamedElement>
             val findMethod = instance.javaClass.getMethod("findElementsByName", Project::class.java, String::class.java)
             val results = findMethod.invoke(instance, project, name) as? Collection<*>
             results?.filterIsInstance<PsiElement>()?.firstOrNull { isRsStruct(it) }
@@ -193,16 +349,10 @@ internal class RustTypeHierarchyImpl : BaseRustHandler<TypeHierarchyData>() {
                         var resolvedType = resolveReference(typeRef)
                         val typeName = resolvedType?.let { getName(it) } ?: typeRef.text?.trim()
 
-                        // Fallback: if reference resolution failed but we have a name, look up the struct.
                         if (resolvedType == null && typeName != null) {
                             resolvedType = lookupStructByName(project, typeName)
                         }
 
-                        // Skip the entry when both reference resolution and name lookup
-                        // fail. Falling back to `psi = definition` (the impl block) breaks
-                        // wire format: RsImplItem is not a PsiNamedElement, so downstream
-                        // conversion grabs psi.text and surfaces raw `impl Foo for Bar { … }`
-                        // body source as the entry's name.
                         if (typeName != null && resolvedType != null) {
                             results.add(TypeElementData(
                                 name = typeName,
@@ -244,8 +394,8 @@ internal class RustTypeHierarchyImpl : BaseRustHandler<TypeHierarchyData>() {
                 language = "Rust",
                 psi = type
             ),
-            supertypes = implementedTraits,  // Implemented traits shown as "supertypes"
-            subtypes = emptyList()           // Rust has no type inheritance
+            supertypes = implementedTraits,
+            subtypes = emptyList()
         )
     }
 
@@ -257,16 +407,12 @@ internal class RustTypeHierarchyImpl : BaseRustHandler<TypeHierarchyData>() {
         val results = mutableListOf<TypeElementData>()
 
         try {
-            // Search for references to this type to find impl blocks
             ReferencesSearch.search(type, searchScope).forEach(Processor { reference ->
                 val impl = findContainingRsImpl(reference.element)
                 if (impl != null && shouldIncludeNavigationElement(searchScope, impl)) {
                     val traitRef = getTraitRef(impl)
                     if (traitRef != null) {
                         val resolvedTrait = resolveReference(traitRef)
-                        // Skip if resolution failed — we cannot point the wire-format
-                        // entry at the unnamed RsImplItem block (its text would surface
-                        // as the raw `impl Foo for Bar { … }` source).
                         if (resolvedTrait != null) {
                             val traitName = getName(resolvedTrait)
                             if (traitName != null && results.none { it.name == traitName }) {
@@ -303,8 +449,6 @@ internal class RustTypeHierarchyImpl : BaseRustHandler<TypeHierarchyData>() {
         val supertypes = mutableListOf<TypeElementData>()
         val subtypes = mutableListOf<TypeElementData>()
 
-        // If implementing a trait, show the trait as a supertype.
-        // Skip if resolution failed: pointing at the impl block leaks raw block source.
         if (traitRef != null) {
             val resolvedTrait = resolveReference(traitRef)
             if (resolvedTrait != null && shouldIncludeNavigationElement(searchScope, resolvedTrait)) {
@@ -323,8 +467,6 @@ internal class RustTypeHierarchyImpl : BaseRustHandler<TypeHierarchyData>() {
             }
         }
 
-        // Show the implementing type as a subtype.
-        // Skip if resolution failed (same reason as above).
         if (typeRef != null) {
             val resolvedType = resolveReference(typeRef)
             if (resolvedType != null && shouldIncludeNavigationElement(searchScope, resolvedType)) {
