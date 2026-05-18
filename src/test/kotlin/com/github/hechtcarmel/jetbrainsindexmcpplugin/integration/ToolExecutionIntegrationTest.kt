@@ -113,7 +113,6 @@ class ToolExecutionIntegrationTest : BasePlatformTestCase() {
                 put("file", callerPsi.virtualFile.path)
                 put("line", line)
                 put("column", column)
-                put("fullElementPreview", true)
             })
         } catch (e: com.github.hechtcarmel.jetbrainsindexmcpplugin.exceptions.IndexNotReadyException) {
             System.err.println("testFindDefinitionToolFullElementPreview: skipped – index not ready")
@@ -136,7 +135,6 @@ class ToolExecutionIntegrationTest : BasePlatformTestCase() {
         }
 
         assertTrue("Full preview should include method name", definition.preview.contains("doWork"))
-        assertEquals("astPath should contain enclosing class", listOf("Service"), definition.astPath)
     }
 
     fun testReadFileToolValidation() = runBlocking {
@@ -293,7 +291,7 @@ class ToolExecutionIntegrationTest : BasePlatformTestCase() {
         val content = result.content.first() as ContentBlock.Text
         val definition = json.decodeFromString<DefinitionResult>(content.text)
         assertEquals(libraryFile.toString().replace('\\', '/'), definition.file)
-        assertEquals(className, definition.symbolName)
+        assertEquals(className, definition.name)
     }
 
     fun testFindDefinitionToolStillRejectsUnrelatedExternalFiles() = runBlocking {
@@ -373,7 +371,7 @@ class ToolExecutionIntegrationTest : BasePlatformTestCase() {
         val usages = json.decodeFromString<FindUsagesResult>(content.text)
         assertTrue(
             "Project usage should be found from external library declaration",
-            usages.usages.any { it.file.endsWith("UseExternalLib.java") && it.context.contains("$className.ping()") }
+            usages.usages.any { it.file.endsWith("UseExternalLib.java") && it.preview.contains("$className.ping()") }
         )
     }
 
