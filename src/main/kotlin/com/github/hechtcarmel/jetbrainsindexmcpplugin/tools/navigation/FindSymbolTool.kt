@@ -255,8 +255,6 @@ class FindSymbolTool : AbstractMcpTool() {
         file = file,
         line = line,
         column = column,
-        containerName = containerName,
-        language = language
     )
 
     private fun SymbolMatch.paginationKey(): String = "$file:$line:$column:$name"

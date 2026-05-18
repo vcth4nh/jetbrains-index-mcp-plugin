@@ -230,9 +230,8 @@ class FindClassTool : AbstractMcpTool() {
                 throw e
             }
             val results = popupResults.candidates
-                .mapNotNull { convertToSymbolMatch(it.item, project, scope) }
+                .mapNotNull { convertToSymbolMatch(it.item, project, scope, languageFilter) }
                 .filter { nameFilter(it.name) }
-                .filter { sym -> languageFilter == null || sym.language.equals(languageFilter, ignoreCase = true) }
                 .distinctBy { "${it.file}:${it.line}:${it.column}:${it.name}" }
             if (results.size >= limit ||
                 popupResults.candidates.size < popupLimit ||
@@ -264,9 +263,15 @@ class FindClassTool : AbstractMcpTool() {
             })
         })
 
-    private fun convertToSymbolMatch(item: NavigationItem, project: Project, scope: GlobalSearchScope): SymbolMatch? {
+    private fun convertToSymbolMatch(item: NavigationItem, project: Project, scope: GlobalSearchScope, languageFilter: String? = null): SymbolMatch? {
         val element = extractPsiElement(item) ?: return null
         val targetElement = element.navigationElement ?: element
+
+        // Language filter (before expensive lookups)
+        if (languageFilter != null) {
+            val language = getLanguageName(targetElement)
+            if (!language.equals(languageFilter, ignoreCase = true)) return null
+        }
 
         val file = targetElement.containingFile?.virtualFile ?: return null
         if (!scope.contains(file)) return null
@@ -288,7 +293,6 @@ class FindClassTool : AbstractMcpTool() {
 
         val line = getLineNumber(project, targetElement) ?: 1
         val kind = determineKind(targetElement)
-        val language = getLanguageName(targetElement)
 
         return SymbolMatch(
             name = name,
@@ -297,8 +301,6 @@ class FindClassTool : AbstractMcpTool() {
             file = relativePath,
             line = line,
             column = getColumnNumber(project, targetElement) ?: 1,
-            containerName = null,
-            language = language
         )
     }
 

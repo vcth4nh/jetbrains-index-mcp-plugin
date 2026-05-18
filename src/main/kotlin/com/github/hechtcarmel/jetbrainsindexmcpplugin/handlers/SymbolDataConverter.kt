@@ -67,7 +67,6 @@ internal object SymbolDataConverter {
 
         val line = getLineNumber(project, targetElement) ?: 1
         val kind = determineKind(targetElement)
-        val containerName = getContainerName(targetElement)
 
         return SymbolData(
             name = name,
@@ -76,8 +75,6 @@ internal object SymbolDataConverter {
             file = relativePath,
             line = line,
             column = getColumnNumber(project, targetElement) ?: 1,
-            containerName = containerName,
-            language = language
         )
     }
 
@@ -112,59 +109,4 @@ internal object SymbolDataConverter {
         return LanguageServiceRegistry.getKind(element)
     }
 
-    private fun getContainerName(element: PsiElement): String? {
-        // Go: method receiver is a sibling, not an ancestor
-        if (element.language.id == "go") {
-            try {
-                val methodDeclClass = Class.forName("com.goide.psi.GoMethodDeclaration")
-                if (methodDeclClass.isInstance(element)) {
-                    val receiver = methodDeclClass.getMethod("getReceiver").invoke(element) ?: return null
-                    val type = receiver.javaClass.getMethod("getType").invoke(receiver) as? PsiElement ?: return null
-                    return type.text?.removePrefix("*")?.trim()
-                }
-            } catch (_: ClassNotFoundException) {
-                // GoLand not loaded — fall through to generic walk
-            } catch (_: Exception) {
-                // Any reflection failure — fall through
-            }
-        }
-
-        // Rust: walk to nearest RsImplItem / RsTraitItem / RsModItem
-        if (element.language.id == "Rust") {
-            try {
-                val implItemClass = try { Class.forName("org.rust.lang.core.psi.RsImplItem") } catch (_: ClassNotFoundException) { null }
-                val traitItemClass = try { Class.forName("org.rust.lang.core.psi.RsTraitItem") } catch (_: ClassNotFoundException) { null }
-                val modItemClass = try { Class.forName("org.rust.lang.core.psi.RsModItem") } catch (_: ClassNotFoundException) { null }
-                var current: PsiElement? = element.parent
-                while (current != null) {
-                    if (implItemClass?.isInstance(current) == true ||
-                        traitItemClass?.isInstance(current) == true ||
-                        modItemClass?.isInstance(current) == true
-                    ) {
-                        val nameMethod = current.javaClass.getMethod("getName")
-                        return nameMethod.invoke(current) as? String
-                    }
-                    current = current.parent
-                }
-            } catch (_: Exception) {
-                // fall through to generic walk
-            }
-        }
-
-        // Generic parent-walk fallback (existing behavior)
-        return try {
-            var parent = element.parent
-            while (parent != null) {
-                val parentClassName = parent.javaClass.simpleName.lowercase()
-                if (parentClassName.contains("class") || parentClassName.contains("type")) {
-                    val nameMethod = parent.javaClass.getMethod("getName")
-                    return nameMethod.invoke(parent) as? String
-                }
-                parent = parent.parent
-            }
-            null
-        } catch (e: Exception) {
-            null
-        }
-    }
 }
