@@ -5,7 +5,6 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ParamNames
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScopeResolver
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.displayLanguageName
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.PaginationService
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.ProjectResolver
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
@@ -214,7 +213,6 @@ class FindImplementationsTool : AbstractMcpTool() {
             line = line,
             column = column,
             kind = kind,
-            language = displayLanguageName(element.language.id),
             qualifiedName = qualifiedName
         )
     }
@@ -317,7 +315,6 @@ class FindImplementationsTool : AbstractMcpTool() {
             line = line,
             column = column,
             kind = kind,
-            language = displayLanguageName(element.language.id),
             qualifiedName = qualifiedName
         )
     }
