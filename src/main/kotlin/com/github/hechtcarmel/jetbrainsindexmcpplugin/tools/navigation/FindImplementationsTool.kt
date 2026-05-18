@@ -54,10 +54,6 @@ class FindImplementationsTool : AbstractMcpTool() {
             try { Class.forName("com.intellij.psi.PsiMethod") } catch (_: ClassNotFoundException) { null }
         }
 
-        private val classPresentationUtilClass: Class<*>? by lazy {
-            try { Class.forName("com.intellij.psi.presentation.java.ClassPresentationUtil") } catch (_: ClassNotFoundException) { null }
-        }
-
         private val lambdaUtilClass: Class<*>? by lazy {
             try { Class.forName("com.intellij.psi.LambdaUtil") } catch (_: ClassNotFoundException) { null }
         }
@@ -194,6 +190,7 @@ class FindImplementationsTool : AbstractMcpTool() {
         val lineStart = document.getLineStartOffset(document.getLineNumber(element.textOffset))
         val column = element.textOffset - lineStart + 1
 
+        val qualifiedName = QualifiedNameUtil.getQualifiedName(element)
         val name: String
         val kind: String
         if (rsImplItemClass?.isInstance(element) == true) {
@@ -208,7 +205,7 @@ class FindImplementationsTool : AbstractMcpTool() {
             val namedElement = element as? PsiNamedElement ?: return null
             val bareName = namedElement.name ?: return null
             kind = LanguageServiceRegistry.getKind(element)
-            name = buildQualifiedDisplayName(element, bareName, kind)
+            name = bareName
         }
 
         return ImplementationLocation(
@@ -218,54 +215,8 @@ class FindImplementationsTool : AbstractMcpTool() {
             column = column,
             kind = kind,
             language = displayLanguageName(element.language.id),
-            qualifiedName = QualifiedNameUtil.getQualifiedName(element)
+            qualifiedName = qualifiedName
         )
-    }
-
-    private fun buildQualifiedDisplayName(element: PsiElement, bareName: String, kind: String): String {
-        if (kind != "METHOD" && kind != "FUNCTION") return bareName
-        return try {
-            val containingClass = try {
-                val m = element.javaClass.getMethod("getContainingClass")
-                m.invoke(element) as? PsiElement
-            } catch (_: Exception) {
-                findEnclosingClassLike(element)
-            } ?: return bareName
-
-            val className = if (psiClassClass?.isInstance(containingClass) == true && classPresentationUtilClass != null) {
-                try {
-                    val m = classPresentationUtilClass!!.getMethod("getNameForClass", psiClassClass, Boolean::class.javaPrimitiveType)
-                    m.invoke(null, containingClass, true) as? String
-                } catch (_: Exception) { null }
-            } else null
-
-            val resolvedName = className
-                ?: (containingClass as? PsiNamedElement)?.let { QualifiedNameUtil.getQualifiedName(it) ?: it.name }
-                ?: try {
-                    containingClass.javaClass.getMethod("getName").invoke(containingClass) as? String
-                } catch (_: Exception) { null }
-                ?: return bareName
-
-            "$resolvedName.$bareName"
-        } catch (e: Exception) {
-            LOG.debug("Failed to build qualified name for $bareName: ${e.message}")
-            bareName
-        }
-    }
-
-    private fun findEnclosingClassLike(element: PsiElement): PsiElement? {
-        var current = element.parent
-        var depth = 0
-        while (current != null && depth < 10) {
-            if (psiClassClass?.isInstance(current) == true) return current
-            val simpleName = current.javaClass.simpleName.lowercase()
-            if (simpleName.contains("class") && !simpleName.contains("list") && !simpleName.contains("classpath")) {
-                return current
-            }
-            current = current.parent
-            depth++
-        }
-        return null
     }
 
     private fun buildRustMethodName(element: PsiElement, bareName: String): String {
