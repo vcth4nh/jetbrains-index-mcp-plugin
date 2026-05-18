@@ -358,7 +358,7 @@ object PsiUtils {
      * outermost (closest to file root) to the innermost (immediate named parent).
      * The [element] itself is never included, nor are anonymous (unnamed) nodes.
      */
-    fun getAstPath(element: PsiElement): List<String> {
+    fun getEnclosingScope(element: PsiElement): List<String> {
         val ancestors = mutableListOf<String>()
         var current: PsiElement? = element.parent
         while (current != null && current !is PsiFile) {

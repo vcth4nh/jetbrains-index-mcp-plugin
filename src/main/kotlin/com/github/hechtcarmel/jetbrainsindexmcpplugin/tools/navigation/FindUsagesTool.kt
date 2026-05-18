@@ -161,9 +161,9 @@ class FindUsagesTool : AbstractMcpTool() {
                                     file = getRelativePath(project, refFile),
                                     line = lineNumber,
                                     column = columnNumber,
-                                    context = lineText,
-                                    type = classifyUsage(refElement),
-                                    astPath = PsiUtils.getAstPath(refElement)
+                                    preview = lineText,
+                                    usageType = classifyUsage(refElement),
+                                    enclosingScope = PsiUtils.getEnclosingScope(refElement)
                                 ))
                             }
                             total < totalCountLimit
@@ -292,9 +292,9 @@ class FindUsagesTool : AbstractMcpTool() {
                                 file = getRelativePath(project, refFile),
                                 line = lineNumber,
                                 column = columnNumber,
-                                context = lineText,
-                                type = classifyUsage(refElement),
-                                astPath = PsiUtils.getAstPath(refElement)
+                                preview = lineText,
+                                usageType = classifyUsage(refElement),
+                                enclosingScope = PsiUtils.getEnclosingScope(refElement)
                             )
                             newResults.add(
                                 PaginationService.SerializedResult(key, json.encodeToJsonElement(usage))
