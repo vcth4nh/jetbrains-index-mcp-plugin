@@ -1,6 +1,7 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.php
 
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageService
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.MethodData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodsData
@@ -61,12 +62,11 @@ class PhpLanguageService : LanguageService() {
         val file = method.containingFile?.virtualFile
         val methodData = MethodData(
             name = getName(method) ?: "unknown",
-            signature = buildMethodSignature(method),
-            containingClass = QualifiedNameUtil.getQualifiedName(containingClass) ?: getName(containingClass) ?: "unknown",
+            qualifiedName = QualifiedNameUtil.getQualifiedName(method),
+            kind = LanguageServiceRegistry.getKind(method),
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, method) ?: 0,
             column = getColumnNumber(project, method) ?: 0,
-            language = "PHP"
         )
 
         val hierarchy = buildHierarchy(project, method)
@@ -105,15 +105,11 @@ class PhpLanguageService : LanguageService() {
 
                         hierarchy.add(SuperMethodData(
                             name = methodName,
-                            signature = buildMethodSignature(superMethod),
-                            containingClass = superClassName ?: "unknown",
-                            containingClassKind = determineClassKind(superClass),
+                            qualifiedName = QualifiedNameUtil.getQualifiedName(superMethod),
+                            kind = LanguageServiceRegistry.getKind(superMethod),
                             file = file?.let { getRelativePath(project, it) },
                             line = getLineNumber(project, superMethod),
                             column = getColumnNumber(project, superMethod),
-                            isInterface = invokeBoolean(superClass, "isInterface"),
-                            depth = depth,
-                            language = "PHP"
                         ))
 
                         hierarchy.addAll(buildHierarchy(project, superMethod, visited, depth + 1))
@@ -135,15 +131,11 @@ class PhpLanguageService : LanguageService() {
 
                         hierarchy.add(SuperMethodData(
                             name = methodName,
-                            signature = buildMethodSignature(ifaceMethod),
-                            containingClass = ifaceName ?: "unknown",
-                            containingClassKind = "INTERFACE",
+                            qualifiedName = QualifiedNameUtil.getQualifiedName(ifaceMethod),
+                            kind = LanguageServiceRegistry.getKind(ifaceMethod),
                             file = file?.let { getRelativePath(project, it) },
                             line = getLineNumber(project, ifaceMethod),
                             column = getColumnNumber(project, ifaceMethod),
-                            isInterface = true,
-                            depth = depth,
-                            language = "PHP"
                         ))
 
                         // Interfaces can extend other interfaces
@@ -156,38 +148,6 @@ class PhpLanguageService : LanguageService() {
         }
 
         return hierarchy
-    }
-
-    private fun buildMethodSignature(method: PsiElement): String {
-        return try {
-            val getParametersMethod = method.javaClass.getMethod("getParameters")
-            val parameters = getParametersMethod.invoke(method) as? Array<*> ?: emptyArray<Any>()
-
-            val params = parameters.filterIsInstance<PsiElement>().mapNotNull { param ->
-                try {
-                    val getName = param.javaClass.getMethod("getName")
-                    val name = getName.invoke(param) as? String ?: return@mapNotNull null
-
-                    val type = try {
-                        val getType = param.javaClass.getMethod("getDeclaredType")
-                        val typeElement = getType.invoke(param)
-                        if (typeElement != null) {
-                            val toStringMethod = typeElement.javaClass.getMethod("toString")
-                            toStringMethod.invoke(typeElement) as? String
-                        } else null
-                    } catch (_: Exception) { null }
-
-                    if (type != null) "$type \$$name" else "\$$name"
-                } catch (_: Exception) {
-                    null
-                }
-            }.joinToString(", ")
-
-            val methodName = getName(method) ?: "unknown"
-            "$methodName($params)"
-        } catch (_: Exception) {
-            getName(method) ?: "unknown"
-        }
     }
 
     // --- PHP PSI helpers ---
@@ -247,16 +207,6 @@ class PhpLanguageService : LanguageService() {
             } catch (_: Exception) {
                 null
             }
-        }
-    }
-
-    private fun determineClassKind(element: PsiElement): String {
-        return when {
-            invokeBoolean(element, "isInterface") -> "INTERFACE"
-            invokeBoolean(element, "isTrait") -> "TRAIT"
-            invokeBoolean(element, "isEnum") -> "ENUM"
-            invokeBoolean(element, "isAbstract") -> "ABSTRACT_CLASS"
-            else -> "CLASS"
         }
     }
 

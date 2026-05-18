@@ -1,6 +1,7 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.javascript
 
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageService
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.MethodData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodsData
@@ -55,12 +56,11 @@ class JavaScriptLanguageService : LanguageService() {
         val file = jsFunction.containingFile?.virtualFile
         val methodData = MethodData(
             name = getName(jsFunction) ?: "unknown",
-            signature = buildMethodSignature(jsFunction),
-            containingClass = QualifiedNameUtil.getQualifiedName(containingClass) ?: getName(containingClass) ?: "unknown",
+            qualifiedName = QualifiedNameUtil.getQualifiedName(jsFunction),
+            kind = LanguageServiceRegistry.getKind(jsFunction),
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, jsFunction) ?: 0,
             column = getColumnNumber(project, jsFunction) ?: 0,
-            language = getLanguageName(jsFunction)
         )
 
         val hierarchy = buildHierarchy(project, jsFunction)
@@ -99,15 +99,11 @@ class JavaScriptLanguageService : LanguageService() {
 
                     hierarchy.add(SuperMethodData(
                         name = methodName,
-                        signature = buildMethodSignature(superMethod),
-                        containingClass = superClassName ?: "unknown",
-                        containingClassKind = getClassKind(superClass),
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(superMethod),
+                        kind = LanguageServiceRegistry.getKind(superMethod),
                         file = file?.let { getRelativePath(project, it) },
                         line = getLineNumber(project, superMethod),
                         column = getColumnNumber(project, superMethod),
-                        isInterface = getClassKind(superClass) == "INTERFACE",
-                        depth = depth,
-                        language = getLanguageName(superMethod)
                     ))
 
                     hierarchy.addAll(buildHierarchy(project, superMethod, visited, depth + 1))
@@ -128,15 +124,11 @@ class JavaScriptLanguageService : LanguageService() {
 
                     hierarchy.add(SuperMethodData(
                         name = methodName,
-                        signature = buildMethodSignature(superMethod),
-                        containingClass = ifaceName ?: "unknown",
-                        containingClassKind = "INTERFACE",
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(superMethod),
+                        kind = LanguageServiceRegistry.getKind(superMethod),
                         file = file?.let { getRelativePath(project, it) },
                         line = getLineNumber(project, superMethod),
                         column = getColumnNumber(project, superMethod),
-                        isInterface = true,
-                        depth = depth,
-                        language = getLanguageName(superMethod)
                     ))
                 }
             }
@@ -145,52 +137,6 @@ class JavaScriptLanguageService : LanguageService() {
         }
 
         return hierarchy
-    }
-
-    private fun buildMethodSignature(jsFunction: PsiElement): String {
-        return try {
-            val getParameterListMethod = jsFunction.javaClass.getMethod("getParameterList")
-            val parameterList = getParameterListMethod.invoke(jsFunction)
-            val getParametersMethod = parameterList.javaClass.getMethod("getParameters")
-            val parameters = getParametersMethod.invoke(parameterList) as? Array<*> ?: emptyArray<Any>()
-
-            val params = parameters.filterIsInstance<PsiElement>().mapNotNull { param ->
-                try {
-                    val getNameMethod = param.javaClass.getMethod("getName")
-                    val name = getNameMethod.invoke(param) as? String
-
-                    val type = try {
-                        val getTypeMethod = param.javaClass.getMethod("getType")
-                        val typeElement = getTypeMethod.invoke(param)
-                        typeElement?.toString()
-                    } catch (_: Exception) {
-                        null
-                    }
-
-                    if (type != null) "$name: $type" else name
-                } catch (_: Exception) {
-                    null
-                }
-            }.joinToString(", ")
-
-            val functionName = getName(jsFunction) ?: "unknown"
-
-            val returnType = try {
-                val getReturnTypeMethod = jsFunction.javaClass.getMethod("getReturnType")
-                val returnTypeElement = getReturnTypeMethod.invoke(jsFunction)
-                returnTypeElement?.toString()
-            } catch (_: Exception) {
-                null
-            }
-
-            if (returnType != null) {
-                "$functionName($params): $returnType"
-            } else {
-                "$functionName($params)"
-            }
-        } catch (_: Exception) {
-            getName(jsFunction) ?: "unknown"
-        }
     }
 
     // --- JS PSI helpers ---
@@ -215,16 +161,6 @@ class JavaScriptLanguageService : LanguageService() {
             method.invoke(element) as? String
         } catch (_: Exception) {
             null
-        }
-    }
-
-    private fun getClassKind(jsClass: PsiElement): String {
-        return try {
-            val isInterfaceMethod = jsClass.javaClass.getMethod("isInterface")
-            val isInterface = isInterfaceMethod.invoke(jsClass) as? Boolean ?: false
-            if (isInterface) "INTERFACE" else "CLASS"
-        } catch (_: Exception) {
-            "CLASS"
         }
     }
 
@@ -258,17 +194,6 @@ class JavaScriptLanguageService : LanguageService() {
             } catch (_: Exception) {
                 null
             }
-        }
-    }
-
-    private fun getLanguageName(element: PsiElement): String {
-        return when (element.language.id) {
-            "TypeScript" -> "TypeScript"
-            "TypeScript JSX" -> "TypeScript"
-            "JavaScript" -> "JavaScript"
-            "ECMAScript 6" -> "JavaScript"
-            "JSX Harmony" -> "JavaScript"
-            else -> "JavaScript"
         }
     }
 

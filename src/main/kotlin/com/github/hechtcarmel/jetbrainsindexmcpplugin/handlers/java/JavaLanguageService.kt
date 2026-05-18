@@ -1,6 +1,7 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.java
 
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageService
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.MethodData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodsData
@@ -10,7 +11,6 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.*
-import com.intellij.psi.presentation.java.ClassPresentationUtil
 import com.intellij.psi.util.PsiTreeUtil
 
 class JavaLanguageService : LanguageService() {
@@ -64,12 +64,11 @@ class JavaLanguageService : LanguageService() {
         val file = method.containingFile?.virtualFile
         val methodData = MethodData(
             name = method.name,
-            signature = buildMethodSignature(method),
-            containingClass = ClassPresentationUtil.getNameForClass(containingClass, true),
+            qualifiedName = QualifiedNameUtil.getQualifiedName(method),
+            kind = LanguageServiceRegistry.getKind(method),
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, method) ?: 0,
             column = getColumnNumber(project, method) ?: 0,
-            language = if (method.navigationElement.language.id == "kotlin") "Kotlin" else "Java"
         )
 
         val hierarchy = buildHierarchy(project, method)
@@ -92,38 +91,25 @@ class JavaLanguageService : LanguageService() {
 
         for (superMethod in method.findSuperMethods()) {
             val key = QualifiedNameUtil.getQualifiedName(superMethod)
-                ?: "${superMethod.containingClass?.let { ClassPresentationUtil.getNameForClass(it, true) }}.${superMethod.name}"
+                ?: "${superMethod.containingClass?.qualifiedName}.${superMethod.name}"
             if (key in visited) continue
             visited.add(key)
 
-            val containingClass = superMethod.containingClass
             val file = superMethod.containingFile?.virtualFile
 
             hierarchy.add(SuperMethodData(
                 name = superMethod.name,
-                signature = buildMethodSignature(superMethod),
-                containingClass = containingClass?.let { ClassPresentationUtil.getNameForClass(it, true) } ?: "unknown",
-                containingClassKind = containingClass?.let { getClassKind(it) } ?: "UNKNOWN",
+                qualifiedName = QualifiedNameUtil.getQualifiedName(superMethod),
+                kind = LanguageServiceRegistry.getKind(superMethod),
                 file = file?.let { getRelativePath(project, it) },
                 line = getLineNumber(project, superMethod),
                 column = getColumnNumber(project, superMethod),
-                isInterface = containingClass?.isInterface == true,
-                depth = depth,
-                language = if (superMethod.navigationElement.language.id == "kotlin") "Kotlin" else "Java"
             ))
 
             hierarchy.addAll(buildHierarchy(project, superMethod, visited, depth + 1))
         }
 
         return hierarchy
-    }
-
-    private fun buildMethodSignature(method: PsiMethod): String {
-        val params = method.parameterList.parameters.joinToString(", ") {
-            "${it.type.presentableText} ${it.name}"
-        }
-        val returnType = method.returnType?.presentableText ?: "void"
-        return "${method.name}($params): $returnType"
     }
 
     // --- Method/class resolution helpers (shared with Kotlin) ---
@@ -176,17 +162,6 @@ class JavaLanguageService : LanguageService() {
             current?.reference?.resolve()?.let { return it }
         }
         return null
-    }
-
-    private fun getClassKind(psiClass: PsiClass): String {
-        return when {
-            psiClass.isInterface -> "INTERFACE"
-            psiClass.isEnum -> "ENUM"
-            psiClass.isAnnotationType -> "ANNOTATION"
-            psiClass.isRecord -> "RECORD"
-            psiClass.hasModifierProperty("abstract") -> "ABSTRACT_CLASS"
-            else -> "CLASS"
-        }
     }
 
     private fun getRelativePath(project: Project, file: com.intellij.openapi.vfs.VirtualFile): String {

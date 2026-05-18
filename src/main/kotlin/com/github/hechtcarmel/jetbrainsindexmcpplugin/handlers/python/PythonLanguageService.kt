@@ -1,6 +1,7 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.python
 
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageService
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.MethodData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodsData
@@ -55,12 +56,11 @@ class PythonLanguageService : LanguageService() {
         val file = pyFunction.containingFile?.virtualFile
         val methodData = MethodData(
             name = getName(pyFunction) ?: "unknown",
-            signature = buildMethodSignature(pyFunction),
-            containingClass = QualifiedNameUtil.getQualifiedName(containingClass) ?: getName(containingClass) ?: "unknown",
+            qualifiedName = QualifiedNameUtil.getQualifiedName(pyFunction),
+            kind = LanguageServiceRegistry.getKind(pyFunction),
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, pyFunction) ?: 0,
             column = getColumnNumber(project, pyFunction) ?: 0,
-            language = "Python"
         )
 
         val hierarchy = buildHierarchy(project, pyFunction)
@@ -98,15 +98,11 @@ class PythonLanguageService : LanguageService() {
 
                     hierarchy.add(SuperMethodData(
                         name = methodName,
-                        signature = buildMethodSignature(superMethod),
-                        containingClass = superClassName ?: "unknown",
-                        containingClassKind = "CLASS",
+                        qualifiedName = QualifiedNameUtil.getQualifiedName(superMethod),
+                        kind = LanguageServiceRegistry.getKind(superMethod),
                         file = file?.let { getRelativePath(project, it) },
                         line = getLineNumber(project, superMethod),
                         column = getColumnNumber(project, superMethod),
-                        isInterface = false,
-                        depth = depth,
-                        language = "Python"
                     ))
 
                     hierarchy.addAll(buildHierarchy(project, superMethod, visited, depth + 1))
@@ -117,29 +113,6 @@ class PythonLanguageService : LanguageService() {
         }
 
         return hierarchy
-    }
-
-    private fun buildMethodSignature(pyFunction: PsiElement): String {
-        return try {
-            val getParameterListMethod = pyFunction.javaClass.getMethod("getParameterList")
-            val parameterList = getParameterListMethod.invoke(pyFunction)
-            val getParametersMethod = parameterList.javaClass.getMethod("getParameters")
-            val parameters = getParametersMethod.invoke(parameterList) as? Array<*> ?: emptyArray<Any>()
-
-            val params = parameters.filterIsInstance<PsiElement>().mapNotNull { param ->
-                try {
-                    val getNameMethod = param.javaClass.getMethod("getName")
-                    getNameMethod.invoke(param) as? String
-                } catch (_: Exception) {
-                    null
-                }
-            }.joinToString(", ")
-
-            val functionName = getName(pyFunction) ?: "unknown"
-            "$functionName($params)"
-        } catch (_: Exception) {
-            getName(pyFunction) ?: "unknown"
-        }
     }
 
     // --- Python PSI helpers ---

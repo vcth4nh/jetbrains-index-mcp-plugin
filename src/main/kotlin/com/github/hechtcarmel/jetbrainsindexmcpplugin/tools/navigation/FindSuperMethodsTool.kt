@@ -31,7 +31,7 @@ class FindSuperMethodsTool : AbstractMcpTool() {
 
         NOT supported for Rust: Rust uses trait implementations rather than classical inheritance, so there are no "super methods" in the traditional sense. Use ide_find_definition or ide_type_hierarchy instead.
 
-        Returns: full hierarchy chain from immediate parent (depth=1) to root, with file locations (line/column) and containing class info.
+        Returns: full hierarchy chain from immediate parent to root, with file locations (line/column), qualified names, and element kinds.
 
         Example: {"file": "src/UserServiceImpl.java", "line": 25, "column": 10}
     """.trimIndent()
@@ -69,28 +69,22 @@ class FindSuperMethodsTool : AbstractMcpTool() {
             createJsonResult(SuperMethodsResult(
                 method = MethodInfo(
                     name = superMethodsData.method.name,
-                    signature = superMethodsData.method.signature,
-                    containingClass = superMethodsData.method.containingClass,
+                    qualifiedName = superMethodsData.method.qualifiedName,
+                    kind = superMethodsData.method.kind,
                     file = superMethodsData.method.file,
                     line = superMethodsData.method.line,
                     column = superMethodsData.method.column,
-                    language = superMethodsData.method.language
                 ),
                 hierarchy = superMethodsData.hierarchy.map { superMethod ->
                     SuperMethodInfo(
                         name = superMethod.name,
-                        signature = superMethod.signature,
-                        containingClass = superMethod.containingClass,
-                        containingClassKind = superMethod.containingClassKind,
+                        qualifiedName = superMethod.qualifiedName,
+                        kind = superMethod.kind,
                         file = superMethod.file,
                         line = superMethod.line,
                         column = superMethod.column,
-                        isInterface = superMethod.isInterface,
-                        depth = superMethod.depth,
-                        language = superMethod.language
                     )
                 },
-                totalCount = superMethodsData.hierarchy.size
             ))
         }
     }
