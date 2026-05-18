@@ -15,9 +15,9 @@ data class UsageLocation(
     val file: String,
     val line: Int,
     val column: Int,
-    val context: String,
-    val type: String,
-    val astPath: List<String>,
+    val preview: String,
+    val usageType: String,
+    val enclosingScope: List<String>,
 )
 
 @Serializable
@@ -39,9 +39,11 @@ data class DefinitionResult(
     val file: String,
     val line: Int,
     val column: Int,
+    val name: String,
+    val kind: String,
     val preview: String,
-    val symbolName: String,
-    val astPath: List<String>
+    val qualifiedName: String? = null,
+    val enclosingScope: List<String>? = null,
 )
 
 // ide_read_file output
@@ -113,7 +115,6 @@ data class ImplementationLocation(
     val line: Int,
     val column: Int,
     val kind: String,
-    val language: String? = null,
     val qualifiedName: String? = null
 )
 
@@ -267,8 +268,6 @@ data class SymbolMatch(
     val file: String,
     val line: Int,
     val column: Int,
-    val containerName: String?,
-    val language: String? = null
 )
 
 // ide_find_super_methods output
@@ -276,32 +275,26 @@ data class SymbolMatch(
 data class SuperMethodsResult(
     val method: MethodInfo,
     val hierarchy: List<SuperMethodInfo>,
-    val totalCount: Int
 )
 
 @Serializable
 data class MethodInfo(
     val name: String,
-    val signature: String,
-    val containingClass: String,
+    val qualifiedName: String? = null,
+    val kind: String,
     val file: String,
     val line: Int,
     val column: Int,
-    val language: String? = null
 )
 
 @Serializable
 data class SuperMethodInfo(
     val name: String,
-    val signature: String,
-    val containingClass: String,
-    val containingClassKind: String,
+    val qualifiedName: String? = null,
+    val kind: String,
     val file: String?,
     val line: Int?,
     val column: Int?,
-    val isInterface: Boolean,
-    val depth: Int,
-    val language: String? = null
 )
 
 // ide_find_class output (reuses SymbolMatch)

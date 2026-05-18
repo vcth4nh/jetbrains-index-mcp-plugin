@@ -56,8 +56,6 @@ data class SymbolData(
     val file: String,
     val line: Int,
     val column: Int,
-    val containerName: String?,
-    val language: String
 )
 
 /**
@@ -73,12 +71,11 @@ data class SuperMethodsData(
  */
 data class MethodData(
     val name: String,
-    val signature: String,
-    val containingClass: String,
+    val qualifiedName: String?,
+    val kind: String,
     val file: String,
     val line: Int,
     val column: Int,
-    val language: String
 )
 
 /**
@@ -86,13 +83,9 @@ data class MethodData(
  */
 data class SuperMethodData(
     val name: String,
-    val signature: String,
-    val containingClass: String,
-    val containingClassKind: String,
+    val qualifiedName: String?,
+    val kind: String,
     val file: String?,
     val line: Int?,
     val column: Int?,
-    val isInterface: Boolean,
-    val depth: Int,
-    val language: String
 )
