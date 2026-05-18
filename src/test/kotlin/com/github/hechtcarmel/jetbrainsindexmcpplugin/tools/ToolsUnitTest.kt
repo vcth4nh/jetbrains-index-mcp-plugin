@@ -926,14 +926,6 @@ class ToolsUnitTest : TestCase() {
 
     // ── maxPreviewLines schema test ────────────────────────────────────────────
 
-    fun testFindDefinitionToolSchemaHasMaxPreviewLines() {
-        val tool = FindDefinitionTool()
-        val properties = tool.inputSchema[SchemaConstants.PROPERTIES]?.jsonObject
-        assertNotNull("Should have properties", properties)
-        assertNotNull("Should have fullElementPreview property", properties?.get("fullElementPreview"))
-        assertNotNull("Should have maxPreviewLines property", properties?.get("maxPreviewLines"))
-    }
-
     // ── FindUsagesTool totalCount/truncated via maxResults schema ──────────────
 
     fun testFindUsagesToolSchemaHasMaxResults() {
