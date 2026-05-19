@@ -379,7 +379,7 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
         )
         assertTrue(
             "All results must be Java when language=Java is specified",
-            filteredResult.symbols.all { it.language.equals("Java", ignoreCase = true) }
+            filteredResult.symbols.all { it.file.endsWith(".java", ignoreCase = true) }
         )
 
         // Case-insensitive: lowercase input should return the same results as canonical case.
