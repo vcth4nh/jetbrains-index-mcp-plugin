@@ -16,6 +16,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PsiUtils
 import com.intellij.ide.hierarchy.HierarchyNodeDescriptor
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -203,9 +204,9 @@ class TypeHierarchyTool : AbstractMcpTool() {
         )
     }
 
-    private fun computeLineColumn(psi: com.intellij.psi.PsiElement): Pair<Int?, Int?> {
+    private fun computeLineColumn(psi: PsiElement): Pair<Int?, Int?> {
         val containingFile = psi.containingFile ?: return null to null
-        val document = com.intellij.psi.PsiDocumentManager.getInstance(psi.project)
+        val document = PsiDocumentManager.getInstance(psi.project)
             .getDocument(containingFile) ?: return null to null
         val offset = psi.textRange?.startOffset ?: return null to null
         val line = document.getLineNumber(offset) + 1
