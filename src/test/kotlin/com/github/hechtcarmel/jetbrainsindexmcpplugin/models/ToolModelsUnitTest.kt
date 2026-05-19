@@ -195,10 +195,10 @@ class ToolModelsUnitTest : TestCase() {
 
     fun testCallHierarchyResultSerialization() {
         val result = CallHierarchyResult(
-            element = CallElement("processData", "src/Processor.kt", 50, 1),
+            element = CallElement(name = "processData", kind = "METHOD", file = "src/Processor.kt", line = 50, column = 1),
             calls = listOf(
-                CallElement("validateInput", "src/Validator.kt", 30, 1),
-                CallElement("saveResult", "src/Repository.kt", 100, 1)
+                CallElement(name = "validateInput", kind = "METHOD", file = "src/Validator.kt", line = 30, column = 1),
+                CallElement(name = "saveResult", kind = "METHOD", file = "src/Repository.kt", line = 100, column = 1)
             )
         )
 
@@ -214,14 +214,15 @@ class ToolModelsUnitTest : TestCase() {
     fun testCallElementWithChildren() {
         val element = CallElement(
             name = "main",
+            kind = "FUNCTION",
             file = "Main.kt",
             line = 5,
             column = 1,
             children = listOf(
-                CallElement("init", "Init.kt", 10, 1, children = listOf(
-                    CallElement("loadConfig", "Config.kt", 15, 1)
+                CallElement(name = "init", kind = "FUNCTION", file = "Init.kt", line = 10, column = 1, children = listOf(
+                    CallElement(name = "loadConfig", kind = "FUNCTION", file = "Config.kt", line = 15, column = 1)
                 )),
-                CallElement("run", "Runner.kt", 20, 1)
+                CallElement(name = "run", kind = "FUNCTION", file = "Runner.kt", line = 20, column = 1)
             )
         )
 
@@ -1113,14 +1114,30 @@ class ToolModelsUnitTest : TestCase() {
 
     fun testCallElementCarriesQualifiedName() {
         val el = CallElement(
-            name = "Foo.bar",
+            name = "bar",
+            qualifiedName = "com.example.Foo#bar()",
+            kind = "METHOD",
             file = "Foo.java",
             line = 5,
-            column = 2,
-            qualifiedName = "com.example.Foo#bar()"
+            column = 2
         )
         val serialized = json.encodeToString(el)
         val deserialized = json.decodeFromString<CallElement>(serialized)
         assertEquals("com.example.Foo#bar()", deserialized.qualifiedName)
+    }
+
+    fun testCallElementCarriesEnclosingScope() {
+        val el = CallElement(
+            name = "lambda$0",
+            enclosingScope = listOf("UserService", "filterBy"),
+            kind = "FUNCTION",
+            file = "src/UserService.java",
+            line = 42,
+            column = 18
+        )
+        val serialized = json.encodeToString(el)
+        val deserialized = json.decodeFromString<CallElement>(serialized)
+        assertNull(deserialized.qualifiedName)
+        assertEquals(listOf("UserService", "filterBy"), deserialized.enclosingScope)
     }
 }

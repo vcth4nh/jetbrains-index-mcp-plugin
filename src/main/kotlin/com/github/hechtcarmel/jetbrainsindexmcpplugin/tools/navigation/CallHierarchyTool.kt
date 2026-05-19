@@ -155,16 +155,19 @@ class CallHierarchyTool : AbstractMcpTool() {
             ?.mapNotNull { convertDescriptorToCallElement(it, resolver, remainingDepth - 1) }
             ?: emptyList()
 
+        val qualifiedName = com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.ClassLikePsi
+            .describeQualifiedName(psi)
+
         return CallElement(
             name = com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.ClassLikePsi
                 .descriptorDisplayName(descriptor, psi),
+            qualifiedName = qualifiedName,
+            enclosingScope = if (qualifiedName == null) PsiUtils.getEnclosingScope(psi) else null,
+            kind = com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry.getKind(psi),
             file = ProjectUtils.getRelativePath(psi.project, virtualFile),
             line = line,
             column = column,
-            language = com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.displayLanguageName(psi.language.id),
-            children = if (children.isEmpty()) null else children,
-            qualifiedName = com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.ClassLikePsi
-                .describeQualifiedName(psi)
+            children = if (children.isEmpty()) null else children
         )
     }
 

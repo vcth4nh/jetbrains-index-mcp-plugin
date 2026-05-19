@@ -89,12 +89,13 @@ data class CallHierarchyResult(
 @Serializable
 data class CallElement(
     val name: String,
+    val qualifiedName: String? = null,
+    val enclosingScope: List<String>? = null,
+    val kind: String,
     val file: String,
     val line: Int,
     val column: Int,
-    val language: String? = null,
-    val children: List<CallElement>? = null,
-    val qualifiedName: String? = null
+    val children: List<CallElement>? = null
 )
 
 // find_implementations output
