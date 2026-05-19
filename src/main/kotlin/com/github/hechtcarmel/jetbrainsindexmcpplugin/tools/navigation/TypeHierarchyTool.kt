@@ -12,6 +12,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.HierarchyTreeWalker
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PsiUtils
 import com.intellij.ide.hierarchy.HierarchyNodeDescriptor
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
@@ -187,14 +188,29 @@ class TypeHierarchyTool : AbstractMcpTool() {
                 ?.takeIf { it.isNotEmpty() }
         } else null
 
+        val qualifiedName = ClassLikePsi.describeQualifiedName(psi)
+        val (line, column) = computeLineColumn(psi)
+
         return TypeElement(
             name = ClassLikePsi.descriptorDisplayName(descriptor, psi),
-            file = virtualFile?.let { ProjectUtils.getRelativePath(psi.project, it) },
+            qualifiedName = qualifiedName,
+            enclosingScope = if (qualifiedName == null) PsiUtils.getEnclosingScope(psi) else null,
             kind = ClassLikePsi.describeKind(psi),
-            language = com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.displayLanguageName(psi.language.id),
-            supertypes = supertypes,
-            qualifiedName = ClassLikePsi.describeQualifiedName(psi)
+            file = virtualFile?.let { ProjectUtils.getRelativePath(psi.project, it) },
+            line = line,
+            column = column,
+            supertypes = supertypes
         )
+    }
+
+    private fun computeLineColumn(psi: com.intellij.psi.PsiElement): Pair<Int?, Int?> {
+        val containingFile = psi.containingFile ?: return null to null
+        val document = com.intellij.psi.PsiDocumentManager.getInstance(psi.project)
+            .getDocument(containingFile) ?: return null to null
+        val offset = psi.textRange?.startOffset ?: return null to null
+        val line = document.getLineNumber(offset) + 1
+        val column = offset - document.getLineStartOffset(line - 1) + 1
+        return line to column
     }
 
 
@@ -202,13 +218,17 @@ class TypeHierarchyTool : AbstractMcpTool() {
         val name = ClassLikePsi.descriptorDisplayName(descriptor, psi)
         if (name.isBlank()) return null
         val virtualFile = psi.containingFile?.virtualFile
+        val qualifiedName = ClassLikePsi.describeQualifiedName(psi)
+        val (line, column) = computeLineColumn(psi)
         return TypeElement(
             name = name,
-            file = virtualFile?.let { ProjectUtils.getRelativePath(psi.project, it) },
+            qualifiedName = qualifiedName,
+            enclosingScope = if (qualifiedName == null) PsiUtils.getEnclosingScope(psi) else null,
             kind = ClassLikePsi.describeKind(psi),
-            language = com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.displayLanguageName(psi.language.id),
-            supertypes = null,
-            qualifiedName = ClassLikePsi.describeQualifiedName(psi)
+            file = virtualFile?.let { ProjectUtils.getRelativePath(psi.project, it) },
+            line = line,
+            column = column,
+            supertypes = null
         )
     }
 }

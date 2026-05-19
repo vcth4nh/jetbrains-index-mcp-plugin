@@ -111,13 +111,13 @@ class ToolModelsUnitTest : TestCase() {
 
     fun testTypeHierarchyResultSerialization() {
         val result = TypeHierarchyResult(
-            element = TypeElement("MyService", "src/MyService.kt", "CLASS"),
+            element = TypeElement(name = "MyService", kind = "CLASS", file = "src/MyService.kt", line = 4, column = 7),
             supertypes = listOf(
-                TypeElement("BaseService", "src/BaseService.kt", "CLASS"),
-                TypeElement("Service", null, "INTERFACE")
+                TypeElement(name = "BaseService", kind = "CLASS", file = "src/BaseService.kt", line = 4, column = 7),
+                TypeElement(name = "Service", kind = "INTERFACE", file = null, line = null, column = null)
             ),
             subtypes = listOf(
-                TypeElement("SpecialService", "src/SpecialService.kt", "CLASS")
+                TypeElement(name = "SpecialService", kind = "CLASS", file = "src/SpecialService.kt", line = 4, column = 7)
             )
         )
 
@@ -134,15 +134,28 @@ class ToolModelsUnitTest : TestCase() {
     fun testTypeElementWithNestedSupertypes() {
         val element = TypeElement(
             name = "Child",
-            file = "Child.kt",
+            qualifiedName = "demo.Child",
             kind = "CLASS",
+            file = "Child.kt",
+            line = 4,
+            column = 7,
             supertypes = listOf(
                 TypeElement(
                     name = "Parent",
-                    file = "Parent.kt",
+                    qualifiedName = "demo.Parent",
                     kind = "CLASS",
+                    file = "Parent.kt",
+                    line = 4,
+                    column = 7,
                     supertypes = listOf(
-                        TypeElement("GrandParent", "GrandParent.kt", "CLASS")
+                        TypeElement(
+                            name = "GrandParent",
+                            qualifiedName = "demo.GrandParent",
+                            kind = "CLASS",
+                            file = "GrandParent.kt",
+                            line = 4,
+                            column = 7
+                        )
                     )
                 )
             )
@@ -152,6 +165,7 @@ class ToolModelsUnitTest : TestCase() {
         val deserialized = json.decodeFromString<TypeElement>(serialized)
 
         assertEquals("Child", deserialized.name)
+        assertEquals("demo.Child", deserialized.qualifiedName)
         assertNotNull(deserialized.supertypes)
         assertEquals(1, deserialized.supertypes!!.size)
         assertEquals("Parent", deserialized.supertypes!![0].name)
@@ -161,8 +175,10 @@ class ToolModelsUnitTest : TestCase() {
     fun testTypeElementWithNullFile() {
         val element = TypeElement(
             name = "Serializable",
+            kind = "INTERFACE",
             file = null,
-            kind = "INTERFACE"
+            line = null,
+            column = null
         )
 
         val serialized = json.encodeToString(element)
@@ -170,6 +186,8 @@ class ToolModelsUnitTest : TestCase() {
 
         assertEquals("Serializable", deserialized.name)
         assertNull(deserialized.file)
+        assertNull(deserialized.line)
+        assertNull(deserialized.column)
         assertEquals("INTERFACE", deserialized.kind)
     }
 
@@ -1067,13 +1085,30 @@ class ToolModelsUnitTest : TestCase() {
     fun testTypeElementCarriesQualifiedName() {
         val el = TypeElement(
             name = "Foo",
-            file = "Foo.java",
+            qualifiedName = "com.example.Foo",
             kind = "CLASS",
-            qualifiedName = "com.example.Foo"
+            file = "Foo.java",
+            line = 1,
+            column = 7
         )
         val serialized = json.encodeToString(el)
         val deserialized = json.decodeFromString<TypeElement>(serialized)
         assertEquals("com.example.Foo", deserialized.qualifiedName)
+    }
+
+    fun testTypeElementCarriesEnclosingScope() {
+        val el = TypeElement(
+            name = "Comparator",
+            enclosingScope = listOf("UserService", "sortByName"),
+            kind = "CLASS",
+            file = "src/UserService.java",
+            line = 64,
+            column = 35
+        )
+        val serialized = json.encodeToString(el)
+        val deserialized = json.decodeFromString<TypeElement>(serialized)
+        assertNull(deserialized.qualifiedName)
+        assertEquals(listOf("UserService", "sortByName"), deserialized.enclosingScope)
     }
 
     fun testCallElementCarriesQualifiedName() {

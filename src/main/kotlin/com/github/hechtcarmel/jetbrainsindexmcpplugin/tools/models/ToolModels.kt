@@ -70,11 +70,13 @@ data class TypeHierarchyResult(
 @Serializable
 data class TypeElement(
     val name: String,
-    val file: String?,
+    val qualifiedName: String? = null,
+    val enclosingScope: List<String>? = null,
     val kind: String,
-    val language: String? = null,
-    val supertypes: List<TypeElement>? = null,
-    val qualifiedName: String? = null
+    val file: String? = null,
+    val line: Int? = null,
+    val column: Int? = null,
+    val supertypes: List<TypeElement>? = null
 )
 
 // call_hierarchy output
