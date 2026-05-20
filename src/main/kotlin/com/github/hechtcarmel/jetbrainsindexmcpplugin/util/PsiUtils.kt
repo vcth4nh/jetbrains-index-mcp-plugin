@@ -373,6 +373,21 @@ object PsiUtils {
         return ancestors.asReversed()
     }
 
+    /**
+     * Offset of [element]'s name identifier — the position the IDE's "Go to Declaration"
+     * navigates to.
+     *
+     * Uses the name identifier's `textRange`, which resolves the decompiled-class mirror
+     * the same way it does for source PSI. `element.textOffset` is deliberately avoided:
+     * it returns -1 for some decompiled `.class` stubs (the compiled-PSI mirror can be
+     * soft-collected between calls). Anonymous elements have no name identifier — they
+     * are never hierarchy nodes, so the element's own range start is used.
+     */
+    fun identifierOffset(element: PsiElement): Int {
+        val anchor = (element as? PsiNameIdentifierOwner)?.nameIdentifier ?: element
+        return anchor.textRange?.startOffset ?: 0
+    }
+
     fun findNamedElement(element: PsiElement): PsiNamedElement? {
         var current: PsiElement? = element
         while (current != null) {

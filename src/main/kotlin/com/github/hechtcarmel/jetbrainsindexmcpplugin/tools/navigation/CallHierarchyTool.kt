@@ -146,7 +146,7 @@ class CallHierarchyTool : AbstractMcpTool() {
         val virtualFile = psi.containingFile?.virtualFile ?: return null
         val document = PsiDocumentManager.getInstance(psi.project)
             .getDocument(psi.containingFile) ?: return null
-        val offset = psi.textRange?.startOffset ?: return null
+        val offset = PsiUtils.identifierOffset(psi)
         val line = document.getLineNumber(offset) + 1
         val column = offset - document.getLineStartOffset(line - 1) + 1
 

@@ -208,7 +208,7 @@ class TypeHierarchyTool : AbstractMcpTool() {
         val containingFile = psi.containingFile ?: return null to null
         val document = PsiDocumentManager.getInstance(psi.project)
             .getDocument(containingFile) ?: return null to null
-        val offset = psi.textRange?.startOffset ?: return null to null
+        val offset = PsiUtils.identifierOffset(psi)
         val line = document.getLineNumber(offset) + 1
         val column = offset - document.getLineStartOffset(line - 1) + 1
         return line to column
