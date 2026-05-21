@@ -62,3 +62,22 @@
 {"id":"find-symbol-describe",      "tool":"ide_find_symbol",          "params":{"query":"describe"}}
 {"id":"find-symbol-totalArea",     "tool":"ide_find_symbol",          "params":{"query":"totalArea"}}
 {"id":"find-symbol-draw",          "tool":"ide_find_symbol",          "params":{"query":"draw"}}
+{"id":"audit-refs-area-libraries-scope",      "tool":"ide_find_usages",         "params":{"file":"src/main/java/demo/Normal.java","line":11,"column":21,"scope":"project_and_libraries"}}
+{"id":"audit-find-symbol-area-paged",         "tool":"ide_find_symbol",         "params":{"query":"area","pageSize":2}}
+{"id":"audit-find-class-Sh-prefix",           "tool":"ide_find_class",          "params":{"query":"Sh","matchMode":"prefix"}}
+{"id":"audit-find-class-Circle-exact",        "tool":"ide_find_class",          "params":{"query":"Circle","matchMode":"exact"}}
+{"id":"audit-find-class-SC-camelCase",        "tool":"ide_find_class",          "params":{"query":"SC","matchMode":"camelCase"}}
+{"id":"audit-type-hier-Square-supertypes",    "tool":"ide_type_hierarchy",      "params":{"file":"src/main/java/demo/Normal.java","line":56,"column":7,"direction":"supertypes"}}
+{"id":"audit-type-hier-Shape-subtypes",       "tool":"ide_type_hierarchy",      "params":{"file":"src/main/java/demo/Normal.java","line":10,"column":16,"direction":"subtypes"}}
+{"id":"audit-call-hier-makeDefault-d3",       "tool":"ide_call_hierarchy",      "params":{"file":"src/main/java/demo/Normal.java","line":87,"column":31,"direction":"callees","maxDepth":3}}
+{"id":"audit-find-symbol-qualified-Shape-area","tool":"ide_find_symbol",        "params":{"query":"Shape.area"}}
+{"id":"audit-find-class-no-match",            "tool":"ide_find_class",          "params":{"query":"NoSuchClassXyz"}}
+{"id":"audit-find-symbol-no-match",           "tool":"ide_find_symbol",         "params":{"query":"noSuchSymbolXyz"}}
+{"id":"audit-find-class-Shape-wildcard",      "tool":"ide_find_class",          "params":{"query":"Sh*","matchMode":"substring"}}
+{"id":"audit-def-classifyShape-kind-decl","tool":"ide_find_definition","params":{"file":"src/main/java/demo/Normal.java","line":97,"column":13}}
+{"id":"audit-refs-classifyShape-kind","tool":"ide_find_usages","params":{"file":"src/main/java/demo/Normal.java","line":97,"column":13}}
+{"id":"audit-super-anon-apply","tool":"ide_find_super_methods","params":{"file":"src/main/java/demo/Quirks.java","line":24,"column":28}}
+{"id":"audit-super-CoerceMode-INT-apply","tool":"ide_find_super_methods","params":{"file":"src/main/java/demo/Quirks.java","line":72,"column":19}}
+{"id":"audit-file-structure-Modern","tool":"ide_file_structure","params":{"file":"src/main/java/demo/Modern.java"}}
+{"id":"audit-file-structure-Quirks","tool":"ide_file_structure","params":{"file":"src/main/java/demo/Quirks.java"}}
+{"id":"audit-diagnostics-warnings","tool":"ide_diagnostics","params":{"file":"src/main/java/demo/Normal.java","severity":"warnings"}}

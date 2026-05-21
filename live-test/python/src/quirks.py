@@ -98,3 +98,15 @@ def quirk_chained_getattr(x: str) -> int:
 def quirk_multiple_assignment(x: str) -> int:
     a = b = int
     return a(x) + b(x)
+
+
+def classify_shape(s):
+    """Issue #11: variable-assign in if/else for find_usages coverage."""
+    from .normal import Circle, Rectangle
+    if isinstance(s, Circle):
+        kind = 1
+    elif isinstance(s, Rectangle):
+        kind = 2
+    else:
+        kind = 0
+    return kind

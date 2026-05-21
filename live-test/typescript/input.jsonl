@@ -51,3 +51,16 @@
 {"id":"find-symbol-totalArea",       "tool":"ide_find_symbol",          "params":{"query":"totalArea"}}
 {"id":"find-symbol-draw",            "tool":"ide_find_symbol",          "params":{"query":"draw"}}
 {"id":"find-symbol-largest",         "tool":"ide_find_symbol",          "params":{"query":"largest"}}
+{"id":"audit-refs-area-libraries-scope",      "tool":"ide_find_usages",         "params":{"file":"src/normal.ts","line":6,"column":14,"scope":"project_and_libraries"}}
+{"id":"audit-find-symbol-area-paged",         "tool":"ide_find_symbol",         "params":{"query":"area","pageSize":2}}
+{"id":"audit-find-class-Sh-prefix",           "tool":"ide_find_class",          "params":{"query":"Sh","matchMode":"prefix"}}
+{"id":"audit-find-class-Circle-exact",        "tool":"ide_find_class",          "params":{"query":"Circle","matchMode":"exact"}}
+{"id":"audit-find-class-SC-camelCase",        "tool":"ide_find_class",          "params":{"query":"SC","matchMode":"camelCase"}}
+{"id":"audit-type-hier-Square-supertypes",    "tool":"ide_type_hierarchy",      "params":{"file":"src/normal.ts","line":29,"column":14,"direction":"supertypes"}}
+{"id":"audit-type-hier-Shape-subtypes",       "tool":"ide_type_hierarchy",      "params":{"file":"src/normal.ts","line":5,"column":23,"direction":"subtypes"}}
+{"id":"audit-call-hier-makeDefault-d3",       "tool":"ide_call_hierarchy",      "params":{"file":"src/normal.ts","line":55,"column":17,"direction":"callees","maxDepth":3}}
+{"id":"audit-find-symbol-qualified-Shape-area","tool":"ide_find_symbol",        "params":{"query":"Shape.area"}}
+{"id":"audit-find-class-no-match",            "tool":"ide_find_class",          "params":{"query":"NoSuchClassXyz"}}
+{"id":"audit-find-symbol-no-match",           "tool":"ide_find_symbol",         "params":{"query":"noSuchSymbolXyz"}}
+{"id":"audit-find-class-Shape-wildcard",      "tool":"ide_find_class",          "params":{"query":"Sh*","matchMode":"substring"}}
+{"id":"audit-type-hier-Coerce-alias","tool":"ide_type_hierarchy","params":{"file":"src/quirks.ts","line":60,"column":13}}

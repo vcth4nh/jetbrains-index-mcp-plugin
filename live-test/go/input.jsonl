@@ -40,3 +40,18 @@
 {"id":"find-symbol-TotalArea",       "tool":"ide_find_symbol",     "params":{"query":"TotalArea"}}
 {"id":"find-symbol-Draw",            "tool":"ide_find_symbol",     "params":{"query":"Draw"}}
 {"id":"find-symbol-Largest",         "tool":"ide_find_symbol",     "params":{"query":"Largest"}}
+{"id":"audit-refs-area-libraries-scope",      "tool":"ide_find_usages",         "params":{"file":"normal.go","line":23,"column":18,"scope":"project_and_libraries"}}
+{"id":"audit-find-symbol-area-paged",         "tool":"ide_find_symbol",         "params":{"query":"Area","pageSize":2}}
+{"id":"audit-find-class-Sh-prefix",           "tool":"ide_find_class",          "params":{"query":"Sh","matchMode":"prefix"}}
+{"id":"audit-find-class-Circle-exact",        "tool":"ide_find_class",          "params":{"query":"Circle","matchMode":"exact"}}
+{"id":"audit-find-class-SC-camelCase",        "tool":"ide_find_class",          "params":{"query":"SC","matchMode":"camelCase"}}
+{"id":"audit-type-hier-Square-supertypes",    "tool":"ide_type_hierarchy",      "params":{"file":"normal.go","line":40,"column":7,"direction":"supertypes"}}
+{"id":"audit-type-hier-Shape-subtypes",       "tool":"ide_type_hierarchy",      "params":{"file":"normal.go","line":9,"column":6,"direction":"subtypes"}}
+{"id":"audit-call-hier-makeDefault-d3",       "tool":"ide_call_hierarchy",      "params":{"file":"normal.go","line":72,"column":6,"direction":"callees","maxDepth":3}}
+{"id":"audit-find-symbol-qualified-IntCoercer-Coerce","tool":"ide_find_symbol","params":{"query":"IntCoercer.Coerce"}}
+{"id":"audit-find-class-no-match",            "tool":"ide_find_class",          "params":{"query":"NoSuchClassXyz"}}
+{"id":"audit-find-symbol-no-match",           "tool":"ide_find_symbol",         "params":{"query":"noSuchSymbolXyz"}}
+{"id":"audit-find-class-Shape-wildcard",      "tool":"ide_find_class",          "params":{"query":"Sh*","matchMode":"substring"}}
+{"id":"audit-refs-baseShape-Describe-promoted","tool":"ide_find_usages","params":{"file":"normal.go","line":16,"column":20}}
+{"id":"audit-find-class-prefix-Shape","tool":"ide_find_class","params":{"query":"Shape","matchMode":"prefix"}}
+{"id":"audit-find-class-exact-Circle","tool":"ide_find_class","params":{"query":"Circle","matchMode":"exact"}}

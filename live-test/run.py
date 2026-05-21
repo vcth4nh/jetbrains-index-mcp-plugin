@@ -39,6 +39,7 @@ SORTABLE_ARRAYS = {
     "usages", "references", "implementations", "subtypes", "supertypes",
     "classes", "symbols", "files", "matches",
     "problems", "intentions", "buildErrors", "testResults", "hierarchy", "calls",
+    "children",
 }
 
 

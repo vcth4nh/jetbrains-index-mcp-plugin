@@ -91,4 +91,17 @@ public class Normal {
         shapes.add(new Square(4.0));
         return shapes;
     }
+
+    /** Issue #11: variable-assign in if/else for find_usages coverage. */
+    static int classifyShape(Shape s) {
+        int kind;
+        if (s instanceof Circle) {
+            kind = 1;
+        } else if (s instanceof Rectangle) {
+            kind = 2;
+        } else {
+            kind = 0;
+        }
+        return kind;
+    }
 }

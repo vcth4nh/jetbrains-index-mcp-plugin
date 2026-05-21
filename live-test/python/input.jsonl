@@ -57,3 +57,20 @@
 {"id":"find-symbol-total_area",      "tool":"ide_find_symbol",          "params":{"query":"total_area"}}
 {"id":"find-symbol-draw",            "tool":"ide_find_symbol",          "params":{"query":"draw"}}
 {"id":"find-symbol-largest",         "tool":"ide_find_symbol",          "params":{"query":"largest"}}
+{"id":"audit-refs-area-libraries-scope",      "tool":"ide_find_usages",         "params":{"file":"src/normal.py","line":12,"column":9,"scope":"project_and_libraries"}}
+{"id":"audit-find-symbol-area-paged",         "tool":"ide_find_symbol",         "params":{"query":"area","pageSize":2}}
+{"id":"audit-find-class-Sh-prefix",           "tool":"ide_find_class",          "params":{"query":"Sh","matchMode":"prefix"}}
+{"id":"audit-find-class-Circle-exact",        "tool":"ide_find_class",          "params":{"query":"Circle","matchMode":"exact"}}
+{"id":"audit-find-class-SC-camelCase",        "tool":"ide_find_class",          "params":{"query":"SC","matchMode":"camelCase"}}
+{"id":"audit-type-hier-Square-supertypes",    "tool":"ide_type_hierarchy",      "params":{"file":"src/normal.py","line":42,"column":7,"direction":"supertypes"}}
+{"id":"audit-type-hier-Shape-subtypes",       "tool":"ide_type_hierarchy",      "params":{"file":"src/normal.py","line":10,"column":7,"direction":"subtypes"}}
+{"id":"audit-call-hier-makeDefault-d3",       "tool":"ide_call_hierarchy",      "params":{"file":"src/normal.py","line":63,"column":5,"direction":"callees","maxDepth":3}}
+{"id":"audit-find-symbol-qualified-Coercer-coerce","tool":"ide_find_symbol",   "params":{"query":"Coercer.coerce"}}
+{"id":"audit-find-class-no-match",            "tool":"ide_find_class",          "params":{"query":"NoSuchClassXyz"}}
+{"id":"audit-find-symbol-no-match",           "tool":"ide_find_symbol",         "params":{"query":"noSuchSymbolXyz"}}
+{"id":"audit-find-class-Shape-wildcard",      "tool":"ide_find_class",          "params":{"query":"Sh*","matchMode":"substring"}}
+{"id":"audit-def-classify-shape-kind","tool":"ide_find_definition","params":{"file":"src/quirks.py","line":107,"column":9}}
+{"id":"audit-refs-classify-shape-kind","tool":"ide_find_usages","params":{"file":"src/quirks.py","line":107,"column":9}}
+{"id":"audit-super-Circle-draw-protocol","tool":"ide_find_super_methods","params":{"file":"src/normal.py","line":26,"column":9}}
+{"id":"audit-find-symbol-Coercer-coerce","tool":"ide_find_symbol","params":{"query":"Coercer.coerce"}}
+{"id":"audit-refs-import-alias-a","tool":"ide_find_usages","params":{"file":"src/quirks.py","line":47,"column":33}}

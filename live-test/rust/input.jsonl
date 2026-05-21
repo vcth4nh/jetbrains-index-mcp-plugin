@@ -51,3 +51,15 @@
 {"id":"find-symbol-describe",        "tool":"ide_find_symbol",          "params":{"query":"describe"}}
 {"id":"find-symbol-total_area",      "tool":"ide_find_symbol",          "params":{"query":"total_area"}}
 {"id":"find-symbol-draw",            "tool":"ide_find_symbol",          "params":{"query":"draw"}}
+{"id":"audit-refs-area-libraries-scope",      "tool":"ide_find_usages",         "params":{"file":"src/normal.rs","line":18,"column":8,"scope":"project_and_libraries"}}
+{"id":"audit-find-symbol-area-paged",         "tool":"ide_find_symbol",         "params":{"query":"area","pageSize":2}}
+{"id":"audit-find-class-Sh-prefix",           "tool":"ide_find_class",          "params":{"query":"Sh","matchMode":"prefix"}}
+{"id":"audit-find-class-Circle-exact",        "tool":"ide_find_class",          "params":{"query":"Circle","matchMode":"exact"}}
+{"id":"audit-find-class-SC-camelCase",        "tool":"ide_find_class",          "params":{"query":"SC","matchMode":"camelCase"}}
+{"id":"audit-type-hier-Square-supertypes",    "tool":"ide_type_hierarchy",      "params":{"file":"src/normal.rs","line":54,"column":12,"direction":"supertypes"}}
+{"id":"audit-type-hier-Shape-subtypes",       "tool":"ide_type_hierarchy",      "params":{"file":"src/normal.rs","line":5,"column":11,"direction":"subtypes"}}
+{"id":"audit-call-hier-makeDefault-d3",       "tool":"ide_call_hierarchy",      "params":{"file":"src/normal.rs","line":94,"column":8,"direction":"callees","maxDepth":3}}
+{"id":"audit-find-symbol-qualified-IntCoercer-coerce","tool":"ide_find_symbol","params":{"query":"IntCoercer::coerce"}}
+{"id":"audit-find-class-no-match",            "tool":"ide_find_class",          "params":{"query":"NoSuchClassXyz"}}
+{"id":"audit-find-symbol-no-match",           "tool":"ide_find_symbol",         "params":{"query":"noSuchSymbolXyz"}}
+{"id":"audit-find-class-Shape-wildcard",      "tool":"ide_find_class",          "params":{"query":"Sh*","matchMode":"substring"}}
