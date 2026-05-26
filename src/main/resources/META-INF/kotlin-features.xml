@@ -1,3 +1,8 @@
 <idea-plugin>
-    <!-- Kotlin-specific extensions can be added here if needed in the future -->
+    <extensions defaultExtensionNs="com.github.hechtcarmel.jetbrainsindexmcpplugin">
+        <languageKindResolver language="kotlin"
+                              implementationClass="com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.kotlin.KotlinKindResolver"/>
+        <superMethodsProvider language="kotlin"
+                              implementationClass="com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.kotlin.KotlinSuperMethodsProvider"/>
+    </extensions>
 </idea-plugin>
