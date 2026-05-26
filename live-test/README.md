@@ -6,6 +6,10 @@ against committed `expected.jsonl` files.
 
 Run after every plugin version bump.
 
+> Maintaining or extending this suite? See `CLAUDE.md` in this directory
+> for conventions (id naming, snapshot format, bless safety rules,
+> captured-ground-truth quirks, fixture-edit safety).
+
 ## Requirements
 
 - Python 3.10+ (stdlib only — no third-party deps)
@@ -29,12 +33,19 @@ then run the harness.
 ## Quick start
 
 ```bash
-./run.py                          # runs every language, fails on diff
-./run.py --bless                  # rewrite expected.jsonl from server output
-./run.py --language python        # one language only
-./run.py --tool ide_find_definition   # one tool across all languages
+./run.py                                 # runs every language, fails on diff
+./run.py --bless                         # rewrite expected.jsonl from server output
+./run.py --bless --bless-errors          # allow blessing rows that returned tool errors (rare)
+./run.py --bless --prune                 # allow bless to drop orphan expected ids
+./run.py --language python               # one language only
+./run.py --tool ide_find_definition      # one tool across all languages
 ./run.py --url http://127.0.0.1:29170/index-mcp/streamable-http   # override URL
+./run.py --check-fixtures                # validate input/expected files offline (no IDE calls)
 ```
+
+Each run writes `live-test/<lang>/output.jsonl` (gitignored) with the raw
+normalized response per entry. Useful for inspecting current responses
+without re-blessing.
 
 ## Version-bump workflow
 
@@ -56,11 +67,6 @@ then run the harness.
      version bump.
    - Regression: file an issue or revert the change.
 
-Each run also writes `live-test/<lang>/output.jsonl` with the raw
-normalized response per entry. Useful for inspecting current
-responses without re-blessing or scraping diff output.
-`output.jsonl` is gitignored.
-
 ## Troubleshooting
 
 - **`PRECHECK: cannot reach …`** — the IDE's MCP server isn't running on
@@ -69,62 +75,18 @@ responses without re-blessing or scraping diff output.
   configured a non-default value in Settings → Tools → Index MCP Server.
 - **`PRECHECK: project is in dumb mode`** — wait for indexing to finish
   in the IDE, then retry.
-- **`MISSING (no expected.jsonl line N)`** — `expected.jsonl` is shorter
-  than `input.jsonl`. Likely you added a new entry to `input.jsonl` and
-  haven't blessed yet. Run `--bless` to regenerate.
+- **`MISSING (no expected entry for this id)`** — `expected.jsonl` doesn't
+  have an entry for this input id. Likely you added a new input row and
+  haven't blessed yet. Run `--bless` to add it.
+- **`ORPHAN expected id …`** — an expected entry whose id is no longer in
+  `input.jsonl`. Either restore the input row or run `--bless --prune` to
+  drop the orphan.
 - **All entries `FAIL` after a JDK / language toolchain update** — the
   toolchain change shifted JDK source line numbers. Re-bless once
   intentionally.
-
-## Known limitations captured as ground truth
-
-Some fixtures encode IntelliJ / language-plugin behaviors that are
-*captured intentionally* — re-blessing is not the right response when
-they show up. They document quirks of the platform, not bugs to fix:
-
-- **Java `call-hier-makeDefault` callees empty**: constructor invocations
-  inside a method body don't surface as callees. Same in Kotlin / TS / PHP
-  fixtures' analogous entries.
-- **Java `find_symbol` for overridden methods**: collapses to the
-  topmost super; concrete overrides on subclasses are not separately
-  surfaced.
-- **PHP `call-hier-makeDefault` callees empty**: `new` expressions
-  aren't tracked as callees (same root cause as Java's).
-- **Python `find_implementations` on a `Protocol`**: returns empty —
-  Protocols are structural, so PyCharm has no nominal implementer set.
-- **Python `find_definition` on builtins inside lambda / dict bodies**:
-  some positions return `tool_error_text: No named element at position`.
-  Captured as the documented limitation.
-- **TypeScript `find_implementations` via object literal**: classes/objects
-  satisfying an interface structurally (no `implements` clause) are not
-  surfaced.
-- **Go `type_hierarchy`**: returns empty `supertypes` / `subtypes` —
-  Go uses implicit (structural) interfaces, so the `Drawable` ↔
-  `Circle` relationship doesn't appear here. Use `ide_find_class` for
-  Go interface implementations.
-- **Go `qualifiedName` is universally `null`**: GoLand does not register
-  a `QualifiedNameProvider` for Go elements, and the plugin's
-  `QualifiedNameUtil` has no Go-specific fallback. Tracked separately as
-  a plugin enhancement.
-- **Rust `qualifiedName` partially `null`**: when the Rust provider can't
-  compute an FQN. The `name` field is unaffected.
-- **Rust `find_implementations` on a generic trait bound** (e.g.
-  `<C: Coercer>`): returns "No method or class found at position".
-  Bound positions don't expose the trait through this API; anchor on
-  the trait declaration directly instead.
-- **Kotlin `call-hier-makeDefault` callees empty**: same constructor
-  filtering as Java's — `Circle(...)`, `Rectangle(...)`, `Square(...)`
-  invocations don't appear.
-- **Kotlin `qualifiedName` uses `#` for methods** (e.g.
-  `demo.Shape#area`): correct — matches IntelliJ's "Copy Reference"
-  format and is consistent with Java.
-- **JDK / toolchain paths in supertype results**: `type_hierarchy` for
-  classes that extend `java.lang.Object` records an absolute path to a
-  JDK `.class` file (Adoptium, mise-installed openjdk, etc.). Path
-  changes when the toolchain changes; re-bless is the right response.
-- **PyCharm / WebStorm stdlib paths**: similar to above for
-  Python/JavaScript/TypeScript builtins (Number.parseInt → JetBrains
-  helpers stdlib path; Python `int` → PyCharm typeshed path).
+- **Result that looks wrong but the IDE consistently returns it** — see
+  "Captured ground truth" in `CLAUDE.md`. Some IDE quirks are blessed on
+  purpose; don't try to "fix" them by changing the probe.
 
 ## Why not in CI?
 

@@ -1,7 +1,6 @@
-{"id":"def-circle-from-constructor-call", "tool":"ide_find_definition",   "params":{"file":"src/normal.py","line":64,"column":13}}
-{"id":"def-Circle-constructor-call","tool":"ide_find_definition",      "params":{"file":"src/normal.py","line":64,"column":13}}
-{"id":"def-rectangle-area-decl",    "tool":"ide_find_definition",      "params":{"file":"src/normal.py","line":35,"column":9}}
-{"id":"def-shape-describe-decl",    "tool":"ide_find_definition",      "params":{"file":"src/normal.py","line":15,"column":9}}
+{"id":"def-Circle-from-constructor-call", "tool":"ide_find_definition",   "params":{"file":"src/normal.py","line":64,"column":13}}
+{"id":"def-Rectangle.area-decl",    "tool":"ide_find_definition",      "params":{"file":"src/normal.py","line":35,"column":9}}
+{"id":"def-Shape.describe-decl",    "tool":"ide_find_definition",      "params":{"file":"src/normal.py","line":15,"column":9}}
 {"id":"def-make-default-shapes-decl","tool":"ide_find_definition",     "params":{"file":"src/normal.py","line":63,"column":5}}
 {"id":"def-int-builtin-via-rebinding-rhs","tool":"ide_find_definition","params":{"file":"src/quirks.py","line":12,"column":10}}
 {"id":"def-super-init",             "tool":"ide_find_definition",      "params":{"file":"src/normal.py","line":44,"column":9}}
@@ -13,42 +12,42 @@
 {"id":"def-walrus-result",          "tool":"ide_find_definition",      "params":{"file":"src/quirks.py","line":70,"column":16}}
 {"id":"def-multiple-assign-b",      "tool":"ide_find_definition",      "params":{"file":"src/quirks.py","line":100,"column":19}}
 {"id":"def-nested-return-fn",       "tool":"ide_find_definition",      "params":{"file":"src/quirks.py","line":82,"column":12}}
-{"id":"refs-area-from-describe",    "tool":"ide_find_usages",      "params":{"file":"src/normal.py","line":12,"column":9}}
-{"id":"refs-shapes-field",          "tool":"ide_find_usages",      "params":{"file":"src/normal.py","line":49,"column":14}}
-{"id":"refs-shape-class",           "tool":"ide_find_usages",      "params":{"file":"src/normal.py","line":10,"column":7}}
-{"id":"refs-int-builtin-in-quirks", "tool":"ide_find_usages",      "params":{"file":"src/quirks.py","line":64,"column":20}}
-{"id":"refs-circle-radius",         "tool":"ide_find_usages",      "params":{"file":"src/normal.py","line":21,"column":14}}
-{"id":"impls-shape-area",           "tool":"ide_find_implementations", "params":{"file":"src/normal.py","line":12,"column":9}}
-{"id":"impls-drawable-draw",        "tool":"ide_find_implementations", "params":{"file":"src/normal.py","line":7,"column":9}}
-{"id":"super-Square-init",          "tool":"ide_find_super_methods",   "params":{"file":"src/normal.py","line":43,"column":9}}
-{"id":"super-circle-area",          "tool":"ide_find_super_methods",   "params":{"file":"src/normal.py","line":23,"column":9}}
-{"id":"super-rectangle-area",       "tool":"ide_find_super_methods",   "params":{"file":"src/normal.py","line":35,"column":9}}
-{"id":"type-hier-square",           "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.py","line":42,"column":7}}
-{"id":"type-hier-rectangle",        "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.py","line":30,"column":7}}
-{"id":"type-hier-shape",            "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.py","line":10,"column":7}}
-{"id":"call-hier-make-default",     "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.py","line":63,"column":5,"direction":"callees","maxDepth":2}}
-{"id":"call-hier-area-callers",     "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.py","line":12,"column":9,"direction":"callers","maxDepth":2}}
-{"id":"call-hier-total-area",       "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.py","line":54,"column":9,"direction":"callees","maxDepth":2}}
+{"id":"usage-area-from-describe",    "tool":"ide_find_usages",      "params":{"file":"src/normal.py","line":12,"column":9}}
+{"id":"usage-shapes-field",          "tool":"ide_find_usages",      "params":{"file":"src/normal.py","line":49,"column":14}}
+{"id":"usage-Shape-class",           "tool":"ide_find_usages",      "params":{"file":"src/normal.py","line":10,"column":7}}
+{"id":"usage-int-builtin-in-Quirks", "tool":"ide_find_usages",      "params":{"file":"src/quirks.py","line":64,"column":20}}
+{"id":"usage-Circle.radius",         "tool":"ide_find_usages",      "params":{"file":"src/normal.py","line":21,"column":14}}
+{"id":"impls-Shape.area",           "tool":"ide_find_implementations", "params":{"file":"src/normal.py","line":12,"column":9}}
+{"id":"impls-Drawable.draw",        "tool":"ide_find_implementations", "params":{"file":"src/normal.py","line":7,"column":9}}
+{"id":"super-Square.__init__",          "tool":"ide_find_super_methods",   "params":{"file":"src/normal.py","line":43,"column":9}}
+{"id":"super-Circle.area",          "tool":"ide_find_super_methods",   "params":{"file":"src/normal.py","line":23,"column":9}}
+{"id":"super-Rectangle.area",       "tool":"ide_find_super_methods",   "params":{"file":"src/normal.py","line":35,"column":9}}
+{"id":"hier-type-Square",           "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.py","line":42,"column":7}}
+{"id":"hier-type-Rectangle",        "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.py","line":30,"column":7}}
+{"id":"hier-type-Shape",            "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.py","line":10,"column":7}}
+{"id":"hier-callee-make-default",     "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.py","line":63,"column":5,"direction":"callees","maxDepth":2}}
+{"id":"hier-caller-area",     "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.py","line":12,"column":9,"direction":"callers","maxDepth":2}}
+{"id":"hier-callee-total-area",       "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.py","line":54,"column":9,"direction":"callees","maxDepth":2}}
 {"id":"find-class-Shape",           "tool":"ide_find_class",           "params":{"query":"Shape"}}
 {"id":"find-class-Rectangle",       "tool":"ide_find_class",           "params":{"query":"Rectangle"}}
 {"id":"find-symbol-area",           "tool":"ide_find_symbol",          "params":{"query":"area"}}
 {"id":"find-symbol-quirk-rebind",   "tool":"ide_find_symbol",          "params":{"query":"quirk_name_rebinding"}}
-{"id":"file-structure-normal",      "tool":"ide_file_structure",       "params":{"file":"src/normal.py"}}
-{"id":"file-structure-quirks",      "tool":"ide_file_structure",       "params":{"file":"src/quirks.py"}}
-{"id":"refs-Drawable-protocol",      "tool":"ide_find_usages",          "params":{"file":"src/normal.py","line":6,"column":7}}
-{"id":"refs-Rectangle-class",        "tool":"ide_find_usages",          "params":{"file":"src/normal.py","line":30,"column":7}}
+{"id":"file-structure-Normal",      "tool":"ide_file_structure",       "params":{"file":"src/normal.py"}}
+{"id":"file-structure-Quirks",      "tool":"ide_file_structure",       "params":{"file":"src/quirks.py"}}
+{"id":"usage-Drawable-protocol",      "tool":"ide_find_usages",          "params":{"file":"src/normal.py","line":6,"column":7}}
+{"id":"usage-Rectangle-class",        "tool":"ide_find_usages",          "params":{"file":"src/normal.py","line":30,"column":7}}
 {"id":"impls-Shape-class",           "tool":"ide_find_implementations", "params":{"file":"src/normal.py","line":10,"column":7}}
 {"id":"impls-Rectangle-class",       "tool":"ide_find_implementations", "params":{"file":"src/normal.py","line":30,"column":7}}
 {"id":"impls-Circle-class",          "tool":"ide_find_implementations", "params":{"file":"src/normal.py","line":19,"column":7}}
-{"id":"impls-Shape-describe",        "tool":"ide_find_implementations", "params":{"file":"src/normal.py","line":15,"column":9}}
-{"id":"super-Circle-draw",           "tool":"ide_find_super_methods",   "params":{"file":"src/normal.py","line":26,"column":9}}
-{"id":"super-Rectangle-draw",        "tool":"ide_find_super_methods",   "params":{"file":"src/normal.py","line":38,"column":9}}
-{"id":"type-hier-Drawable",          "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.py","line":6,"column":7}}
-{"id":"type-hier-Circle",            "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.py","line":19,"column":7}}
-{"id":"type-hier-ShapeCollection",   "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.py","line":47,"column":7}}
-{"id":"call-hier-describe-callers",  "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.py","line":15,"column":9,"direction":"callers","maxDepth":2}}
-{"id":"call-hier-largest-callees",   "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.py","line":57,"column":9,"direction":"callees","maxDepth":2}}
-{"id":"call-hier-add-callers",       "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.py","line":51,"column":9,"direction":"callers","maxDepth":2}}
+{"id":"impls-Shape.describe",        "tool":"ide_find_implementations", "params":{"file":"src/normal.py","line":15,"column":9}}
+{"id":"super-Circle.draw",           "tool":"ide_find_super_methods",   "params":{"file":"src/normal.py","line":26,"column":9}}
+{"id":"super-Rectangle.draw",        "tool":"ide_find_super_methods",   "params":{"file":"src/normal.py","line":38,"column":9}}
+{"id":"hier-type-Drawable",          "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.py","line":6,"column":7}}
+{"id":"hier-type-Circle",            "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.py","line":19,"column":7}}
+{"id":"hier-type-ShapeCollection",   "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.py","line":47,"column":7}}
+{"id":"hier-caller-describe",  "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.py","line":15,"column":9,"direction":"callers","maxDepth":2}}
+{"id":"hier-callee-largest",   "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.py","line":57,"column":9,"direction":"callees","maxDepth":2}}
+{"id":"hier-caller-add",       "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.py","line":51,"column":9,"direction":"callers","maxDepth":2}}
 {"id":"find-class-Circle",           "tool":"ide_find_class",           "params":{"query":"Circle"}}
 {"id":"find-class-Square",           "tool":"ide_find_class",           "params":{"query":"Square"}}
 {"id":"find-class-Drawable",         "tool":"ide_find_class",           "params":{"query":"Drawable"}}
@@ -57,20 +56,18 @@
 {"id":"find-symbol-total_area",      "tool":"ide_find_symbol",          "params":{"query":"total_area"}}
 {"id":"find-symbol-draw",            "tool":"ide_find_symbol",          "params":{"query":"draw"}}
 {"id":"find-symbol-largest",         "tool":"ide_find_symbol",          "params":{"query":"largest"}}
-{"id":"audit-refs-area-libraries-scope",      "tool":"ide_find_usages",         "params":{"file":"src/normal.py","line":12,"column":9,"scope":"project_and_libraries"}}
-{"id":"audit-find-symbol-area-paged",         "tool":"ide_find_symbol",         "params":{"query":"area","pageSize":2}}
-{"id":"audit-find-class-Sh-prefix",           "tool":"ide_find_class",          "params":{"query":"Sh","matchMode":"prefix"}}
-{"id":"audit-find-class-Circle-exact",        "tool":"ide_find_class",          "params":{"query":"Circle","matchMode":"exact"}}
-{"id":"audit-find-class-SC-camelCase",        "tool":"ide_find_class",          "params":{"query":"SC","matchMode":"camelCase"}}
-{"id":"audit-type-hier-Square-supertypes",    "tool":"ide_type_hierarchy",      "params":{"file":"src/normal.py","line":42,"column":7,"direction":"supertypes"}}
-{"id":"audit-type-hier-Shape-subtypes",       "tool":"ide_type_hierarchy",      "params":{"file":"src/normal.py","line":10,"column":7,"direction":"subtypes"}}
-{"id":"audit-call-hier-makeDefault-d3",       "tool":"ide_call_hierarchy",      "params":{"file":"src/normal.py","line":63,"column":5,"direction":"callees","maxDepth":3}}
-{"id":"audit-find-symbol-qualified-Coercer-coerce","tool":"ide_find_symbol",   "params":{"query":"Coercer.coerce"}}
-{"id":"audit-find-class-no-match",            "tool":"ide_find_class",          "params":{"query":"NoSuchClassXyz"}}
-{"id":"audit-find-symbol-no-match",           "tool":"ide_find_symbol",         "params":{"query":"noSuchSymbolXyz"}}
-{"id":"audit-find-class-Shape-wildcard",      "tool":"ide_find_class",          "params":{"query":"Sh*","matchMode":"substring"}}
-{"id":"audit-def-classify-shape-kind","tool":"ide_find_definition","params":{"file":"src/quirks.py","line":107,"column":9}}
-{"id":"audit-refs-classify-shape-kind","tool":"ide_find_usages","params":{"file":"src/quirks.py","line":107,"column":9}}
-{"id":"audit-super-Circle-draw-protocol","tool":"ide_find_super_methods","params":{"file":"src/normal.py","line":26,"column":9}}
-{"id":"audit-find-symbol-Coercer-coerce","tool":"ide_find_symbol","params":{"query":"Coercer.coerce"}}
-{"id":"audit-refs-import-alias-a","tool":"ide_find_usages","params":{"file":"src/quirks.py","line":47,"column":33}}
+{"id":"usage-area-libraries-scope",      "tool":"ide_find_usages",         "params":{"file":"src/normal.py","line":12,"column":9,"scope":"project_and_libraries"}}
+{"id":"find-symbol-area-paged",         "tool":"ide_find_symbol",         "params":{"query":"area","pageSize":2}}
+{"id":"find-class-Sh-prefix",           "tool":"ide_find_class",          "params":{"query":"Sh","matchMode":"prefix"}}
+{"id":"find-class-Circle-exact",        "tool":"ide_find_class",          "params":{"query":"Circle","matchMode":"exact"}}
+{"id":"find-class-SC-camelcase",        "tool":"ide_find_class",          "params":{"query":"SC","matchMode":"camelCase"}}
+{"id":"hier-super-Square",    "tool":"ide_type_hierarchy",      "params":{"file":"src/normal.py","line":42,"column":7,"direction":"supertypes"}}
+{"id":"hier-sub-Shape",       "tool":"ide_type_hierarchy",      "params":{"file":"src/normal.py","line":10,"column":7,"direction":"subtypes"}}
+{"id":"hier-callee-make-default-d3",       "tool":"ide_call_hierarchy",      "params":{"file":"src/normal.py","line":63,"column":5,"direction":"callees","maxDepth":3}}
+{"id":"find-symbol-Coercer.coerce-qualified","tool":"ide_find_symbol",   "params":{"query":"Coercer.coerce"}}
+{"id":"find-class-no-match",            "tool":"ide_find_class",          "params":{"query":"NoSuchClassXyz"}}
+{"id":"find-symbol-no-match",           "tool":"ide_find_symbol",         "params":{"query":"noSuchSymbolXyz"}}
+{"id":"find-class-Shape-wildcard",      "tool":"ide_find_class",          "params":{"query":"Sh*","matchMode":"substring"}}
+{"id":"def-classify-Shape-kind","tool":"ide_find_definition","params":{"file":"src/quirks.py","line":107,"column":9}}
+{"id":"usage-classify-Shape-kind","tool":"ide_find_usages","params":{"file":"src/quirks.py","line":107,"column":9}}
+{"id":"usage-import-alias-a","tool":"ide_find_usages","params":{"file":"src/quirks.py","line":47,"column":33}}

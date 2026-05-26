@@ -15,3 +15,4 @@ Thumbs.db
 
 # Per-run output captured by run.py (raw IDE responses, not snapshots)
 output.jsonl
+__pycache__/

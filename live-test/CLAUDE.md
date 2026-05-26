@@ -1,0 +1,201 @@
+# live-test conventions
+
+Working notes for the snapshot harness. See `README.md` for user-facing docs.
+
+## Snapshot file format
+
+Both `input.jsonl` and `expected.jsonl` are id-keyed JSONL.
+
+- **input row**: `{"id": "<unique-id>", "tool": "ide_X", "params": {...}}` — one per line.
+- **expected row**: `{"id": "<input-id>", "result": <normalized-output>}` — one per line.
+- **output row** (produced by `run.py`): same shape as expected.
+
+Rows are matched by `id`, not position. Reordering, inserting, or deleting
+rows in `input.jsonl` does not shift the rest of the snapshot. The strict
+loader in `run.py` (`_load_expected_by_id`) fails on malformed JSON, missing
+`id`/`result`, non-string ids, or duplicate ids.
+
+## ID convention
+
+Format: `<tool-prefix>-<entity>[-<context>][-<variant>]`
+
+All lowercase except entity, which preserves source-language casing (PascalCase
+classes, camelCase methods, snake_case Python identifiers, UPPER enum constants).
+
+### Tool prefixes
+
+| Prefix | MCP tool | Notes |
+|---|---|---|
+| `def-` | `ide_find_definition` | |
+| `usage-` | `ide_find_usages` | (not `refs-`) |
+| `impls-` | `ide_find_implementations` | |
+| `super-` | `ide_find_super_methods` | |
+| `hier-caller-` | `ide_call_hierarchy` direction=callers | |
+| `hier-callee-` | `ide_call_hierarchy` direction=callees | |
+| `hier-super-` | `ide_type_hierarchy` direction=supertypes | |
+| `hier-sub-` | `ide_type_hierarchy` direction=subtypes | |
+| `hier-type-` | `ide_type_hierarchy` (default direction) | |
+| `find-class-` | `ide_find_class` | |
+| `find-symbol-` | `ide_find_symbol` | |
+| `find-file-` | `ide_find_file` | |
+| `file-structure-` | `ide_file_structure` | |
+| `diagnostics-` | `ide_diagnostics` | |
+| `status-` | `ide_index_status` | |
+
+### Entity
+
+The thing being probed. Use the source-language identifier verbatim.
+
+- Class names: PascalCase (`Circle`, `ShapeCollection`, `IntCoercer`).
+- Methods/fields: language-native casing (`area`, `totalArea`, `make_default_shapes`).
+- Member access: dot (`Circle.area`, `CoerceMode.INT.apply`, `Status.Active`).
+- Enum constants: UPPER (Java) or PascalCase (PHP enums) as the source uses.
+- Multi-segment Go/Rust paths: dot (`baseShape.Describe`).
+
+### Variants (lowercase suffix)
+
+Append to disambiguate parameter shapes or behaviors of the same probe:
+
+- direction: `-callers`, `-callees`, `-supertypes`, `-subtypes` — embedded in
+  the hier-* prefix, never as a suffix.
+- depth: `-d1`, `-d2`, `-d3`.
+- matchMode: `-prefix`, `-exact`, `-substring`, `-wildcard`, `-camelcase`.
+- scope: `-libraries-scope`, `-files-scope`.
+- pagination: `-paged`, `-page1`, `-page2`.
+- query shape: `-qualified` (e.g. `find-symbol-Shape.area-qualified`).
+- result shape: `-no-match`, `-empty`, `-direct-overrides-only`.
+- diagnostics severity: `-errors`, `-warnings`, `-info`, `-all`.
+- context: `-cross-file`, `-decl`, `-call`, `-ctor`, `-promoted`, `-from-<x>`, `-via-<x>`.
+
+Kind descriptors that follow a class but are NOT member access: keep the
+hyphen, don't dot. E.g. `usage-Drawable-trait`, `impls-Shape-struct`,
+`def-Status-enum-decl`.
+
+### Anti-examples (don't do this)
+
+- ❌ `audit-find-symbol-area-paged` — drop the `audit-` prefix (legacy from layered audits)
+- ❌ `refs-Circle-ctor` — use `usage-`
+- ❌ `call-hier-area-callers` — direction goes in the prefix: `hier-caller-area`
+- ❌ `type-hier-Shape-supertypes` — `hier-super-Shape`
+- ❌ `find-class-SC-camelCase` — lowercase variant: `find-class-SC-camelcase`
+- ❌ `find-symbol-qualified-Shape-area` — variant at end: `find-symbol-Shape.area-qualified`
+- ❌ `def-circle-area-decl` — preserve class casing: `def-Circle.area-decl`
+- ❌ `super-Circle-draw` — dot member access: `super-Circle.draw`
+
+## Bless safety
+
+`./run.py --bless` is gated. By default it refuses to:
+
+1. Bless rows whose result is `tool_error_text` / `transport_error` /
+   `jsonrpc_error`. Override with `--bless-errors` (rare; usually fix the
+   probe first).
+2. Drop orphan expected ids (ids in `expected.jsonl` no longer in
+   `input.jsonl`). Override with `--prune`.
+3. Run with `--tool` filter matching zero rows.
+
+Writes are atomic (temp file + `os.replace`) — SIGINT-safe but not concurrency-
+safe. Don't run parallel `--bless` against the same language.
+
+**Never bless without explicit user permission** — re-blessing locks in
+whatever the live IDE returns as truth. If the IDE has a regression, that
+regression becomes the new baseline.
+
+## Library / SDK path normalization
+
+`LIBRARY_PATH_SUBS` in `run.py` substitutes machine-specific stub paths with
+stable tokens before diffing. Currently Linux-only patterns:
+
+- `${RUST_STDLIB}/`, `${KOTLIN_STDLIB}.jar!`, `${JDK}!`,
+  `${PYCHARM_TYPESHED}/`, `${PYTHON_STDLIB}/`, `${PHP_STUBS}.jar!`,
+  `${WEBSTORM_JS_STUBS}/`, catch-all `${HOME}/`.
+
+When running on a new host (macOS, Windows, non-Toolbox install, SDKMAN/asdf
+JDK), library paths will leak through the catch-all as `${HOME}/...` and
+cause diffs. Extend `LIBRARY_PATH_SUBS` with the new prefix family — see the
+HIGH finding in `live-test-review-2.md` for the list.
+
+## Fixture-edit safety
+
+- `./run.py --check-fixtures` runs offline validation (no IDE calls):
+  - input ids are unique non-empty strings
+  - expected.jsonl parses strictly
+  - no orphan or missing expected ids
+  - each `file+line+column` probe targets an existing file, a line within
+    bounds, and a non-whitespace character.
+- Run it before any branch with fixture edits — line-shift bugs surface
+  here instead of as silent IDE empty responses during a live run.
+- When inserting lines into a fixture, every position-based probe with a
+  `line` >= insertion point shifts. `--check-fixtures` catches the
+  end-of-file case but not the wrong-token case.
+
+## Workflow for adding new probes
+
+1. Pick an `id` following the convention above.
+2. Add the row to `<lang>/input.jsonl`.
+3. `./run.py --check-fixtures` — verify the new probe is offline-valid.
+4. `./run.py --language <lang>` — see the new row reported as MISSING.
+5. Inspect the IDE response in `<lang>/output.jsonl` for that id. Confirm
+   it looks like the truth you expected.
+6. Ask the user to bless.
+7. On approval: `./run.py --bless --language <lang>`. The new row's
+   expected entry is added; pre-existing expected rows are preserved.
+
+## When fixtures change
+
+- Adding a fixture file (e.g. a new `.java`): no impact on existing probes
+  unless the file appears in some find_class / find_symbol / file_structure
+  result. Re-bless those.
+- Editing a fixture file (insert/delete lines): every position-based probe
+  in that file at or after the edit point breaks. Re-run probes; either
+  re-bless if the new behavior is correct, or update the probe's `line`/
+  `column` to point at the original target.
+- Renaming a class: every ID referencing that name in the suite should
+  also be renamed. Use the rename script pattern from `/tmp/rename_ids.py`
+  (preserves alignment in input.jsonl).
+
+## Captured ground truth (don't re-bless these as "fixes")
+
+Some snapshot rows encode platform quirks intentionally. When you see a
+"weird" expected result that looks like a bug, check this list first — the
+IDE legitimately returns that output, and changing the probe to "fix" it
+will just snapshot a different empty/odd result.
+
+- **Java `hier-callee-makeDefault`**: empty callees. Constructor invocations
+  inside a method body don't surface as call-hierarchy callees in IntelliJ.
+  Same in Kotlin / TypeScript / PHP analogs.
+- **Java `find-symbol` for overridden methods**: collapses to the topmost
+  super; concrete overrides on subclasses are not separately surfaced.
+- **PHP `hier-callee-makeDefault`**: same constructor-callee root cause as
+  Java.
+- **Python `impls-Drawable-protocol`**: returns empty. `Drawable` is a
+  `typing.Protocol`, so PyCharm has no nominal implementer set to enumerate.
+- **Python `find-definition` on builtins inside lambda / dict bodies**: some
+  positions return `tool_error_text: No named element at position`. Captured
+  as the documented limitation.
+- **TypeScript `impls-` via object literal**: classes/objects satisfying an
+  interface structurally (no `implements` clause) are not surfaced.
+- **Go `hier-type-*`**: returns empty `supertypes` / `subtypes`. Go uses
+  implicit (structural) interfaces, so the `Drawable` ↔ `Circle`
+  relationship doesn't appear here. Use `find_class` for Go interface
+  implementations.
+- **Go `qualifiedName` universally `null`**: GoLand does not register a
+  `QualifiedNameProvider` for Go elements, and `QualifiedNameUtil` has no
+  Go-specific fallback. Tracked separately as a plugin enhancement.
+- **Rust `qualifiedName` partially `null`**: when the Rust provider can't
+  compute an FQN. The `name` field is unaffected.
+- **Rust `impls-` on a generic trait bound** (e.g. `<C: Coercer>`): returns
+  "No method or class found at position". Bound positions don't expose the
+  trait through this API; anchor on the trait declaration directly instead.
+- **Kotlin `hier-callee-makeDefault`**: same constructor filtering as
+  Java's — `Circle(...)`, `Rectangle(...)`, `Square(...)` invocations don't
+  appear.
+- **Kotlin `qualifiedName` uses `#` for methods** (e.g. `demo.Shape#area`):
+  correct — matches IntelliJ's "Copy Reference" format and is consistent
+  with Java.
+- **JDK / toolchain paths in supertype results**: `hier-super-*` for classes
+  extending `java.lang.Object` records an absolute path to a JDK `.class`
+  file. After path normalization this is `${JDK}!/java/lang/Object.class`.
+  Path token changes when the toolchain changes; re-bless is the right
+  response.
+- **PyCharm / WebStorm stdlib paths**: similar — `Number.parseInt` →
+  `${WEBSTORM_JS_STUBS}/...`; Python `int` → `${PYCHARM_TYPESHED}/...`.
