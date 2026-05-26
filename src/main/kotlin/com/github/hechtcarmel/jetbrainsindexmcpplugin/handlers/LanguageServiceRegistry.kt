@@ -16,7 +16,7 @@ object LanguageServiceRegistry {
         "com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.java.JavaLanguageService",
         "com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.kotlin.KotlinLanguageService",
         "com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.python.PythonLanguageService",
-        "com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.javascript.JavaScriptLanguageService",
+        // JavaScriptLanguageService migrated to EP (superMethodsProvider)
         "com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.go.GoLanguageService",
         "com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.php.PhpLanguageService",
         "com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.rust.RustLanguageService",

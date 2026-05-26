@@ -1,11 +1,10 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.javascript
 
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageService
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServices
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.MethodData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodsData
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PluginDetectors
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodsProvider
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
 import com.intellij.openapi.diagnostic.logger
@@ -14,26 +13,11 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 
-class JavaScriptLanguageService : LanguageService() {
+class JavaScriptSuperMethodsProvider : SuperMethodsProvider {
 
     companion object {
-        private val LOG = logger<JavaScriptLanguageService>()
+        private val LOG = logger<JavaScriptSuperMethodsProvider>()
     }
-
-    override val languageIds: Set<String> by lazy {
-        buildSet {
-            resolveLanguageId("com.intellij.lang.javascript.JavascriptLanguage", "INSTANCE")?.let { add(it) }
-            resolveLanguageId("com.intellij.lang.javascript.TypeScriptLanguage", "INSTANCE")?.let { add(it) }
-            listOf("ECMAScript 6", "JSX Harmony", "TypeScript JSX").forEach { add(it) }
-        }
-    }
-    override val displayName = "JavaScript/TypeScript"
-    override fun isAvailable(): Boolean = PluginDetectors.javaScript.isAvailable
-
-    override val supportsSuperMethods: Boolean = true
-
-    // JS/TS kind resolution is already handled well by the platform's
-    // JSNamedElementKind via LanguageFindUsages.getType(). No override needed.
 
     // Lazy-loaded JS PSI classes via reflection
 
