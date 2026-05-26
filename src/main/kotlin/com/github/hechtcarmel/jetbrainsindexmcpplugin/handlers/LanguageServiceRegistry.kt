@@ -12,12 +12,12 @@ object LanguageServiceRegistry {
     private val services = ConcurrentHashMap<String, LanguageService>()
     private var initialized = false
 
-    private val serviceClassNames = listOf(
+    private val serviceClassNames = listOf<String>(
         // JavaLanguageService migrated to EP (languageKindResolver + superMethodsProvider)
         // KotlinLanguageService migrated to EP (languageKindResolver + superMethodsProvider)
         // PythonLanguageService migrated to EP (languageKindResolver + superMethodsProvider)
         // JavaScriptLanguageService migrated to EP (superMethodsProvider)
-        "com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.go.GoLanguageService",
+        // GoLanguageService migrated to EP (languageKindResolver + superMethodsProvider)
         // PhpLanguageService migrated to EP (languageKindResolver + superMethodsProvider)
         // RustLanguageService migrated to EP (languageKindResolver)
     )

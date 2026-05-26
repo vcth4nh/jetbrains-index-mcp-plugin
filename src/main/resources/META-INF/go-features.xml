@@ -1,3 +1,8 @@
 <idea-plugin>
-    <!-- Go-specific extensions can be added here if needed in the future -->
+    <extensions defaultExtensionNs="com.github.hechtcarmel.jetbrainsindexmcpplugin">
+        <languageKindResolver language="go"
+                              implementationClass="com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.go.GoKindResolver"/>
+        <superMethodsProvider language="go"
+                              implementationClass="com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.go.GoSuperMethodsProvider"/>
+    </extensions>
 </idea-plugin>

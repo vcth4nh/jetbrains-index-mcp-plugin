@@ -1,18 +1,10 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.go
 
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageService
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PluginDetectors
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageKindResolver
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 
-class GoLanguageService : LanguageService() {
-    override val languageIds: Set<String> by lazy {
-        resolveLanguageId("com.goide.GoLanguage", "INSTANCE")
-            ?.let { setOf(it) } ?: emptySet()
-    }
-    override val displayName = "Go"
-    override fun isAvailable(): Boolean = PluginDetectors.go.isAvailable
-    override val supportsSuperMethods: Boolean = false
+class GoKindResolver : LanguageKindResolver {
 
     private val goTypeSpecClass: Class<*>? by lazy {
         try { Class.forName("com.goide.psi.GoTypeSpec") } catch (_: ClassNotFoundException) { null }
