@@ -13,7 +13,7 @@ object LanguageServiceRegistry {
     private var initialized = false
 
     private val serviceClassNames = listOf(
-        "com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.java.JavaLanguageService",
+        // JavaLanguageService migrated to EP (languageKindResolver + superMethodsProvider)
         "com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.kotlin.KotlinLanguageService",
         "com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.python.PythonLanguageService",
         // JavaScriptLanguageService migrated to EP (superMethodsProvider)
