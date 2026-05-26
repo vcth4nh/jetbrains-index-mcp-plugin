@@ -1,6 +1,6 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy
 
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServices
 import com.intellij.ide.hierarchy.HierarchyNodeDescriptor
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNamedElement
@@ -113,7 +113,7 @@ internal object ClassLikePsi {
      * tell — preserves wire-format compatibility.
      */
     fun describeKind(element: PsiElement): String {
-        return LanguageServiceRegistry.getKind(element)
+        return LanguageServices.getKind(element)
     }
 
     /**

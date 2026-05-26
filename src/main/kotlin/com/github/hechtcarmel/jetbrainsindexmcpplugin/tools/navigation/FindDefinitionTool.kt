@@ -6,7 +6,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResu
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.AbstractMcpTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.DefinitionResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServices
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PsiUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
 import com.intellij.openapi.project.Project
@@ -124,7 +124,7 @@ class FindDefinitionTool : AbstractMcpTool() {
                 effectiveTarget.text.take(50)
             }
             val qualifiedName = QualifiedNameUtil.getQualifiedName(effectiveTarget)
-            val kind = LanguageServiceRegistry.getKind(effectiveTarget)
+            val kind = LanguageServices.getKind(effectiveTarget)
             val enclosingScope = if (qualifiedName == null) PsiUtils.getEnclosingScope(effectiveTarget) else null
 
             createJsonResult(DefinitionResult(

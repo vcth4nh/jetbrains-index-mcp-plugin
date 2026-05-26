@@ -1,7 +1,7 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.php
 
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageService
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServices
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.MethodData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodsData
@@ -63,7 +63,7 @@ class PhpLanguageService : LanguageService() {
         val methodData = MethodData(
             name = getName(method) ?: "unknown",
             qualifiedName = QualifiedNameUtil.getQualifiedName(method),
-            kind = LanguageServiceRegistry.getKind(method),
+            kind = LanguageServices.getKind(method),
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, method) ?: 0,
             column = getColumnNumber(project, method) ?: 0,
@@ -106,7 +106,7 @@ class PhpLanguageService : LanguageService() {
                         hierarchy.add(SuperMethodData(
                             name = methodName,
                             qualifiedName = QualifiedNameUtil.getQualifiedName(superMethod),
-                            kind = LanguageServiceRegistry.getKind(superMethod),
+                            kind = LanguageServices.getKind(superMethod),
                             file = file?.let { getRelativePath(project, it) },
                             line = getLineNumber(project, superMethod),
                             column = getColumnNumber(project, superMethod),
@@ -132,7 +132,7 @@ class PhpLanguageService : LanguageService() {
                         hierarchy.add(SuperMethodData(
                             name = methodName,
                             qualifiedName = QualifiedNameUtil.getQualifiedName(ifaceMethod),
-                            kind = LanguageServiceRegistry.getKind(ifaceMethod),
+                            kind = LanguageServices.getKind(ifaceMethod),
                             file = file?.let { getRelativePath(project, it) },
                             line = getLineNumber(project, ifaceMethod),
                             column = getColumnNumber(project, ifaceMethod),

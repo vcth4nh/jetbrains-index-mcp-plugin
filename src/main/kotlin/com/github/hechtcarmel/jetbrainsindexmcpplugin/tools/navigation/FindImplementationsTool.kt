@@ -4,7 +4,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ErrorMessages
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ParamNames
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScopeResolver
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServices
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.PaginationService
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.ProjectResolver
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
@@ -198,12 +198,12 @@ class FindImplementationsTool : AbstractMcpTool() {
         } else if (rsFunctionClass?.isInstance(element) == true) {
             val namedElement = element as? PsiNamedElement ?: return null
             val bareName = namedElement.name ?: return null
-            kind = LanguageServiceRegistry.getKind(element)
+            kind = LanguageServices.getKind(element)
             name = if (kind == "METHOD") buildRustMethodName(element, bareName) else bareName
         } else {
             val namedElement = element as? PsiNamedElement ?: return null
             val bareName = namedElement.name ?: return null
-            kind = LanguageServiceRegistry.getKind(element)
+            kind = LanguageServices.getKind(element)
             name = bareName
         }
 

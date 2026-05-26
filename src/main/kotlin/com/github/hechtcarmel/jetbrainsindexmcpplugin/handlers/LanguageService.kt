@@ -20,6 +20,10 @@ abstract class LanguageService {
 
     protected open fun resolveKind(element: PsiElement): String? = null
 
+    // TEMPORARY: public accessor for LanguageServices façade dual-dispatch shim.
+    // Removed in cleanup phase when LanguageService.kt is deleted.
+    internal fun resolveKindOrNull(element: PsiElement): String? = resolveKind(element)
+
     open fun findSuperMethods(element: PsiElement, project: Project): SuperMethodsData? = null
 
     protected fun resolveLanguageId(className: String, fieldName: String): String? {

@@ -149,9 +149,21 @@ for detailed documentation and examples.</p>
         <notificationGroup id="Index MCP Server" displayType="BALLOON"/>
     </extensions>
 
-    <!-- Extension Point for Custom Tools -->
+    <!-- Extension Points -->
     <extensionPoints>
-        <extensionPoint name="mcpTool" interface="com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.McpTool" dynamic="true"/>
+        <extensionPoint name="mcpTool"
+                        interface="com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.McpTool"
+                        dynamic="true"/>
+        <extensionPoint name="languageKindResolver"
+                        beanClass="com.intellij.lang.LanguageExtensionPoint">
+            <with attribute="implementationClass"
+                  implements="com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageKindResolver"/>
+        </extensionPoint>
+        <extensionPoint name="superMethodsProvider"
+                        beanClass="com.intellij.lang.LanguageExtensionPoint">
+            <with attribute="implementationClass"
+                  implements="com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodsProvider"/>
+        </extensionPoint>
     </extensionPoints>
 
     <actions>

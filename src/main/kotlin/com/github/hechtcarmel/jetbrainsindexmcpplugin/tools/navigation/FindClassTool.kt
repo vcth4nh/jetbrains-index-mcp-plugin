@@ -14,7 +14,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.AbstractMcpTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.FindClassResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.SymbolMatch
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServices
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
 import com.intellij.navigation.NavigationItem
@@ -333,7 +333,7 @@ class FindClassTool : AbstractMcpTool() {
     }
 
     private fun determineKind(element: PsiElement): String {
-        return LanguageServiceRegistry.getKind(element)
+        return LanguageServices.getKind(element)
     }
 
     private fun getLanguageName(element: PsiElement): String {

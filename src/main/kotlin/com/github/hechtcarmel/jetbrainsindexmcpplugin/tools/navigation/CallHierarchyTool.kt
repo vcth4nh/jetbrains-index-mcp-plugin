@@ -163,7 +163,7 @@ class CallHierarchyTool : AbstractMcpTool() {
                 .descriptorDisplayName(descriptor, psi),
             qualifiedName = qualifiedName,
             enclosingScope = if (qualifiedName == null) PsiUtils.getEnclosingScope(psi) else null,
-            kind = com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry.getKind(psi),
+            kind = com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServices.getKind(psi),
             file = ProjectUtils.getRelativePath(psi.project, virtualFile),
             line = line,
             column = column,

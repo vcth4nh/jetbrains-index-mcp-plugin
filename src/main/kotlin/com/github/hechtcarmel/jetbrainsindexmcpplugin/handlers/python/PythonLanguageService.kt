@@ -1,7 +1,7 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.python
 
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageService
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServices
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.MethodData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodsData
@@ -57,7 +57,7 @@ class PythonLanguageService : LanguageService() {
         val methodData = MethodData(
             name = getName(pyFunction) ?: "unknown",
             qualifiedName = QualifiedNameUtil.getQualifiedName(pyFunction),
-            kind = LanguageServiceRegistry.getKind(pyFunction),
+            kind = LanguageServices.getKind(pyFunction),
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, pyFunction) ?: 0,
             column = getColumnNumber(project, pyFunction) ?: 0,
@@ -99,7 +99,7 @@ class PythonLanguageService : LanguageService() {
                     hierarchy.add(SuperMethodData(
                         name = methodName,
                         qualifiedName = QualifiedNameUtil.getQualifiedName(superMethod),
-                        kind = LanguageServiceRegistry.getKind(superMethod),
+                        kind = LanguageServices.getKind(superMethod),
                         file = file?.let { getRelativePath(project, it) },
                         line = getLineNumber(project, superMethod),
                         column = getColumnNumber(project, superMethod),

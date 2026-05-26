@@ -2,7 +2,7 @@ package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation
 
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ErrorMessages
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ToolNames
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServices
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.AbstractMcpTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.MethodInfo
@@ -58,7 +58,7 @@ class FindSuperMethodsTool : AbstractMcpTool() {
                 )
             }
 
-            val superMethodsData = LanguageServiceRegistry.findSuperMethods(element, project)
+            val superMethodsData = LanguageServices.findSuperMethods(element, project)
             if (superMethodsData == null) {
                 return@suspendingReadAction createErrorResult(
                     "No method found at position. Ensure the position is within a method declaration or body."

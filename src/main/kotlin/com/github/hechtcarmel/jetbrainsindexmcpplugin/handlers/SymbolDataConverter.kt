@@ -106,7 +106,7 @@ internal object SymbolDataConverter {
     }
 
     private fun determineKind(element: PsiElement): String {
-        return LanguageServiceRegistry.getKind(element)
+        return LanguageServices.getKind(element)
     }
 
 }

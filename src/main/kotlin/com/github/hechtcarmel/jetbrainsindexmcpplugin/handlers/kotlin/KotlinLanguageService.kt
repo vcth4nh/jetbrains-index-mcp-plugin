@@ -1,7 +1,7 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.kotlin
 
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageService
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServices
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.MethodData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodsData
@@ -85,7 +85,7 @@ class KotlinLanguageService : LanguageService() {
         val methodData = MethodData(
             name = method.name,
             qualifiedName = QualifiedNameUtil.getQualifiedName(method),
-            kind = LanguageServiceRegistry.getKind(method),
+            kind = LanguageServices.getKind(method),
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
             line = getLineNumber(project, method) ?: 0,
             column = getColumnNumber(project, method) ?: 0,
@@ -120,7 +120,7 @@ class KotlinLanguageService : LanguageService() {
             hierarchy.add(SuperMethodData(
                 name = superMethod.name,
                 qualifiedName = QualifiedNameUtil.getQualifiedName(superMethod),
-                kind = LanguageServiceRegistry.getKind(superMethod),
+                kind = LanguageServices.getKind(superMethod),
                 file = file?.let { getRelativePath(project, it) },
                 line = getLineNumber(project, superMethod),
                 column = getColumnNumber(project, superMethod),
