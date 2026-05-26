@@ -6,5 +6,9 @@
                               implementationClass="com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.javascript.JavaScriptSuperMethodsProvider"/>
         <superMethodsProvider language="ECMAScript 6"
                               implementationClass="com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.javascript.JavaScriptSuperMethodsProvider"/>
+        <superMethodsProvider language="JSX Harmony"
+                              implementationClass="com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.javascript.JavaScriptSuperMethodsProvider"/>
+        <superMethodsProvider language="TypeScript JSX"
+                              implementationClass="com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.javascript.JavaScriptSuperMethodsProvider"/>
     </extensions>
 </idea-plugin>
