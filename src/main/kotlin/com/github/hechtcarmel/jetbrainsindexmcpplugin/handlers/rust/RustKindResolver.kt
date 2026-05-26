@@ -1,17 +1,9 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.rust
 
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageService
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PluginDetectors
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageKindResolver
 import com.intellij.psi.PsiElement
 
-class RustLanguageService : LanguageService() {
-    override val languageIds: Set<String> by lazy {
-        resolveLanguageId("org.rust.lang.RsLanguage", "INSTANCE")
-            ?.let { setOf(it) } ?: emptySet()
-    }
-    override val displayName = "Rust"
-    override fun isAvailable(): Boolean = PluginDetectors.rust.isAvailable
-    override val supportsSuperMethods: Boolean = false
+class RustKindResolver : LanguageKindResolver {
 
     private val rsStructItem: Class<*>? by lazy { loadClass("org.rust.lang.core.psi.RsStructItem") }
     private val rsTraitItem: Class<*>? by lazy { loadClass("org.rust.lang.core.psi.RsTraitItem") }

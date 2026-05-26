@@ -1,3 +1,6 @@
 <idea-plugin>
-    <!-- Rust-specific extensions can be added here if needed in the future -->
+    <extensions defaultExtensionNs="com.github.hechtcarmel.jetbrainsindexmcpplugin">
+        <languageKindResolver language="Rust"
+                              implementationClass="com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.rust.RustKindResolver"/>
+    </extensions>
 </idea-plugin>
