@@ -1,32 +1,20 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.python
 
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageService
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServices
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.MethodData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodsData
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PluginDetectors
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodsProvider
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
 
-class PythonLanguageService : LanguageService() {
-    override val languageIds: Set<String> by lazy {
-        resolveLanguageIdViaGetInstance("com.jetbrains.python.PythonLanguage")
-            ?.let { setOf(it) } ?: emptySet()
-    }
-    override val displayName = "Python"
-    override fun isAvailable(): Boolean = PluginDetectors.python.isAvailable
-
-    override val supportsSuperMethods: Boolean = true
-
-    private val pyTargetExpressionClass: Class<*>? by lazy {
-        try { Class.forName("com.jetbrains.python.psi.PyTargetExpression") } catch (_: ClassNotFoundException) { null }
-    }
+class PythonSuperMethodsProvider : SuperMethodsProvider {
 
     private val pyClassClass: Class<*>? by lazy {
         try { Class.forName("com.jetbrains.python.psi.PyClass") } catch (_: ClassNotFoundException) { null }
@@ -40,18 +28,9 @@ class PythonLanguageService : LanguageService() {
         try { Class.forName("com.jetbrains.python.psi.types.TypeEvalContext") } catch (_: ClassNotFoundException) { null }
     }
 
-    override fun resolveKind(element: PsiElement): String? {
-        val pyClass = pyTargetExpressionClass ?: return null
-        if (!pyClass.isInstance(element)) return null
-        return try {
-            val containingClass = element.javaClass.getMethod("getContainingClass").invoke(element)
-            if (containingClass != null) "FIELD" else "VARIABLE"
-        } catch (_: Exception) { "FIELD" }
-    }
-
     override fun findSuperMethods(element: PsiElement, project: Project): SuperMethodsData? {
         val pyFunction = findContainingPyFunction(element) ?: return null
-        val containingClass = findContainingPyClass(pyFunction) ?: return null
+        findContainingPyClass(pyFunction) ?: return null
 
         val file = pyFunction.containingFile?.virtualFile
         val methodData = MethodData(
@@ -63,24 +42,15 @@ class PythonLanguageService : LanguageService() {
             column = getColumnNumber(project, pyFunction) ?: 0,
         )
 
-        val hierarchy = buildHierarchy(project, pyFunction)
-
-        return SuperMethodsData(
-            method = methodData,
-            hierarchy = hierarchy
-        )
+        return SuperMethodsData(method = methodData, hierarchy = buildHierarchy(project, pyFunction))
     }
-
-    // --- Super methods helpers ---
 
     private fun buildHierarchy(
         project: Project,
         pyFunction: PsiElement,
         visited: MutableSet<String> = mutableSetOf(),
-        depth: Int = 1
     ): List<SuperMethodData> {
         val hierarchy = mutableListOf<SuperMethodData>()
-
         try {
             val containingClass = findContainingPyClass(pyFunction) ?: return emptyList()
             val methodName = getName(pyFunction) ?: return emptyList()
@@ -89,13 +59,11 @@ class PythonLanguageService : LanguageService() {
             superClasses?.filterIsInstance<PsiElement>()?.forEach { superClass ->
                 val superClassName = QualifiedNameUtil.getQualifiedName(superClass) ?: getName(superClass)
                 val key = "$superClassName.$methodName"
-                if (key in visited) return@forEach
-                visited.add(key)
+                if (!visited.add(key)) return@forEach
 
                 val superMethod = findMethodInClass(superClass, methodName)
                 if (superMethod != null) {
                     val file = superMethod.containingFile?.virtualFile
-
                     hierarchy.add(SuperMethodData(
                         name = methodName,
                         qualifiedName = QualifiedNameUtil.getQualifiedName(superMethod),
@@ -104,18 +72,14 @@ class PythonLanguageService : LanguageService() {
                         line = getLineNumber(project, superMethod),
                         column = getColumnNumber(project, superMethod),
                     ))
-
-                    hierarchy.addAll(buildHierarchy(project, superMethod, visited, depth + 1))
+                    hierarchy.addAll(buildHierarchy(project, superMethod, visited))
                 }
             }
         } catch (_: Exception) {
             // Handle gracefully
         }
-
         return hierarchy
     }
-
-    // --- Python PSI helpers ---
 
     private fun findContainingPyFunction(element: PsiElement): PsiElement? {
         if (pyFunctionClass?.isInstance(element) == true) return element
@@ -131,32 +95,25 @@ class PythonLanguageService : LanguageService() {
         return PsiTreeUtil.getParentOfType(element, pyClass as Class<out PsiElement>)
     }
 
-    private fun getName(element: PsiElement): String? {
-        return try {
-            val method = element.javaClass.getMethod("getName")
-            method.invoke(element) as? String
-        } catch (_: Exception) {
-            null
-        }
-    }
+    private fun getName(element: PsiElement): String? = runCatching {
+        element.javaClass.getMethod("getName").invoke(element) as? String
+    }.getOrNull()
 
     private fun getSuperClasses(
         pyClass: PsiElement,
-        context: Any? = createCodeAnalysisContext(pyClass.project, pyClass.containingFile)
+        context: Any? = createCodeAnalysisContext(pyClass.project, pyClass.containingFile),
     ): Array<*>? {
         val typeEvalContextClass = pyTypeEvalContextClass ?: return null
         return try {
-            val method = pyClass.javaClass.getMethod("getSuperClasses", typeEvalContextClass)
-            method.invoke(pyClass, context) as? Array<*>
-        } catch (_: Exception) {
-            null
-        }
+            pyClass.javaClass.getMethod("getSuperClasses", typeEvalContextClass)
+                .invoke(pyClass, context) as? Array<*>
+        } catch (_: Exception) { null }
     }
 
     private fun findMethodInClass(
         pyClass: PsiElement,
         methodName: String,
-        context: Any? = createUserInitiatedContext(pyClass.project, pyClass.containingFile)
+        context: Any? = createUserInitiatedContext(pyClass.project, pyClass.containingFile),
     ): PsiElement? {
         val typeEvalContextClass = pyTypeEvalContextClass
 
@@ -166,7 +123,7 @@ class PythonLanguageService : LanguageService() {
                     "findMethodByName",
                     String::class.java,
                     java.lang.Boolean.TYPE,
-                    typeEvalContextClass
+                    typeEvalContextClass,
                 )
                 val result = method.invoke(pyClass, methodName, false, context) as? PsiElement
                 if (result != null) return result
@@ -176,43 +133,32 @@ class PythonLanguageService : LanguageService() {
         }
 
         return try {
-            val getMethodsMethod = pyClass.javaClass.getMethod("getMethods")
-            val methods = getMethodsMethod.invoke(pyClass) as? Array<*> ?: return null
+            val methods = pyClass.javaClass.getMethod("getMethods").invoke(pyClass) as? Array<*> ?: return null
             methods.filterIsInstance<PsiElement>().find { getName(it) == methodName }
-        } catch (_: Exception) {
-            null
-        }
+        } catch (_: Exception) { null }
     }
 
-    private fun createCodeAnalysisContext(project: Project, origin: PsiFile?): Any? {
-        return createTypeEvalContext("codeAnalysis", project, origin)
-    }
+    private fun createCodeAnalysisContext(project: Project, origin: PsiFile?): Any? =
+        createTypeEvalContext("codeAnalysis", project, origin)
 
-    private fun createUserInitiatedContext(project: Project, origin: PsiFile?): Any? {
-        return createTypeEvalContext("userInitiated", project, origin)
-    }
+    private fun createUserInitiatedContext(project: Project, origin: PsiFile?): Any? =
+        createTypeEvalContext("userInitiated", project, origin)
 
     private fun createTypeEvalContext(factoryMethod: String, project: Project, origin: PsiFile?): Any? {
         val typeEvalContextClass = pyTypeEvalContextClass ?: return null
-
         return try {
-            val method = typeEvalContextClass.getMethod(factoryMethod, Project::class.java, PsiFile::class.java)
-            method.invoke(null, project, origin)
+            typeEvalContextClass.getMethod(factoryMethod, Project::class.java, PsiFile::class.java)
+                .invoke(null, project, origin)
         } catch (_: Exception) {
             try {
-                val fallbackMethod = typeEvalContextClass.getMethod("codeInsightFallback", Project::class.java)
-                fallbackMethod.invoke(null, project)
-            } catch (_: Exception) {
-                null
-            }
+                typeEvalContextClass.getMethod("codeInsightFallback", Project::class.java)
+                    .invoke(null, project)
+            } catch (_: Exception) { null }
         }
     }
 
-    // --- Position helpers ---
-
-    private fun getRelativePath(project: Project, file: com.intellij.openapi.vfs.VirtualFile): String {
-        return ProjectUtils.getToolFilePath(project, file)
-    }
+    private fun getRelativePath(project: Project, file: VirtualFile): String =
+        ProjectUtils.getToolFilePath(project, file)
 
     private fun getLineNumber(project: Project, element: PsiElement): Int? {
         val psiFile = element.containingFile ?: return null
