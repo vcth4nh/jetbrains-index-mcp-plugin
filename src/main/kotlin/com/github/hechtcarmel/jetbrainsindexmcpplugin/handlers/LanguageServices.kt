@@ -13,10 +13,7 @@ object LanguageServices {
             LanguageKindResolver.EP.forLanguage(base)?.resolveKind(element)?.let { return it }
         }
         // Tier 1b: legacy LanguageServiceRegistry fallback (removed in cleanup phase)
-        val legacyService = LanguageServiceRegistry.getService(element)
-        if (legacyService != null) {
-            legacyService.resolveKindOrNull(element)?.let { return it }
-        }
+        LanguageServiceRegistry.getService(element)?.resolveKindOrNull(element)?.let { return it }
         // Tier 2: platform FindUsagesProvider
         val ideType = LanguageFindUsages.getType(element)
         if (ideType.isNotEmpty()) return normalizeKind(ideType)
