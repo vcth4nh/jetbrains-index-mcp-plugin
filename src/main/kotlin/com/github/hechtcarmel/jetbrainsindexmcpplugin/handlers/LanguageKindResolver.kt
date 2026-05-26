@@ -7,7 +7,7 @@ interface LanguageKindResolver {
     fun resolveKind(element: PsiElement): String?
 
     companion object {
-        const val EP_NAME = "com.github.hechtcarmel.jetbrainsindexmcpplugin.languageKindResolver"
-        val EP = LanguageExtension<LanguageKindResolver>(EP_NAME)
+        const val EP_NAME_STRING = "com.github.hechtcarmel.jetbrainsindexmcpplugin.languageKindResolver"
+        val EP = LanguageExtension<LanguageKindResolver>(EP_NAME_STRING)
     }
 }
