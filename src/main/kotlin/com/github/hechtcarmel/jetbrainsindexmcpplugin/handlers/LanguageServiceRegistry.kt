@@ -18,7 +18,7 @@ object LanguageServiceRegistry {
         "com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.python.PythonLanguageService",
         // JavaScriptLanguageService migrated to EP (superMethodsProvider)
         "com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.go.GoLanguageService",
-        "com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.php.PhpLanguageService",
+        // PhpLanguageService migrated to EP (languageKindResolver + superMethodsProvider)
         // RustLanguageService migrated to EP (languageKindResolver)
     )
 
