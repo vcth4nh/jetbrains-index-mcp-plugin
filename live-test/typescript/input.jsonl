@@ -71,5 +71,4 @@
 {"id":"super-OptImpl.req","tool":"ide_find_super_methods","params":{"file":"src/multisuper.ts","line":67,"column":5}}
 {"id":"super-OptImpl.opt","tool":"ide_find_super_methods","params":{"file":"src/multisuper.ts","line":68,"column":5}}
 {"id":"super-AccessorImpl.value","tool":"ide_find_super_methods","params":{"file":"src/multisuper.ts","line":81,"column":9}}
-{"id":"super-ConcreteCombo.p","tool":"ide_find_super_methods","params":{"file":"src/multisuper.ts","line":100,"column":23}}
 {"id":"super-Runner.run","tool":"ide_find_super_methods","params":{"file":"src/multisuper.ts","line":117,"column":5}}
