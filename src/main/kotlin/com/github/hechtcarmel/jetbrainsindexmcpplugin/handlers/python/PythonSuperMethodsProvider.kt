@@ -7,6 +7,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodsData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodsProvider
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
@@ -14,23 +15,48 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
 
+/**
+ * Python super-methods provider. Delegates to
+ * `com.jetbrains.python.psi.search.PySuperMethodsSearch.search(...)` — the
+ * data layer the IDE's `PyLineMarkerProvider` uses for the `I↑` gutter icon.
+ *
+ * `deepSearch=true` walks the full C3 MRO chain; `@property` getter/setter
+ * direction handled by the search's executor.
+ */
 class PythonSuperMethodsProvider : SuperMethodsProvider {
 
-    private val pyClassClass: Class<*>? by lazy {
-        try { Class.forName("com.jetbrains.python.psi.PyClass") } catch (_: ClassNotFoundException) { null }
+    companion object {
+        private val LOG = logger<PythonSuperMethodsProvider>()
     }
 
     private val pyFunctionClass: Class<*>? by lazy {
         try { Class.forName("com.jetbrains.python.psi.PyFunction") } catch (_: ClassNotFoundException) { null }
     }
 
-    private val pyTypeEvalContextClass: Class<*>? by lazy {
+    private val pySuperMethodsSearchClass: Class<*>? by lazy {
+        try { Class.forName("com.jetbrains.python.psi.search.PySuperMethodsSearch") } catch (_: ClassNotFoundException) { null }
+    }
+
+    private val typeEvalContextClass: Class<*>? by lazy {
         try { Class.forName("com.jetbrains.python.psi.types.TypeEvalContext") } catch (_: ClassNotFoundException) { null }
+    }
+
+    private val searchMethod: java.lang.reflect.Method? by lazy {
+        try {
+            val py = pyFunctionClass ?: return@lazy null
+            val tec = typeEvalContextClass ?: return@lazy null
+            pySuperMethodsSearchClass?.getMethod("search", py, java.lang.Boolean.TYPE, tec)
+        } catch (_: Throwable) { null }
+    }
+
+    private val userInitiatedFactory: java.lang.reflect.Method? by lazy {
+        try {
+            typeEvalContextClass?.getMethod("userInitiated", Project::class.java, PsiFile::class.java)
+        } catch (_: Throwable) { null }
     }
 
     override fun findSuperMethods(element: PsiElement, project: Project): SuperMethodsData? {
         val pyFunction = findContainingPyFunction(element) ?: return null
-        findContainingPyClass(pyFunction) ?: return null
 
         val file = pyFunction.containingFile?.virtualFile
         val methodData = MethodData(
@@ -45,115 +71,65 @@ class PythonSuperMethodsProvider : SuperMethodsProvider {
         return SuperMethodsData(method = methodData, hierarchy = buildHierarchy(project, pyFunction))
     }
 
-    private fun buildHierarchy(
-        project: Project,
-        pyFunction: PsiElement,
-        visited: MutableSet<String> = mutableSetOf(),
-    ): List<SuperMethodData> {
-        val hierarchy = mutableListOf<SuperMethodData>()
-        try {
-            val containingClass = findContainingPyClass(pyFunction) ?: return emptyList()
-            val methodName = getName(pyFunction) ?: return emptyList()
+    private fun buildHierarchy(project: Project, pyFunction: PsiElement): List<SuperMethodData> {
+        val search = searchMethod ?: return emptyList()
+        val ctx = createUserInitiatedContext(project, pyFunction.containingFile) ?: return emptyList()
 
-            val superClasses = getSuperClasses(containingClass)
-            superClasses?.filterIsInstance<PsiElement>()?.forEach { superClass ->
-                val superClassName = QualifiedNameUtil.getQualifiedName(superClass) ?: getName(superClass)
-                val key = "$superClassName.$methodName"
-                if (!visited.add(key)) return@forEach
-
-                val superMethod = findMethodInClass(superClass, methodName)
-                if (superMethod != null) {
-                    val file = superMethod.containingFile?.virtualFile
-                    hierarchy.add(SuperMethodData(
-                        name = methodName,
-                        qualifiedName = QualifiedNameUtil.getQualifiedName(superMethod),
-                        kind = LanguageServices.getKind(superMethod),
-                        file = file?.let { getRelativePath(project, it) },
-                        line = getLineNumber(project, superMethod),
-                        column = getColumnNumber(project, superMethod),
-                    ))
-                    hierarchy.addAll(buildHierarchy(project, superMethod, visited))
-                }
-            }
-        } catch (_: Exception) {
-            // Handle gracefully
+        val query = try {
+            search.invoke(null, pyFunction, true, ctx)
+        } catch (t: Throwable) {
+            LOG.debug("PySuperMethodsSearch.search invocation failed", t)
+            return emptyList()
         }
-        return hierarchy
+
+        val findAllMethod = runCatching { query.javaClass.getMethod("findAll") }.getOrNull()
+            ?: return emptyList()
+
+        @Suppress("UNCHECKED_CAST")
+        val results = try {
+            findAllMethod.invoke(query) as? Collection<PsiElement> ?: return emptyList()
+        } catch (t: Throwable) {
+            LOG.debug("Query.findAll invocation failed", t)
+            return emptyList()
+        }
+
+        val visited = mutableSetOf<String>()
+        val out = mutableListOf<SuperMethodData>()
+        for (superMethod in results) {
+            val key = QualifiedNameUtil.getQualifiedName(superMethod)
+                ?: "${superMethod.javaClass.simpleName}@${System.identityHashCode(superMethod)}"
+            if (!visited.add(key)) continue
+            val file = superMethod.containingFile?.virtualFile
+            out.add(SuperMethodData(
+                name = getName(superMethod) ?: "unknown",
+                qualifiedName = QualifiedNameUtil.getQualifiedName(superMethod),
+                kind = LanguageServices.getKind(superMethod),
+                file = file?.let { getRelativePath(project, it) },
+                line = getLineNumber(project, superMethod),
+                column = getColumnNumber(project, superMethod),
+            ))
+        }
+        return out
     }
 
     private fun findContainingPyFunction(element: PsiElement): PsiElement? {
-        if (pyFunctionClass?.isInstance(element) == true) return element
-        val pyFunction = pyFunctionClass ?: return null
+        val pyFunc = pyFunctionClass ?: return null
+        if (pyFunc.isInstance(element)) return element
         @Suppress("UNCHECKED_CAST")
-        return PsiTreeUtil.getParentOfType(element, pyFunction as Class<out PsiElement>)
-    }
-
-    private fun findContainingPyClass(element: PsiElement): PsiElement? {
-        if (pyClassClass?.isInstance(element) == true) return element
-        val pyClass = pyClassClass ?: return null
-        @Suppress("UNCHECKED_CAST")
-        return PsiTreeUtil.getParentOfType(element, pyClass as Class<out PsiElement>)
+        return PsiTreeUtil.getParentOfType(element, pyFunc as Class<out PsiElement>)
     }
 
     private fun getName(element: PsiElement): String? = runCatching {
         element.javaClass.getMethod("getName").invoke(element) as? String
     }.getOrNull()
 
-    private fun getSuperClasses(
-        pyClass: PsiElement,
-        context: Any? = createCodeAnalysisContext(pyClass.project, pyClass.containingFile),
-    ): Array<*>? {
-        val typeEvalContextClass = pyTypeEvalContextClass ?: return null
+    private fun createUserInitiatedContext(project: Project, origin: PsiFile?): Any? {
+        val factory = userInitiatedFactory ?: return null
         return try {
-            pyClass.javaClass.getMethod("getSuperClasses", typeEvalContextClass)
-                .invoke(pyClass, context) as? Array<*>
-        } catch (_: Exception) { null }
-    }
-
-    private fun findMethodInClass(
-        pyClass: PsiElement,
-        methodName: String,
-        context: Any? = createUserInitiatedContext(pyClass.project, pyClass.containingFile),
-    ): PsiElement? {
-        val typeEvalContextClass = pyTypeEvalContextClass
-
-        if (typeEvalContextClass != null) {
-            try {
-                val method = pyClass.javaClass.getMethod(
-                    "findMethodByName",
-                    String::class.java,
-                    java.lang.Boolean.TYPE,
-                    typeEvalContextClass,
-                )
-                val result = method.invoke(pyClass, methodName, false, context) as? PsiElement
-                if (result != null) return result
-            } catch (_: Exception) {
-                // Fall back to enumerating methods below.
-            }
-        }
-
-        return try {
-            val methods = pyClass.javaClass.getMethod("getMethods").invoke(pyClass) as? Array<*> ?: return null
-            methods.filterIsInstance<PsiElement>().find { getName(it) == methodName }
-        } catch (_: Exception) { null }
-    }
-
-    private fun createCodeAnalysisContext(project: Project, origin: PsiFile?): Any? =
-        createTypeEvalContext("codeAnalysis", project, origin)
-
-    private fun createUserInitiatedContext(project: Project, origin: PsiFile?): Any? =
-        createTypeEvalContext("userInitiated", project, origin)
-
-    private fun createTypeEvalContext(factoryMethod: String, project: Project, origin: PsiFile?): Any? {
-        val typeEvalContextClass = pyTypeEvalContextClass ?: return null
-        return try {
-            typeEvalContextClass.getMethod(factoryMethod, Project::class.java, PsiFile::class.java)
-                .invoke(null, project, origin)
-        } catch (_: Exception) {
-            try {
-                typeEvalContextClass.getMethod("codeInsightFallback", Project::class.java)
-                    .invoke(null, project)
-            } catch (_: Exception) { null }
+            factory.invoke(null, project, origin)
+        } catch (t: Throwable) {
+            LOG.debug("TypeEvalContext.userInitiated invocation failed", t)
+            null
         }
     }
 
