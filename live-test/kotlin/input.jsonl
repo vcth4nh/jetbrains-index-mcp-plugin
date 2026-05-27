@@ -65,3 +65,13 @@
 {"id":"find-class-no-match",            "tool":"ide_find_class",          "params":{"query":"NoSuchClassXyz"}}
 {"id":"find-symbol-no-match",           "tool":"ide_find_symbol",         "params":{"query":"noSuchSymbolXyz"}}
 {"id":"find-class-Shape-wildcard",      "tool":"ide_find_class",          "params":{"query":"Sh*","matchMode":"substring"}}
+{"id":"super-Triple.name","tool":"ide_find_super_methods","params":{"file":"src/main/kotlin/demo/MultiSuper.kt","line":16,"column":18}}
+{"id":"super-Leaf.m","tool":"ide_find_super_methods","params":{"file":"src/main/kotlin/demo/MultiSuper.kt","line":38,"column":18}}
+{"id":"super-Mid2.m","tool":"ide_find_super_methods","params":{"file":"src/main/kotlin/demo/MultiSuper.kt","line":34,"column":18}}
+{"id":"super-Bottom.m","tool":"ide_find_super_methods","params":{"file":"src/main/kotlin/demo/MultiSuper.kt","line":55,"column":18}}
+{"id":"super-LoudGreeter.greet","tool":"ide_find_super_methods","params":{"file":"src/main/kotlin/demo/MultiSuper.kt","line":72,"column":18}}
+{"id":"super-Tagged.label","tool":"ide_find_super_methods","params":{"file":"src/main/kotlin/demo/MultiSuper.kt","line":89,"column":18}}
+{"id":"super-CustomHolder.holder","tool":"ide_find_super_methods","params":{"file":"src/main/kotlin/demo/MultiSuper.kt","line":102,"column":18}}
+{"id":"super-Active.status","tool":"ide_find_super_methods","params":{"file":"src/main/kotlin/demo/MultiSuper.kt","line":121,"column":18}}
+{"id":"super-Point.name","tool":"ide_find_super_methods","params":{"file":"src/main/kotlin/demo/MultiSuper.kt","line":141,"column":31}}
+{"id":"super-Singleton.name","tool":"ide_find_super_methods","params":{"file":"src/main/kotlin/demo/MultiSuper.kt","line":145,"column":18}}

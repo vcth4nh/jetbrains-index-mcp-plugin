@@ -77,5 +77,14 @@
 {"id":"def-classifyShape-kind-decl","tool":"ide_find_definition","params":{"file":"src/main/java/demo/Normal.java","line":97,"column":13}}
 {"id":"usage-classifyShape-kind","tool":"ide_find_usages","params":{"file":"src/main/java/demo/Normal.java","line":97,"column":13}}
 {"id":"super-anon-apply","tool":"ide_find_super_methods","params":{"file":"src/main/java/demo/Quirks.java","line":24,"column":28}}
+{"id":"super-Triple.name",        "tool":"ide_find_super_methods",   "params":{"file":"src/main/java/demo/MultiSuper.java","line":17,"column":19}}
+{"id":"super-ChainLeaf.tag",      "tool":"ide_find_super_methods",   "params":{"file":"src/main/java/demo/MultiSuper.java","line":46,"column":19}}
+{"id":"super-ChainMid2.tag",      "tool":"ide_find_super_methods",   "params":{"file":"src/main/java/demo/MultiSuper.java","line":39,"column":19}}
+{"id":"super-DiamondBottom.pick", "tool":"ide_find_super_methods",   "params":{"file":"src/main/java/demo/MultiSuper.java","line":67,"column":19}}
+{"id":"super-LoudGreeter.greet",  "tool":"ide_find_super_methods",   "params":{"file":"src/main/java/demo/MultiSuper.java","line":90,"column":19}}
+{"id":"super-SealedSquare.sides", "tool":"ide_find_super_methods",   "params":{"file":"src/main/java/demo/MultiSuper.java","line":109,"column":16}}
+{"id":"super-LabelPoint.label",   "tool":"ide_find_super_methods",   "params":{"file":"src/main/java/demo/MultiSuper.java","line":133,"column":26}}
+{"id":"super-Op.ADD.apply",       "tool":"ide_find_super_methods",   "params":{"file":"src/main/java/demo/MultiSuper.java","line":147,"column":20}}
+{"id":"super-AnonHost-anon.run",  "tool":"ide_find_super_methods",   "params":{"file":"src/main/java/demo/MultiSuper.java","line":166,"column":25}}
 {"id":"file-structure-Modern","tool":"ide_file_structure","params":{"file":"src/main/java/demo/Modern.java"}}
 {"id":"diagnostics-warnings","tool":"ide_diagnostics","params":{"file":"src/main/java/demo/Normal.java","severity":"warnings"}}

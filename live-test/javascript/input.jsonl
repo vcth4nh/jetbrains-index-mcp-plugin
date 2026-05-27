@@ -69,3 +69,7 @@
 {"id":"file-structure-accessors","tool":"ide_file_structure","params":{"file":"src/accessors.js"}}
 {"id":"super-Box.area","tool":"ide_find_super_methods","params":{"file":"src/accessors.js","line":9,"column":9}}
 {"id":"def-Number.parseInt-libraries-scope","tool":"ide_find_definition","params":{"file":"src/quirks.js","line":5,"column":23,"scope":"project_and_libraries"}}
+{"id":"super-Leaf.m","tool":"ide_find_super_methods","params":{"file":"src/multisuper.js","line":14,"column":5}}
+{"id":"super-Mid.m","tool":"ide_find_super_methods","params":{"file":"src/multisuper.js","line":10,"column":5}}
+{"id":"super-AccessorDerived.value","tool":"ide_find_super_methods","params":{"file":"src/multisuper.js","line":23,"column":9}}
+{"id":"super-StaticDerived.factory","tool":"ide_find_super_methods","params":{"file":"src/multisuper.js","line":32,"column":12}}

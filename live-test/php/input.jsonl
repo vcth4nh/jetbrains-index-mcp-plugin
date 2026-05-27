@@ -68,3 +68,11 @@
 {"id":"find-symbol-no-match",           "tool":"ide_find_symbol",         "params":{"query":"noSuchSymbolXyz"}}
 {"id":"find-class-Shape-wildcard",      "tool":"ide_find_class",          "params":{"query":"Sh*","matchMode":"substring"}}
 {"id":"usage-qNameRebind-callable-array","tool":"ide_find_usages","params":{"file":"src/Quirks.php","line":6,"column":28}}
+{"id":"super-Triple.name","tool":"ide_find_super_methods","params":{"file":"src/MultiSuper.php","line":17,"column":21}}
+{"id":"super-Mid.m","tool":"ide_find_super_methods","params":{"file":"src/MultiSuper.php","line":40,"column":21}}
+{"id":"super-Leaf.m","tool":"ide_find_super_methods","params":{"file":"src/MultiSuper.php","line":50,"column":21}}
+{"id":"super-Bottom.m-diamond","tool":"ide_find_super_methods","params":{"file":"src/MultiSuper.php","line":69,"column":21}}
+{"id":"super-WithTrait.log-trait","tool":"ide_find_super_methods","params":{"file":"src/MultiSuper.php","line":100,"column":21}}
+{"id":"super-KindLeaf.KIND-const","tool":"ide_find_super_methods","params":{"file":"src/MultiSuper.php","line":119,"column":11}}
+{"id":"super-Runner.run","tool":"ide_find_super_methods","params":{"file":"src/MultiSuper.php","line":136,"column":21}}
+{"id":"super-UsesDefault.greet-via-trait","tool":"ide_find_super_methods","params":{"file":"src/MultiSuper.php","line":152,"column":21}}

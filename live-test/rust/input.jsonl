@@ -63,3 +63,4 @@
 {"id":"find-class-no-match",            "tool":"ide_find_class",          "params":{"query":"NoSuchClassXyz"}}
 {"id":"find-symbol-no-match",           "tool":"ide_find_symbol",         "params":{"query":"noSuchSymbolXyz"}}
 {"id":"find-class-Shape-wildcard",      "tool":"ide_find_class",          "params":{"query":"Sh*","matchMode":"substring"}}
+{"id":"super-MyStruct.m",               "tool":"ide_find_super_methods",  "params":{"file":"src/multisuper.rs","line":8,"column":8}}

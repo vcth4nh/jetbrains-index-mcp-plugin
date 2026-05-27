@@ -56,3 +56,9 @@
 {"id":"find-class-Shape-prefix","tool":"ide_find_class","params":{"query":"Shape","matchMode":"prefix"}}
 {"id":"super-Circle.Area",          "tool":"ide_find_super_methods","params":{"file":"normal.go","line":23,"column":17}}
 {"id":"super-IntCoercer.Coerce",    "tool":"ide_find_super_methods","params":{"file":"quirks.go","line":56,"column":19}}
+{"id":"super-Triple.Name",          "tool":"ide_find_super_methods","params":{"file":"multisuper.go","line":13,"column":18}}
+{"id":"super-ChainImpl.Chain",      "tool":"ide_find_super_methods","params":{"file":"multisuper.go","line":30,"column":21}}
+{"id":"super-FullImpl.Base",        "tool":"ide_find_super_methods","params":{"file":"multisuper.go","line":49,"column":20}}
+{"id":"super-FullImpl.Full",        "tool":"ide_find_super_methods","params":{"file":"multisuper.go","line":51,"column":20}}
+{"id":"super-Outer.Hello",          "tool":"ide_find_super_methods","params":{"file":"multisuper.go","line":60,"column":16}}
+{"id":"super-Greeter.String",       "tool":"ide_find_super_methods","params":{"file":"multisuper.go","line":65,"column":18}}

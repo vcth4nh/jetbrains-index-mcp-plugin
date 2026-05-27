@@ -5,9 +5,17 @@
 ## [Unreleased]
 
 ### Added
+- `ide_find_super_methods` now supports Rust — returns the trait method(s) a struct method satisfies (dispatches via the Rust plugin's `RsGotoSuperHandlerKt.gotoSuperTargets`, mirroring RustRover's own Ctrl+U handler and gutter `I↑` marker). The tool is registered in RustRover for the first time. Closes #21.
 - `ide_find_super_methods` now supports Go — returns the interface method(s) a struct method satisfies (dispatches via the Go plugin's `GoSuperMethodSearch.GO_SUPER_METHOD_SEARCH`, mirroring GoLand's own Ctrl+U handler). The tool is registered in GoLand for the first time.
 
 ### Changed
+- Internal: 5 `SuperMethodsProvider` implementations (Java, Kotlin, Python, PHP, JavaScript/TypeScript) refactored to delegate to each language plugin's own super-method data API (the function its `GotoSuperHandler` uses internally) instead of bespoke recursive PSI walking. Same wire format and Ctrl+U semantics; smaller and more accurate per-language code. Closes #19.
+  - **Kotlin:** now uses `SuperDeclarationProvider.findSuperDeclarations` (Analysis API) — surfaces `KtProperty` / primary-constructor `val/var` / `object` properties / `expect`/`actual` / `internal` visibility that the previous LightClass bridge dropped.
+  - **Python:** now uses `PySuperMethodsSearch.search` — `@property` getter/setter direction-aware.
+  - **PHP:** now uses `PhpClassHierarchyUtils.processSuperMembers` — surfaces trait sources, `insteadof` conflict resolution, `@mixin`, and constant overrides that the previous walker missed.
+  - **JavaScript/TypeScript:** now uses `JSInheritanceUtil.findNearestOverriddenMembers` + `findImplementedMembers` fallback.
+  - **Java:** drops bespoke reference-resolution helper (the tool layer already resolves at-position). Otherwise unchanged — already used `PsiMethod.findSuperMethods()`.
+  - **Go:** unchanged (P3-1 already optimal).
 - Internal: replaced the custom `LanguageHandler` / `LanguageServiceRegistry` reflective registry with IntelliJ's `LanguageExtension` extension-point mechanism. Per-language kind resolvers and super-methods providers are now declared in `*-features.xml` files, registered against two custom EPs (`languageKindResolver`, `superMethodsProvider`). Closes audit item P3-1.
 
 ### Removed

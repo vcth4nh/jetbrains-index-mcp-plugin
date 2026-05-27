@@ -42,6 +42,7 @@
 {"id":"impls-Shape.describe",        "tool":"ide_find_implementations", "params":{"file":"src/normal.py","line":15,"column":9}}
 {"id":"super-Circle.draw",           "tool":"ide_find_super_methods",   "params":{"file":"src/normal.py","line":26,"column":9}}
 {"id":"super-Rectangle.draw",        "tool":"ide_find_super_methods",   "params":{"file":"src/normal.py","line":38,"column":9}}
+{"id":"super-Triple.name",           "tool":"ide_find_super_methods",   "params":{"file":"src/multi_super.py","line":25,"column":9}}
 {"id":"hier-type-Drawable",          "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.py","line":6,"column":7}}
 {"id":"hier-type-Circle",            "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.py","line":19,"column":7}}
 {"id":"hier-type-ShapeCollection",   "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.py","line":47,"column":7}}
@@ -71,3 +72,11 @@
 {"id":"def-classify-Shape-kind","tool":"ide_find_definition","params":{"file":"src/quirks.py","line":107,"column":9}}
 {"id":"usage-classify-Shape-kind","tool":"ide_find_usages","params":{"file":"src/quirks.py","line":107,"column":9}}
 {"id":"usage-import-alias-a","tool":"ide_find_usages","params":{"file":"src/quirks.py","line":47,"column":33}}
+{"id":"super-DeepMid2.m",            "tool":"ide_find_super_methods",   "params":{"file":"src/multi_super.py","line":47,"column":9}}
+{"id":"super-DeepLeaf.m",            "tool":"ide_find_super_methods",   "params":{"file":"src/multi_super.py","line":52,"column":9}}
+{"id":"super-DiamondBottom.m",       "tool":"ide_find_super_methods",   "params":{"file":"src/multi_super.py","line":78,"column":9}}
+{"id":"super-ConcreteShape.draw",    "tool":"ide_find_super_methods",   "params":{"file":"src/multi_super.py","line":99,"column":9}}
+{"id":"super-MixedClass.log",        "tool":"ide_find_super_methods",   "params":{"file":"src/multi_super.py","line":119,"column":9}}
+{"id":"super-PropDerived.value",     "tool":"ide_find_super_methods",   "params":{"file":"src/multi_super.py","line":143,"column":9}}
+{"id":"super-FactoryDerived.factory","tool":"ide_find_super_methods",   "params":{"file":"src/multi_super.py","line":167,"column":9}}
+{"id":"super-StaticDerived.helper",  "tool":"ide_find_super_methods",   "params":{"file":"src/multi_super.py","line":191,"column":9}}
