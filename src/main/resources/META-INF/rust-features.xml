@@ -2,5 +2,7 @@
     <extensions defaultExtensionNs="com.github.hechtcarmel.jetbrainsindexmcpplugin">
         <languageKindResolver language="Rust"
                               implementationClass="com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.rust.RustKindResolver"/>
+        <superMethodsProvider language="Rust"
+                              implementationClass="com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.rust.RustSuperMethodsProvider"/>
     </extensions>
 </idea-plugin>

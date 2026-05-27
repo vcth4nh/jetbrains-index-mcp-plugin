@@ -9,3 +9,19 @@ impl MyTrait for MyStruct {
         "impl".to_string()
     }
 }
+
+pub trait MyConst {
+    const KIND: &'static str;
+}
+
+pub trait MyTypeAlias {
+    type Output;
+}
+
+impl MyConst for MyStruct {
+    const KIND: &'static str = "impl";
+}
+
+impl MyTypeAlias for MyStruct {
+    type Output = String;
+}

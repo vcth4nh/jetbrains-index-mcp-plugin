@@ -420,7 +420,7 @@ These activate based on available language plugins (Java, Python, JavaScript/Typ
 - `ide_type_hierarchy` - Get type hierarchy for a class (Java, Kotlin, Python, JS/TS, Go, PHP, Rust)
 - `ide_call_hierarchy` - Get call hierarchy for a method (Java, Kotlin, Python, JS/TS, Go, PHP, Rust).
 - `ide_find_implementations` - Find implementations of interface/method (Java, Kotlin, Python, JS/TS, PHP, Rust — not Go).
-- `ide_find_super_methods` - Find methods that a given method overrides/implements (Java, Kotlin, Python, JS/TS, PHP). Go: returns interface method(s) a struct method satisfies via `GoSuperMethodSearch`. Not supported for Rust (trait model doesn't fit hierarchy enumeration).
+- `ide_find_super_methods` - Find methods that a given method overrides/implements (Java, Kotlin, Python, JS/TS, PHP). Go: returns interface method(s) a struct method satisfies via `GoSuperMethodSearch`. Rust: returns trait fn/const/type alias the impl satisfies via `RsGotoSuperHandlerKt.gotoSuperTargets`.
 - `ide_file_structure` - Get hierarchical file structure similar to IDE's Structure view (Java, Kotlin, Python, JS/TS, Markdown) (disabled by default)
 
 **Java/Kotlin-Only Refactoring Tools:**

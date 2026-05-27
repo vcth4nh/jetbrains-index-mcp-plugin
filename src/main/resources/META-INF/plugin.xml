@@ -45,7 +45,7 @@
     <li><b>Type Hierarchy</b> - Explore class inheritance chains (Java, Kotlin, Python, JS/TS, Go, PHP, Rust)</li>
     <li><b>Call Hierarchy</b> - Trace method/function call relationships (Java, Kotlin, Python, JS/TS, Go, PHP, Rust)</li>
     <li><b>Find Implementations</b> - Discover all implementations of interfaces and abstract methods (Java, Kotlin, Python, JS/TS, PHP, Rust)</li>
-    <li><b>Find Super Methods</b> - Navigate through method override hierarchies (Java, Kotlin, Python, JS/TS, PHP) or interface satisfaction (Go)</li>
+    <li><b>Find Super Methods</b> - Navigate through method override hierarchies (Java, Kotlin, Python, JS/TS, PHP), interface satisfaction (Go), or trait fn/const/type alias overrides (Rust)</li>
 </ul>
 
 <h3>Refactoring Tools</h3>
