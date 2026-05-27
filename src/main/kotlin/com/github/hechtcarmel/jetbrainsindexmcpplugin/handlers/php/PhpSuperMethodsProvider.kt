@@ -13,128 +13,137 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
+import java.lang.reflect.InvocationHandler
+import java.lang.reflect.Proxy
 
+/**
+ * PHP super-methods provider. Delegates to
+ * `com.jetbrains.php.PhpClassHierarchyUtils.processSuperMembers(PhpClassMember, HierarchyClassMemberProcessor)`
+ * — the broader API that internally dispatches to `processSuperMethods` for
+ * `Method` and `processSuperFields` for `Field`. In the PHP plugin's PSI,
+ * `const X = "y"` inside a class is a `Field` with `isConstant() == true`,
+ * so this single call covers methods, fields/properties, AND class constants.
+ *
+ * Matches the data path `PhpLineMarkerProvider.findParents` uses for the
+ * `↑` gutter marker (which also accepts both Method and Field).
+ *
+ * The `HierarchyClassMemberProcessor` is a `@FunctionalInterface` callback;
+ * we implement it via `java.lang.reflect.Proxy.newProxyInstance` to avoid a
+ * compile-time PHP-plugin dep.
+ *
+ * Covers (gain over previous walker): trait sources, `insteadof` conflict
+ * resolution, `@mixin`, constant overrides, field overrides, correct
+ * private-method handling.
+ */
 class PhpSuperMethodsProvider : SuperMethodsProvider {
 
     companion object {
         private val LOG = logger<PhpSuperMethodsProvider>()
     }
 
-    private val methodClass: Class<*>? by lazy {
-        try { Class.forName("com.jetbrains.php.lang.psi.elements.Method") } catch (_: ClassNotFoundException) { null }
+    private val phpClassMemberClass: Class<*>? by lazy {
+        try { Class.forName("com.jetbrains.php.lang.psi.elements.PhpClassMember") } catch (_: ClassNotFoundException) { null }
+    }
+
+    private val hierarchyUtilsClass: Class<*>? by lazy {
+        try { Class.forName("com.jetbrains.php.PhpClassHierarchyUtils") } catch (_: ClassNotFoundException) { null }
+    }
+
+    private val hierarchyClassMemberProcessorClass: Class<*>? by lazy {
+        try { Class.forName("com.jetbrains.php.PhpClassHierarchyUtils\$HierarchyClassMemberProcessor") } catch (_: ClassNotFoundException) { null }
+    }
+
+    private val processSuperMembersMethod: java.lang.reflect.Method? by lazy {
+        try {
+            val util = hierarchyUtilsClass ?: return@lazy null
+            val member = phpClassMemberClass ?: return@lazy null
+            val processor = hierarchyClassMemberProcessorClass ?: return@lazy null
+            util.getMethod("processSuperMembers", member, processor)
+        } catch (_: Throwable) { null }
     }
 
     override fun findSuperMethods(element: PsiElement, project: Project): SuperMethodsData? {
-        val method = findContainingMethod(element) ?: return null
-        getContainingClass(method) ?: return null
+        val member = findContainingMember(element) ?: return null
 
-        val file = method.containingFile?.virtualFile
+        val file = member.containingFile?.virtualFile
         val methodData = MethodData(
-            name = getName(method) ?: "unknown",
-            qualifiedName = QualifiedNameUtil.getQualifiedName(method),
-            kind = LanguageServices.getKind(method),
+            name = getName(member) ?: "unknown",
+            qualifiedName = QualifiedNameUtil.getQualifiedName(member),
+            kind = LanguageServices.getKind(member),
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
-            line = getLineNumber(project, method) ?: 0,
-            column = getColumnNumber(project, method) ?: 0,
+            line = getLineNumber(project, member) ?: 0,
+            column = getColumnNumber(project, member) ?: 0,
         )
 
-        return SuperMethodsData(method = methodData, hierarchy = buildHierarchy(project, method))
+        return SuperMethodsData(method = methodData, hierarchy = buildHierarchy(project, member))
     }
 
-    private fun buildHierarchy(
-        project: Project,
-        method: PsiElement,
-        visited: MutableSet<String> = mutableSetOf(),
-    ): List<SuperMethodData> {
-        val hierarchy = mutableListOf<SuperMethodData>()
-        try {
-            val containingClass = getContainingClass(method) ?: return emptyList()
-            val methodName = getName(method) ?: return emptyList()
+    private fun buildHierarchy(project: Project, member: PsiElement): List<SuperMethodData> {
+        val invoker = processSuperMembersMethod ?: return emptyList()
+        val processorIface = hierarchyClassMemberProcessorClass ?: return emptyList()
 
-            // Superclass
-            val superClass = getSuperClass(containingClass)
-            if (superClass != null) {
-                val superClassName = QualifiedNameUtil.getQualifiedName(superClass) ?: getName(superClass)
-                val key = "$superClassName::$methodName"
-                if (visited.add(key)) {
-                    val superMethod = findMethodInClass(superClass, methodName)
-                    if (superMethod != null) {
-                        val file = superMethod.containingFile?.virtualFile
-                        hierarchy.add(SuperMethodData(
-                            name = methodName,
-                            qualifiedName = QualifiedNameUtil.getQualifiedName(superMethod),
-                            kind = LanguageServices.getKind(superMethod),
-                            file = file?.let { getRelativePath(project, it) },
-                            line = getLineNumber(project, superMethod),
-                            column = getColumnNumber(project, superMethod),
-                        ))
-                        hierarchy.addAll(buildHierarchy(project, superMethod, visited))
-                    }
+        val collected = mutableListOf<PsiElement>()
+        val visited = mutableSetOf<String>()
+
+        val handler = InvocationHandler { _, m, args ->
+            if (m.name == "process" && args != null && args.isNotEmpty()) {
+                val superMember = args[0] as? PsiElement
+                if (superMember != null) {
+                    val key = QualifiedNameUtil.getQualifiedName(superMember)
+                        ?: "${superMember.javaClass.simpleName}@${System.identityHashCode(superMember)}"
+                    if (visited.add(key)) collected.add(superMember)
                 }
+                return@InvocationHandler true  // keep processing
             }
-
-            // Interfaces
-            getImplementedInterfaces(containingClass)
-                ?.filterIsInstance<PsiElement>()
-                ?.forEach { iface ->
-                    val ifaceName = QualifiedNameUtil.getQualifiedName(iface) ?: getName(iface)
-                    val key = "$ifaceName::$methodName"
-                    if (visited.add(key)) {
-                        val ifaceMethod = findMethodInClass(iface, methodName)
-                        if (ifaceMethod != null) {
-                            val file = ifaceMethod.containingFile?.virtualFile
-                            hierarchy.add(SuperMethodData(
-                                name = methodName,
-                                qualifiedName = QualifiedNameUtil.getQualifiedName(ifaceMethod),
-                                kind = LanguageServices.getKind(ifaceMethod),
-                                file = file?.let { getRelativePath(project, it) },
-                                line = getLineNumber(project, ifaceMethod),
-                                column = getColumnNumber(project, ifaceMethod),
-                            ))
-                            hierarchy.addAll(buildHierarchy(project, ifaceMethod, visited))
-                        }
-                    }
-                }
-        } catch (e: Exception) {
-            LOG.debug("Error building PHP super-method hierarchy: ${e.message}")
+            // Default returns for the Object methods (equals/hashCode/toString) and
+            // any unexpected interface method. Defensive — the PHP plugin should
+            // only ever call `process(...)` on our processor.
+            when {
+                m.name == "equals" && args?.size == 1 -> false
+                m.name == "hashCode" -> 0
+                m.name == "toString" -> "HierarchyClassMemberProcessor\$Proxy"
+                m.returnType == java.lang.Boolean.TYPE -> true
+                m.returnType == java.lang.Void.TYPE -> null
+                else -> null
+            }
         }
-        return hierarchy
+
+        val proxy = Proxy.newProxyInstance(
+            processorIface.classLoader,
+            arrayOf(processorIface),
+            handler,
+        )
+
+        try {
+            invoker.invoke(null, member, proxy)
+        } catch (t: Throwable) {
+            LOG.debug("PhpClassHierarchyUtils.processSuperMembers invocation failed", t)
+            return emptyList()
+        }
+
+        return collected.map { superMember ->
+            val file = superMember.containingFile?.virtualFile
+            SuperMethodData(
+                name = getName(superMember) ?: "unknown",
+                qualifiedName = QualifiedNameUtil.getQualifiedName(superMember),
+                kind = LanguageServices.getKind(superMember),
+                file = file?.let { getRelativePath(project, it) },
+                line = getLineNumber(project, superMember),
+                column = getColumnNumber(project, superMember),
+            )
+        }
     }
 
-    private fun findContainingMethod(element: PsiElement): PsiElement? {
-        if (methodClass?.isInstance(element) == true) return element
-        val method = methodClass ?: return null
+    private fun findContainingMember(element: PsiElement): PsiElement? {
+        val cls = phpClassMemberClass ?: return null
+        if (cls.isInstance(element)) return element
         @Suppress("UNCHECKED_CAST")
-        return PsiTreeUtil.getParentOfType(element, method as Class<out PsiElement>)
+        return PsiTreeUtil.getParentOfType(element, cls as Class<out PsiElement>)
     }
-
-    private fun getContainingClass(method: PsiElement): PsiElement? = runCatching {
-        method.javaClass.getMethod("getContainingClass").invoke(method) as? PsiElement
-    }.getOrNull()
 
     private fun getName(element: PsiElement): String? = runCatching {
         element.javaClass.getMethod("getName").invoke(element) as? String
     }.getOrNull()
-
-    private fun getSuperClass(phpClass: PsiElement): PsiElement? = runCatching {
-        phpClass.javaClass.getMethod("getSuperClass").invoke(phpClass) as? PsiElement
-    }.getOrNull()
-
-    private fun getImplementedInterfaces(phpClass: PsiElement): Array<*>? = runCatching {
-        phpClass.javaClass.getMethod("getImplementedInterfaces").invoke(phpClass) as? Array<*>
-    }.getOrNull()
-
-    private fun findMethodInClass(phpClass: PsiElement, methodName: String): PsiElement? {
-        return try {
-            phpClass.javaClass.getMethod("findMethodByName", String::class.java)
-                .invoke(phpClass, methodName) as? PsiElement
-        } catch (_: Exception) {
-            try {
-                val methods = phpClass.javaClass.getMethod("getOwnMethods").invoke(phpClass) as? Array<*> ?: return null
-                methods.filterIsInstance<PsiElement>().find { getName(it) == methodName }
-            } catch (_: Exception) { null }
-        }
-    }
 
     private fun getRelativePath(project: Project, file: VirtualFile): String =
         ProjectUtils.getToolFilePath(project, file)
