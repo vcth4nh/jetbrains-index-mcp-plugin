@@ -7,97 +7,140 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodsData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SuperMethodsProvider
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiMethod
-import org.jetbrains.kotlin.asJava.LightClassUtil
-import org.jetbrains.kotlin.psi.KtFunction
-import org.jetbrains.kotlin.psi.KtProperty
-import org.jetbrains.kotlin.psi.KtPropertyAccessor
+import com.intellij.psi.SmartPsiElementPointer
+import com.intellij.psi.util.PsiTreeUtil
 
+/**
+ * Kotlin super-methods provider. Delegates to
+ * `org.jetbrains.kotlin.idea.codeInsight.SuperDeclarationProvider.findSuperDeclarations`
+ * — the Analysis-API-based data layer that backs both K2's GotoSuper handler
+ * and `KotlinLineMarkerProvider`'s `I↑` gutter icon. Works under both K1 and K2.
+ *
+ * Loaded reflectively to avoid a compile-time dep on the Kotlin plugin.
+ */
 class KotlinSuperMethodsProvider : SuperMethodsProvider {
 
     companion object {
-        private const val MAX_PARENT_TRAVERSAL_DEPTH = 50
-        private const val MAX_REFERENCE_SEARCH_DEPTH = 3
+        private val LOG = logger<KotlinSuperMethodsProvider>()
+
+        private const val PROVIDER_FQN = "org.jetbrains.kotlin.idea.codeInsight.SuperDeclarationProvider"
+        private const val KT_DECLARATION_FQN = "org.jetbrains.kotlin.psi.KtDeclaration"
+        private const val KT_CALLABLE_DECLARATION_FQN = "org.jetbrains.kotlin.psi.KtCallableDeclaration"
+    }
+
+    private val ktDeclarationClass: Class<*>? by lazy {
+        try { Class.forName(KT_DECLARATION_FQN) } catch (_: ClassNotFoundException) { null }
+    }
+
+    private val ktCallableDeclarationClass: Class<*>? by lazy {
+        try { Class.forName(KT_CALLABLE_DECLARATION_FQN) } catch (_: ClassNotFoundException) { null }
+    }
+
+    private val providerObject: Any? by lazy {
+        try {
+            val cls = Class.forName(PROVIDER_FQN)
+            cls.getDeclaredField("INSTANCE").get(null)
+        } catch (_: Throwable) { null }
+    }
+
+    private val findMethod: java.lang.reflect.Method? by lazy {
+        try {
+            val cls = providerObject?.javaClass ?: return@lazy null
+            val ktDecl = ktDeclarationClass ?: return@lazy null
+            cls.getMethod("findSuperDeclarations", ktDecl)
+        } catch (_: Throwable) { null }
     }
 
     override fun findSuperMethods(element: PsiElement, project: Project): SuperMethodsData? {
-        val method = resolveKotlinMethod(element) ?: return null
-        method.containingClass ?: return null
+        val declaration = resolveKtDeclaration(element) ?: return null
 
-        val file = method.containingFile?.virtualFile
+        val file = declaration.containingFile?.virtualFile
         val methodData = MethodData(
-            name = method.name,
-            qualifiedName = QualifiedNameUtil.getQualifiedName(method),
-            kind = LanguageServices.getKind(method),
+            name = (declaration as? com.intellij.psi.PsiNamedElement)?.name ?: "unknown",
+            qualifiedName = QualifiedNameUtil.getQualifiedName(declaration),
+            kind = LanguageServices.getKind(declaration),
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
-            line = getLineNumber(project, method) ?: 0,
-            column = getColumnNumber(project, method) ?: 0,
+            line = getLineNumber(project, declaration) ?: 0,
+            column = getColumnNumber(project, declaration) ?: 0,
         )
 
-        return SuperMethodsData(method = methodData, hierarchy = buildHierarchy(project, method))
+        return SuperMethodsData(method = methodData, hierarchy = buildHierarchy(project, declaration))
     }
 
-    private fun resolveKotlinMethod(element: PsiElement): PsiMethod? {
-        if (element is PsiMethod) return element
-
-        // Try reference resolution first (for method calls/references)
-        var current: PsiElement? = element
-        repeat(MAX_REFERENCE_SEARCH_DEPTH) {
-            current?.reference?.resolve()?.let { if (it is PsiMethod) return it }
-            current = current?.parent ?: return@repeat
-        }
-
-        // Walk up to a Kotlin declaration, convert to light method
-        current = element
-        var depth = 0
-        while (current != null && depth < MAX_PARENT_TRAVERSAL_DEPTH) {
-            when (val node = current) {
-                is KtFunction -> {
-                    val lightMethod = LightClassUtil.getLightClassMethod(node)
-                    if (lightMethod != null) return lightMethod
-                }
-                is KtPropertyAccessor -> {
-                    val lightMethod = LightClassUtil.getLightClassAccessorMethod(node)
-                    if (lightMethod != null) return lightMethod
-                }
-                is KtProperty -> {
-                    val accessors = LightClassUtil.getLightClassPropertyMethods(node)
-                    val lightMethod = accessors.getter ?: accessors.setter
-                    if (lightMethod != null) return lightMethod
-                }
-            }
-            current = current?.parent
-            depth++
-        }
-        return null
+    private fun resolveKtDeclaration(element: PsiElement): PsiElement? {
+        val ktCallable = ktCallableDeclarationClass ?: return null
+        if (ktCallable.isInstance(element)) return element
+        @Suppress("UNCHECKED_CAST")
+        return PsiTreeUtil.getParentOfType(element, ktCallable as Class<out PsiElement>)
     }
 
     private fun buildHierarchy(
         project: Project,
-        method: PsiMethod,
+        declaration: PsiElement,
         visited: MutableSet<String> = mutableSetOf(),
     ): List<SuperMethodData> {
+        val invoker = findMethod ?: return emptyList()
+        val instance = providerObject ?: return emptyList()
+
+        @Suppress("UNCHECKED_CAST")
+        val rawSupers: List<Any> = try {
+            invoker.invoke(instance, declaration) as? List<Any> ?: return emptyList()
+        } catch (t: Throwable) {
+            LOG.debug("SuperDeclarationProvider.findSuperDeclarations failed", t)
+            return emptyList()
+        }
+
         val out = mutableListOf<SuperMethodData>()
-        for (superMethod in method.findSuperMethods()) {
-            val key = QualifiedNameUtil.getQualifiedName(superMethod)
-                ?: "${superMethod.containingClass?.qualifiedName}.${superMethod.name}"
+        for (superDecl in rawSupers) {
+            val superPsi = extractPsiFromSuperDeclaration(superDecl) ?: continue
+            val key = QualifiedNameUtil.getQualifiedName(superPsi)
+                ?: "${superPsi.javaClass.simpleName}@${System.identityHashCode(superPsi)}"
             if (!visited.add(key)) continue
-            val file = superMethod.containingFile?.virtualFile
+
+            val file = superPsi.containingFile?.virtualFile
             out.add(SuperMethodData(
-                name = superMethod.name,
-                qualifiedName = QualifiedNameUtil.getQualifiedName(superMethod),
-                kind = LanguageServices.getKind(superMethod),
+                name = (superPsi as? com.intellij.psi.PsiNamedElement)?.name ?: "unknown",
+                qualifiedName = QualifiedNameUtil.getQualifiedName(superPsi),
+                kind = LanguageServices.getKind(superPsi),
                 file = file?.let { getRelativePath(project, it) },
-                line = getLineNumber(project, superMethod),
-                column = getColumnNumber(project, superMethod),
+                line = getLineNumber(project, superPsi),
+                column = getColumnNumber(project, superPsi),
             ))
-            out.addAll(buildHierarchy(project, superMethod, visited))
+            // Recurse to walk transitive chain (analogous to Java's findSuperMethods recursion)
+            out.addAll(buildHierarchy(project, superPsi, visited))
         }
         return out
+    }
+
+    /**
+     * Unpacks a `SuperDeclaration` sealed instance. All four variants
+     * (`Function` / `Property` / `Parameter` / `Class`) carry a
+     * `declarationPointer: SmartPsiElementPointer<*>` — extract via reflection.
+     */
+    private fun extractPsiFromSuperDeclaration(superDecl: Any): PsiElement? {
+        return try {
+            // Try common accessor names; the sealed-class pattern in Kotlin
+            // exposes one of these depending on variant.
+            for (accessor in listOf("getDeclarationPointer", "getDeclaration")) {
+                val m = runCatching { superDecl.javaClass.getMethod(accessor) }.getOrNull() ?: continue
+                val raw = m.invoke(superDecl)
+                val psi = when (raw) {
+                    is SmartPsiElementPointer<*> -> raw.element
+                    is PsiElement -> raw
+                    else -> null
+                }
+                if (psi != null) return psi
+            }
+            null
+        } catch (t: Throwable) {
+            LOG.debug("Failed to extract PSI from SuperDeclaration $superDecl", t)
+            null
+        }
     }
 
     private fun getRelativePath(project: Project, file: VirtualFile): String =
