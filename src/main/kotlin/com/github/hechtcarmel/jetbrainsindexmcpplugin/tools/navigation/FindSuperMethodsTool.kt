@@ -18,7 +18,7 @@ import kotlinx.serialization.json.JsonObject
  *
  * Supports: Java, Kotlin, Python, JavaScript, TypeScript, PHP
  *
- * Delegates to language-specific services via [LanguageServiceRegistry].
+ * Delegates to language-specific providers via the [SuperMethodsProvider] extension point.
  */
 class FindSuperMethodsTool : AbstractMcpTool() {
 

@@ -6,21 +6,6 @@ object PluginDetectors {
         pluginIds = listOf("com.intellij.java", "com.intellij.modules.java")
     )
 
-    val python = PluginDetector(
-        name = "Python",
-        pluginIds = listOf("Pythonid", "PythonCore")
-    )
-
-    val javaScript = PluginDetector(
-        name = "JavaScript",
-        pluginIds = listOf("JavaScript")
-    )
-
-    val go = PluginDetector(
-        name = "Go",
-        pluginIds = listOf("org.jetbrains.plugins.go")
-    )
-
     val php = PluginDetector(
         name = "PHP",
         pluginIds = listOf("com.jetbrains.php")

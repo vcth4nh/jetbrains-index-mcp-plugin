@@ -1,6 +1,5 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools
 
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServices
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.McpServerService
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolDefinition
@@ -185,9 +184,6 @@ class ToolRegistry {
      * - Refactoring tools are only registered when the Java plugin is available
      */
     fun registerBuiltInTools() {
-        // Initialize language services first
-        LanguageServiceRegistry.registerServices()
-
         // Universal tools - work in all JetBrains IDEs
         registerUniversalTools()
 

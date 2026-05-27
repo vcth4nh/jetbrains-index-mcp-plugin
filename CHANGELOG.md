@@ -4,6 +4,15 @@
 
 ## [Unreleased]
 
+### Added
+- `ide_find_super_methods` now supports Go — returns the interface method(s) a struct method satisfies (dispatches via the Go plugin's `GoSuperMethodSearch.GO_SUPER_METHOD_SEARCH`, mirroring GoLand's own Ctrl+U handler). The tool is registered in GoLand for the first time.
+
+### Changed
+- Internal: replaced the custom `LanguageHandler` / `LanguageServiceRegistry` reflective registry with IntelliJ's `LanguageExtension` extension-point mechanism. Per-language kind resolvers and super-methods providers are now declared in `*-features.xml` files, registered against two custom EPs (`languageKindResolver`, `superMethodsProvider`). Closes audit item P3-1.
+
+### Removed
+- `LanguageService` abstract base class, `LanguageServiceRegistry` reflective loader, 7 per-language `*LanguageService` subclasses, dead `PluginDetectors` entries (`python`, `javaScript`, `go`).
+
 ### Breaking
 - **Unified output-format overhaul across all 8 navigation tools** — `ide_find_usages`, `ide_find_definition`, `ide_find_class`, `ide_find_symbol`, `ide_find_implementations`, `ide_find_super_methods`, `ide_type_hierarchy`, `ide_call_hierarchy`. Per-item wire fields are now consistent across every tool. Clients parsing these responses must update. Closes #15, #13, #10, #9.
   - **Renamed:** `type` → `usageType` (find_usages); `astPath` → `enclosingScope` (find_usages, find_definition); `symbolName` → `name` (find_definition).
