@@ -15,7 +15,7 @@
   - **PHP:** now uses `PhpClassHierarchyUtils.processSuperMembers` — surfaces trait sources, `insteadof` conflict resolution, `@mixin`, and constant overrides that the previous walker missed.
   - **JavaScript/TypeScript:** now uses `JSInheritanceUtil.findNearestOverriddenMembers` + `findImplementedMembers` fallback.
   - **Java:** drops bespoke reference-resolution helper (the tool layer already resolves at-position). Otherwise unchanged — already used `PsiMethod.findSuperMethods()`.
-  - **Go:** unchanged (P3-1 already optimal).
+  - **Go:** added visited-set dedup inside the `Processor<Any>` callback (keyed by `qname@file:line`) so multi-inheritance-path interface methods that fire through the processor multiple times collapse to a single entry — matches the sibling providers' dedup pattern.
 - Internal: replaced the custom `LanguageHandler` / `LanguageServiceRegistry` reflective registry with IntelliJ's `LanguageExtension` extension-point mechanism. Per-language kind resolvers and super-methods providers are now declared in `*-features.xml` files, registered against two custom EPs (`languageKindResolver`, `superMethodsProvider`). Closes audit item P3-1.
 
 ### Removed

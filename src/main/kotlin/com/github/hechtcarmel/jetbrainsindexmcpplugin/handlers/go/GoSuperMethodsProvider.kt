@@ -64,9 +64,19 @@ class GoSuperMethodsProvider : SuperMethodsProvider {
         // Call processQuery via the Object overload which accepts raw types.
         // GoSuperMethodSearch extends QueryExecutorBase<GoNamedSignatureOwner, SearchParameters>
         // and returns GoMethodSpec instances (interface method specs satisfied by this struct method).
+        // Dedup: when a struct embeds an interface via multiple inheritance paths
+        // (e.g. ChainBase embedded by Mid1, Mid2, and Leaf), the same interface method
+        // declaration fires through the processor multiple times. Collapse on
+        // (qname or identityHashCode) + file:line, matching the sibling providers.
+        val visited = mutableSetOf<String>()
         val processor = Processor<Any> { result ->
             if (result is PsiElement) {
-                results.add(result)
+                val qname = QualifiedNameUtil.getQualifiedName(result)
+                    ?: "${result.javaClass.simpleName}@${System.identityHashCode(result)}"
+                val file = result.containingFile?.virtualFile?.let { getRelativePath(project, it) } ?: "?"
+                val line = getLineNumber(project, result)?.toString() ?: "?"
+                val key = "$qname@$file:$line"
+                if (visited.add(key)) results.add(result)
             }
             true
         }
