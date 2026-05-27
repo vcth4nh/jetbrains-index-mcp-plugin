@@ -14,14 +14,19 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
 
+/**
+ * Java super-methods provider. Delegates to the platform-public
+ * [PsiMethod.findSuperMethods] (same API the IDE's `JavaGotoSuperHandler`
+ * uses via `FindSuperElementsHelper.findSuperElements`). Recursion walks
+ * the transitive chain because `findSuperMethods` returns only direct
+ * overrides.
+ */
 class JavaSuperMethodsProvider : SuperMethodsProvider {
 
-    companion object {
-        private const val MAX_REFERENCE_SEARCH_DEPTH = 3
-    }
-
     override fun findSuperMethods(element: PsiElement, project: Project): SuperMethodsData? {
-        val method = resolveMethod(element) ?: return null
+        val method = (element as? PsiMethod)
+            ?: PsiTreeUtil.getParentOfType(element, PsiMethod::class.java)
+            ?: return null
         method.containingClass ?: return null
 
         val file = method.containingFile?.virtualFile
@@ -35,22 +40,6 @@ class JavaSuperMethodsProvider : SuperMethodsProvider {
         )
 
         return SuperMethodsData(method = methodData, hierarchy = buildHierarchy(project, method))
-    }
-
-    private fun resolveMethod(element: PsiElement): PsiMethod? {
-        if (element is PsiMethod) return element
-        resolveReference(element)?.let { if (it is PsiMethod) return it }
-        return PsiTreeUtil.getParentOfType(element, PsiMethod::class.java)
-    }
-
-    private fun resolveReference(element: PsiElement): PsiElement? {
-        element.reference?.resolve()?.let { return it }
-        var current: PsiElement? = element
-        repeat(MAX_REFERENCE_SEARCH_DEPTH) {
-            current = current?.parent ?: return null
-            current?.reference?.resolve()?.let { return it }
-        }
-        return null
     }
 
     private fun buildHierarchy(

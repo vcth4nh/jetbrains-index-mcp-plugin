@@ -83,7 +83,6 @@
 {"id":"super-DiamondBottom.pick", "tool":"ide_find_super_methods",   "params":{"file":"src/main/java/demo/MultiSuper.java","line":67,"column":19}}
 {"id":"super-LoudGreeter.greet",  "tool":"ide_find_super_methods",   "params":{"file":"src/main/java/demo/MultiSuper.java","line":90,"column":19}}
 {"id":"super-SealedSquare.sides", "tool":"ide_find_super_methods",   "params":{"file":"src/main/java/demo/MultiSuper.java","line":109,"column":16}}
-{"id":"super-LabelPoint.label",   "tool":"ide_find_super_methods",   "params":{"file":"src/main/java/demo/MultiSuper.java","line":133,"column":26}}
 {"id":"super-Op.ADD.apply",       "tool":"ide_find_super_methods",   "params":{"file":"src/main/java/demo/MultiSuper.java","line":147,"column":20}}
 {"id":"super-AnonHost-anon.run",  "tool":"ide_find_super_methods",   "params":{"file":"src/main/java/demo/MultiSuper.java","line":166,"column":25}}
 {"id":"file-structure-Modern","tool":"ide_file_structure","params":{"file":"src/main/java/demo/Modern.java"}}
