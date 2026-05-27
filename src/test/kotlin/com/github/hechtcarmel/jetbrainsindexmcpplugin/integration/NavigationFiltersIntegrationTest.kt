@@ -1,6 +1,5 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.integration
 
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ContentBlock
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.CallHierarchyResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.FindClassResult
@@ -39,19 +38,6 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
     private val json = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
-    }
-
-    override fun setUp() {
-        super.setUp()
-        LanguageServiceRegistry.registerServices()
-    }
-
-    override fun tearDown() {
-        try {
-            LanguageServiceRegistry.clear()
-        } finally {
-            super.tearDown()
-        }
     }
 
     fun testTypeHierarchyRespectsProjectProductionFilesScope() = runBlocking {

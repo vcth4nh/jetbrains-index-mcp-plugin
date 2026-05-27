@@ -19,7 +19,6 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.refactoring.SafeDele
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.SchemaConstants
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScopeResolver
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServiceRegistry
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -36,19 +35,6 @@ import kotlinx.serialization.json.put
  * For schema and registration tests that don't need the platform, see ToolsUnitTest.
  */
 class ToolsTest : BasePlatformTestCase() {
-
-    override fun setUp() {
-        super.setUp()
-        LanguageServiceRegistry.registerServices()
-    }
-
-    override fun tearDown() {
-        try {
-            LanguageServiceRegistry.clear()
-        } finally {
-            super.tearDown()
-        }
-    }
 
     private fun errorText(result: com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult): String =
         (result.content.first() as ContentBlock.Text).text
