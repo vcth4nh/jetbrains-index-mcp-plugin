@@ -38,7 +38,7 @@ These tools activate based on available language plugins:
 | `ide_type_hierarchy` | Get type inheritance hierarchy | Java, Kotlin, Python, JS/TS, Go, PHP, Rust |
 | `ide_call_hierarchy` | Analyze method call relationships | Java, Kotlin, Python, JS/TS, Go, PHP, Rust |
 | `ide_find_implementations` | Find interface implementations | Java, Kotlin, Python, JS/TS, PHP, Rust |
-| `ide_find_super_methods` | Find overridden methods | Java, Kotlin, Python, JS/TS, PHP |
+| `ide_find_super_methods` | Find overridden methods | Java, Kotlin, Python, JS/TS, PHP, Go, Rust |
 | `ide_file_structure` | Hierarchical file structure *(disabled by default)* | Java, Kotlin, Python, JS/TS, Markdown |
 
 ### Java-Specific Refactoring Tools
@@ -1494,7 +1494,7 @@ Finds all concrete implementations of an interface, abstract class, or abstract 
 
 Finds the complete inheritance hierarchy for a method - all parent methods it overrides or implements.
 
-**Languages:** Java, Kotlin, Python, JS/TS, PHP (not Go or Rust — they use composition/traits instead of classical inheritance).
+**Languages:** Java, Kotlin, Python, JS/TS, PHP, Go (returns interface method(s) a struct method satisfies via `GoSuperMethodSearch`), Rust (returns trait fn/const/type alias the impl satisfies via `RsGotoSuperHandlerKt.gotoSuperTargets`).
 
 **Use when:**
 - Finding which interface method an implementation overrides
