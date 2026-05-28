@@ -240,3 +240,10 @@ will just snapshot a different empty/odd result.
   with its origin file), not just the queried file's. Adding any `.go` fixture
   to the package changes these snapshots — re-bless them when you add Go
   fixtures (this is why they drift after `multisuper.go` / `*_super.go` land).
+- **Rust `super-Inherent.foo-inherent`**: empty hierarchy — *correct*. An
+  inherent `impl` method (no trait) has no super. Don't be misled by RustRover's
+  raw Ctrl+U "Go to Super", which jumps to the enclosing `pub mod` declaration
+  (module-super noise); `RustSuperMethodsProvider` filters `gotoSuperTargets` to
+  `RsAbstractable` (see its source) and so returns empty, mirroring the gutter
+  "I↑" marker (absent on inherent methods), not raw Ctrl+U. Unlike Go's negative
+  case (#25), Rust returns the correct empty hierarchy here, not an error.

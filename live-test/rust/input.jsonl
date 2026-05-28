@@ -66,3 +66,9 @@
 {"id":"super-MyStruct.m",               "tool":"ide_find_super_methods",  "params":{"file":"src/multisuper.rs","line":8,"column":8}}
 {"id":"super-MyStruct.KIND",            "tool":"ide_find_super_methods",  "params":{"file":"src/multisuper.rs","line":22,"column":11}}
 {"id":"super-MyStruct.Output",          "tool":"ide_find_super_methods",  "params":{"file":"src/multisuper.rs","line":26,"column":10}}
+{"id":"super-Inherent.foo-inherent",    "tool":"ide_find_super_methods",  "params":{"file":"src/negative_super.rs","line":5,"column":12}}
+{"id":"super-SubImpl.method-supertrait","tool":"ide_find_super_methods",  "params":{"file":"src/supertrait_super.rs","line":15,"column":8}}
+{"id":"super-SingleImpl.child-single-supertrait","tool":"ide_find_super_methods","params":{"file":"src/supertrait_super.rs","line":34,"column":8}}
+{"id":"super-Overrider.compute-default-override","tool":"ide_find_super_methods","params":{"file":"src/default_super.rs","line":11,"column":8}}
+{"id":"super-Computable.compute-trait-default","tool":"ide_find_super_methods","params":{"file":"src/default_super.rs","line":3,"column":8}}
+{"id":"super-IntStore.get-generic",     "tool":"ide_find_super_methods",  "params":{"file":"src/generic_super.rs","line":9,"column":8}}
