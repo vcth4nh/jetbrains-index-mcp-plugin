@@ -12,7 +12,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
-import com.intellij.psi.util.PsiTreeUtil
 
 /**
  * JavaScript/TypeScript super-methods provider. Delegates to
@@ -30,6 +29,10 @@ class JavaScriptSuperMethodsProvider : SuperMethodsProvider {
 
     private val jsFunctionClass: Class<*>? by lazy {
         try { Class.forName("com.intellij.lang.javascript.psi.JSFunction") } catch (_: ClassNotFoundException) { null }
+    }
+
+    private val jsFieldClass: Class<*>? by lazy {
+        try { Class.forName("com.intellij.lang.javascript.psi.JSField") } catch (_: ClassNotFoundException) { null }
     }
 
     private val jsPsiElementBaseClass: Class<*>? by lazy {
@@ -59,26 +62,30 @@ class JavaScriptSuperMethodsProvider : SuperMethodsProvider {
     }
 
     override fun findSuperMethods(element: PsiElement, project: Project): SuperMethodsData? {
-        val jsFunction = findContainingJSFunction(element) ?: return null
+        val (member, isField) = findContainingMember(element) ?: return null
 
-        val file = jsFunction.containingFile?.virtualFile
+        val file = member.containingFile?.virtualFile
         val methodData = MethodData(
-            name = getName(jsFunction) ?: "unknown",
-            qualifiedName = QualifiedNameUtil.getQualifiedName(jsFunction),
-            kind = LanguageServices.getKind(jsFunction),
+            name = getName(member) ?: "unknown",
+            qualifiedName = QualifiedNameUtil.getQualifiedName(member),
+            kind = LanguageServices.getKind(member),
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
-            line = getLineNumber(project, jsFunction) ?: 0,
-            column = getColumnNumber(project, jsFunction) ?: 0,
+            line = getLineNumber(project, member) ?: 0,
+            column = getColumnNumber(project, member) ?: 0,
         )
 
-        return SuperMethodsData(method = methodData, hierarchy = buildHierarchy(project, jsFunction))
+        return SuperMethodsData(method = methodData, hierarchy = buildHierarchy(project, member, isField = isField))
     }
 
-    private fun buildHierarchy(project: Project, jsFunction: PsiElement): List<SuperMethodData> {
-        val overridden = invokeFindNearestOverridden(jsFunction)
+    private fun buildHierarchy(
+        project: Project,
+        jsFunction: PsiElement,
+        visited: MutableSet<String> = mutableSetOf(),
+        isField: Boolean = false,
+    ): List<SuperMethodData> {
+        val overridden = invokeFindNearestOverridden(jsFunction, onlyFunctions = !isField)
         val results = if (overridden.isNotEmpty()) overridden else invokeFindImplemented(jsFunction)
 
-        val visited = mutableSetOf<String>()
         val out = mutableListOf<SuperMethodData>()
         for (superMember in results) {
             val key = QualifiedNameUtil.getQualifiedName(superMember)
@@ -93,15 +100,18 @@ class JavaScriptSuperMethodsProvider : SuperMethodsProvider {
                 line = getLineNumber(project, superMember),
                 column = getColumnNumber(project, superMember),
             ))
+            // Walk the full transitive chain — matches the Java/Kotlin providers and
+            // WebStorm's gutter (JSInheritanceUtil.iterateOverriddenMembersUp recursive=true).
+            out.addAll(buildHierarchy(project, superMember, visited, isField = jsFieldClass?.isInstance(superMember) == true))
         }
         return out
     }
 
-    private fun invokeFindNearestOverridden(jsFunction: PsiElement): List<PsiElement> {
+    private fun invokeFindNearestOverridden(jsFunction: PsiElement, onlyFunctions: Boolean): List<PsiElement> {
         val m = findNearestOverriddenMethod ?: return emptyList()
         return try {
             @Suppress("UNCHECKED_CAST")
-            (m.invoke(null, jsFunction, true) as? Collection<PsiElement>)?.toList() ?: emptyList()
+            (m.invoke(null, jsFunction, onlyFunctions) as? Collection<PsiElement>)?.toList() ?: emptyList()
         } catch (t: Throwable) {
             LOG.debug("JSInheritanceUtil.findNearestOverriddenMembers invocation failed", t)
             emptyList()
@@ -121,11 +131,21 @@ class JavaScriptSuperMethodsProvider : SuperMethodsProvider {
         }
     }
 
-    private fun findContainingJSFunction(element: PsiElement): PsiElement? {
-        val cls = jsFunctionClass ?: return null
-        if (cls.isInstance(element)) return element
-        @Suppress("UNCHECKED_CAST")
-        return PsiTreeUtil.getParentOfType(element, cls as Class<out PsiElement>)
+    /** Returns the nearest enclosing JS function or field, plus a flag indicating if it is a field. */
+    private fun findContainingMember(element: PsiElement): Pair<PsiElement, Boolean>? {
+        val fnCls = jsFunctionClass
+        val fieldCls = jsFieldClass
+        // Check the element itself first
+        if (fnCls != null && fnCls.isInstance(element)) return Pair(element, false)
+        if (fieldCls != null && fieldCls.isInstance(element)) return Pair(element, true)
+        // Walk up to the nearest enclosing function or field
+        var current = element.parent
+        while (current != null) {
+            if (fnCls != null && fnCls.isInstance(current)) return Pair(current, false)
+            if (fieldCls != null && fieldCls.isInstance(current)) return Pair(current, true)
+            current = current.parent
+        }
+        return null
     }
 
     private fun getName(element: PsiElement): String? = runCatching {
