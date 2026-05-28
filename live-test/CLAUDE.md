@@ -219,3 +219,12 @@ will just snapshot a different empty/odd result.
   statically resolve the super — confirmed the gutter shows nothing either.
   This is expected ground truth (not a tool gap), unlike the immediate-only
   case above.
+- **TS `super-ConstChild.KIND-const`**: `tool_error_text: "No method found at
+  position"`. The position is a `static readonly` field; the tool's method-only
+  gate (`PsiUtils.resolveTargetElement`) rejects it. This *diverges* from the
+  IDE — the field shows an "overrides" gutter icon and Ctrl+U navigates to
+  `ConstBase.KIND` — and from PHP/Rust/Kotlin, which surface const/property
+  supers via this tool. Tracked in vcth4nh/jetbrains-index-mcp-plugin#24; when
+  fixed the probe will return `ConstBase.KIND` and diff — re-bless then.
+  (Note: TS *static methods* DO resolve — see `super-Child.factory-static` →
+  `StaticBase.factory`; only fields/consts are rejected.)

@@ -72,3 +72,9 @@
 {"id":"super-OptImpl.opt","tool":"ide_find_super_methods","params":{"file":"src/multisuper.ts","line":68,"column":5}}
 {"id":"super-AccessorImpl.value","tool":"ide_find_super_methods","params":{"file":"src/multisuper.ts","line":81,"column":9}}
 {"id":"super-Runner.run","tool":"ide_find_super_methods","params":{"file":"src/multisuper.ts","line":117,"column":5}}
+{"id":"super-Standalone.compute-negative","tool":"ide_find_super_methods","params":{"file":"src/negative_super.ts","line":2,"column":5}}
+{"id":"super-WithSetter.value-setter","tool":"ide_find_super_methods","params":{"file":"src/setter_super.ts","line":7,"column":9}}
+{"id":"super-Child.factory-static","tool":"ide_find_super_methods","params":{"file":"src/static_super.ts","line":6,"column":12}}
+{"id":"super-ConstChild.KIND-const","tool":"ide_find_super_methods","params":{"file":"src/const_super.ts","line":6,"column":21}}
+{"id":"super-AsyncImpl.fetch-async","tool":"ide_find_super_methods","params":{"file":"src/async_super.ts","line":6,"column":11}}
+{"id":"super-Repo.find-generic","tool":"ide_find_super_methods","params":{"file":"src/generic_super.ts","line":6,"column":5}}
