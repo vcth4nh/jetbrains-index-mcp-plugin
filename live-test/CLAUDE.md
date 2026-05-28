@@ -228,3 +228,15 @@ will just snapshot a different empty/odd result.
   fixed the probe will return `ConstBase.KIND` and diff — re-bless then.
   (Note: TS *static methods* DO resolve — see `super-Child.factory-static` →
   `StaticBase.factory`; only fields/consts are rejected.)
+- **Go `super-Standalone.Compute-negative`**: `tool_error_text: "No method
+  found at position"`. A Go method that satisfies no interface returns an
+  error, whereas Java/Python/Kotlin return an empty hierarchy (method found,
+  no super) for the same negative case. Verified in GoLand: the method has no
+  gutter icon and Ctrl+U no-ops — it's a valid method with no super, so the
+  error message is misleading. Tracked in vcth4nh/jetbrains-index-mcp-plugin#25;
+  when fixed it returns an empty hierarchy — re-bless then.
+- **Go `file_structure` is package-scoped**: `file-structure-Normal` /
+  `file-structure-Quirks` list *every* type in package `main` (each tagged
+  with its origin file), not just the queried file's. Adding any `.go` fixture
+  to the package changes these snapshots — re-bless them when you add Go
+  fixtures (this is why they drift after `multisuper.go` / `*_super.go` land).
