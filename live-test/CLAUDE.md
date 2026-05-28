@@ -206,3 +206,16 @@ will just snapshot a different empty/odd result.
   known gap in vcth4nh/jetbrains-index-mcp-plugin#22. When that's fixed the
   probe will start returning `Runnable#run` and surface as a diff —
   re-bless to the correct output then (don't "fix" the probe before #22).
+- **JS/TS return only the immediate super, not the full chain**: e.g.
+  `super-LeafMix.greet-3level` (JS) and `super-DeepLeaf.m` (TS) return one
+  super, while the Java/Kotlin/Python analogs return the full transitive
+  chain. The JS/TS provider uses `JSInheritanceUtil.findNearestOverriddenMembers`
+  (nearest only). The IDE's gutter "overrides" icon / Method Hierarchy shows
+  the full chain (Ctrl+U only walks one level). Tracked as a known gap in
+  vcth4nh/jetbrains-index-mcp-plugin#23 — when fixed, these probes will gain
+  the transitive supers and surface as diffs; re-bless then.
+- **JS `super-WithMixin.shout-mixin`**: empty hierarchy. `WithMixin` extends
+  a dynamically-constructed mixin class (`Amplifier(Plain)`); the IDE cannot
+  statically resolve the super — confirmed the gutter shows nothing either.
+  This is expected ground truth (not a tool gap), unlike the immediate-only
+  case above.
