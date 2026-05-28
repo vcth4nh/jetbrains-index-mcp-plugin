@@ -6,7 +6,7 @@ class StaticBase {
     }
 }
 
-class StaticChild extends StaticBase {
+class StaticDerived extends StaticBase {
     static String factory() {
         return "child";
     }
