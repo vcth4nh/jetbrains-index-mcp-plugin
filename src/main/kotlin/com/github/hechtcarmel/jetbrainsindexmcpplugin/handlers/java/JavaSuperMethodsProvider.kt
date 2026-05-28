@@ -9,9 +9,14 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.QualifiedNameUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.psi.LambdaUtil
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFunctionalExpression
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiNamedElement
+import com.intellij.psi.impl.FindSuperElementsHelper
 import com.intellij.psi.util.PsiTreeUtil
 
 /**
@@ -24,22 +29,57 @@ import com.intellij.psi.util.PsiTreeUtil
 class JavaSuperMethodsProvider : SuperMethodsProvider {
 
     override fun findSuperMethods(element: PsiElement, project: Project): SuperMethodsData? {
-        val method = (element as? PsiMethod)
-            ?: PsiTreeUtil.getParentOfType(element, PsiMethod::class.java)
+        // Lambda / method-reference: resolve the SAM it implements (mirrors JavaGotoSuperHandler).
+        val functionalExpr = element as? PsiFunctionalExpression
+            ?: PsiTreeUtil.getParentOfType(element, PsiFunctionalExpression::class.java, false, PsiMethod::class.java)
+        if (functionalExpr != null) {
+            val sam = LambdaUtil.getFunctionalInterfaceMethod(functionalExpr)
+            if (sam != null) {
+                return SuperMethodsData(method = toMethodData(project, sam), hierarchy = buildHierarchy(project, sam))
+            }
+        }
+
+        // Nearest method or class, mirroring FindSuperElementsHelper's two branches.
+        val member = PsiTreeUtil.getNonStrictParentOfType(element, PsiMethod::class.java, PsiClass::class.java)
             ?: return null
-        method.containingClass ?: return null
+        return when (member) {
+            is PsiMethod -> {
+                member.containingClass ?: return null
+                SuperMethodsData(method = toMethodData(project, member), hierarchy = buildHierarchy(project, member))
+            }
+            is PsiClass -> {
+                // Direct supertypes only (FindSuperElementsHelper returns getSupers() minus Object).
+                val supers = FindSuperElementsHelper.findSuperElements(member)
+                    .filterIsInstance<PsiClass>()
+                SuperMethodsData(
+                    method = toMethodData(project, member),
+                    hierarchy = supers.map { superClass ->
+                        SuperMethodData(
+                            name = superClass.name ?: "unknown",
+                            qualifiedName = QualifiedNameUtil.getQualifiedName(superClass),
+                            kind = LanguageServices.getKind(superClass),
+                            file = superClass.containingFile?.virtualFile?.let { getRelativePath(project, it) },
+                            line = getLineNumber(project, superClass),
+                            column = getColumnNumber(project, superClass),
+                        )
+                    },
+                )
+            }
+            else -> null
+        }
+    }
 
-        val file = method.containingFile?.virtualFile
-        val methodData = MethodData(
-            name = method.name,
-            qualifiedName = QualifiedNameUtil.getQualifiedName(method),
-            kind = LanguageServices.getKind(method),
+    private fun toMethodData(project: Project, element: PsiElement): MethodData {
+        val named = element as? PsiNamedElement
+        val file = element.containingFile?.virtualFile
+        return MethodData(
+            name = named?.name ?: "unknown",
+            qualifiedName = QualifiedNameUtil.getQualifiedName(element),
+            kind = LanguageServices.getKind(element),
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
-            line = getLineNumber(project, method) ?: 0,
-            column = getColumnNumber(project, method) ?: 0,
+            line = getLineNumber(project, element) ?: 0,
+            column = getColumnNumber(project, element) ?: 0,
         )
-
-        return SuperMethodsData(method = methodData, hierarchy = buildHierarchy(project, method))
     }
 
     private fun buildHierarchy(

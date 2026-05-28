@@ -9,7 +9,6 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.MethodInfo
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.SuperMethodInfo
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.SuperMethodsResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PsiUtils
 import com.intellij.openapi.project.Project
 import kotlinx.serialization.json.JsonObject
 
@@ -48,18 +47,13 @@ class FindSuperMethodsTool : AbstractMcpTool() {
                 return@suspendingReadAction createErrorResult(it.message ?: ErrorMessages.COULD_NOT_RESOLVE_SYMBOL)
             }
 
-            // Tool-layer gate: reject position-based invocations where the caret is not on a
-            // resolvable target. See CallHierarchyTool for rationale.
-            if (PsiUtils.resolveTargetElement(element) == null) {
-                return@suspendingReadAction createErrorResult(
-                    "No method found at position. Ensure the position is within a method declaration or body."
-                )
-            }
-
+            // Anchor resolution is delegated entirely to the language provider: it returns null
+            // only when the caret is not on a super-navigable element (method, class, field/const,
+            // or lambda), and an empty hierarchy when the element is valid but has no super.
             val superMethodsData = LanguageServices.findSuperMethods(element, project)
             if (superMethodsData == null) {
                 return@suspendingReadAction createErrorResult(
-                    "No method found at position. Ensure the position is within a method declaration or body."
+                    "No super-navigable element at position. Place the caret on a method, class, field/const, or lambda."
                 )
             }
 
