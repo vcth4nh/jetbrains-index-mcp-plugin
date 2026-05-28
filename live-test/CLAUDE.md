@@ -199,3 +199,10 @@ will just snapshot a different empty/odd result.
   response.
 - **PyCharm / WebStorm stdlib paths**: similar — `Number.parseInt` →
   `${WEBSTORM_JS_STUBS}/...`; Python `int` → `${PYCHARM_TYPESHED}/...`.
+- **Java `super-LambdaHost-lambda.run-sam`**: `tool_error_text: "No method
+  found at position"`. Caret is on a lambda's `->`; a lambda has no
+  `PsiMethod`, so `ide_find_super_methods` bails. This *diverges* from the
+  IDE — Ctrl+U on the lambda navigates to `Runnable#run`. Tracked as a
+  known gap in vcth4nh/jetbrains-index-mcp-plugin#22. When that's fixed the
+  probe will start returning `Runnable#run` and surface as a diff —
+  re-bless to the correct output then (don't "fix" the probe before #22).
