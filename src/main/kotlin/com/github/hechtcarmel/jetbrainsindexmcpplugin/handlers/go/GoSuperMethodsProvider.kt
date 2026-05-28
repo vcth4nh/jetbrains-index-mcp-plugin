@@ -82,8 +82,8 @@ class GoSuperMethodsProvider : SuperMethodsProvider {
         }
         runCatching { method.invoke(search, params, processor) }
 
-        if (results.isEmpty()) return null
-
+        // A resolved Go method that satisfies no interface is a valid result with an
+        // empty hierarchy (mirrors Java/Kotlin/Python), not "no method found".
         val file = goMethod.containingFile?.virtualFile
         val methodData = MethodData(
             name = getName(goMethod) ?: "unknown",
