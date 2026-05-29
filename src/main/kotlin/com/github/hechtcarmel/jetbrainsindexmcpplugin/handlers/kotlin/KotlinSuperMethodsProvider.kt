@@ -31,6 +31,7 @@ class KotlinSuperMethodsProvider : SuperMethodsProvider {
         private const val PROVIDER_FQN = "org.jetbrains.kotlin.idea.codeInsight.SuperDeclarationProvider"
         private const val KT_DECLARATION_FQN = "org.jetbrains.kotlin.psi.KtDeclaration"
         private const val KT_CALLABLE_DECLARATION_FQN = "org.jetbrains.kotlin.psi.KtCallableDeclaration"
+        private const val KT_CLASS_OR_OBJECT_FQN = "org.jetbrains.kotlin.psi.KtClassOrObject"
     }
 
     private val ktDeclarationClass: Class<*>? by lazy {
@@ -39,6 +40,10 @@ class KotlinSuperMethodsProvider : SuperMethodsProvider {
 
     private val ktCallableDeclarationClass: Class<*>? by lazy {
         try { Class.forName(KT_CALLABLE_DECLARATION_FQN) } catch (_: ClassNotFoundException) { null }
+    }
+
+    private val ktClassOrObjectClass: Class<*>? by lazy {
+        try { Class.forName(KT_CLASS_OR_OBJECT_FQN) } catch (_: ClassNotFoundException) { null }
     }
 
     private val providerObject: Any? by lazy {
@@ -58,6 +63,7 @@ class KotlinSuperMethodsProvider : SuperMethodsProvider {
 
     override fun findSuperMethods(element: PsiElement, project: Project): SuperMethodsData? {
         val declaration = resolveKtDeclaration(element) ?: return null
+        val isClass = ktClassOrObjectClass?.isInstance(declaration) == true
 
         val file = declaration.containingFile?.virtualFile
         val methodData = MethodData(
@@ -69,20 +75,34 @@ class KotlinSuperMethodsProvider : SuperMethodsProvider {
             column = getColumnNumber(project, declaration) ?: 0,
         )
 
-        return SuperMethodsData(method = methodData, hierarchy = buildHierarchy(project, declaration))
+        return SuperMethodsData(method = methodData, hierarchy = buildHierarchy(project, declaration, recurse = !isClass))
     }
 
     private fun resolveKtDeclaration(element: PsiElement): PsiElement? {
+        val ktClassOrObject = ktClassOrObjectClass
+        if (ktClassOrObject != null && ktClassOrObject.isInstance(element)) return element
         val ktCallable = ktCallableDeclarationClass ?: return null
         if (ktCallable.isInstance(element)) return element
+        // Walk up: prefer KtClassOrObject first (class-level anchor), then KtCallableDeclaration
         @Suppress("UNCHECKED_CAST")
-        return PsiTreeUtil.getParentOfType(element, ktCallable as Class<out PsiElement>)
+        val nearestCallable = PsiTreeUtil.getParentOfType(element, ktCallable as Class<out PsiElement>)
+        if (ktClassOrObject != null) {
+            @Suppress("UNCHECKED_CAST")
+            val nearestClass = PsiTreeUtil.getParentOfType(element, ktClassOrObject as Class<out PsiElement>)
+            if (nearestClass != null && nearestCallable != null) {
+                // Return whichever is the closer ancestor (smaller depth from element)
+                return if (PsiTreeUtil.isAncestor(nearestCallable, nearestClass, false)) nearestClass else nearestCallable
+            }
+            if (nearestClass != null) return nearestClass
+        }
+        return nearestCallable
     }
 
     private fun buildHierarchy(
         project: Project,
         declaration: PsiElement,
         visited: MutableSet<String> = mutableSetOf(),
+        recurse: Boolean = true,
     ): List<SuperMethodData> {
         val invoker = findMethod ?: return emptyList()
         val instance = providerObject ?: return emptyList()
@@ -111,8 +131,9 @@ class KotlinSuperMethodsProvider : SuperMethodsProvider {
                 line = getLineNumber(project, superPsi),
                 column = getColumnNumber(project, superPsi),
             ))
-            // Recurse to walk transitive chain (analogous to Java's findSuperMethods recursion)
-            out.addAll(buildHierarchy(project, superPsi, visited))
+            // Recurse to walk transitive chain (analogous to Java's findSuperMethods recursion).
+            // Disabled for class anchors — direct supertypes only (one level up).
+            if (recurse) out.addAll(buildHierarchy(project, superPsi, visited))
         }
         return out
     }

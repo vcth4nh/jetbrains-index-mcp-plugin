@@ -45,6 +45,10 @@ class PhpSuperMethodsProvider : SuperMethodsProvider {
         try { Class.forName("com.jetbrains.php.lang.psi.elements.PhpClassMember") } catch (_: ClassNotFoundException) { null }
     }
 
+    private val phpClassClass: Class<*>? by lazy {
+        try { Class.forName("com.jetbrains.php.lang.psi.elements.PhpClass") } catch (_: ClassNotFoundException) { null }
+    }
+
     private val hierarchyUtilsClass: Class<*>? by lazy {
         try { Class.forName("com.jetbrains.php.PhpClassHierarchyUtils") } catch (_: ClassNotFoundException) { null }
     }
@@ -62,20 +66,42 @@ class PhpSuperMethodsProvider : SuperMethodsProvider {
         } catch (_: Throwable) { null }
     }
 
+    private val getImmediateParentsMethod: java.lang.reflect.Method? by lazy {
+        try {
+            val util = hierarchyUtilsClass ?: return@lazy null
+            val phpClass = phpClassClass ?: return@lazy null
+            util.getMethod("getImmediateParents", phpClass)
+        } catch (_: Throwable) { null }
+    }
+
     override fun findSuperMethods(element: PsiElement, project: Project): SuperMethodsData? {
-        val member = findContainingMember(element) ?: return null
+        // Member anchor: existing full-chain behavior (unchanged)
+        val member = findContainingMember(element)
+        if (member != null) {
+            val file = member.containingFile?.virtualFile
+            val methodData = MethodData(
+                name = getName(member) ?: "unknown",
+                qualifiedName = QualifiedNameUtil.getQualifiedName(member),
+                kind = LanguageServices.getKind(member),
+                file = file?.let { getRelativePath(project, it) } ?: "unknown",
+                line = getLineNumber(project, member) ?: 0,
+                column = getColumnNumber(project, member) ?: 0,
+            )
+            return SuperMethodsData(method = methodData, hierarchy = buildHierarchy(project, member))
+        }
 
-        val file = member.containingFile?.virtualFile
-        val methodData = MethodData(
-            name = getName(member) ?: "unknown",
-            qualifiedName = QualifiedNameUtil.getQualifiedName(member),
-            kind = LanguageServices.getKind(member),
+        // Class anchor: direct supertypes only (one level up)
+        val phpClass = findContainingPhpClass(element) ?: return null
+        val file = phpClass.containingFile?.virtualFile
+        val classData = MethodData(
+            name = getName(phpClass) ?: "unknown",
+            qualifiedName = QualifiedNameUtil.getQualifiedName(phpClass),
+            kind = LanguageServices.getKind(phpClass),
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
-            line = getLineNumber(project, member) ?: 0,
-            column = getColumnNumber(project, member) ?: 0,
+            line = getLineNumber(project, phpClass) ?: 0,
+            column = getColumnNumber(project, phpClass) ?: 0,
         )
-
-        return SuperMethodsData(method = methodData, hierarchy = buildHierarchy(project, member))
+        return SuperMethodsData(method = classData, hierarchy = buildClassHierarchy(project, phpClass))
     }
 
     private fun buildHierarchy(project: Project, member: PsiElement): List<SuperMethodData> {
@@ -139,6 +165,42 @@ class PhpSuperMethodsProvider : SuperMethodsProvider {
         if (cls.isInstance(element)) return element
         @Suppress("UNCHECKED_CAST")
         return PsiTreeUtil.getParentOfType(element, cls as Class<out PsiElement>)
+    }
+
+    private fun findContainingPhpClass(element: PsiElement): PsiElement? {
+        val cls = phpClassClass ?: return null
+        if (cls.isInstance(element)) return element
+        @Suppress("UNCHECKED_CAST")
+        return PsiTreeUtil.getParentOfType(element, cls as Class<out PsiElement>)
+    }
+
+    /**
+     * Returns the DIRECT supertypes of [phpClass] — one level only, no transitive walk.
+     * Mirrors `PhpGotoSuperMethodHandler`'s class branch, which calls
+     * `PhpClassHierarchyUtils.getImmediateParents(PhpClass)` (super class + interfaces + traits).
+     */
+    private fun buildClassHierarchy(project: Project, phpClass: PsiElement): List<SuperMethodData> {
+        val invoker = getImmediateParentsMethod ?: return emptyList()
+
+        @Suppress("UNCHECKED_CAST")
+        val parents: List<PsiElement> = try {
+            invoker.invoke(null, phpClass) as? List<PsiElement> ?: return emptyList()
+        } catch (t: Throwable) {
+            LOG.debug("PhpClassHierarchyUtils.getImmediateParents invocation failed", t)
+            return emptyList()
+        }
+
+        return parents.mapNotNull { parent ->
+            val file = parent.containingFile?.virtualFile
+            SuperMethodData(
+                name = getName(parent) ?: "unknown",
+                qualifiedName = QualifiedNameUtil.getQualifiedName(parent),
+                kind = LanguageServices.getKind(parent),
+                file = file?.let { getRelativePath(project, it) },
+                line = getLineNumber(project, parent),
+                column = getColumnNumber(project, parent),
+            )
+        }
     }
 
     private fun getName(element: PsiElement): String? = runCatching {
