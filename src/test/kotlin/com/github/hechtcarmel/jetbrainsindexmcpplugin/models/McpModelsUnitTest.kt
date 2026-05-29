@@ -5,6 +5,7 @@ import junit.framework.TestCase
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 class McpModelsUnitTest : TestCase() {
@@ -224,5 +225,26 @@ class McpModelsUnitTest : TestCase() {
 
         assertEquals("ide_index_status", deserialized.name)
         assertNull(deserialized.arguments)
+    }
+
+    fun testToolCallResultOmitsStructuredContentWhenNull() {
+        val json = Json { encodeDefaults = true; prettyPrint = false }
+        val result = ToolCallResult(content = listOf(ContentBlock.Text("hi")), isError = false)
+        val encoded = json.encodeToString(ToolCallResult.serializer(), result)
+        assertFalse("null structuredContent must be omitted", encoded.contains("structuredContent"))
+    }
+
+    fun testToolCallResultIncludesStructuredContentWhenPresent() {
+        val json = Json { encodeDefaults = true; prettyPrint = false }
+        val body = buildJsonObject { put("error", "tool_error"); put("message", "boom") }
+        val result = ToolCallResult(
+            content = listOf(ContentBlock.Text(body.toString())),
+            structuredContent = body,
+            isError = true,
+        )
+        val encoded = json.encodeToString(ToolCallResult.serializer(), result)
+        assertTrue(encoded.contains("\"structuredContent\""))
+        val decoded = json.decodeFromString(ToolCallResult.serializer(), encoded)
+        assertEquals("tool_error", decoded.structuredContent!!["error"]!!.jsonPrimitive.content)
     }
 }
