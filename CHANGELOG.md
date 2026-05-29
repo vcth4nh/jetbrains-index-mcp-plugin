@@ -22,6 +22,7 @@
 
 ### Fixed
 - `ide_find_super_methods` in Go now returns an empty hierarchy (not a "No method found" error) for a method that satisfies no interface — matching the Java/Kotlin/Python "valid method, no super" behavior. Closes #25.
+- Go interface-method `qualifiedName` now includes the enclosing interface (`package.Interface.method`, e.g. `fmt.Stringer.String`) instead of `package.method`, which was indistinguishable from a top-level function. `QualifiedNameUtil`'s Go fallback now qualifies a `GoMethodSpec` by its enclosing `GoTypeSpec`. Affects every tool that surfaces Go interface-method names (`ide_find_super_methods`, `ide_find_symbol`, `ide_call_hierarchy`, `ide_find_definition`). Closes #20.
 
 ### Removed
 - `LanguageService` abstract base class, `LanguageServiceRegistry` reflective loader, 7 per-language `*LanguageService` subclasses, dead `PluginDetectors` entries (`python`, `javaScript`, `go`).

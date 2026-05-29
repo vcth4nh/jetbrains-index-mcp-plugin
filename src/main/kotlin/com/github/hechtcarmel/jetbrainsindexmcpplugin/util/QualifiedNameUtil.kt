@@ -4,6 +4,7 @@ import com.intellij.ide.actions.QualifiedNameProvider
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.util.PsiTreeUtil
 
 object QualifiedNameUtil {
     private val LOG = logger<QualifiedNameUtil>()
@@ -22,6 +23,14 @@ object QualifiedNameUtil {
 
     private val goMethodDeclarationClass: Class<*>? by lazy {
         try { Class.forName("com.goide.psi.GoMethodDeclaration") } catch (_: ClassNotFoundException) { null }
+    }
+
+    private val goMethodSpecClass: Class<*>? by lazy {
+        try { Class.forName("com.goide.psi.GoMethodSpec") } catch (_: ClassNotFoundException) { null }
+    }
+
+    private val goTypeSpecClass: Class<*>? by lazy {
+        try { Class.forName("com.goide.psi.GoTypeSpec") } catch (_: ClassNotFoundException) { null }
     }
 
     private val rsNamedElementClass: Class<*>? by lazy {
@@ -118,7 +127,18 @@ object QualifiedNameUtil {
                 val type = receiver.javaClass.getMethod("getType").invoke(receiver) as? PsiElement ?: return@run null
                 type.text?.trim()
             }
-            formatGoQualifiedName(packageName, receiverType, name)
+            // Interface method specs (GoMethodSpec) have no receiver; qualify them by the enclosing
+            // interface (GoTypeSpec) so they read `package.Interface.method` instead of `package.method`
+            // (otherwise indistinguishable from a top-level function). See #20.
+            val interfaceName = run {
+                val spec = goMethodSpecClass ?: return@run null
+                if (!spec.isInstance(element)) return@run null
+                val typeSpecCls = goTypeSpecClass ?: return@run null
+                @Suppress("UNCHECKED_CAST")
+                val enclosing = PsiTreeUtil.getParentOfType(element, typeSpecCls as Class<out PsiElement>) ?: return@run null
+                enclosing.javaClass.getMethod("getName").invoke(enclosing) as? String
+            }
+            formatGoQualifiedName(packageName, receiverType ?: interfaceName, name)
         } catch (e: Exception) {
             LOG.debug("Go qualified-name fallback threw for ${element.javaClass.simpleName}: ${e.message}")
             null
