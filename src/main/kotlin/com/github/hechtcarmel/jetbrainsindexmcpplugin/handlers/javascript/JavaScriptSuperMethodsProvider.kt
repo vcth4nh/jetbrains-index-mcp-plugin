@@ -35,6 +35,10 @@ class JavaScriptSuperMethodsProvider : SuperMethodsProvider {
         try { Class.forName("com.intellij.lang.javascript.psi.JSField") } catch (_: ClassNotFoundException) { null }
     }
 
+    private val jsClassClass: Class<*>? by lazy {
+        try { Class.forName("com.intellij.lang.javascript.psi.ecmal4.JSClass") } catch (_: ClassNotFoundException) { null }
+    }
+
     private val jsPsiElementBaseClass: Class<*>? by lazy {
         try { Class.forName("com.intellij.lang.javascript.psi.JSPsiElementBase") } catch (_: ClassNotFoundException) { null }
     }
@@ -62,19 +66,34 @@ class JavaScriptSuperMethodsProvider : SuperMethodsProvider {
     }
 
     override fun findSuperMethods(element: PsiElement, project: Project): SuperMethodsData? {
-        val (member, isField) = findContainingMember(element) ?: return null
+        // Try function/field anchor first (unchanged behaviour).
+        val memberPair = findContainingMember(element)
+        if (memberPair != null) {
+            val (member, isField) = memberPair
+            val file = member.containingFile?.virtualFile
+            val methodData = MethodData(
+                name = getName(member) ?: "unknown",
+                qualifiedName = QualifiedNameUtil.getQualifiedName(member),
+                kind = LanguageServices.getKind(member),
+                file = file?.let { getRelativePath(project, it) } ?: "unknown",
+                line = getLineNumber(project, member) ?: 0,
+                column = getColumnNumber(project, member) ?: 0,
+            )
+            return SuperMethodsData(method = methodData, hierarchy = buildHierarchy(project, member, isField = isField))
+        }
 
-        val file = member.containingFile?.virtualFile
-        val methodData = MethodData(
-            name = getName(member) ?: "unknown",
-            qualifiedName = QualifiedNameUtil.getQualifiedName(member),
-            kind = LanguageServices.getKind(member),
+        // Class anchor: caret on a class/interface declaration — return DIRECT supertypes only.
+        val jsClass = findContainingJSClass(element) ?: return null
+        val file = jsClass.containingFile?.virtualFile
+        val classData = MethodData(
+            name = getName(jsClass) ?: "unknown",
+            qualifiedName = QualifiedNameUtil.getQualifiedName(jsClass),
+            kind = LanguageServices.getKind(jsClass),
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
-            line = getLineNumber(project, member) ?: 0,
-            column = getColumnNumber(project, member) ?: 0,
+            line = getLineNumber(project, jsClass) ?: 0,
+            column = getColumnNumber(project, jsClass) ?: 0,
         )
-
-        return SuperMethodsData(method = methodData, hierarchy = buildHierarchy(project, member, isField = isField))
+        return SuperMethodsData(method = classData, hierarchy = buildClassHierarchy(project, jsClass))
     }
 
     private fun buildHierarchy(
@@ -105,6 +124,48 @@ class JavaScriptSuperMethodsProvider : SuperMethodsProvider {
             out.addAll(buildHierarchy(project, superMember, visited, isField = jsFieldClass?.isInstance(superMember) == true))
         }
         return out
+    }
+
+    /**
+     * Returns DIRECT supertypes of [jsClass] (both extends and implements, one level only).
+     * Uses [JSClass.getSupers()] which is the combined API for all direct supertypes.
+     */
+    private fun buildClassHierarchy(project: Project, jsClass: PsiElement): List<SuperMethodData> {
+        val getSupers = try {
+            jsClass.javaClass.getMethod("getSupers")
+        } catch (_: Throwable) { return emptyList() }
+
+        @Suppress("UNCHECKED_CAST")
+        val supers = try {
+            (getSupers.invoke(jsClass) as? Array<*>) ?: return emptyList()
+        } catch (t: Throwable) {
+            LOG.debug("JSClass.getSupers() invocation failed", t)
+            return emptyList()
+        }
+
+        return supers.filterIsInstance<PsiElement>().map { superClass ->
+            val superFile = superClass.containingFile?.virtualFile
+            SuperMethodData(
+                name = getName(superClass) ?: "unknown",
+                qualifiedName = QualifiedNameUtil.getQualifiedName(superClass),
+                kind = LanguageServices.getKind(superClass),
+                file = superFile?.let { getRelativePath(project, it) },
+                line = getLineNumber(project, superClass),
+                column = getColumnNumber(project, superClass),
+            )
+        }
+    }
+
+    /** Returns the nearest enclosing [JSClass] by walking up the PSI tree. */
+    private fun findContainingJSClass(element: PsiElement): PsiElement? {
+        val cls = jsClassClass ?: return null
+        if (cls.isInstance(element)) return element
+        var current = element.parent
+        while (current != null) {
+            if (cls.isInstance(current)) return current
+            current = current.parent
+        }
+        return null
     }
 
     private fun invokeFindNearestOverridden(jsFunction: PsiElement, onlyFunctions: Boolean): List<PsiElement> {
