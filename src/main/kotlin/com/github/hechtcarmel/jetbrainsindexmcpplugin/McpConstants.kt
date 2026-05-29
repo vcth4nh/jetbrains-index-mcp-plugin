@@ -38,8 +38,11 @@ object McpConstants {
 
     // MCP Protocol versions
     const val LEGACY_MCP_PROTOCOL_VERSION = "2024-11-05"
-    const val STREAMABLE_HTTP_MCP_PROTOCOL_VERSION = "2025-03-26"
+    const val STREAMABLE_HTTP_MCP_PROTOCOL_VERSION = "2025-11-25"
     const val MCP_PROTOCOL_VERSION = STREAMABLE_HTTP_MCP_PROTOCOL_VERSION
+
+    /** Protocol versions this server can speak, newest first. Used for initialize negotiation. */
+    val SUPPORTED_PROTOCOL_VERSIONS = listOf("2025-11-25", "2025-03-26", "2024-11-05")
 
     // Server identification - IDE-specific
     /**

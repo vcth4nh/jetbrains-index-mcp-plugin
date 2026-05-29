@@ -78,8 +78,15 @@ class JsonRpcHandler @JvmOverloads constructor(
     }
 
     private fun processInitialize(request: JsonRpcRequest, protocolVersion: String): JsonRpcResponse {
+        val requested = (request.params?.get("protocolVersion") as? JsonPrimitive)?.contentOrNull
+        val negotiated = if (requested != null && requested in McpConstants.SUPPORTED_PROTOCOL_VERSIONS) {
+            requested
+        } else {
+            protocolVersion
+        }
+
         val result = InitializeResult(
-            protocolVersion = protocolVersion,
+            protocolVersion = negotiated,
             serverInfo = ServerInfo(
                 name = McpConstants.SERVER_NAME,
                 version = McpConstants.SERVER_VERSION,

@@ -192,4 +192,46 @@ class JsonRpcHandlerUnitTest : TestCase() {
 
         assertNull("Notification should return null (no response)", responseJson)
     }
+
+    fun testInitializeEchoesRequestedSupportedVersion() = runBlocking {
+        val request = JsonRpcRequest(
+            id = JsonPrimitive(1),
+            method = JsonRpcMethods.INITIALIZE,
+            params = buildJsonObject { put("protocolVersion", "2025-11-25") }
+        )
+        val responseJson = handler.handleRequest(
+            json.encodeToString(JsonRpcRequest.serializer(), request),
+            protocolVersion = "2025-11-25"
+        )
+        val response = json.decodeFromString<JsonRpcResponse>(responseJson!!)
+        assertEquals("2025-11-25", response.result!!.jsonObject["protocolVersion"]!!.jsonPrimitive.content)
+    }
+
+    fun testInitializeNegotiatesDownToOlderSupportedVersion() = runBlocking {
+        val request = JsonRpcRequest(
+            id = JsonPrimitive(1),
+            method = JsonRpcMethods.INITIALIZE,
+            params = buildJsonObject { put("protocolVersion", "2025-03-26") }
+        )
+        val responseJson = handler.handleRequest(
+            json.encodeToString(JsonRpcRequest.serializer(), request),
+            protocolVersion = "2025-11-25"
+        )
+        val response = json.decodeFromString<JsonRpcResponse>(responseJson!!)
+        assertEquals("2025-03-26", response.result!!.jsonObject["protocolVersion"]!!.jsonPrimitive.content)
+    }
+
+    fun testInitializeFallsBackForUnsupportedRequestedVersion() = runBlocking {
+        val request = JsonRpcRequest(
+            id = JsonPrimitive(1),
+            method = JsonRpcMethods.INITIALIZE,
+            params = buildJsonObject { put("protocolVersion", "1999-01-01") }
+        )
+        val responseJson = handler.handleRequest(
+            json.encodeToString(JsonRpcRequest.serializer(), request),
+            protocolVersion = "2025-11-25"
+        )
+        val response = json.decodeFromString<JsonRpcResponse>(responseJson!!)
+        assertEquals("2025-11-25", response.result!!.jsonObject["protocolVersion"]!!.jsonPrimitive.content)
+    }
 }
