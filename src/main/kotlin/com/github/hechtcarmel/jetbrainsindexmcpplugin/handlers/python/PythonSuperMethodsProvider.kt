@@ -33,6 +33,10 @@ class PythonSuperMethodsProvider : SuperMethodsProvider {
         try { Class.forName("com.jetbrains.python.psi.PyFunction") } catch (_: ClassNotFoundException) { null }
     }
 
+    private val pyClassClass: Class<*>? by lazy {
+        try { Class.forName("com.jetbrains.python.psi.PyClass") } catch (_: ClassNotFoundException) { null }
+    }
+
     private val pySuperMethodsSearchClass: Class<*>? by lazy {
         try { Class.forName("com.jetbrains.python.psi.search.PySuperMethodsSearch") } catch (_: ClassNotFoundException) { null }
     }
@@ -55,20 +59,42 @@ class PythonSuperMethodsProvider : SuperMethodsProvider {
         } catch (_: Throwable) { null }
     }
 
+    private val getSuperClassesMethod: java.lang.reflect.Method? by lazy {
+        try {
+            val pyc = pyClassClass ?: return@lazy null
+            val tec = typeEvalContextClass ?: return@lazy null
+            pyc.getMethod("getSuperClasses", tec)
+        } catch (_: Throwable) { null }
+    }
+
     override fun findSuperMethods(element: PsiElement, project: Project): SuperMethodsData? {
-        val pyFunction = findContainingPyFunction(element) ?: return null
+        // Member path: try PyFunction first (unchanged).
+        val pyFunction = findContainingPyFunction(element)
+        if (pyFunction != null) {
+            val file = pyFunction.containingFile?.virtualFile
+            val methodData = MethodData(
+                name = getName(pyFunction) ?: "unknown",
+                qualifiedName = QualifiedNameUtil.getQualifiedName(pyFunction),
+                kind = LanguageServices.getKind(pyFunction),
+                file = file?.let { getRelativePath(project, it) } ?: "unknown",
+                line = getLineNumber(project, pyFunction) ?: 0,
+                column = getColumnNumber(project, pyFunction) ?: 0,
+            )
+            return SuperMethodsData(method = methodData, hierarchy = buildHierarchy(project, pyFunction))
+        }
 
-        val file = pyFunction.containingFile?.virtualFile
-        val methodData = MethodData(
-            name = getName(pyFunction) ?: "unknown",
-            qualifiedName = QualifiedNameUtil.getQualifiedName(pyFunction),
-            kind = LanguageServices.getKind(pyFunction),
+        // Class anchor path: walk up to nearest PyClass and return direct base classes.
+        val pyClass = findContainingPyClass(element) ?: return null
+        val file = pyClass.containingFile?.virtualFile
+        val classData = MethodData(
+            name = getName(pyClass) ?: "unknown",
+            qualifiedName = QualifiedNameUtil.getQualifiedName(pyClass),
+            kind = LanguageServices.getKind(pyClass),
             file = file?.let { getRelativePath(project, it) } ?: "unknown",
-            line = getLineNumber(project, pyFunction) ?: 0,
-            column = getColumnNumber(project, pyFunction) ?: 0,
+            line = getLineNumber(project, pyClass) ?: 0,
+            column = getColumnNumber(project, pyClass) ?: 0,
         )
-
-        return SuperMethodsData(method = methodData, hierarchy = buildHierarchy(project, pyFunction))
+        return SuperMethodsData(method = classData, hierarchy = buildClassHierarchy(project, pyClass))
     }
 
     private fun buildHierarchy(project: Project, pyFunction: PsiElement): List<SuperMethodData> {
@@ -117,6 +143,40 @@ class PythonSuperMethodsProvider : SuperMethodsProvider {
         if (pyFunc.isInstance(element)) return element
         @Suppress("UNCHECKED_CAST")
         return PsiTreeUtil.getParentOfType(element, pyFunc as Class<out PsiElement>)
+    }
+
+    private fun findContainingPyClass(element: PsiElement): PsiElement? {
+        val pyc = pyClassClass ?: return null
+        if (pyc.isInstance(element)) return element
+        @Suppress("UNCHECKED_CAST")
+        return PsiTreeUtil.getParentOfType(element, pyc as Class<out PsiElement>)
+    }
+
+    private fun buildClassHierarchy(project: Project, pyClass: PsiElement): List<SuperMethodData> {
+        val method = getSuperClassesMethod ?: return emptyList()
+        val ctx = createUserInitiatedContext(project, pyClass.containingFile) ?: return emptyList()
+
+        @Suppress("UNCHECKED_CAST")
+        val superClasses: Array<PsiElement> = try {
+            method.invoke(pyClass, ctx) as? Array<PsiElement> ?: return emptyList()
+        } catch (t: Throwable) {
+            LOG.debug("PyClass.getSuperClasses invocation failed", t)
+            return emptyList()
+        }
+
+        val out = mutableListOf<SuperMethodData>()
+        for (base in superClasses) {
+            val file = base.containingFile?.virtualFile
+            out.add(SuperMethodData(
+                name = getName(base) ?: "unknown",
+                qualifiedName = QualifiedNameUtil.getQualifiedName(base),
+                kind = LanguageServices.getKind(base),
+                file = file?.let { getRelativePath(project, it) },
+                line = getLineNumber(project, base),
+                column = getColumnNumber(project, base),
+            ))
+        }
+        return out
     }
 
     private fun getName(element: PsiElement): String? = runCatching {
