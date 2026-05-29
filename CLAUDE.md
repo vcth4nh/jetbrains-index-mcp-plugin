@@ -51,7 +51,7 @@ choosing unilaterally:
 - **Build System**: Gradle 9.0 with Kotlin DSL
 - **IDE Platform**: IntelliJ IDEA 2025.1+ (platformType = IC)
 - **HTTP Server**: Ktor CIO 2.3.12 (embedded, configurable port)
-- **Protocol**: Model Context Protocol (MCP) 2025-03-26
+- **Protocol**: Model Context Protocol (MCP) — 2025-11-25 (default), negotiated down to 2025-03-26 or 2024-11-05
 
 ## Key Documentation
 
@@ -65,9 +65,10 @@ choosing unilaterally:
 - **Explore API**: https://plugins.jetbrains.com/docs/intellij/explore-api.html
 
 ### Model Context Protocol (MCP)
-- **Specification**: https://spec.modelcontextprotocol.io/specification/2025-03-26/
-- **Tools API**: https://modelcontextprotocol.io/specification/2025-03-26/server/tools
-- **Resources API**: https://modelcontextprotocol.io/specification/2025-03-26/server/resources
+- **Tools API (2025-11-25 — structuredContent)**: https://modelcontextprotocol.io/specification/2025-11-25/server/tools
+- **Specification (2025-03-26, also supported)**: https://spec.modelcontextprotocol.io/specification/2025-03-26/
+- **Tools API (2025-03-26, also supported)**: https://modelcontextprotocol.io/specification/2025-03-26/server/tools
+- **Resources API (2025-03-26)**: https://modelcontextprotocol.io/specification/2025-03-26/server/resources
 - **Legacy SSE Transport**: https://spec.modelcontextprotocol.io/specification/2024-11-05/basic/transports/
 - **GitHub**: https://github.com/modelcontextprotocol/modelcontextprotocol
 
@@ -160,10 +161,10 @@ MCP servers expose:
 - `KtorSseSessionManager` - SSE session management using Kotlin channels
 - `JsonRpcHandler` - JSON-RPC 2.0 request processing
 
-**Transport**: This plugin supports two transports with JSON-RPC 2.0:
+**Transport**: This plugin supports two transports with JSON-RPC 2.0. All tool results include native `structuredContent` (MCP 2025-11-25); the serialized JSON is also mirrored in the text content block for backward compatibility. This applies regardless of which transport is in use.
 
 *Streamable HTTP (Primary, MCP 2025-11-25):*
-- `POST /index-mcp/streamable-http` → Stateless JSON-RPC requests/responses; returns native `structuredContent` on tool results (JSON also mirrored in the text block for backward compatibility)
+- `POST /index-mcp/streamable-http` → Stateless JSON-RPC requests/responses
 - `GET /index-mcp/streamable-http` → 405 Method Not Allowed
 - `DELETE /index-mcp/streamable-http` → 405 Method Not Allowed
 - Protocol version is negotiated on `initialize` (supported: 2025-11-25, 2025-03-26, 2024-11-05); streamable-HTTP defaults to 2025-11-25
