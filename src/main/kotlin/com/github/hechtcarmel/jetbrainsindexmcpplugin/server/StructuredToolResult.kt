@@ -14,6 +14,9 @@ import kotlinx.serialization.json.JsonObject
  * when it is a JSON object, also attached as native [ToolCallResult.structuredContent]
  * (MCP 2025-11-25). The serialized-JSON text mirror is always present per the spec's
  * backwards-compatibility rule. Pure logic — [format] is passed in so this is unit-testable.
+ *
+ * Callers own formatting-failure fallback: this builder does not catch exceptions. The
+ * AbstractMcpTool producers that wrap it fall back to a plain-text error on failure.
  */
 object StructuredToolResult {
     private val json = Json { encodeDefaults = true; prettyPrint = false }
