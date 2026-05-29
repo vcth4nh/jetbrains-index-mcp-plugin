@@ -162,10 +162,11 @@ MCP servers expose:
 
 **Transport**: This plugin supports two transports with JSON-RPC 2.0:
 
-*Streamable HTTP (Primary, MCP 2025-03-26):*
-- `POST /index-mcp/streamable-http` → Stateless JSON-RPC requests/responses
+*Streamable HTTP (Primary, MCP 2025-11-25):*
+- `POST /index-mcp/streamable-http` → Stateless JSON-RPC requests/responses; returns native `structuredContent` on tool results (JSON also mirrored in the text block for backward compatibility)
 - `GET /index-mcp/streamable-http` → 405 Method Not Allowed
 - `DELETE /index-mcp/streamable-http` → 405 Method Not Allowed
+- Protocol version is negotiated on `initialize` (supported: 2025-11-25, 2025-03-26, 2024-11-05); streamable-HTTP defaults to 2025-11-25
 
 *Legacy SSE (MCP 2024-11-05):*
 - `GET /index-mcp/sse` → Opens SSE stream, sends `endpoint` event with POST URL

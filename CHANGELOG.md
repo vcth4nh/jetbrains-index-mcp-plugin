@@ -5,11 +5,13 @@
 ## [Unreleased]
 
 ### Added
+- Native `structuredContent` on all tool results (MCP 2025-11-25); the serialized JSON is still mirrored in the text content block for backward compatibility.
 - `ide_find_super_methods` now supports Rust — returns the trait method(s) a struct method satisfies (dispatches via the Rust plugin's `RsGotoSuperHandlerKt.gotoSuperTargets`, mirroring RustRover's own Ctrl+U handler and gutter `I↑` marker). The tool is registered in RustRover for the first time. Closes #21.
 - `ide_find_super_methods` now supports Go — a method returns the interface method(s) it satisfies (via the Go plugin's `GoSuperMethodSearch.GO_SUPER_METHOD_SEARCH`); a type (interface/struct) returns the interfaces it satisfies, transitively (via `GoGotoSuperHandler.SUPER_SEARCH`). Both mirror GoLand's own Ctrl+U handler and `implementing` gutter. The tool is registered in GoLand for the first time.
 - `ide_find_super_methods` now resolves more anchor kinds, mirroring the IDE's Go-to-Super (Ctrl+U): **class / interface / struct / trait** declarations → their direct supertypes (Java, Kotlin, PHP, Python, JavaScript, TypeScript); **lambda / functional expressions** → the single abstract method they implement (Java); **field / constant** positions → the overridden member (TypeScript). The tool-layer gate was relaxed so these positions reach the language provider. Closes #22, #24, #26.
 
 ### Changed
+- Negotiate the MCP protocol version during `initialize` (supported: 2025-11-25, 2025-03-26, 2024-11-05) instead of returning a fixed per-transport version; streamable-HTTP now defaults to 2025-11-25.
 - Internal: 5 `SuperMethodsProvider` implementations (Java, Kotlin, Python, PHP, JavaScript/TypeScript) refactored to delegate to each language plugin's own super-method data API (the function its `GotoSuperHandler` uses internally) instead of bespoke recursive PSI walking. Same wire format and Ctrl+U semantics; smaller and more accurate per-language code. Closes #19.
   - **Kotlin:** now uses `SuperDeclarationProvider.findSuperDeclarations` (Analysis API) — surfaces `KtProperty` / primary-constructor `val/var` / `object` properties / `expect`/`actual` / `internal` visibility that the previous LightClass bridge dropped.
   - **Python:** now uses `PySuperMethodsSearch.search` — `@property` getter/setter direction-aware.

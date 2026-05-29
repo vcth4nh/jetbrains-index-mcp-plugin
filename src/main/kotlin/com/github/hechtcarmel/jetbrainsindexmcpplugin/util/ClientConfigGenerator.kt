@@ -262,7 +262,7 @@ object ClientConfigGenerator {
      * Returns hint text for Streamable HTTP configuration.
      */
     fun getStreamableHttpHint(): String = """
-        Standard MCP configuration using Streamable HTTP transport (2025-03-26 spec).
+        Standard MCP configuration using Streamable HTTP transport (2025-11-25 spec).
         Use this for any modern MCP client that supports Streamable HTTP natively.
     """.trimIndent()
 
