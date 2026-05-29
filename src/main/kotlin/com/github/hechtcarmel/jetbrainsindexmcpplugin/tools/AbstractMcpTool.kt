@@ -6,13 +6,13 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.toArgumentFailur
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.exceptions.IndexNotReadyException
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.PaginationService
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.ProjectResolver
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.StructuredToolResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ContentBlock
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.settings.McpSettings
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ClassResolver
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PsiUtils
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ResponseFormatter
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.ModalityState
@@ -38,8 +38,8 @@ import com.intellij.psi.util.PsiModificationTracker
 import com.intellij.util.concurrency.annotations.RequiresReadLock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
@@ -635,10 +635,10 @@ abstract class AbstractMcpTool : McpTool {
      */
     protected fun createStructuredErrorResult(data: JsonElement): ToolCallResult {
         return try {
-            val jsonText = json.encodeToString(JsonElement.serializer(), data)
-            ToolCallResult(
-                content = listOf(ContentBlock.Text(text = formatStructuredPayload(jsonText))),
-                isError = true
+            StructuredToolResult.fromElement(
+                element = data,
+                isError = true,
+                format = McpSettings.getInstance().responseFormat,
             )
         } catch (e: Exception) {
             createErrorResult(formattingFailureMessage(e))
@@ -653,20 +653,14 @@ abstract class AbstractMcpTool : McpTool {
      */
     protected inline fun <reified T> createJsonResult(data: T): ToolCallResult {
         return try {
-            val jsonText = json.encodeToString(data)
-            ToolCallResult(
-                content = listOf(ContentBlock.Text(text = formatStructuredPayload(jsonText))),
-                isError = false
+            StructuredToolResult.fromElement(
+                element = json.encodeToJsonElement(data),
+                isError = false,
+                format = McpSettings.getInstance().responseFormat,
             )
         } catch (e: Exception) {
             createErrorResult(formattingFailureMessage(e))
         }
-    }
-
-    @PublishedApi
-    internal fun formatStructuredPayload(jsonText: String): String {
-        val format = McpSettings.getInstance().responseFormat
-        return ResponseFormatter.formatStructuredPayload(jsonText, format)
     }
 
     @PublishedApi
