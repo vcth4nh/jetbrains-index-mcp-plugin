@@ -7,6 +7,7 @@
 ### Added
 - `ide_find_super_methods` now supports Rust — returns the trait method(s) a struct method satisfies (dispatches via the Rust plugin's `RsGotoSuperHandlerKt.gotoSuperTargets`, mirroring RustRover's own Ctrl+U handler and gutter `I↑` marker). The tool is registered in RustRover for the first time. Closes #21.
 - `ide_find_super_methods` now supports Go — returns the interface method(s) a struct method satisfies (dispatches via the Go plugin's `GoSuperMethodSearch.GO_SUPER_METHOD_SEARCH`, mirroring GoLand's own Ctrl+U handler). The tool is registered in GoLand for the first time.
+- `ide_find_super_methods` now resolves more anchor kinds, mirroring the IDE's Go-to-Super (Ctrl+U): **class / interface / struct / trait** declarations → their direct supertypes (Java, Kotlin, PHP, Python, JavaScript, TypeScript); **lambda / functional expressions** → the single abstract method they implement (Java); **field / constant** positions → the overridden member (TypeScript). The tool-layer gate was relaxed so these positions reach the language provider. Closes #22, #24, #26.
 
 ### Changed
 - Internal: 5 `SuperMethodsProvider` implementations (Java, Kotlin, Python, PHP, JavaScript/TypeScript) refactored to delegate to each language plugin's own super-method data API (the function its `GotoSuperHandler` uses internally) instead of bespoke recursive PSI walking. Same wire format and Ctrl+U semantics; smaller and more accurate per-language code. Closes #19.
@@ -17,6 +18,10 @@
   - **Java:** drops bespoke reference-resolution helper (the tool layer already resolves at-position). Otherwise unchanged — already used `PsiMethod.findSuperMethods()`.
   - **Go:** added visited-set dedup inside the `Processor<Any>` callback (keyed by `qname@file:line`) so multi-inheritance-path interface methods that fire through the processor multiple times collapse to a single entry — matches the sibling providers' dedup pattern.
 - Internal: replaced the custom `LanguageHandler` / `LanguageServiceRegistry` reflective registry with IntelliJ's `LanguageExtension` extension-point mechanism. Per-language kind resolvers and super-methods providers are now declared in `*-features.xml` files, registered against two custom EPs (`languageKindResolver`, `superMethodsProvider`). Closes audit item P3-1.
+- `ide_find_super_methods` now returns the **full transitive super-method chain** for JavaScript/TypeScript (previously immediate-parent only), matching Java/Kotlin/Python and WebStorm's overriding-gutter. Closes #23.
+
+### Fixed
+- `ide_find_super_methods` in Go now returns an empty hierarchy (not a "No method found" error) for a method that satisfies no interface — matching the Java/Kotlin/Python "valid method, no super" behavior. Closes #25.
 
 ### Removed
 - `LanguageService` abstract base class, `LanguageServiceRegistry` reflective loader, 7 per-language `*LanguageService` subclasses, dead `PluginDetectors` entries (`python`, `javaScript`, `go`).

@@ -199,42 +199,32 @@ will just snapshot a different empty/odd result.
   response.
 - **PyCharm / WebStorm stdlib paths**: similar — `Number.parseInt` →
   `${WEBSTORM_JS_STUBS}/...`; Python `int` → `${PYCHARM_TYPESHED}/...`.
-- **Java `super-LambdaHost-lambda.run-sam`**: `tool_error_text: "No method
-  found at position"`. Caret is on a lambda's `->`; a lambda has no
-  `PsiMethod`, so `ide_find_super_methods` bails. This *diverges* from the
-  IDE — Ctrl+U on the lambda navigates to `Runnable#run`. Tracked as a
-  known gap in vcth4nh/jetbrains-index-mcp-plugin#22. When that's fixed the
-  probe will start returning `Runnable#run` and surface as a diff —
-  re-bless to the correct output then (don't "fix" the probe before #22).
-- **JS/TS return only the immediate super, not the full chain**: e.g.
-  `super-LeafMix.greet-3level` (JS) and `super-DeepLeaf.m` (TS) return one
-  super, while the Java/Kotlin/Python analogs return the full transitive
-  chain. The JS/TS provider uses `JSInheritanceUtil.findNearestOverriddenMembers`
-  (nearest only). The IDE's gutter "overrides" icon / Method Hierarchy shows
-  the full chain (Ctrl+U only walks one level). Tracked as a known gap in
-  vcth4nh/jetbrains-index-mcp-plugin#23 — when fixed, these probes will gain
-  the transitive supers and surface as diffs; re-bless then.
+- **Java `super-LambdaHost-lambda.run-sam`**: returns the lambda's SAM as the
+  `method` (`java.lang.Runnable#run`, empty `hierarchy`). Caret is on a lambda's
+  `->`; the provider resolves the functional interface's single abstract method
+  via `LambdaUtil.getFunctionalInterfaceMethod`, mirroring Ctrl+U. Resolved in
+  #22 (was previously a `tool_error`).
+- **JS/TS return the full transitive super chain**: e.g.
+  `super-LeafMix.greet-3level` (JS) and `super-DeepLeaf.m`/`super-DeepMid2.m` (TS)
+  return every transitive super, matching the Java/Kotlin/Python analogs and
+  WebStorm's overriding-gutter. The provider recurses on
+  `JSInheritanceUtil.findNearestOverriddenMembers` to a fixpoint. Resolved in
+  #23 (was previously immediate-parent only).
 - **JS `super-WithMixin.shout-mixin`**: empty hierarchy. `WithMixin` extends
   a dynamically-constructed mixin class (`Amplifier(Plain)`); the IDE cannot
   statically resolve the super — confirmed the gutter shows nothing either.
   This is expected ground truth (not a tool gap), unlike the immediate-only
   case above.
-- **TS `super-ConstChild.KIND-const`**: `tool_error_text: "No method found at
-  position"`. The position is a `static readonly` field; the tool's method-only
-  gate (`PsiUtils.resolveTargetElement`) rejects it. This *diverges* from the
-  IDE — the field shows an "overrides" gutter icon and Ctrl+U navigates to
-  `ConstBase.KIND` — and from PHP/Rust/Kotlin, which surface const/property
-  supers via this tool. Tracked in vcth4nh/jetbrains-index-mcp-plugin#24; when
-  fixed the probe will return `ConstBase.KIND` and diff — re-bless then.
-  (Note: TS *static methods* DO resolve — see `super-Child.factory-static` →
-  `StaticBase.factory`; only fields/consts are rejected.)
-- **Go `super-Standalone.Compute-negative`**: `tool_error_text: "No method
-  found at position"`. A Go method that satisfies no interface returns an
-  error, whereas Java/Python/Kotlin return an empty hierarchy (method found,
-  no super) for the same negative case. Verified in GoLand: the method has no
-  gutter icon and Ctrl+U no-ops — it's a valid method with no super, so the
-  error message is misleading. Tracked in vcth4nh/jetbrains-index-mcp-plugin#25;
-  when fixed it returns an empty hierarchy — re-bless then.
+- **TS `super-ConstChild.KIND-const`**: a `static readonly` field anchor returns
+  its overridden field (`ConstBase.KIND`, `kind: READONLY_FIELD`), mirroring the
+  IDE's overriding-gutter / Ctrl+U and matching PHP/Rust/Kotlin const/property
+  supers. Resolved in #24 (was previously a `tool_error` from the method-only
+  gate). (TS *static methods* also resolve — see `super-Child.factory-static` →
+  `StaticBase.factory`.)
+- **Go `super-Standalone.Compute-negative`**: a method satisfying no interface
+  returns an empty `hierarchy` (method found, no super), matching
+  Java/Python/Kotlin. Verified in GoLand: no gutter icon, Ctrl+U no-ops.
+  Resolved in #25 (was previously a misleading `tool_error`).
 - **Go `file_structure` is package-scoped**: `file-structure-Normal` /
   `file-structure-Quirks` list *every* type in package `main` (each tagged
   with its origin file), not just the queried file's. Adding any `.go` fixture

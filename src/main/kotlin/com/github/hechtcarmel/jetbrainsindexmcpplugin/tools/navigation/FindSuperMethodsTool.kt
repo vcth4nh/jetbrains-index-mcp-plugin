@@ -24,11 +24,11 @@ class FindSuperMethodsTool : AbstractMcpTool() {
     override val name = ToolNames.FIND_SUPER_METHODS
 
     override val description = """
-        Find parent methods that a method overrides or implements. Use to navigate up the inheritance chain—from implementation to interface, or from override to original declaration.
+        Navigate UP the hierarchy from a code element — what it overrides, implements, or extends. Mirrors the IDE's "Go to Super" (Ctrl+U). Anchor on a method (→ super-methods, full transitive chain), a class/interface/struct/trait (→ direct supertypes), a lambda (→ the single abstract method it implements), or a field/constant (→ the overridden member).
 
-        Languages: Java, Kotlin, Python, JavaScript, TypeScript, PHP, Go (returns interface methods a struct method satisfies), Rust (returns trait fn/const/type alias the impl satisfies).
+        Languages: Java, Kotlin, Python, JavaScript, TypeScript, PHP, Go (interface methods a struct method satisfies), Rust (trait fn/const/type alias the impl satisfies).
 
-        Returns: full hierarchy chain from immediate parent to root, with file locations (line/column), qualified names, and element kinds.
+        Returns: the matching supers with file locations (line/column), qualified names, and element kinds. Empty when the element has no super.
 
         Example: {"file": "src/UserServiceImpl.java", "line": 25, "column": 10}
     """.trimIndent()
