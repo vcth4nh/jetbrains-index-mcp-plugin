@@ -388,7 +388,7 @@ Configure the plugin at <kbd>Settings</kbd> > <kbd>Tools</kbd> > <kbd>Index MCP 
 
 - **JetBrains IDE** 2025.1 or later (any IDE based on IntelliJ Platform)
 - **JVM** 21 or later
-- **MCP Protocol** 2025-03-26 (primary Streamable HTTP), with 2024-11-05 legacy SSE compatibility
+- **MCP Protocol** 2025-11-25 (primary Streamable HTTP, negotiated; 2025-03-26 / 2024-11-05 also supported)
 
 ### Supported IDEs
 
@@ -412,7 +412,7 @@ Configure the plugin at <kbd>Settings</kbd> > <kbd>Tools</kbd> > <kbd>Index MCP 
 
 The plugin runs a **custom embedded Ktor CIO HTTP server** with **dual MCP transports**:
 
-### Streamable HTTP Transport (Primary, MCP 2025-03-26)
+### Streamable HTTP Transport (Primary, MCP 2025-11-25)
 
 ```
 AI Assistant ──────► POST /index-mcp/streamable-http (initialize or request)
@@ -436,7 +436,7 @@ AI Assistant ──────► GET /index-mcp/sse              (establish SS
 ```
 
 This dual approach:
-- **Primary MCP transport** - Streamable HTTP per MCP `2025-03-26`
+- **Primary MCP transport** - Streamable HTTP per MCP `2025-11-25` (negotiated; `2025-03-26` / `2024-11-05` also supported)
 - **MCP Inspector compatible** - Legacy SSE transport per MCP `2024-11-05`
 - **Configurable port** - IDE-specific default port, changeable in settings
 - Works with any MCP-compatible client
