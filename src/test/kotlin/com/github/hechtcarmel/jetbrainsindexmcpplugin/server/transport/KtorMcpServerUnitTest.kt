@@ -49,11 +49,11 @@ class KtorMcpServerUnitTest : TestCase() {
         super.tearDown()
     }
 
-    fun testStreamableInitializeOmitsSessionHeaderAndReturns2025ProtocolVersion() {
+    fun testStreamableInitializeEchoesCurrentProtocolVersion() {
         val response = sendRequest(
             method = "POST",
             path = McpConstants.STREAMABLE_HTTP_ENDPOINT_PATH,
-            body = initializeRequestBody("2025-03-26")
+            body = initializeRequestBody("2025-11-25")
         )
 
         assertEquals(HttpStatusCode.OK.value, response.statusCode())
@@ -64,7 +64,7 @@ class KtorMcpServerUnitTest : TestCase() {
 
         val responseBody = json.parseToJsonElement(response.body()).jsonObject
         assertEquals(
-            "2025-03-26",
+            "2025-11-25",
             responseBody["result"]!!.jsonObject["protocolVersion"]!!.jsonPrimitive.content
         )
     }
