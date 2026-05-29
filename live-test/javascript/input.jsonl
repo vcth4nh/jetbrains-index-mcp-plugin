@@ -79,3 +79,4 @@
 {"id":"super-LeafMix.greet-3level","tool":"ide_find_super_methods","params":{"file":"src/triple_super.js","line":12,"column":5}}
 {"id":"super-WithMixin.shout-mixin","tool":"ide_find_super_methods","params":{"file":"src/mixin_super.js","line":12,"column":5}}
 {"id":"super-AsyncChild.fetch-async","tool":"ide_find_super_methods","params":{"file":"src/async_super.js","line":8,"column":11}}
+{"id":"super-Leaf-class","tool":"ide_find_super_methods","params":{"file":"src/multisuper.js","line":13,"column":7}}

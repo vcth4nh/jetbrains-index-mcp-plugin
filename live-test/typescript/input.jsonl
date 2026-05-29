@@ -78,3 +78,4 @@
 {"id":"super-ConstChild.KIND-const","tool":"ide_find_super_methods","params":{"file":"src/const_super.ts","line":6,"column":21}}
 {"id":"super-AsyncImpl.fetch-async","tool":"ide_find_super_methods","params":{"file":"src/async_super.ts","line":6,"column":11}}
 {"id":"super-Repo.find-generic","tool":"ide_find_super_methods","params":{"file":"src/generic_super.ts","line":6,"column":5}}
+{"id":"super-Triple-class","tool":"ide_find_super_methods","params":{"file":"src/multisuper.ts","line":13,"column":14}}

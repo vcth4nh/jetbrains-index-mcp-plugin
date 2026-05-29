@@ -82,3 +82,4 @@
 {"id":"super-AsyncImpl.fetch-suspend","tool":"ide_find_super_methods","params":{"file":"src/main/kotlin/demo/AsyncSuper.kt","line":8,"column":26}}
 {"id":"super-Repo.find-generic","tool":"ide_find_super_methods","params":{"file":"src/main/kotlin/demo/GenericSuper.kt","line":8,"column":18}}
 {"id":"super-Caller.invoke-operator","tool":"ide_find_super_methods","params":{"file":"src/main/kotlin/demo/OperatorSuper.kt","line":8,"column":27}}
+{"id":"super-Triple-class","tool":"ide_find_super_methods","params":{"file":"src/main/kotlin/demo/MultiSuper.kt","line":15,"column":7}}

@@ -85,3 +85,4 @@
 {"id":"super-AsyncImpl.fetch-async","tool":"ide_find_super_methods","params":{"file":"src/async_super.py","line":12,"column":15}}
 {"id":"super-Repo.find-generic","tool":"ide_find_super_methods","params":{"file":"src/generic_super.py","line":13,"column":9}}
 {"id":"super-ChildDC.__post_init__-dataclass","tool":"ide_find_super_methods","params":{"file":"src/dataclass_super.py","line":17,"column":9}}
+{"id":"super-Triple-class","tool":"ide_find_super_methods","params":{"file":"src/multi_super.py","line":24,"column":7}}

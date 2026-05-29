@@ -91,3 +91,4 @@
 {"id":"super-StaticDerived.factory-static-hiding","tool":"ide_find_super_methods","params":{"file":"src/main/java/demo/StaticSuper.java","line":10,"column":19}}
 {"id":"super-Repo.find-generic","tool":"ide_find_super_methods","params":{"file":"src/main/java/demo/GenericSuper.java","line":9,"column":7}}
 {"id":"super-LambdaHost-lambda.run-sam","tool":"ide_find_super_methods","params":{"file":"src/main/java/demo/LambdaSuper.java","line":5,"column":19}}
+{"id":"super-Triple-class","tool":"ide_find_super_methods","params":{"file":"src/main/java/demo/MultiSuper.java","line":15,"column":7}}
