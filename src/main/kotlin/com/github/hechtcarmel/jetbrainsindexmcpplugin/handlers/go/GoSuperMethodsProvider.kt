@@ -46,7 +46,38 @@ class GoSuperMethodsProvider : SuperMethodsProvider {
         } catch (_: Exception) { null }
     }
 
-    override fun findSuperMethods(element: PsiElement, project: Project): SuperMethodsData? {
+    private val goTypeSpecClass: Class<*>? by lazy {
+        try { Class.forName("com.goide.psi.GoTypeSpec") } catch (_: ClassNotFoundException) { null }
+    }
+
+    /**
+     * Type anchor (caret on an interface/struct declaration). GoGotoSuperHandler.SUPER_SEARCH is the
+     * GoSuperSearch instance behind BOTH Ctrl+U and the "implementing" gutter for types
+     * (GoSuperMarkerProvider.hasSuperType calls the same field). It emits GoTypeSpec for every
+     * interface the type structurally satisfies, transitively; embedded structs are never emitted.
+     * Distinct from GO_SUPER_METHOD_SEARCH above, which is the method-anchor path.
+     */
+    private val goSuperTypeSearch: Any? by lazy {
+        try {
+            Class.forName("com.goide.go.GoGotoSuperHandler")
+                .getDeclaredField("SUPER_SEARCH").get(null)
+        } catch (_: Exception) { null }
+    }
+
+    private val processTypeQueryMethod: java.lang.reflect.Method? by lazy {
+        try {
+            goSuperTypeSearch?.javaClass?.getMethod("processQuery", Any::class.java, Processor::class.java)
+        } catch (_: Exception) { null }
+    }
+
+    override fun findSuperMethods(element: PsiElement, project: Project): SuperMethodsData? =
+        tryMethodAnchor(element, project) ?: tryTypeAnchor(element, project)
+
+    /**
+     * Method anchor: caret on a Go method declaration -> the interface method spec(s) it satisfies.
+     * Uses GoSuperMethodSearch.GO_SUPER_METHOD_SEARCH (the GotoSuper method path).
+     */
+    private fun tryMethodAnchor(element: PsiElement, project: Project): SuperMethodsData? {
         val goMethodClass = goMethodDeclarationClass ?: return null
         val search = goSuperMethodSearch ?: return null
         val method = processQueryMethod ?: return null
@@ -56,18 +87,66 @@ class GoSuperMethodsProvider : SuperMethodsProvider {
         else PsiTreeUtil.getParentOfType(element, goMethodClass as Class<out PsiElement>)
             ?: return null
 
-        // DefinitionsScopedSearch.SearchParameters(element) single-arg constructor
-        // sets checkDeep=true. This matches GoGotoUtil.param() used by the IDE's GotoSuper.
-        val params = DefinitionsScopedSearch.SearchParameters(goMethod)
-        val results = mutableListOf<PsiElement>()
+        // A resolved Go method that satisfies no interface is a valid result with an
+        // empty hierarchy (mirrors Java/Kotlin/Python), not "no method found".
+        val results = runSuperSearch(search, method, goMethod, project)
+        val file = goMethod.containingFile?.virtualFile
+        val methodData = MethodData(
+            name = getName(goMethod) ?: "unknown",
+            qualifiedName = QualifiedNameUtil.getQualifiedName(goMethod),
+            kind = LanguageServices.getKind(goMethod),
+            file = file?.let { getRelativePath(project, it) } ?: "unknown",
+            line = getLineNumber(project, goMethod) ?: 0,
+            column = getColumnNumber(project, goMethod) ?: 0,
+        )
+        return SuperMethodsData(method = methodData, hierarchy = results.map { toSuperMethodData(it, project) })
+    }
 
-        // Call processQuery via the Object overload which accepts raw types.
-        // GoSuperMethodSearch extends QueryExecutorBase<GoNamedSignatureOwner, SearchParameters>
-        // and returns GoMethodSpec instances (interface method specs satisfied by this struct method).
-        // Dedup: when a struct embeds an interface via multiple inheritance paths
-        // (e.g. ChainBase embedded by Mid1, Mid2, and Leaf), the same interface method
-        // declaration fires through the processor multiple times. Collapse on
-        // (qname or identityHashCode) + file:line, matching the sibling providers.
+    /**
+     * Type anchor: caret on an interface/struct declaration -> the interfaces it structurally
+     * satisfies (transitive; embedded structs excluded). Uses GoGotoSuperHandler.SUPER_SEARCH — the
+     * GoSuperSearch instance behind both Ctrl+U and the "implementing" gutter for types.
+     */
+    private fun tryTypeAnchor(element: PsiElement, project: Project): SuperMethodsData? {
+        val typeSpecClass = goTypeSpecClass ?: return null
+        val search = goSuperTypeSearch ?: return null
+        val method = processTypeQueryMethod ?: return null
+
+        @Suppress("UNCHECKED_CAST")
+        val goType = if (typeSpecClass.isInstance(element)) element
+        else PsiTreeUtil.getParentOfType(element, typeSpecClass as Class<out PsiElement>)
+            ?: return null
+
+        val results = runSuperSearch(search, method, goType, project)
+        val file = goType.containingFile?.virtualFile
+        val typeData = MethodData(
+            name = getName(goType) ?: "unknown",
+            qualifiedName = QualifiedNameUtil.getQualifiedName(goType),
+            kind = LanguageServices.getKind(goType),
+            file = file?.let { getRelativePath(project, it) } ?: "unknown",
+            line = getLineNumber(project, goType) ?: 0,
+            column = getColumnNumber(project, goType) ?: 0,
+        )
+        return SuperMethodsData(method = typeData, hierarchy = results.map { toSuperMethodData(it, project) })
+    }
+
+    /**
+     * Runs a Go super-search field's processQuery(SearchParameters, Processor) via reflection and
+     * returns the deduped PsiElement results. The single-arg DefinitionsScopedSearch.SearchParameters
+     * constructor sets checkDeep=true, matching GoGotoUtil.param() used by the IDE's GotoSuper.
+     *
+     * Dedup: when a type/method is reachable via multiple inheritance paths the same super
+     * declaration fires through the processor more than once (e.g. an interface embedded along
+     * several paths). Collapse on (qname or identityHashCode) + file:line, matching the sibling providers.
+     */
+    private fun runSuperSearch(
+        search: Any,
+        method: java.lang.reflect.Method,
+        anchor: PsiElement,
+        project: Project,
+    ): List<PsiElement> {
+        val params = DefinitionsScopedSearch.SearchParameters(anchor)
+        val results = mutableListOf<PsiElement>()
         val visited = mutableSetOf<String>()
         val processor = Processor<Any> { result ->
             if (result is PsiElement) {
@@ -81,23 +160,7 @@ class GoSuperMethodsProvider : SuperMethodsProvider {
             true
         }
         runCatching { method.invoke(search, params, processor) }
-
-        // A resolved Go method that satisfies no interface is a valid result with an
-        // empty hierarchy (mirrors Java/Kotlin/Python), not "no method found".
-        val file = goMethod.containingFile?.virtualFile
-        val methodData = MethodData(
-            name = getName(goMethod) ?: "unknown",
-            qualifiedName = QualifiedNameUtil.getQualifiedName(goMethod),
-            kind = LanguageServices.getKind(goMethod),
-            file = file?.let { getRelativePath(project, it) } ?: "unknown",
-            line = getLineNumber(project, goMethod) ?: 0,
-            column = getColumnNumber(project, goMethod) ?: 0,
-        )
-
-        return SuperMethodsData(
-            method = methodData,
-            hierarchy = results.map { toSuperMethodData(it, project) },
-        )
+        return results
     }
 
     private fun toSuperMethodData(resultElement: PsiElement, project: Project): SuperMethodData {

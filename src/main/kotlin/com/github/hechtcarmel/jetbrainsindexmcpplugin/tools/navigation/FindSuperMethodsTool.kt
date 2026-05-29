@@ -15,7 +15,7 @@ import kotlinx.serialization.json.JsonObject
 /**
  * Tool for finding super methods across multiple languages.
  *
- * Supports: Java, Kotlin, Python, JavaScript, TypeScript, PHP, Go (interface satisfaction), Rust (trait fn/const/type alias overrides).
+ * Supports: Java, Kotlin, Python, JavaScript, TypeScript, PHP, Go (interface satisfaction — methods and types), Rust (trait fn/const/type alias overrides).
  *
  * Delegates to language-specific providers via the [SuperMethodsProvider] extension point.
  */
@@ -26,7 +26,7 @@ class FindSuperMethodsTool : AbstractMcpTool() {
     override val description = """
         Navigate UP the hierarchy from a code element — what it overrides, implements, or extends. Mirrors the IDE's "Go to Super" (Ctrl+U). Anchor on a method (→ super-methods, full transitive chain), a class/interface/struct/trait (→ direct supertypes), a lambda (→ the single abstract method it implements), or a field/constant (→ the overridden member).
 
-        Languages: Java, Kotlin, Python, JavaScript, TypeScript, PHP, Go (interface methods a struct method satisfies), Rust (trait fn/const/type alias the impl satisfies).
+        Languages: Java, Kotlin, Python, JavaScript, TypeScript, PHP, Go (a method → the interface methods it satisfies; a type → the interfaces it satisfies), Rust (trait fn/const/type alias the impl satisfies).
 
         Returns: the matching supers with file locations (line/column), qualified names, and element kinds. Empty when the element has no super.
 
