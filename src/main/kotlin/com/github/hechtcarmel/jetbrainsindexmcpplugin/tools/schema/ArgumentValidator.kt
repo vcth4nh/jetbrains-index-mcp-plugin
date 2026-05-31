@@ -81,7 +81,7 @@ object ArgumentValidator {
         is JsonNull -> "null"
         is JsonPrimitive -> when {
             value.isString -> "string"
-            value.booleanOrNull != null -> "boolean"
+            value.booleanOrNull != null -> "boolean" // before integer: a numeric primitive's booleanOrNull is null, so order is safe
             value.longOrNull != null -> "integer"
             value.doubleOrNull != null -> "number"
             else -> "string"

@@ -18,6 +18,7 @@ class ArgumentValidatorUnitTest : TestCase() {
             putJsonObject("line") { put(SchemaConstants.TYPE, SchemaConstants.TYPE_INTEGER) }
             putJsonObject("pageSize") { put(SchemaConstants.TYPE, SchemaConstants.TYPE_INTEGER) }
             putJsonObject("project_path") { put(SchemaConstants.TYPE, SchemaConstants.TYPE_STRING) }
+            putJsonObject("verbose") { put(SchemaConstants.TYPE, SchemaConstants.TYPE_BOOLEAN) }
         }
         putJsonArray(SchemaConstants.REQUIRED) { add("query") }
     }
@@ -94,6 +95,40 @@ class ArgumentValidatorUnitTest : TestCase() {
         val v = ArgumentValidator.validate(
             args("query" to JsonPrimitive("Foo"), "project_path" to JsonPrimitive("/repo")), schema)
         assertTrue(v.isEmpty())
+    }
+
+    fun testBooleanTypeAcceptsBooleanAndBooleanString() {
+        // `verbose` is declared boolean; `true` and the string "true" both satisfy the runtime accessor.
+        assertTrue(ArgumentValidator.validate(
+            args("query" to JsonPrimitive("Foo"), "verbose" to JsonPrimitive(true)), schema).isEmpty())
+        assertTrue(ArgumentValidator.validate(
+            args("query" to JsonPrimitive("Foo"), "verbose" to JsonPrimitive("true")), schema).isEmpty())
+    }
+
+    fun testBooleanTypeRejectsNonBoolean() {
+        val v = ArgumentValidator.validate(
+            args("query" to JsonPrimitive("Foo"), "verbose" to JsonPrimitive("yes")), schema)
+        val it0 = v.single() as Violation.InvalidType
+        assertEquals("verbose", it0.parameter)
+        assertEquals("boolean", it0.expected)
+        assertEquals("string", it0.provided)
+    }
+
+    fun testFloatJsonNumberRejectedForInteger() {
+        // 1.5 is a JSON number but not an integer; longOrNull is null, so it must reject as invalid_type.
+        val v = ArgumentValidator.validate(
+            args("query" to JsonPrimitive("Foo"), "line" to JsonPrimitive(1.5)), schema)
+        val it0 = v.single() as Violation.InvalidType
+        assertEquals("line", it0.parameter)
+        assertEquals("integer", it0.expected)
+        assertEquals("number", it0.provided)
+    }
+
+    fun testFloatStringRejectedForInteger() {
+        val v = ArgumentValidator.validate(
+            args("query" to JsonPrimitive("Foo"), "line" to JsonPrimitive("1.5")), schema)
+        val it0 = v.single() as Violation.InvalidType
+        assertEquals("string", it0.provided)
     }
 
     fun testCursorOnlyCallPassesWhenNoRequiredArray() {
