@@ -4,13 +4,11 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ErrorMessages
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.settings.McpSettings
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ContentBlock
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ResponseFormatter
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.roots.ModuleRootManager
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 
 internal data class AvailableProjectEntry(
@@ -45,17 +43,8 @@ internal fun buildStructuredErrorResult(
     payload: JsonObject,
     format: McpSettings.ResponseFormat = McpSettings.ResponseFormat.JSON
 ): ToolCallResult {
-    val json = Json { encodeDefaults = true; prettyPrint = false }
     return try {
-        val jsonText = json.encodeToString(payload)
-        ToolCallResult(
-            content = listOf(
-                ContentBlock.Text(
-                    text = ResponseFormatter.formatStructuredPayload(jsonText, format)
-                )
-            ),
-            isError = true
-        )
+        StructuredToolResult.fromElement(payload, isError = true, format = format)
     } catch (e: Exception) {
         val message = e.message?.takeIf { it.isNotBlank() } ?: "unknown error"
         ToolCallResult(
