@@ -534,6 +534,49 @@ The plugin supports cursor-based pagination for search tools that return flat re
 
 **Backward compatibility:** Old `limit`/`maxResults` parameters work as aliases for `pageSize`. Legacy cursors (without embedded pageSize) are still decodable but require an explicit `pageSize` parameter.
 
+### Argument Validation & Structured Errors
+
+Two pieces ship the structured-validated-error-path work (Layers B + C of
+`docs/superpowers/specs/2026-05-29-structured-validated-error-path-design.md`):
+
+**`ArgumentValidator`** (`tools/schema/ArgumentValidator.kt`) — the enforcement counterpart to
+`SchemaBuilder`. Pure and unit-tested. `JsonRpcHandler.processToolCall` calls
+`validate(arguments, tool.inputSchema)` **after** project resolution and **before** `tool.execute`;
+non-empty violations short-circuit to an `invalid_arguments` tool error (not recorded in command
+history, not logged at ERROR). It is **strict** — checks required, primitive type, enum, **and
+unknown keys** (the core fix for silently-ignored typos, #12). Type checking mirrors the runtime
+accessors (`jsonPrimitive.int`/`.boolean`/`.content`): it rejects only the kinds those would throw on
+and stays lenient on numeric-string→int (`line: "123"` passes, `line: "abc"` does not). The
+undocumented pagination aliases `limit`/`maxResults` are allowlisted; `project_path` is in-schema on
+every tool. **Consequence:** because validation now enforces the schema, every parameter (and enum
+value) a tool actually accepts MUST be declared in its `SchemaBuilder` schema — an accepted-but-
+undeclared param is a bug (this surfaced `ide_find_class` `matchMode: camelCase`, which was missing
+from the enum). Conversely a param the tool ignores should not be sent; the validator (correctly)
+rejects it.
+
+**`McpErrors`** (`server/McpErrors.kt`) — builds canonical error bodies as `JsonObject`s (pure;
+callers render them to a `ToolCallResult` via `StructuredToolResult.fromElement`). Canonical shape:
+`{ "error": "<snake_case_code>", "message": "<human>", …context }`. Validation errors aggregate:
+`{ "error": "invalid_arguments", "message": …, "violations": [ {"parameter", "problem", …} ] }` where
+`problem` ∈ `{missing_required, unknown_parameter, invalid_type, invalid_enum}` (unknown carries
+`allowedParameters`; type carries `expected`/`provided`; enum carries `provided`/`supportedValues`).
+
+**Error channel & catch-all split.** Once a tool resolves, all errors are **tool results**
+(`isError: true` + text mirror + native `structuredContent`), never JSON-RPC `error` objects — those
+stay reserved for pre-dispatch protocol failures (parse, bad jsonrpc, missing params, unknown
+tool/method). `AbstractMcpTool.createErrorResult(message)` now wraps to
+`{"error":"tool_error","message":message}` centrally (all ~100 call sites, zero edits), and is
+recursion-safe (`createStructuredErrorResult`'s formatting-failure fallback builds plain text inline).
+`processToolCall`'s catch is split: `catch (McpException)` → `McpErrors.fromException(e)` using
+`e.errorType`, **not** logged at ERROR (client-caused, e.g. dumb mode); `catch (Exception)` →
+`internal_error`, logged at ERROR.
+
+**`error` code vocabulary:** `invalid_arguments` (validator) · `tool_error` (generic
+`createErrorResult`) · `internal_error` (generic catch / `InternalErrorException`) · the
+`McpException.errorType` codes `index_not_ready` / `file_not_found` / `symbol_not_found` /
+`refactoring_conflict` / `invalid_params` · and `ProjectResolver`'s `no_project_open` /
+`project_not_found` / `multiple_projects_open`.
+
 ### Search Collection Pattern (Processor)
 
 All search operations use the `Processor` pattern for efficient streaming and early termination:
