@@ -4,11 +4,14 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.McpConstants
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ErrorMessages
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.JsonRpcMethods
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ParamNames
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.exceptions.McpException
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.history.CommandEntry
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.history.CommandHistoryService
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.history.CommandStatus
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.*
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.settings.McpSettings
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.ToolRegistry
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.ArgumentValidator
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import kotlinx.serialization.encodeToString
@@ -138,6 +141,13 @@ class JsonRpcHandler @JvmOverloads constructor(
 
         val project = projectResult.project!!
 
+        // Strict argument validation against the tool's input schema (Layer B).
+        // Returns BEFORE recording history — mirrors the project-resolution early-return above.
+        val violations = ArgumentValidator.validate(arguments, tool.inputSchema)
+        if (violations.isNotEmpty()) {
+            return structuredToolError(request.id, McpErrors.invalidArguments(toolName, violations))
+        }
+
         // Record command in history
         val commandEntry = CommandEntry(
             toolName = toolName,
@@ -170,6 +180,20 @@ class JsonRpcHandler @JvmOverloads constructor(
                 id = request.id,
                 result = json.encodeToJsonElement(result)
             )
+        } catch (e: McpException) {
+            val duration = System.currentTimeMillis() - startTime
+            // Client-caused (dumb mode, not-found, conflict, …) — do NOT log at ERROR.
+            LOG.info("Tool '$toolName' returned ${e.errorType}: ${e.message}")
+
+            updateHistorySafely(
+                project = project,
+                commandEntry = commandEntry,
+                status = CommandStatus.ERROR,
+                result = e.message,
+                duration = duration
+            )
+
+            structuredToolError(request.id, McpErrors.fromException(e))
         } catch (e: Exception) {
             val duration = System.currentTimeMillis() - startTime
             LOG.error("Tool execution failed: $toolName", e)
@@ -182,14 +206,9 @@ class JsonRpcHandler @JvmOverloads constructor(
                 duration = duration
             )
 
-            JsonRpcResponse(
-                id = request.id,
-                result = json.encodeToJsonElement(
-                    ToolCallResult(
-                        content = listOf(ContentBlock.Text(text = e.message ?: ErrorMessages.UNKNOWN_ERROR)),
-                        isError = true
-                    )
-                )
+            structuredToolError(
+                request.id,
+                McpErrors.generic("internal_error", e.message ?: ErrorMessages.UNKNOWN_ERROR)
             )
         }
     }
@@ -221,6 +240,21 @@ class JsonRpcHandler @JvmOverloads constructor(
             id = request.id,
             result = JsonObject(emptyMap())
         )
+    }
+
+    /**
+     * Renders a canonical error body ([McpErrors]) into a tool-result `JsonRpcResponse`
+     * (`isError:true` + text mirror + `structuredContent`). The bodies are trivial objects, so
+     * `fromElement` cannot realistically throw; if it ever did, the outer [handleRequest] try/catch
+     * is the backstop, returning a JSON-RPC INTERNAL_ERROR.
+     */
+    private fun structuredToolError(id: JsonElement?, body: JsonObject): JsonRpcResponse {
+        val result = StructuredToolResult.fromElement(
+            element = body,
+            isError = true,
+            format = McpSettings.getInstance().responseFormat,
+        )
+        return JsonRpcResponse(id = id, result = json.encodeToJsonElement(result))
     }
 
     private fun createErrorResponse(

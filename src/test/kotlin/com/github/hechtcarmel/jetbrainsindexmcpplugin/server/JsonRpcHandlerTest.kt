@@ -5,7 +5,10 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ToolNames
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.JsonRpcRequest
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.JsonRpcResponse
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.ToolRegistry
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -65,5 +68,25 @@ class JsonRpcHandlerTest : BasePlatformTestCase() {
 
         val result = response.result!!.jsonObject
         assertNotNull("Result should contain tools array", result["tools"])
+    }
+
+    // Single-project BasePlatformTestCase: ProjectResolver picks the only open project.
+    fun testToolCallWithUnknownKeyReturnsInvalidArguments() = runBlocking {
+        val req = """{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"ide_find_class","arguments":{"query":"Foo","maxResult":5}}}"""
+        val resp = handler.handleRequest(req)!!
+        val result = Json.parseToJsonElement(resp).jsonObject["result"]!!.jsonObject
+        assertEquals(true, result["isError"]!!.jsonPrimitive.boolean)
+        val structured = result["structuredContent"]!!.jsonObject
+        assertEquals("invalid_arguments", structured["error"]!!.jsonPrimitive.content)
+        val problems = structured["violations"]!!.jsonArray.map { it.jsonObject["problem"]!!.jsonPrimitive.content }
+        assertTrue(problems.contains("unknown_parameter"))
+    }
+
+    fun testToolCallWithValidArgsDoesNotTripValidation() = runBlocking {
+        val req = """{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ide_index_status","arguments":{}}}"""
+        val resp = handler.handleRequest(req)!!
+        val result = Json.parseToJsonElement(resp).jsonObject["result"]!!.jsonObject
+        val structured = result["structuredContent"]?.jsonObject
+        assertTrue(structured == null || structured["error"]?.jsonPrimitive?.content != "invalid_arguments")
     }
 }
