@@ -6,6 +6,7 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.toArgumentFailur
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.exceptions.IndexNotReadyException
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.PaginationService
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.ProjectResolver
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.McpErrors
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.StructuredToolResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ContentBlock
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
@@ -615,23 +616,20 @@ abstract class AbstractMcpTool : McpTool {
     }
 
     /**
-     * Creates an error result with a message.
-     *
-     * @param message The error message
-     * @return A [ToolCallResult] with `isError = true`
+     * Creates an error result from a human-readable message. The message is wrapped in the
+     * canonical `{error:"tool_error", message}` body and emitted with `structuredContent`
+     * (MCP 2025-11-25) plus the text mirror. Delegates to [createStructuredErrorResult], whose
+     * formatting-failure fallback is inline — so this never recurses.
      */
     protected fun createErrorResult(message: String): ToolCallResult {
-        return ToolCallResult(
-            content = listOf(ContentBlock.Text(text = message)),
-            isError = true
-        )
+        return createStructuredErrorResult(McpErrors.generic("tool_error", message))
     }
 
     /**
-     * Creates an error result with a structured payload.
-     *
-     * The payload is emitted using the configured response format.
-     * If formatting fails, returns a plain-text formatting error instead.
+     * Creates an error result with a structured payload. The payload is emitted using the
+     * configured response format with native `structuredContent`. If formatting fails, falls back
+     * to a plain-text error built INLINE — it must not call [createErrorResult], which delegates
+     * here (that would form a cycle).
      */
     protected fun createStructuredErrorResult(data: JsonElement): ToolCallResult {
         return try {
@@ -641,7 +639,10 @@ abstract class AbstractMcpTool : McpTool {
                 format = McpSettings.getInstance().responseFormat,
             )
         } catch (e: Exception) {
-            createErrorResult(formattingFailureMessage(e))
+            ToolCallResult(
+                content = listOf(ContentBlock.Text(text = formattingFailureMessage(e))),
+                isError = true,
+            )
         }
     }
 
