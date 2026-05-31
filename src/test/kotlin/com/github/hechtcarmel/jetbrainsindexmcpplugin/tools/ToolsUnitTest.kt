@@ -905,7 +905,8 @@ class ToolsUnitTest : TestCase() {
         assertTrue("enum should contain 'substring'", values?.contains("substring") == true)
         assertTrue("enum should contain 'prefix'",    values?.contains("prefix")    == true)
         assertTrue("enum should contain 'exact'",     values?.contains("exact")     == true)
-        assertEquals("enum should have exactly 3 values", 3, values?.size)
+        assertTrue("enum should contain 'camelCase'", values?.contains("camelCase") == true)
+        assertEquals("enum should have exactly 4 values", 4, values?.size)
     }
 
     // ── language filter schema tests ───────────────────────────────────────────
