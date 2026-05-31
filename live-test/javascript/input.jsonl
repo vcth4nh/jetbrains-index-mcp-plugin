@@ -58,8 +58,8 @@
 {"id":"find-class-Sh-prefix",           "tool":"ide_find_class",          "params":{"query":"Sh","matchMode":"prefix"}}
 {"id":"find-class-Circle-exact",        "tool":"ide_find_class",          "params":{"query":"Circle","matchMode":"exact"}}
 {"id":"find-class-SC-camelcase",        "tool":"ide_find_class",          "params":{"query":"SC","matchMode":"camelCase"}}
-{"id":"hier-super-Square",    "tool":"ide_type_hierarchy",      "params":{"file":"src/normal.js","line":31,"column":7,"direction":"supertypes"}}
-{"id":"hier-sub-Shape",       "tool":"ide_type_hierarchy",      "params":{"file":"src/normal.js","line":7,"column":7,"direction":"subtypes"}}
+{"id":"hier-super-Square",    "tool":"ide_type_hierarchy",      "params":{"file":"src/normal.js","line":31,"column":7}}
+{"id":"hier-sub-Shape",       "tool":"ide_type_hierarchy",      "params":{"file":"src/normal.js","line":7,"column":7}}
 {"id":"hier-callee-makeDefault-d3",       "tool":"ide_call_hierarchy",      "params":{"file":"src/normal.js","line":56,"column":10,"direction":"callees","maxDepth":3}}
 {"id":"find-symbol-Shape.area-qualified","tool":"ide_find_symbol",        "params":{"query":"Shape.area"}}
 {"id":"find-class-no-match",            "tool":"ide_find_class",          "params":{"query":"NoSuchClassXyz"}}
@@ -68,7 +68,7 @@
 {"id":"usage-Circle-cross-file","tool":"ide_find_usages","params":{"file":"src/normal.js","line":12,"column":7}}
 {"id":"file-structure-accessors","tool":"ide_file_structure","params":{"file":"src/accessors.js"}}
 {"id":"super-Box.area","tool":"ide_find_super_methods","params":{"file":"src/accessors.js","line":9,"column":9}}
-{"id":"def-Number.parseInt-libraries-scope","tool":"ide_find_definition","params":{"file":"src/quirks.js","line":5,"column":23,"scope":"project_and_libraries"}}
+{"id":"def-Number.parseInt-libraries-scope","tool":"ide_find_definition","params":{"file":"src/quirks.js","line":5,"column":23}}
 {"id":"super-Leaf.m","tool":"ide_find_super_methods","params":{"file":"src/multisuper.js","line":14,"column":5}}
 {"id":"super-Mid.m","tool":"ide_find_super_methods","params":{"file":"src/multisuper.js","line":10,"column":5}}
 {"id":"super-AccessorDerived.value","tool":"ide_find_super_methods","params":{"file":"src/multisuper.js","line":23,"column":9}}

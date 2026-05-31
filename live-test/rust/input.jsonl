@@ -56,8 +56,8 @@
 {"id":"find-class-Sh-prefix",           "tool":"ide_find_class",          "params":{"query":"Sh","matchMode":"prefix"}}
 {"id":"find-class-Circle-exact",        "tool":"ide_find_class",          "params":{"query":"Circle","matchMode":"exact"}}
 {"id":"find-class-SC-camelcase",        "tool":"ide_find_class",          "params":{"query":"SC","matchMode":"camelCase"}}
-{"id":"hier-super-Square",    "tool":"ide_type_hierarchy",      "params":{"file":"src/normal.rs","line":54,"column":12,"direction":"supertypes"}}
-{"id":"hier-sub-Shape",       "tool":"ide_type_hierarchy",      "params":{"file":"src/normal.rs","line":5,"column":11,"direction":"subtypes"}}
+{"id":"hier-super-Square",    "tool":"ide_type_hierarchy",      "params":{"file":"src/normal.rs","line":54,"column":12}}
+{"id":"hier-sub-Shape",       "tool":"ide_type_hierarchy",      "params":{"file":"src/normal.rs","line":5,"column":11}}
 {"id":"hier-callee-make-default-d3",       "tool":"ide_call_hierarchy",      "params":{"file":"src/normal.rs","line":94,"column":8,"direction":"callees","maxDepth":3}}
 {"id":"find-symbol-IntCoercer.coerce-qualified","tool":"ide_find_symbol","params":{"query":"IntCoercer::coerce"}}
 {"id":"find-class-no-match",            "tool":"ide_find_class",          "params":{"query":"NoSuchClassXyz"}}
