@@ -175,7 +175,9 @@ Get complete type inheritance hierarchy (supertypes and subtypes).
 | `file` | string | no | Alternative: project-relative file path. Unlike other read-only navigation tools, `ide_type_hierarchy` file mode does not resolve dependency/library absolute paths or `jar://` URLs. |
 | `line` | integer | no | Required with file |
 | `column` | integer | no | Required with file |
-| `scope` | enum | no | One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
+| `scope` | enum | no | One of `all` (default), `production`, `test` |
+| `direction` | enum | no | `supertypes`, `subtypes`, or `both` (default) |
+| `maxDepth` | integer | no | Levels to traverse (default 5, max 20) |
 | `project_path` | string | no | Project root path |
 
 **Provide either** `className` **or** `file`+`line`+`column`.
@@ -196,7 +198,7 @@ Build call tree showing who calls a method or what a method calls.
 | `symbol` | string | conditional | Fully qualified symbol reference. Required for symbol-based lookup. |
 | `direction` | enum | yes | `callers` or `callees` |
 | `depth` | integer | no | Recursion depth (default 3, max 5) |
-| `scope` | enum | no | One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
+| `scope` | enum | no | One of `all` (default), `production`, `test`, `this_class`, `this_module` |
 | `project_path` | string | no | Project root path |
 
 **Returns**: `{ element: {name, file, line, column, language}, calls: [{name, file, line, column, language, children: [...]}] }`

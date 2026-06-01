@@ -40,13 +40,13 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
         encodeDefaults = true
     }
 
-    fun testTypeHierarchyRespectsProjectProductionFilesScope() = runBlocking {
+    fun testTypeHierarchyRespectsProductionScope() = runBlocking {
         val fixture = createLibraryInterfaceFixture()
         val tool = TypeHierarchyTool()
 
         val result = tool.execute(project, buildJsonObject {
             put("className", fixture.interfaceFqn)
-            put("scope", "project_production_files")
+            put("scope", "production")
         })
 
         assertFalse("Type hierarchy should succeed: ${result.content}", result.isError)
@@ -56,8 +56,8 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
         val subtypeNames = hierarchy.subtypes.map { it.name }
 
         assertTrue("Production implementation should remain visible", subtypeNames.any { it.contains("ProdRepositoryImpl") })
-        assertFalse("Test implementation should be filtered out by project_production_files", subtypeNames.any { it.contains("TestRepositoryImpl") })
-        assertFalse("Library implementation should be filtered out by project_production_files", subtypeNames.any { it.contains("LibraryRepositoryImpl") })
+        assertFalse("Test implementation should be filtered out by production scope", subtypeNames.any { it.contains("TestRepositoryImpl") })
+        assertFalse("Library implementation should be filtered out by production scope", subtypeNames.any { it.contains("LibraryRepositoryImpl") })
     }
 
     fun testFindImplementationsRespectsProjectTestFilesScope() = runBlocking {
@@ -397,7 +397,7 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
         )
     }
 
-    fun testCallHierarchyRespectsProjectProductionFilesScope() = runBlocking {
+    fun testCallHierarchyRespectsProductionScope() = runBlocking {
         val fixture = createProjectMethodFixture()
         val tool = CallHierarchyTool()
 
@@ -406,7 +406,7 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
             put("line", fixture.targetLine)
             put("column", fixture.targetColumn)
             put("direction", "callers")
-            put("scope", "project_production_files")
+            put("scope", "production")
         })
 
         assertFalse("Call hierarchy should succeed: ${result.content}", result.isError)
@@ -416,10 +416,10 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
         val callerNames = hierarchy.calls.map { it.name }
 
         assertTrue("Production caller should remain visible", callerNames.any { it.contains("ProdCaller.call") })
-        assertFalse("Test caller should be filtered out by project_production_files", callerNames.any { it.contains("TargetServiceTest.exercise") })
+        assertFalse("Test caller should be filtered out by production scope", callerNames.any { it.contains("TargetServiceTest.exercise") })
     }
 
-    fun testCallHierarchyRespectsProjectAndLibrariesScope() = runBlocking {
+    fun testCallHierarchyAllScopeIncludesLibraries() = runBlocking {
         val fixture = createLibraryMethodFixture()
         val tool = CallHierarchyTool()
 
@@ -428,7 +428,7 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
             put("line", fixture.targetLine)
             put("column", fixture.targetColumn)
             put("direction", "callers")
-            put("scope", "project_and_libraries")
+            put("scope", "all")
         })
 
         assertFalse("Call hierarchy should succeed: ${result.content}", result.isError)
