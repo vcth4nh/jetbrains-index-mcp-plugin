@@ -18,6 +18,7 @@
 {"id":"hier-type-Square",         "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.js","line":31,"column":7}}
 {"id":"hier-type-Rectangle",      "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.js","line":21,"column":7}}
 {"id":"hier-type-Shape",          "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.js","line":7,"column":7}}
+{"id":"hier-type-Shape-byname",   "tool":"ide_type_hierarchy",       "params":{"className":"Shape"}}
 {"id":"hier-callee-makeDefault",    "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.js","line":56,"column":10,"direction":"callees","maxDepth":2}}
 {"id":"hier-caller-area",   "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.js","line":8,"column":5,"direction":"callers","maxDepth":2}}
 {"id":"hier-callee-qAwait", "tool":"ide_call_hierarchy",       "params":{"file":"src/quirks.js","line":64,"column":16,"direction":"callees","maxDepth":2}}

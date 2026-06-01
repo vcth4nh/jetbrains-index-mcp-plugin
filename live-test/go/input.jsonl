@@ -53,6 +53,7 @@
 {"id":"find-symbol-no-match",           "tool":"ide_find_symbol",         "params":{"query":"noSuchSymbolXyz"}}
 {"id":"find-class-Shape-wildcard",      "tool":"ide_find_class",          "params":{"query":"Sh*","matchMode":"substring"}}
 {"id":"usage-baseShape.Describe-promoted","tool":"ide_find_usages","params":{"file":"normal.go","line":16,"column":20}}
+{"id":"usage-baseShape-embed","tool":"ide_find_usages","params":{"file":"embed.go","line":6,"column":2}}
 {"id":"find-class-Shape-prefix","tool":"ide_find_class","params":{"query":"Shape","matchMode":"prefix"}}
 {"id":"super-Circle.Area",          "tool":"ide_find_super_methods","params":{"file":"normal.go","line":23,"column":17}}
 {"id":"super-IntCoercer.Coerce",    "tool":"ide_find_super_methods","params":{"file":"quirks.go","line":56,"column":19}}

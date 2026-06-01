@@ -25,6 +25,7 @@
 {"id":"hier-type-Square",           "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.py","line":42,"column":7}}
 {"id":"hier-type-Rectangle",        "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.py","line":30,"column":7}}
 {"id":"hier-type-Shape",            "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.py","line":10,"column":7}}
+{"id":"hier-type-Shape-byname",     "tool":"ide_type_hierarchy",       "params":{"className":"normal.Shape"}}
 {"id":"hier-callee-make-default",     "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.py","line":63,"column":5,"direction":"callees","maxDepth":2}}
 {"id":"hier-caller-area",     "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.py","line":12,"column":9,"direction":"callers","maxDepth":2}}
 {"id":"hier-callee-total-area",       "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.py","line":54,"column":9,"direction":"callees","maxDepth":2}}

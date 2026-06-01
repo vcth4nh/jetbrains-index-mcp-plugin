@@ -24,6 +24,7 @@
 {"id":"hier-type-Square",         "tool":"ide_type_hierarchy",       "params":{"file":"src/main/java/demo/Normal.java","line":56,"column":7}}
 {"id":"hier-type-Rectangle",      "tool":"ide_type_hierarchy",       "params":{"file":"src/main/java/demo/Normal.java","line":36,"column":7}}
 {"id":"hier-type-Shape",          "tool":"ide_type_hierarchy",       "params":{"file":"src/main/java/demo/Normal.java","line":10,"column":16}}
+{"id":"hier-type-Shape-byname",   "tool":"ide_type_hierarchy",       "params":{"className":"demo.Shape"}}
 {"id":"hier-type-CoerceMode",     "tool":"ide_type_hierarchy",       "params":{"file":"src/main/java/demo/Quirks.java","line":71,"column":10}}
 {"id":"hier-type-Point",          "tool":"ide_type_hierarchy",       "params":{"file":"src/main/java/demo/Modern.java","line":4,"column":19}}
 {"id":"hier-type-Animal",         "tool":"ide_type_hierarchy",       "params":{"file":"src/main/java/demo/Modern.java","line":8,"column":29}}

@@ -22,6 +22,7 @@
 {"id":"hier-type-Square",         "tool":"ide_type_hierarchy",       "params":{"file":"src/Normal.php","line":40,"column":7}}
 {"id":"hier-type-Rectangle",      "tool":"ide_type_hierarchy",       "params":{"file":"src/Normal.php","line":28,"column":7}}
 {"id":"hier-type-Shape",          "tool":"ide_type_hierarchy",       "params":{"file":"src/Normal.php","line":8,"column":16}}
+{"id":"hier-type-Shape-byname",   "tool":"ide_type_hierarchy",       "params":{"className":"\\Demo\\Shape"}}
 {"id":"hier-type-Drawable",       "tool":"ide_type_hierarchy",       "params":{"file":"src/Normal.php","line":4,"column":11}}
 {"id":"hier-type-Coercer",        "tool":"ide_type_hierarchy",       "params":{"file":"src/Quirks.php","line":79,"column":11}}
 {"id":"hier-type-Status",         "tool":"ide_type_hierarchy",       "params":{"file":"src/Modern.php","line":4,"column":6}}

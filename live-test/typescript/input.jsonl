@@ -1,4 +1,6 @@
 {"id":"def-Circle.area",          "tool":"ide_find_definition",      "params":{"file":"src/normal.ts","line":17,"column":5}}
+{"id":"def-Circle.radius-paramprop",  "tool":"ide_find_definition",      "params":{"file":"src/normal.ts","line":17,"column":44}}
+{"id":"usage-Circle.radius-paramprop","tool":"ide_find_usages",          "params":{"file":"src/normal.ts","line":14,"column":33}}
 {"id":"def-Rectangle.area",       "tool":"ide_find_definition",      "params":{"file":"src/normal.ts","line":25,"column":5}}
 {"id":"def-makeDefaultShapes",    "tool":"ide_find_definition",      "params":{"file":"src/normal.ts","line":55,"column":17}}
 {"id":"def-Quirks-parseint-from-typed-lambda","tool":"ide_find_definition","params":{"file":"src/quirks.ts","line":3,"column":12}}
@@ -18,6 +20,7 @@
 {"id":"hier-type-Square",         "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.ts","line":29,"column":14}}
 {"id":"hier-type-Rectangle",      "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.ts","line":21,"column":14}}
 {"id":"hier-type-Shape",          "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.ts","line":5,"column":23}}
+{"id":"hier-type-Shape-byname",   "tool":"ide_type_hierarchy",       "params":{"className":"Shape"}}
 {"id":"hier-type-TypedCoercer",               "tool":"ide_type_hierarchy","params":{"file":"src/quirks.ts","line":52,"column":14}}
 {"id":"hier-type-Drawable",       "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.ts","line":1,"column":18}}
 {"id":"hier-callee-makeDefault",    "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.ts","line":55,"column":17,"direction":"callees","maxDepth":2}}
