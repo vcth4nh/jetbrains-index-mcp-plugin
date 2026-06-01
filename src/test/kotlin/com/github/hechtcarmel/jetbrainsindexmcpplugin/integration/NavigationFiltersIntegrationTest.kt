@@ -462,6 +462,76 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
         assertTrue("Library usage should remain visible when scope includes libraries", usageFiles.any { it.contains("LibraryCaller.java") })
     }
 
+    fun testFindUsagesCursorRoundTripVisitsEveryUsageExactlyOnce() = runBlocking {
+        val fixture = createMultiUsageFixture()
+        val tool = FindUsagesTool()
+
+        // Baseline: a single large page collects every usage in one shot (no cursor).
+        val baselinePage = tool.execute(project, buildJsonObject {
+            put("file", fixture.targetFilePath)
+            put("line", fixture.targetLine)
+            put("column", fixture.targetColumn)
+            put("pageSize", 100)
+        })
+        assertFalse("Baseline find_usages should succeed: ${baselinePage.content}", baselinePage.isError)
+        val baseline = json.decodeFromString<FindUsagesResult>(
+            (baselinePage.content.first() as ContentBlock.Text).text
+        )
+        assertNull("Every usage fits one large page, so there is no next cursor", baseline.nextCursor)
+        val baselineKeys = baseline.usages.map { Triple(it.file, it.line, it.column) }
+        assertTrue(
+            "Fixture must yield enough usages to force multiple pages, got ${baselineKeys.size}",
+            baselineKeys.size >= 4
+        )
+        assertEquals("Baseline usages must have distinct positions", baselineKeys.size, baselineKeys.toSet().size)
+
+        // Walk the same result set two-at-a-time, chaining each returned cursor into the next request.
+        val pageSize = 2
+        val firstPage = tool.execute(project, buildJsonObject {
+            put("file", fixture.targetFilePath)
+            put("line", fixture.targetLine)
+            put("column", fixture.targetColumn)
+            put("pageSize", pageSize)
+        })
+        assertFalse("First page should succeed: ${firstPage.content}", firstPage.isError)
+        var page = json.decodeFromString<FindUsagesResult>(
+            (firstPage.content.first() as ContentBlock.Text).text
+        )
+        assertEquals("First page should be full", pageSize, page.usages.size)
+        assertNotNull("First page must carry a cursor while results remain", page.nextCursor)
+
+        val collected = page.usages.map { Triple(it.file, it.line, it.column) }.toMutableList()
+        var cursor = page.nextCursor
+        var guard = 0
+        while (cursor != null) {
+            assertTrue("Pagination did not terminate", guard++ < 50)
+            val nextPage = tool.execute(project, buildJsonObject {
+                put("cursor", cursor)
+                put("pageSize", pageSize)
+            })
+            assertFalse("Cursor page should succeed: ${nextPage.content}", nextPage.isError)
+            page = json.decodeFromString<FindUsagesResult>(
+                (nextPage.content.first() as ContentBlock.Text).text
+            )
+            // Every page before the last is full.
+            if (page.nextCursor != null) {
+                assertEquals("Non-final page should be full", pageSize, page.usages.size)
+            }
+            collected += page.usages.map { Triple(it.file, it.line, it.column) }
+            cursor = page.nextCursor
+        }
+
+        // The paged walk must reproduce the baseline exactly: no omissions, no extras, no duplicates.
+        assertEquals(
+            "Paged walk must visit each usage once (no cross-page duplicates)",
+            collected.size, collected.toSet().size
+        )
+        assertEquals(
+            "Paged walk must cover exactly the single-page baseline",
+            baselineKeys.toSet(), collected.toSet()
+        )
+    }
+
     private data class LibraryInterfaceFixture(
         val interfaceFqn: String,
         val interfaceFile: Path,
@@ -658,6 +728,54 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
         val line = targetDocument.getLineNumber(offset) + 1
         val column = offset - targetDocument.getLineStartOffset(line - 1) + 1
 
+        return ProjectMethodFixture(
+            targetFilePath = ProjectUtils.getRelativePath(project, targetFile.toString().replace('\\', '/')),
+            targetLine = line,
+            targetColumn = column
+        )
+    }
+
+    /** A target method invoked from five distinct call sites — enough usages to span several pages. */
+    private fun createMultiUsageFixture(): ProjectMethodFixture {
+        val prodRootPath = createProjectDirectory("usage-pagination-src")
+        val prodRoot = refreshVfsDirectory(prodRootPath)
+        PsiTestUtil.addSourceRoot(module, prodRoot, false)
+
+        val targetSource = """
+            package paging;
+
+            public class UsageTarget {
+                public void ping() {
+                }
+            }
+        """.trimIndent()
+        val targetFile = writePathFile(prodRootPath, "paging/UsageTarget.java", targetSource)
+
+        // One caller invoking ping() on five distinct lines → five distinct usage positions.
+        val callerFile = writePathFile(
+            prodRootPath,
+            "paging/UsageCaller.java",
+            """
+                package paging;
+
+                public class UsageCaller {
+                    public void exercise(UsageTarget t) {
+                        t.ping();
+                        t.ping();
+                        t.ping();
+                        t.ping();
+                        t.ping();
+                    }
+                }
+            """.trimIndent()
+        )
+
+        refreshVfsFile(targetFile)
+        refreshVfsFile(callerFile)
+        PsiDocumentManager.getInstance(project).commitAllDocuments()
+        IndexingTestUtil.waitUntilIndexesAreReady(project)
+
+        val (line, column) = findPosition(targetSource, "ping")
         return ProjectMethodFixture(
             targetFilePath = ProjectUtils.getRelativePath(project, targetFile.toString().replace('\\', '/')),
             targetLine = line,
