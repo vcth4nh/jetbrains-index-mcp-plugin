@@ -60,8 +60,8 @@
 {"id":"find-class-Sh-prefix",           "tool":"ide_find_class",          "params":{"query":"Sh","matchMode":"prefix"}}
 {"id":"find-class-Circle-exact",        "tool":"ide_find_class",          "params":{"query":"Circle","matchMode":"exact"}}
 {"id":"find-class-SC-camelcase",        "tool":"ide_find_class",          "params":{"query":"SC","matchMode":"camelCase"}}
-{"id":"hier-super-Square",    "tool":"ide_type_hierarchy",      "params":{"file":"src/Normal.php","line":40,"column":7}}
-{"id":"hier-sub-Shape",       "tool":"ide_type_hierarchy",      "params":{"file":"src/Normal.php","line":8,"column":16}}
+{"id":"hier-super-Square",    "tool":"ide_type_hierarchy",      "params":{"file":"src/Normal.php","line":40,"column":7,"direction":"supertypes"}}
+{"id":"hier-sub-Shape",       "tool":"ide_type_hierarchy",      "params":{"file":"src/Normal.php","line":8,"column":16,"direction":"subtypes"}}
 {"id":"hier-callee-makeDefault-d3",       "tool":"ide_call_hierarchy",      "params":{"file":"src/Normal.php","line":73,"column":10,"direction":"callees","maxDepth":3}}
 {"id":"find-symbol-Shape.area-qualified","tool":"ide_find_symbol",        "params":{"query":"Shape::area"}}
 {"id":"find-class-no-match",            "tool":"ide_find_class",          "params":{"query":"NoSuchClassXyz"}}
