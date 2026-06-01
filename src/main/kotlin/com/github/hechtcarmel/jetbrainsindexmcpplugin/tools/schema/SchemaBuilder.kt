@@ -81,6 +81,15 @@ class SchemaBuilder private constructor() {
         )
     }
 
+    fun hierarchyScopeProperty(description: String, values: List<String>, required: Boolean = false) = apply {
+        enumProperty(
+            name = ParamNames.SCOPE,
+            description = description,
+            values = values,
+            required = required
+        )
+    }
+
     fun property(name: String, schema: JsonObject, required: Boolean = false) = apply {
         properties[name] = schema
         if (required) requiredFields.add(name)
