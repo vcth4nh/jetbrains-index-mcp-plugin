@@ -2,13 +2,12 @@ package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation
 
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ErrorMessages
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ParamNames
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScopeResolver
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.AbstractMcpTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.CallElement
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.CallHierarchyResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.HierarchyKind
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.HierarchyScope
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.HierarchyTreeWalker
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
@@ -48,7 +47,7 @@ class CallHierarchyTool : AbstractMcpTool() {
 
         Returns: recursive tree with method signatures, file locations (line/column), and nested call relationships.
 
-        Parameters: file + line + column (required), direction (required): "callers" or "callees". maxDepth (optional, default: 7, max: 20). scope (optional, default: "project_files"; supported: project_files, project_and_libraries, project_production_files, project_test_files).
+        Parameters: file + line + column (required), direction (required): "callers" or "callees". maxDepth (optional, default: 7, max: 20). scope (optional, default: "all"; supported: all, production, test, this_class, this_module).
 
         Example: {"file": "src/Service.java", "line": 42, "column": 10, "direction": "callers"}
     """.trimIndent()
@@ -59,7 +58,10 @@ class CallHierarchyTool : AbstractMcpTool() {
         .lineAndColumn()
         .enumProperty("direction", "Direction: 'callers' (methods that call this method) or 'callees' (methods this method calls)", listOf("callers", "callees"), required = true)
         .intProperty("maxDepth", "How many levels deep to traverse the call hierarchy (default: 7, max: 20)")
-        .scopeProperty("Search scope. Default: project_files.")
+        .hierarchyScopeProperty(
+            "Hierarchy scope. Default: all. (production = production sources only — empty in projects without production roots, same as the IDE.)",
+            HierarchyScope.wireValues(HierarchyScope.CALL_HIERARCHY_SCOPES)
+        )
         .build()
 
     companion object {
@@ -73,10 +75,8 @@ class CallHierarchyTool : AbstractMcpTool() {
         val depth = (arguments["maxDepth"]?.jsonPrimitive?.int ?: DEFAULT_DEPTH).coerceIn(1, MAX_DEPTH)
         val rawScope = rawScopeValue(arguments[ParamNames.SCOPE])
         val scope = try {
-            BuiltInSearchScopeResolver.parse(arguments, BuiltInSearchScope.PROJECT_FILES)
+            HierarchyScope.parse(arguments)
         } catch (_: IllegalArgumentException) {
-            return createInvalidScopeError(rawScope)
-        } catch (_: IllegalStateException) {
             return createInvalidScopeError(rawScope)
         }
         val kind = when (direction) {
@@ -128,7 +128,7 @@ class CallHierarchyTool : AbstractMcpTool() {
             put("parameter", JsonPrimitive(ParamNames.SCOPE))
             put("provided", JsonPrimitive(provided))
             put("supportedValues", buildJsonArray {
-                BuiltInSearchScope.supportedWireValues().forEach { add(JsonPrimitive(it)) }
+                HierarchyScope.wireValues(HierarchyScope.CALL_HIERARCHY_SCOPES).forEach { add(JsonPrimitive(it)) }
             })
         })
 

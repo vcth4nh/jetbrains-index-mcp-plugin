@@ -16,8 +16,3 @@ internal fun shouldIncludeNavigationFile(
     searchScope: GlobalSearchScope,
     file: VirtualFile,
 ): Boolean = searchScope.contains(file)
-
-internal fun createNavigationSearchScope(
-    project: com.intellij.openapi.project.Project,
-    scope: BuiltInSearchScope,
-): GlobalSearchScope = BuiltInSearchScopeResolver.resolveGlobalScope(project, scope)

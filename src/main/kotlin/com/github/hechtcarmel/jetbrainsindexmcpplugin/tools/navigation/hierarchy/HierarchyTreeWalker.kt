@@ -1,6 +1,5 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy
 
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
 import com.intellij.ide.hierarchy.CallHierarchyBrowserBase
 import com.intellij.ide.hierarchy.HierarchyBrowserBaseEx
 import com.intellij.ide.hierarchy.HierarchyNodeDescriptor
@@ -127,7 +126,7 @@ internal object HierarchyTreeWalker {
         project: Project,
         element: PsiElement,
         kind: HierarchyKind,
-        scope: BuiltInSearchScope,
+        scope: HierarchyScope,
         maxDepth: Int
     ): Result<HierarchyWalkResult> = runCatching { walkInner(project, element, kind, scope, maxDepth) }
         .getOrElse { Result.failure(it) }
@@ -141,7 +140,7 @@ internal object HierarchyTreeWalker {
         project: Project,
         element: PsiElement,
         kind: HierarchyKind,
-        scope: BuiltInSearchScope,
+        scope: HierarchyScope,
         maxDepth: Int
     ): Result<HierarchyWalkResult> {
         val language = element.language
@@ -186,7 +185,7 @@ internal object HierarchyTreeWalker {
         // has no current sheet, so the scope would default to SCOPE_ALL. Reflectively poke
         // the sheet for our `typeName` to install our chosen scope before invoking
         // createHierarchyTreeStructure.
-        applyBrowserScope(browser, typeName, HierarchyScopeMapping.toIdeScopeType(scope))
+        applyBrowserScope(browser, typeName, scope.ideScopeType)
 
         val structure = invokeCreateHierarchyTreeStructure(browser, typeName, target)
             ?: return Result.failure(IllegalStateException("Browser refused element ${element.text} for $kind"))

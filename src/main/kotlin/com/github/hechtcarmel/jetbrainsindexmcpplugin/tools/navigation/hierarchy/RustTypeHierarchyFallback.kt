@@ -1,6 +1,5 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy
 
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
 import com.intellij.ide.hierarchy.HierarchyNodeDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
@@ -18,7 +17,7 @@ internal object RustTypeHierarchyFallback {
         project: Project,
         element: PsiElement,
         kind: HierarchyKind,
-        scope: BuiltInSearchScope,
+        scope: HierarchyScope,
         maxDepth: Int
     ): Result<HierarchyWalkResult> {
         if (!kind.isType) {

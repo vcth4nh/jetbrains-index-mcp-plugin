@@ -46,6 +46,20 @@ class ToolsUnitTest : TestCase() {
         assertNull("Should not have includeTests property", properties?.get("includeTests"))
     }
 
+    private fun assertHasHierarchyScope(
+        properties: kotlinx.serialization.json.JsonObject?,
+        expectedValues: List<String>,
+    ) {
+        val scopeProperty = properties?.get(ParamNames.SCOPE)?.jsonObject
+        assertNotNull("Should have scope property", scopeProperty)
+        assertEquals(
+            expectedValues,
+            scopeProperty?.get("enum")?.jsonArray?.map { it.jsonPrimitive.content }
+        )
+        assertNull("Should not have includeLibraries property", properties?.get("includeLibraries"))
+        assertNull("Should not have includeTests property", properties?.get("includeTests"))
+    }
+
     fun testGetIndexStatusToolSchema() {
         val tool = GetIndexStatusTool()
 
@@ -223,7 +237,16 @@ class ToolsUnitTest : TestCase() {
         assertNotNull("Should have line property", properties?.get(ParamNames.LINE))
         assertNotNull("Should have column property", properties?.get(ParamNames.COLUMN))
         assertNotNull("Should have className property", properties?.get(ParamNames.CLASS_NAME))
-        assertHasScopeAndNoLegacyFilters(properties)
+        assertHasHierarchyScope(properties, listOf("all", "production", "test"))
+
+        // direction (supertypes|subtypes|both) + maxDepth — parity with call hierarchy
+        val directionProp = properties?.get(ParamNames.DIRECTION)?.jsonObject
+        assertNotNull("Should have direction property", directionProp)
+        assertEquals(
+            listOf("supertypes", "subtypes", "both"),
+            directionProp?.get("enum")?.jsonArray?.map { it.jsonPrimitive.content }
+        )
+        assertNotNull("Should have maxDepth property", properties?.get("maxDepth"))
     }
 
     fun testCallHierarchyToolSchema() {
@@ -239,7 +262,10 @@ class ToolsUnitTest : TestCase() {
         assertNotNull(properties)
 
         assertNotNull("Should have direction property", properties?.get(ParamNames.DIRECTION))
-        assertHasScopeAndNoLegacyFilters(properties)
+        assertHasHierarchyScope(
+            properties,
+            listOf("all", "production", "test", "this_class", "this_module")
+        )
     }
 
     fun testFindImplementationsToolSchema() {

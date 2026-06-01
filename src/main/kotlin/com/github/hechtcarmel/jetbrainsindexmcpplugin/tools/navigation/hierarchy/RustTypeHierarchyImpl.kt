@@ -1,9 +1,7 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy
 
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.TypeElementData
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.TypeHierarchyData
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.createNavigationSearchScope
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.shouldIncludeNavigationElement
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PluginDetectors
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
@@ -207,10 +205,10 @@ internal class RustTypeHierarchyImpl {
     fun getTypeHierarchy(
         element: PsiElement,
         project: Project,
-        scope: BuiltInSearchScope
+        scope: HierarchyScope
     ): TypeHierarchyData? {
         LOG.debug("Getting type hierarchy for Rust element at ${element.containingFile?.name}")
-        val searchScope = createNavigationSearchScope(project, scope)
+        val searchScope = HierarchyScope.resolveGlobalScope(project, scope)
 
         // Handle traits
         val trait = findContainingRsTrait(element)

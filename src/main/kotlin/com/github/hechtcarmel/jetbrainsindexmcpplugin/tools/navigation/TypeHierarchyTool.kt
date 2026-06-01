@@ -1,14 +1,13 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation
 
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ParamNames
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScopeResolver
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.AbstractMcpTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.TypeElement
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.TypeHierarchyResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.ClassLikePsi
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.HierarchyKind
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.HierarchyScope
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.HierarchyTreeWalker
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
@@ -45,11 +44,11 @@ class TypeHierarchyTool : AbstractMcpTool() {
 
         Rust note: className parameter not supported for Rust; use file + line + column instead.
 
-        Returns: target class info, full supertype chain (recursive), and all subtypes in the project.
+        Returns: target class info, supertype chain (recursive), and subtypes in the project — per the requested direction.
 
-        Parameters: Either className (e.g., "com.example.MyClass") OR file + line + column. scope (optional, default: "project_files"; supported: project_files, project_and_libraries, project_production_files, project_test_files).
+        Parameters: Either className (e.g., "com.example.MyClass") OR file + line + column. direction (optional: "supertypes", "subtypes", or "both"; default: "both"). maxDepth (optional, default: 5, max: 20). scope (optional, default: "all"; supported: all, production, test).
 
-        Example: {"className": "com.example.UserService", "scope": "project_and_libraries"} or {"file": "src/MyClass.java", "line": 10, "column": 14}
+        Example: {"className": "com.example.UserService", "direction": "subtypes"} or {"file": "src/MyClass.java", "line": 10, "column": 14, "direction": "supertypes"}
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
@@ -58,22 +57,42 @@ class TypeHierarchyTool : AbstractMcpTool() {
         .file(required = false, description = "Path to file relative to project root (e.g., 'src/main/java/com/example/MyClass.java'). Use with line and column.")
         .intProperty("line", "1-based line number where the class is defined. Required if using file parameter.")
         .intProperty("column", "1-based column number. Required if using file parameter.")
-        .scopeProperty("Search scope. Default: project_files.")
+        .hierarchyScopeProperty(
+            "Hierarchy scope. Default: all. (production = production sources only — empty in projects without production roots, same as the IDE.)",
+            HierarchyScope.wireValues(HierarchyScope.TYPE_HIERARCHY_SCOPES)
+        )
+        .enumProperty(
+            ParamNames.DIRECTION,
+            "Which direction to traverse: 'supertypes' (ancestors), 'subtypes' (descendants), or 'both'. Default: both.",
+            listOf("supertypes", "subtypes", "both")
+        )
+        .intProperty("maxDepth", "How many levels deep to traverse the hierarchy (default: 5, max: 20).")
         .build()
+
+    companion object {
+        private const val DEFAULT_DEPTH = 5
+        private const val MAX_DEPTH = 20
+        private const val DIRECTION_SUPERTYPES = "supertypes"
+        private const val DIRECTION_SUBTYPES = "subtypes"
+        private const val DIRECTION_BOTH = "both"
+    }
 
     override suspend fun doExecute(project: Project, arguments: JsonObject): ToolCallResult {
         requireSmartMode(project)
 
         val className = arguments["className"]?.jsonPrimitive?.content
         val file = arguments["file"]?.jsonPrimitive?.content
+        val direction = arguments[ParamNames.DIRECTION]?.jsonPrimitive?.content ?: DIRECTION_BOTH
+        val maxDepth = (arguments["maxDepth"]?.jsonPrimitive?.int ?: DEFAULT_DEPTH).coerceIn(1, MAX_DEPTH)
         val rawScope = rawScopeValue(arguments[ParamNames.SCOPE])
         val scope = try {
-            BuiltInSearchScopeResolver.parse(arguments, BuiltInSearchScope.PROJECT_FILES)
+            HierarchyScope.parse(arguments)
         } catch (_: IllegalArgumentException) {
             return createInvalidScopeError(rawScope)
-        } catch (_: IllegalStateException) {
-            return createInvalidScopeError(rawScope)
         }
+
+        val includeSupertypes = direction != DIRECTION_SUBTYPES
+        val includeSubtypes = direction != DIRECTION_SUPERTYPES
 
         return suspendingReadAction {
             ProgressManager.checkCanceled()
@@ -89,43 +108,51 @@ class TypeHierarchyTool : AbstractMcpTool() {
 
             ProgressManager.checkCanceled()
 
-            // Two walker calls: supertypes (recurse up to maxDepth) and subtypes (flat list).
-            val maxDepth = 5
+            // Walk only the requested direction(s). `both` (default) preserves the original
+            // behavior: supertypes recurse up to maxDepth, subtypes are flattened.
+            val superResult = if (includeSupertypes) {
+                HierarchyTreeWalker
+                    .walk(project, element, HierarchyKind.SUPERTYPES, scope, maxDepth)
+                    .getOrElse {
+                        return@suspendingReadAction createErrorResult(it.message ?: "Failed to build supertype hierarchy")
+                    }
+            } else null
 
-            val superResult = HierarchyTreeWalker
-                .walk(project, element, HierarchyKind.SUPERTYPES, scope, maxDepth)
-                .getOrElse {
-                    return@suspendingReadAction createErrorResult(it.message ?: "Failed to build supertype hierarchy")
-                }
-            val subResult = HierarchyTreeWalker
-                .walk(project, element, HierarchyKind.SUBTYPES, scope, maxDepth)
-                .getOrElse {
-                    return@suspendingReadAction createErrorResult(it.message ?: "Failed to build subtype hierarchy")
-                }
+            val subResult = if (includeSubtypes) {
+                HierarchyTreeWalker
+                    .walk(project, element, HierarchyKind.SUBTYPES, scope, maxDepth)
+                    .getOrElse {
+                        return@suspendingReadAction createErrorResult(it.message ?: "Failed to build subtype hierarchy")
+                    }
+            } else null
 
-            val supertypeDescriptors = superResult.root.cachedChildren
-                ?.filterIsInstance<HierarchyNodeDescriptor>().orEmpty()
-            // Flatten subtypes recursively. The IDE returns a tree (e.g. Shape → Rectangle → Square),
-            // but our wire format expects a flat list of all descendants at the top level. Walk the
-            // descriptor tree and collect each subtype with `supertypes = null`.
+            val supertypes = superResult?.let { sr ->
+                sr.root.cachedChildren
+                    ?.filterIsInstance<HierarchyNodeDescriptor>().orEmpty()
+                    .mapNotNull {
+                        convertDescriptorToTypeElement(it, sr.resolver, recurseSupertypes = true, remainingDepth = maxDepth)
+                    }
+            } ?: emptyList()
+
             val subtypes = mutableListOf<TypeElement>()
-            fun collectSubtypes(desc: HierarchyNodeDescriptor) {
-                convertDescriptorToTypeElement(desc, subResult.resolver, recurseSupertypes = false, remainingDepth = 0)
-                    ?.let { subtypes.add(it) }
-                desc.cachedChildren
+            if (subResult != null) {
+                val resolver = subResult.resolver
+                fun collectSubtypes(desc: HierarchyNodeDescriptor) {
+                    convertDescriptorToTypeElement(desc, resolver, recurseSupertypes = false, remainingDepth = 0)
+                        ?.let { subtypes.add(it) }
+                    desc.cachedChildren
+                        ?.filterIsInstance<HierarchyNodeDescriptor>()
+                        ?.forEach { collectSubtypes(it) }
+                }
+                subResult.root.cachedChildren
                     ?.filterIsInstance<HierarchyNodeDescriptor>()
                     ?.forEach { collectSubtypes(it) }
             }
-            subResult.root.cachedChildren
-                ?.filterIsInstance<HierarchyNodeDescriptor>()
-                ?.forEach { collectSubtypes(it) }
 
-            val supertypes = supertypeDescriptors.mapNotNull {
-                convertDescriptorToTypeElement(it, superResult.resolver, recurseSupertypes = true, remainingDepth = maxDepth)
-            }
-
+            // Root descriptor comes from whichever walk ran (at least one always does).
+            val rootDescriptor = (superResult ?: subResult)!!.root
             val rootElement = ClassLikePsi.walkUpToClassLike(element) ?: element
-            val rootTypeElement = buildRootTypeElement(superResult.root, rootElement)
+            val rootTypeElement = buildRootTypeElement(rootDescriptor, rootElement)
                 ?: return@suspendingReadAction createErrorResult("Could not extract class info from element")
 
             createJsonResult(TypeHierarchyResult(
@@ -148,7 +175,7 @@ class TypeHierarchyTool : AbstractMcpTool() {
             put("parameter", JsonPrimitive(ParamNames.SCOPE))
             put("provided", JsonPrimitive(provided))
             put("supportedValues", buildJsonArray {
-                BuiltInSearchScope.supportedWireValues().forEach { add(JsonPrimitive(it)) }
+                HierarchyScope.wireValues(HierarchyScope.TYPE_HIERARCHY_SCOPES).forEach { add(JsonPrimitive(it)) }
             })
         })
 
