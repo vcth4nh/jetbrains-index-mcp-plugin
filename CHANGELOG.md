@@ -5,6 +5,8 @@
 ## [Unreleased]
 
 ### Added
+- `ide_type_hierarchy` now accepts `direction` (`supertypes` | `subtypes` | `both`, default
+  `both`) and `maxDepth` (default 5, max 20), reaching parity with `ide_call_hierarchy`.
 - Native `structuredContent` on all tool results (MCP 2025-11-25); the serialized JSON is still mirrored in the text content block for backward compatibility.
 - Server-side argument validation: every `tools/call` is validated against the target tool's input schema before execution. Missing required parameters, unknown/misspelled keys, wrong primitive types, and out-of-enum values are rejected with a structured `invalid_arguments` error that aggregates **all** violations in one response (so a single retry can fix everything) — each violation names the offending parameter and, for unknown keys, lists the accepted parameters. Numeric-string coercion stays lenient (`line: "123"` is accepted) to match the runtime accessors. Closes #12.
 - `ide_find_super_methods` now supports Rust — returns the trait method(s) a struct method satisfies (dispatches via the Rust plugin's `RsGotoSuperHandlerKt.gotoSuperTargets`, mirroring RustRover's own Ctrl+U handler and gutter `I↑` marker). The tool is registered in RustRover for the first time. Closes #21.
@@ -33,6 +35,12 @@
 - `LanguageService` abstract base class, `LanguageServiceRegistry` reflective loader, 7 per-language `*LanguageService` subclasses, dead `PluginDetectors` entries (`python`, `javaScript`, `go`).
 
 ### Breaking
+- `ide_call_hierarchy` / `ide_type_hierarchy` `scope` now uses the IDE's native hierarchy
+  vocabulary. `ide_call_hierarchy`: `all`, `production`, `test`, `this_class`, `this_module`.
+  `ide_type_hierarchy`: `all`, `production`, `test`. The previous values (`project_files`,
+  `project_and_libraries`, `project_production_files`, `project_test_files`) are no longer
+  accepted on these two tools. (`production` returns empty in projects without production
+  source roots — same as the IDE's "Production" tab.)
 - **Unified output-format overhaul across all 8 navigation tools** — `ide_find_usages`, `ide_find_definition`, `ide_find_class`, `ide_find_symbol`, `ide_find_implementations`, `ide_find_super_methods`, `ide_type_hierarchy`, `ide_call_hierarchy`. Per-item wire fields are now consistent across every tool. Clients parsing these responses must update. Closes #15, #13, #10, #9.
   - **Renamed:** `type` → `usageType` (find_usages); `astPath` → `enclosingScope` (find_usages, find_definition); `symbolName` → `name` (find_definition).
   - **Removed:** `language` (every navigation tool — derivable from the file extension); `containerName` (find_class, find_symbol — redundant with `qualifiedName`); `signature`, `containingClass`, `containingClassKind`, `isInterface`, `depth` (find_super_methods — redundant with `qualifiedName`/`kind`, or implicit from list order).

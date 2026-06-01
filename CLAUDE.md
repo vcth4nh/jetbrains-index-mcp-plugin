@@ -419,8 +419,8 @@ Tools are organized by IDE availability.
 **Extended Navigation Tools (Language-Aware):**
 
 These activate based on available language plugins (Java, Python, JavaScript/TypeScript, Go, PHP, Rust, Markdown):
-- `ide_type_hierarchy` - Get type hierarchy for a class (Java, Kotlin, Python, JS/TS, Go, PHP, Rust)
-- `ide_call_hierarchy` - Get call hierarchy for a method (Java, Kotlin, Python, JS/TS, Go, PHP, Rust).
+- `ide_type_hierarchy` - Get type hierarchy for a class (Java, Kotlin, Python, JS/TS, Go, PHP, Rust). Accepts `direction` (`supertypes` | `subtypes` | `both`, default `both`), `maxDepth` (default 5, max 20), and `scope` using native hierarchy values (`all`, `production`, `test`).
+- `ide_call_hierarchy` - Get call hierarchy for a method (Java, Kotlin, Python, JS/TS, Go, PHP, Rust). `scope` uses native hierarchy values (`all`, `production`, `test`, `this_class`, `this_module`).
 - `ide_find_implementations` - Find implementations of interface/method (Java, Kotlin, Python, JS/TS, PHP, Rust — not Go).
 - `ide_find_super_methods` - Find methods that a given method overrides/implements (Java, Kotlin, Python, JS/TS, PHP). Go: a method returns the interface method(s) it satisfies via `GoSuperMethodSearch`; a type (interface/struct) returns the interfaces it satisfies, transitively, via `GoGotoSuperHandler.SUPER_SEARCH`. Rust: returns trait fn/const/type alias the impl satisfies via `RsGotoSuperHandlerKt.gotoSuperTargets`.
 - `ide_file_structure` - Get hierarchical file structure similar to IDE's Structure view (Java, Kotlin, Python, JS/TS, Markdown) (disabled by default)
