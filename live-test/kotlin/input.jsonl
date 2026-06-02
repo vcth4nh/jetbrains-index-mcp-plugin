@@ -60,6 +60,7 @@
 {"id":"find-class-Circle-exact",        "tool":"ide_find_class",          "params":{"query":"Circle","matchMode":"exact"}}
 {"id":"find-class-SC-camelcase",        "tool":"ide_find_class",          "params":{"query":"SC","matchMode":"camelCase"}}
 {"id":"hier-super-Square",    "tool":"ide_type_hierarchy",      "params":{"file":"src/main/kotlin/demo/Normal.kt","line":23,"column":7,"direction":"supertypes"}}
+{"id":"hier-super-Square-d1", "tool":"ide_type_hierarchy",      "params":{"file":"src/main/kotlin/demo/Normal.kt","line":23,"column":7,"direction":"supertypes","maxDepth":1}}
 {"id":"hier-sub-Shape",       "tool":"ide_type_hierarchy",      "params":{"file":"src/main/kotlin/demo/Normal.kt","line":7,"column":16,"direction":"subtypes"}}
 {"id":"hier-callee-makeDefault-d3",       "tool":"ide_call_hierarchy",      "params":{"file":"src/main/kotlin/demo/Normal.kt","line":37,"column":5,"direction":"callees","maxDepth":3}}
 {"id":"find-symbol-Coercer.coerce-qualified","tool":"ide_find_symbol",   "params":{"query":"Coercer.coerce"}}

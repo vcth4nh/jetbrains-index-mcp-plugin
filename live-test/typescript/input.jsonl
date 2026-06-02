@@ -44,6 +44,7 @@
 {"id":"hier-type-Circle",            "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.ts","line":13,"column":14}}
 {"id":"hier-type-ShapeCollection",   "tool":"ide_type_hierarchy",       "params":{"file":"src/normal.ts","line":35,"column":14}}
 {"id":"hier-callee-totalArea", "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.ts","line":40,"column":5,"direction":"callees","maxDepth":2}}
+{"id":"hier-callee-totalArea-d1","tool":"ide_call_hierarchy",     "params":{"file":"src/normal.ts","line":40,"column":5,"direction":"callees","maxDepth":1}}
 {"id":"hier-caller-describe",  "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.ts","line":8,"column":5,"direction":"callers","maxDepth":2}}
 {"id":"hier-callee-largest",   "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.ts","line":46,"column":5,"direction":"callees","maxDepth":2}}
 {"id":"hier-caller-draw",      "tool":"ide_call_hierarchy",       "params":{"file":"src/normal.ts","line":2,"column":5,"direction":"callers","maxDepth":2}}
@@ -60,6 +61,7 @@
 {"id":"find-class-Circle-exact",        "tool":"ide_find_class",          "params":{"query":"Circle","matchMode":"exact"}}
 {"id":"find-class-SC-camelcase",        "tool":"ide_find_class",          "params":{"query":"SC","matchMode":"camelCase"}}
 {"id":"hier-super-Square",    "tool":"ide_type_hierarchy",      "params":{"file":"src/normal.ts","line":29,"column":14,"direction":"supertypes"}}
+{"id":"hier-super-Square-d1", "tool":"ide_type_hierarchy",      "params":{"file":"src/normal.ts","line":29,"column":14,"direction":"supertypes","maxDepth":1}}
 {"id":"hier-sub-Shape",       "tool":"ide_type_hierarchy",      "params":{"file":"src/normal.ts","line":5,"column":23,"direction":"subtypes"}}
 {"id":"hier-callee-makeDefault-d3",       "tool":"ide_call_hierarchy",      "params":{"file":"src/normal.ts","line":55,"column":17,"direction":"callees","maxDepth":3}}
 {"id":"find-symbol-Shape.area-qualified","tool":"ide_find_symbol",        "params":{"query":"Shape.area"}}

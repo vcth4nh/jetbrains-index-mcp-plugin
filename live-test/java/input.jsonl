@@ -7,6 +7,8 @@
 {"id":"def-quirkVar-coerce",      "tool":"ide_find_definition",      "params":{"file":"src/main/java/demo/Quirks.java","line":18,"column":16}}
 {"id":"def-Point-record-decl",   "tool":"ide_find_definition",      "params":{"file":"src/main/java/demo/Modern.java","line":4,"column":19}}
 {"id":"def-Animal-sealed-decl",  "tool":"ide_find_definition",      "params":{"file":"src/main/java/demo/Modern.java","line":8,"column":29}}
+{"id":"def-Integer.parseInt-methodref","tool":"ide_find_definition",  "params":{"file":"src/main/java/demo/Quirks.java","line":17,"column":59}}
+{"id":"usage-Point.x-component", "tool":"ide_find_usages",           "params":{"file":"src/main/java/demo/Modern.java","line":4,"column":29}}
 {"id":"usage-area-from-totalArea", "tool":"ide_find_usages",      "params":{"file":"src/main/java/demo/Normal.java","line":72,"column":22}}
 {"id":"usage-shapes-field",        "tool":"ide_find_usages",      "params":{"file":"src/main/java/demo/Normal.java","line":63,"column":33}}
 {"id":"usage-Shape-class",         "tool":"ide_find_usages",      "params":{"file":"src/main/java/demo/Normal.java","line":10,"column":16}}
@@ -55,6 +57,7 @@
 {"id":"hier-type-Drawable",        "tool":"ide_type_hierarchy",       "params":{"file":"src/main/java/demo/Normal.java","line":6,"column":11}}
 {"id":"hier-type-Circle",          "tool":"ide_type_hierarchy",       "params":{"file":"src/main/java/demo/Normal.java","line":18,"column":7}}
 {"id":"hier-callee-totalArea","tool":"ide_call_hierarchy",      "params":{"file":"src/main/java/demo/Normal.java","line":69,"column":12,"direction":"callees","maxDepth":2}}
+{"id":"hier-callee-totalArea-d1","tool":"ide_call_hierarchy",   "params":{"file":"src/main/java/demo/Normal.java","line":69,"column":12,"direction":"callees","maxDepth":1}}
 {"id":"hier-caller-describe","tool":"ide_call_hierarchy",       "params":{"file":"src/main/java/demo/Normal.java","line":13,"column":12,"direction":"callers","maxDepth":2}}
 {"id":"hier-callee-largest", "tool":"ide_call_hierarchy",       "params":{"file":"src/main/java/demo/Normal.java","line":77,"column":11,"direction":"callees","maxDepth":2}}
 {"id":"find-class-Circle",         "tool":"ide_find_class",           "params":{"query":"Circle"}}
@@ -69,6 +72,7 @@
 {"id":"find-class-Circle-exact",        "tool":"ide_find_class",          "params":{"query":"Circle","matchMode":"exact"}}
 {"id":"find-class-SC-camelcase",        "tool":"ide_find_class",          "params":{"query":"SC","matchMode":"camelCase"}}
 {"id":"hier-super-Square",    "tool":"ide_type_hierarchy",      "params":{"file":"src/main/java/demo/Normal.java","line":56,"column":7,"direction":"supertypes"}}
+{"id":"hier-super-Square-d1", "tool":"ide_type_hierarchy",      "params":{"file":"src/main/java/demo/Normal.java","line":56,"column":7,"direction":"supertypes","maxDepth":1}}
 {"id":"hier-sub-Shape",       "tool":"ide_type_hierarchy",      "params":{"file":"src/main/java/demo/Normal.java","line":10,"column":16,"direction":"subtypes"}}
 {"id":"hier-callee-makeDefault-d3",       "tool":"ide_call_hierarchy",      "params":{"file":"src/main/java/demo/Normal.java","line":87,"column":31,"direction":"callees","maxDepth":3}}
 {"id":"find-symbol-Shape.area-qualified","tool":"ide_find_symbol",        "params":{"query":"Shape.area"}}
