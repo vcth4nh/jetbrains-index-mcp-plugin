@@ -230,6 +230,13 @@ will just snapshot a different empty/odd result.
   with its origin file), not just the queried file's. Adding any `.go` fixture
   to the package changes these snapshots — re-bless them when you add Go
   fixtures (this is why they drift after `multisuper.go` / `*_super.go` land).
+- **Go `find_usages` on a type counts the method receiver as a usage**:
+  `usage-baseShape-embed` (find_usages of the `baseShape` struct) returns 4
+  usages — the three embed sites (`Labeled` embed.go:6, `Circle` normal.go:19,
+  `Rectangle` normal.go:30) **plus** the receiver declaration
+  `func (b baseShape) Describe()` at normal.go:16. The receiver names the type,
+  so GoLand counts it as a reference. Verified in GoLand (Find Usages lists the
+  receiver). Not a tool artifact.
 - **Rust `super-Inherent.foo-inherent`**: empty hierarchy — *correct*. An
   inherent `impl` method (no trait) has no super. Don't be misled by RustRover's
   raw Ctrl+U "Go to Super", which jumps to the enclosing `pub mod` declaration
