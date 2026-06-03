@@ -63,7 +63,7 @@ class TypeHierarchyTool : AbstractMcpTool() {
         )
         .enumProperty(
             ParamNames.DIRECTION,
-            "Which direction to traverse: 'supertypes' (ancestors), 'subtypes' (descendants), or 'both'. Default: both.",
+            "Which direction to traverse: 'supertypes' (ancestors), 'subtypes' (descendants), or 'both'. Default: both. 'both' returns the union of the supertypes and subtypes walks, not the IDE's single merged Type Hierarchy tree.",
             listOf("supertypes", "subtypes", "both")
         )
         .intProperty("maxDepth", "How many levels deep to traverse the hierarchy (default: 5, max: 20).")

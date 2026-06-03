@@ -6,7 +6,12 @@
 
 ### Added
 - `ide_type_hierarchy` now accepts `direction` (`supertypes` | `subtypes` | `both`, default
-  `both`) and `maxDepth` (default 5, max 20), reaching parity with `ide_call_hierarchy`.
+  `both`) and `maxDepth` (default 5, max 20), reaching parity with `ide_call_hierarchy`. `both`
+  returns the union of the supertypes and subtypes walks — deliberately not the IDE's single merged
+  Type Hierarchy tree (the platform's `getTypeHierarchyType()` "Class {0}" view), which several
+  languages cannot build headlessly: Kotlin's K2 browser asserts the EDT and runs a modal analysis,
+  Go's browser returns null for it, and Rust ships no type-hierarchy provider at all. The union is
+  the only uniformly-headless option and is equal-or-more-complete than the IDE's combined view.
 - Native `structuredContent` on all tool results (MCP 2025-11-25); the serialized JSON is still mirrored in the text content block for backward compatibility.
 - Server-side argument validation: every `tools/call` is validated against the target tool's input schema before execution. Missing required parameters, unknown/misspelled keys, wrong primitive types, and out-of-enum values are rejected with a structured `invalid_arguments` error that aggregates **all** violations in one response (so a single retry can fix everything) — each violation names the offending parameter and, for unknown keys, lists the accepted parameters. Numeric-string coercion stays lenient (`line: "123"` is accepted) to match the runtime accessors. Closes #12.
 - `ide_find_super_methods` now supports Rust — returns the trait method(s) a struct method satisfies (dispatches via the Rust plugin's `RsGotoSuperHandlerKt.gotoSuperTargets`, mirroring RustRover's own Ctrl+U handler and gutter `I↑` marker). The tool is registered in RustRover for the first time. Closes #21.
