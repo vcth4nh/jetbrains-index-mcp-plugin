@@ -9,11 +9,14 @@ import com.intellij.ide.hierarchy.LanguageTypeHierarchy
 import com.intellij.ide.hierarchy.TypeHierarchyBrowserBase
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
+import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.util.concurrency.annotations.RequiresReadLock
+import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
+import java.util.concurrent.CancellationException
 
 enum class HierarchyKind {
     CALLERS,
@@ -23,6 +26,29 @@ enum class HierarchyKind {
 
     val isCall: Boolean get() = this == CALLERS || this == CALLEES
     val isType: Boolean get() = this == SUPERTYPES || this == SUBTYPES
+}
+
+/**
+ * Rethrows cooperative cancellation so the enclosing cancellable read action can
+ * perform its automatic write-pending restart.
+ *
+ * The hierarchy tools run inside `com.intellij.openapi.application.readAction { }`
+ * (see `AbstractMcpTool.suspendingReadAction`). When a write action becomes pending
+ * mid-read, the platform throws `ReadAction.CannotReadException` (a
+ * `ProcessCanceledException`) out of the action block; the coroutine read loop
+ * (`InternalReadAction.tryReadCancellable`) catches exactly that, maps it to
+ * `ReadResult.WritePending`, yields to the write, and re-runs the block. The
+ * walker's broad `runCatching {}` blocks would otherwise swallow that signal —
+ * reflection wraps it in [InvocationTargetException] — and mislabel it as a genuine
+ * failure (e.g. "Browser refused element ..."), turning a retryable race into a
+ * spurious tool error.
+ *
+ * No-op for every non-cancellation throwable, which keeps flowing through the
+ * caller's normal failure handling.
+ */
+internal fun rethrowIfCancellation(t: Throwable) {
+    val cause = (t as? InvocationTargetException)?.targetException ?: t
+    if (cause is CancellationException || cause is ControlFlowException) throw cause
 }
 
 /**
@@ -128,13 +154,17 @@ internal object HierarchyTreeWalker {
         kind: HierarchyKind,
         scope: HierarchyScope,
         maxDepth: Int
-    ): Result<HierarchyWalkResult> = runCatching { walkInner(project, element, kind, scope, maxDepth) }
-        .getOrElse { Result.failure(it) }
-        .let { result ->
-            // Flatten: walkInner returns Result<...>; runCatching wraps any unexpected
-            // throw as Result.failure; combine so callers always see a single Result.
-            result
-        }
+    ): Result<HierarchyWalkResult> {
+        // Flatten: walkInner returns Result<...>; runCatching wraps any unexpected
+        // throw as Result.failure; combine so callers always see a single Result.
+        val result = runCatching { walkInner(project, element, kind, scope, maxDepth) }
+            .getOrElse { Result.failure(it) }
+        // Never swallow a read-action cancellation — rethrow it so the enclosing
+        // readAction{} can perform its write-pending restart. Covers both a thrown
+        // CannotReadException and one surfaced via Result.failure (e.g. Rust fallback).
+        result.exceptionOrNull()?.let(::rethrowIfCancellation)
+        return result
+    }
 
     private fun walkInner(
         project: Project,
@@ -190,7 +220,7 @@ internal object HierarchyTreeWalker {
         val structure = invokeCreateHierarchyTreeStructure(browser, typeName, target)
             ?: return Result.failure(IllegalStateException("Browser refused element ${element.text} for $kind"))
 
-        runCatching { structure.baseDescriptor.update() }
+        runCatching { structure.baseDescriptor.update() }.onFailure(::rethrowIfCancellation)
         walkRecursive(structure, structure.baseDescriptor, maxDepth, mutableSetOf())
         return Result.success(HierarchyWalkResult(structure.baseDescriptor, BrowserBackedResolver(browser)))
     }
@@ -298,6 +328,7 @@ internal object HierarchyTreeWalker {
         }
         method.isAccessible = true
         return runCatching { method.invoke(browser, typeName, element) as? HierarchyTreeStructure }
+            .onFailure(::rethrowIfCancellation)
             .onFailure { LOG.warn("createHierarchyTreeStructure invocation failed", it) }
             .getOrNull()
     }
@@ -337,13 +368,14 @@ internal object HierarchyTreeWalker {
             visited.add(psi)
         }
         val descriptorChildren = runCatching { structure.getChildElements(node) }
+            .onFailure(::rethrowIfCancellation)
             .getOrDefault(emptyArray<Any>())
             .filterIsInstance<HierarchyNodeDescriptor>()
         node.cachedChildren = descriptorChildren.toTypedArray<Any>()
         for (child in descriptorChildren) {
             // Trigger the descriptor's presentation update so getHighlightedText()
             // is populated — the IDE normally does this in the UI tree renderer.
-            runCatching { child.update() }
+            runCatching { child.update() }.onFailure(::rethrowIfCancellation)
             walkRecursive(structure, child, depthLeft - 1, visited)
         }
     }
