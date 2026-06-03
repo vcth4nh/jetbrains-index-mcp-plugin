@@ -162,7 +162,9 @@ will just snapshot a different empty/odd result.
 
 - **Java `hier-callee-makeDefault`**: empty callees. Constructor invocations
   inside a method body don't surface as call-hierarchy callees in IntelliJ.
-  Same in Kotlin / TypeScript / PHP analogs.
+  Same in Kotlin / PHP analogs — but **not** TypeScript: WebStorm *does* surface
+  constructor calls as `CLASS` callees (`makeDefault` → `Circle`/`Rectangle`/`Square`),
+  so the TS `hier-callee-makeDefault` snapshot is non-empty.
 - **Java `find-symbol` for overridden methods**: collapses to the topmost
   super; concrete overrides on subclasses are not separately surfaced.
 - **PHP `hier-callee-makeDefault`**: same constructor-callee root cause as
@@ -178,6 +180,14 @@ will just snapshot a different empty/odd result.
   implicit (structural) interfaces, so the `Drawable` ↔ `Circle`
   relationship doesn't appear here. Use `find_class` for Go interface
   implementations.
+- **Enum type hierarchy — `direction:both` returns the *supertypes* view, which the IDE's
+  combined Type Hierarchy widget hides.** `hier-type-Direction` (TS numeric enum) blesses
+  `supertypes: [Number ×3]`; `hier-type-Severity-enum` (PHP string-backed enum) blesses
+  `supertypes: [BackedEnum → UnitEnum, Labeled]`. Verified in WebStorm/PhpStorm: the
+  **Supertypes** view shows exactly these, but the default combined ("both") widget shows
+  *nothing* for the enum — a rendering quirk of that view, not a tool error. Don't re-bless
+  these to empty. (Whether `direction:both` should mirror the combined widget vs. the
+  supertypes∪subtypes union is a separate open question — see the type_hierarchy follow-up.)
 - **Go `qualifiedName` universally `null`**: GoLand does not register a
   `QualifiedNameProvider` for Go elements, and `QualifiedNameUtil` has no
   Go-specific fallback. Tracked separately as a plugin enhancement.
