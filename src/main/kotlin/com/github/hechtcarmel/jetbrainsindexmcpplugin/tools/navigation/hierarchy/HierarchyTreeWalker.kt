@@ -254,12 +254,29 @@ internal object HierarchyTreeWalker {
             @Suppress("UNCHECKED_CAST")
             val sheets = sheetMapField.get(browser) as? Map<String, Any> ?: return
             val sheet = sheets[typeName] ?: return
-            val scopeField = sheet.javaClass.getDeclaredField("myScope").apply { isAccessible = true }
-            scopeField.set(sheet, scopeStr)
+            // (1) Base browsers (Java/Kotlin/Python/PHP/JS/TS) read scope from the sheet:
+            //     HierarchyBrowserBaseEx.getCurrentScopeType() = myType2Sheet[currentViewType].myScope.
+            sheet.javaClass.getDeclaredField("myScope").apply { isAccessible = true }.set(sheet, scopeStr)
+            // (2) getCurrentViewType() = myCurrentSheet.get().myType — install our sheet as current so
+            //     the view type is non-null (both base and overriding browsers gate scope on it).
             val currentSheetField = baseClass.getDeclaredField("myCurrentSheet").apply { isAccessible = true }
             @Suppress("UNCHECKED_CAST")
             val currentSheetRef = currentSheetField.get(browser) as? java.util.concurrent.atomic.AtomicReference<Any>
             currentSheetRef?.set(sheet)
+            // (3) Some language browsers (e.g. Go's GoCallHierarchyBrowser) OVERRIDE
+            //     getCurrentScopeType() to read their OWN `myScope` field on the browser rather than
+            //     the sheet's. Without setting it the persisted scope masks our value and scope
+            //     filtering silently no-ops. No-op for browsers that don't declare such a field.
+            var browserClass: Class<*>? = browser.javaClass
+            while (browserClass != null && browserClass.simpleName != "HierarchyBrowserBaseEx") {
+                val ownScopeField = runCatching { browserClass.getDeclaredField("myScope") }.getOrNull()
+                if (ownScopeField != null) {
+                    ownScopeField.isAccessible = true
+                    ownScopeField.set(browser, scopeStr)
+                    break
+                }
+                browserClass = browserClass.superclass
+            }
         }.onFailure { LOG.warn("Failed to set hierarchy browser scope reflectively (typeName=$typeName, scope=$scopeStr)", it) }
     }
 
