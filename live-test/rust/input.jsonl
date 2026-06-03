@@ -78,3 +78,11 @@
 {"id":"usage-Point-derived","tool":"ide_find_usages","params":{"file":"src/macros.rs","line":8,"column":12}}
 {"id":"find-class-Point","tool":"ide_find_class","params":{"query":"Point"}}
 {"id":"file-structure-Macros","tool":"ide_file_structure","params":{"file":"src/macros.rs"}}
+{"id":"hier-caller-target-all","tool":"ide_call_hierarchy","params":{"file":"src/scopes.rs","line":4,"column":12,"direction":"callers","scope":"all"}}
+{"id":"hier-caller-target-production","tool":"ide_call_hierarchy","params":{"file":"src/scopes.rs","line":4,"column":12,"direction":"callers","scope":"production"}}
+{"id":"hier-caller-target-test","tool":"ide_call_hierarchy","params":{"file":"src/scopes.rs","line":4,"column":12,"direction":"callers","scope":"test"}}
+{"id":"hier-caller-target-this-class","tool":"ide_call_hierarchy","params":{"file":"src/scopes.rs","line":4,"column":12,"direction":"callers","scope":"this_class"}}
+{"id":"hier-caller-target-this-module","tool":"ide_call_hierarchy","params":{"file":"src/scopes.rs","line":4,"column":12,"direction":"callers","scope":"this_module"}}
+{"id":"hier-sub-Shape-all","tool":"ide_type_hierarchy","params":{"file":"src/normal.rs","line":5,"column":11,"direction":"subtypes","scope":"all"}}
+{"id":"hier-sub-Shape-production","tool":"ide_type_hierarchy","params":{"file":"src/normal.rs","line":5,"column":11,"direction":"subtypes","scope":"production"}}
+{"id":"hier-sub-Shape-test","tool":"ide_type_hierarchy","params":{"file":"src/normal.rs","line":5,"column":11,"direction":"subtypes","scope":"test"}}

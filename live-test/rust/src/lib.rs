@@ -7,3 +7,4 @@ pub mod supertrait_super;
 pub mod default_super;
 pub mod generic_super;
 pub mod macros;
+pub mod scopes;

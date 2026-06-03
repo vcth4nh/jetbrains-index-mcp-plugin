@@ -85,3 +85,11 @@
 {"id":"def-Quirks-cond-parseint","tool":"ide_find_definition","params":{"file":"src/quirks.js","line":21,"column":27}}
 {"id":"def-Quirks-bind-parseint","tool":"ide_find_definition","params":{"file":"src/quirks.js","line":48,"column":19}}
 {"id":"def-Quirks-bind-call","tool":"ide_find_definition","params":{"file":"src/quirks.js","line":48,"column":28}}
+{"id":"hier-caller-target-all","tool":"ide_call_hierarchy","params":{"file":"src/probes.js","line":4,"column":5,"direction":"callers","scope":"all"}}
+{"id":"hier-caller-target-production","tool":"ide_call_hierarchy","params":{"file":"src/probes.js","line":4,"column":5,"direction":"callers","scope":"production"}}
+{"id":"hier-caller-target-test","tool":"ide_call_hierarchy","params":{"file":"src/probes.js","line":4,"column":5,"direction":"callers","scope":"test"}}
+{"id":"hier-caller-target-this-class","tool":"ide_call_hierarchy","params":{"file":"src/probes.js","line":4,"column":5,"direction":"callers","scope":"this_class"}}
+{"id":"hier-caller-target-this-module","tool":"ide_call_hierarchy","params":{"file":"src/probes.js","line":4,"column":5,"direction":"callers","scope":"this_module"}}
+{"id": "hier-type-Probe-sub-all", "tool": "ide_type_hierarchy", "params": {"file": "src/probes.js", "line": 3, "column": 7, "direction": "subtypes", "scope": "all"}}
+{"id": "hier-type-Probe-sub-production", "tool": "ide_type_hierarchy", "params": {"file": "src/probes.js", "line": 3, "column": 7, "direction": "subtypes", "scope": "production"}}
+{"id": "hier-type-Probe-sub-test", "tool": "ide_type_hierarchy", "params": {"file": "src/probes.js", "line": 3, "column": 7, "direction": "subtypes", "scope": "test"}}

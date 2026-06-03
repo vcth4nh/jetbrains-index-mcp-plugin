@@ -90,3 +90,11 @@
 {"id":"usage-Severity.Low-enum","tool":"ide_find_usages","params":{"file":"src/EnumSuper.php","line":9,"column":10}}
 {"id":"usage-Labeled-interface","tool":"ide_find_usages","params":{"file":"src/EnumSuper.php","line":4,"column":11}}
 {"id":"file-structure-EnumSuper","tool":"ide_file_structure","params":{"file":"src/EnumSuper.php"}}
+{"id":"hier-caller-target-all","tool":"ide_call_hierarchy","params":{"file":"src/Probes.php","line":6,"column":21,"direction":"callers","scope":"all"}}
+{"id":"hier-caller-target-production","tool":"ide_call_hierarchy","params":{"file":"src/Probes.php","line":6,"column":21,"direction":"callers","scope":"production"}}
+{"id":"hier-caller-target-test","tool":"ide_call_hierarchy","params":{"file":"src/Probes.php","line":6,"column":21,"direction":"callers","scope":"test"}}
+{"id":"hier-caller-target-this-class","tool":"ide_call_hierarchy","params":{"file":"src/Probes.php","line":6,"column":21,"direction":"callers","scope":"this_class"}}
+{"id":"hier-caller-target-this-module","tool":"ide_call_hierarchy","params":{"file":"src/Probes.php","line":6,"column":21,"direction":"callers","scope":"this_module"}}
+{"id": "hier-type-Probe-sub-all", "tool": "ide_type_hierarchy", "params": {"file": "src/Probes.php", "line": 4, "column": 7, "direction": "subtypes", "scope": "all"}}
+{"id": "hier-type-Probe-sub-production", "tool": "ide_type_hierarchy", "params": {"file": "src/Probes.php", "line": 4, "column": 7, "direction": "subtypes", "scope": "production"}}
+{"id": "hier-type-Probe-sub-test", "tool": "ide_type_hierarchy", "params": {"file": "src/Probes.php", "line": 4, "column": 7, "direction": "subtypes", "scope": "test"}}

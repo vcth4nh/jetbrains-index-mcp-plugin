@@ -91,3 +91,11 @@
 {"id":"usage-ParentDC-dataclass","tool":"ide_find_usages","params":{"file":"src/dataclass_super.py","line":6,"column":7}}
 {"id":"usage-name-field-dataclass","tool":"ide_find_usages","params":{"file":"src/dataclass_super.py","line":7,"column":5}}
 {"id":"file-structure-dataclass_super","tool":"ide_file_structure","params":{"file":"src/dataclass_super.py"}}
+{"id":"hier-caller-target-all","tool":"ide_call_hierarchy","params":{"file":"src/probes.py","line":2,"column":9,"direction":"callers","scope":"all"}}
+{"id":"hier-caller-target-production","tool":"ide_call_hierarchy","params":{"file":"src/probes.py","line":2,"column":9,"direction":"callers","scope":"production"}}
+{"id":"hier-caller-target-test","tool":"ide_call_hierarchy","params":{"file":"src/probes.py","line":2,"column":9,"direction":"callers","scope":"test"}}
+{"id":"hier-caller-target-this-class","tool":"ide_call_hierarchy","params":{"file":"src/probes.py","line":2,"column":9,"direction":"callers","scope":"this_class"}}
+{"id":"hier-caller-target-this-module","tool":"ide_call_hierarchy","params":{"file":"src/probes.py","line":2,"column":9,"direction":"callers","scope":"this_module"}}
+{"id":"hier-type-Probe-sub-all","tool":"ide_type_hierarchy","params":{"file":"src/probes.py","line":1,"column":7,"direction":"subtypes","scope":"all"}}
+{"id":"hier-type-Probe-sub-production","tool":"ide_type_hierarchy","params":{"file":"src/probes.py","line":1,"column":7,"direction":"subtypes","scope":"production"}}
+{"id":"hier-type-Probe-sub-test","tool":"ide_type_hierarchy","params":{"file":"src/probes.py","line":1,"column":7,"direction":"subtypes","scope":"test"}}

@@ -98,3 +98,11 @@
 {"id":"super-Repo.find-generic","tool":"ide_find_super_methods","params":{"file":"src/main/java/demo/GenericSuper.java","line":9,"column":7}}
 {"id":"super-LambdaHost-lambda.run-sam","tool":"ide_find_super_methods","params":{"file":"src/main/java/demo/LambdaSuper.java","line":5,"column":19}}
 {"id":"super-Triple-class","tool":"ide_find_super_methods","params":{"file":"src/main/java/demo/MultiSuper.java","line":15,"column":7}}
+{"id":"hier-caller-target-all","tool":"ide_call_hierarchy","params":{"file":"src/main/java/demo/Probes.java","line":4,"column":9,"direction":"callers","scope":"all"}}
+{"id":"hier-caller-target-production","tool":"ide_call_hierarchy","params":{"file":"src/main/java/demo/Probes.java","line":4,"column":9,"direction":"callers","scope":"production"}}
+{"id":"hier-caller-target-test","tool":"ide_call_hierarchy","params":{"file":"src/main/java/demo/Probes.java","line":4,"column":9,"direction":"callers","scope":"test"}}
+{"id":"hier-caller-target-this-class","tool":"ide_call_hierarchy","params":{"file":"src/main/java/demo/Probes.java","line":4,"column":9,"direction":"callers","scope":"this_class"}}
+{"id":"hier-caller-target-this-module","tool":"ide_call_hierarchy","params":{"file":"src/main/java/demo/Probes.java","line":4,"column":9,"direction":"callers","scope":"this_module"}}
+{"id":"hier-type-Probe-sub-all","tool":"ide_type_hierarchy","params":{"file":"src/main/java/demo/Probes.java","line":3,"column":7,"direction":"subtypes","scope":"all"}}
+{"id":"hier-type-Probe-sub-production","tool":"ide_type_hierarchy","params":{"file":"src/main/java/demo/Probes.java","line":3,"column":7,"direction":"subtypes","scope":"production"}}
+{"id":"hier-type-Probe-sub-test","tool":"ide_type_hierarchy","params":{"file":"src/main/java/demo/Probes.java","line":3,"column":7,"direction":"subtypes","scope":"test"}}

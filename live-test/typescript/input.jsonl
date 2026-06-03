@@ -104,3 +104,11 @@
 {"id":"usage-traced-decorator","tool":"ide_find_usages","params":{"file":"src/decorators.ts","line":1,"column":17}}
 {"id":"find-symbol-traced","tool":"ide_find_symbol","params":{"query":"traced"}}
 {"id":"file-structure-Decorators","tool":"ide_file_structure","params":{"file":"src/decorators.ts"}}
+{"id":"hier-caller-target-all","tool":"ide_call_hierarchy","params":{"file":"src/probes.ts","line":2,"column":5,"direction":"callers","scope":"all"}}
+{"id":"hier-caller-target-production","tool":"ide_call_hierarchy","params":{"file":"src/probes.ts","line":2,"column":5,"direction":"callers","scope":"production"}}
+{"id":"hier-caller-target-test","tool":"ide_call_hierarchy","params":{"file":"src/probes.ts","line":2,"column":5,"direction":"callers","scope":"test"}}
+{"id":"hier-caller-target-this-class","tool":"ide_call_hierarchy","params":{"file":"src/probes.ts","line":2,"column":5,"direction":"callers","scope":"this_class"}}
+{"id":"hier-caller-target-this-module","tool":"ide_call_hierarchy","params":{"file":"src/probes.ts","line":2,"column":5,"direction":"callers","scope":"this_module"}}
+{"id": "hier-type-Probe-sub-all", "tool": "ide_type_hierarchy", "params": {"file": "src/probes.ts", "line": 1, "column": 14, "direction": "subtypes", "scope": "all"}}
+{"id": "hier-type-Probe-sub-production", "tool": "ide_type_hierarchy", "params": {"file": "src/probes.ts", "line": 1, "column": 14, "direction": "subtypes", "scope": "production"}}
+{"id": "hier-type-Probe-sub-test", "tool": "ide_type_hierarchy", "params": {"file": "src/probes.ts", "line": 1, "column": 14, "direction": "subtypes", "scope": "test"}}
