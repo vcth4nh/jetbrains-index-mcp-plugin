@@ -72,3 +72,9 @@
 {"id":"super-Overrider.compute-default-override","tool":"ide_find_super_methods","params":{"file":"src/default_super.rs","line":11,"column":8}}
 {"id":"super-Computable.compute-trait-default","tool":"ide_find_super_methods","params":{"file":"src/default_super.rs","line":3,"column":8}}
 {"id":"super-IntStore.get-generic",     "tool":"ide_find_super_methods",  "params":{"file":"src/generic_super.rs","line":9,"column":8}}
+{"id":"def-square-macro","tool":"ide_find_definition","params":{"file":"src/macros.rs","line":23,"column":5}}
+{"id":"usage-square-macro","tool":"ide_find_usages","params":{"file":"src/macros.rs","line":1,"column":14}}
+{"id":"find-symbol-square","tool":"ide_find_symbol","params":{"query":"square"}}
+{"id":"usage-Point-derived","tool":"ide_find_usages","params":{"file":"src/macros.rs","line":8,"column":12}}
+{"id":"find-class-Point","tool":"ide_find_class","params":{"query":"Point"}}
+{"id":"file-structure-Macros","tool":"ide_file_structure","params":{"file":"src/macros.rs"}}

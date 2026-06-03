@@ -81,3 +81,7 @@
 {"id":"super-WithMixin.shout-mixin","result":{"hierarchy":[],"method":{"column":5,"file":"src/mixin_super.js","kind":"METHOD","line":12,"name":"shout","qualifiedName":"WithMixin.shout"}}}
 {"id":"super-AsyncChild.fetch-async","result":{"hierarchy":[{"column":11,"file":"src/async_super.js","kind":"METHOD","line":4,"name":"fetch","qualifiedName":"AsyncBase.fetch"}],"method":{"column":11,"file":"src/async_super.js","kind":"METHOD","line":8,"name":"fetch","qualifiedName":"AsyncChild.fetch"}}}
 {"id":"super-Leaf-class","result":{"hierarchy":[{"column":7,"file":"src/multisuper.js","kind":"CLASS","line":9,"name":"Mid","qualifiedName":"Mid"}],"method":{"column":7,"file":"src/multisuper.js","kind":"CLASS","line":13,"name":"Leaf","qualifiedName":"Leaf"}}}
+{"id":"def-Quirks-computed-key","result":{"column":20,"enclosingScope":null,"file":"src/quirks.js","kind":"PARAMETER","line":10,"name":"name","qualifiedName":"name"}}
+{"id":"def-Quirks-cond-parseint","result":{"column":5,"enclosingScope":null,"file":"${WEBSTORM_JS_STUBS}/lib.es2015.core.d.ts","kind":"METHOD","line":276,"name":"parseInt","qualifiedName":"NumberConstructor.parseInt"}}
+{"id":"def-Quirks-bind-parseint","result":{"column":5,"enclosingScope":null,"file":"${WEBSTORM_JS_STUBS}/lib.es2015.core.d.ts","kind":"METHOD","line":276,"name":"parseInt","qualifiedName":"NumberConstructor.parseInt"}}
+{"id":"def-Quirks-bind-call","result":{"column":5,"enclosingScope":null,"file":"${WEBSTORM_JS_STUBS}/lib.es5.d.ts","kind":"METHOD","line":288,"name":"call","qualifiedName":"Function.call"}}

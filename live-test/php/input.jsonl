@@ -83,3 +83,10 @@
 {"id":"super-Severity.label-enum","tool":"ide_find_super_methods","params":{"file":"src/EnumSuper.php","line":12,"column":21}}
 {"id":"super-Implementer.required-abstract-trait","tool":"ide_find_super_methods","params":{"file":"src/AbstractTraitSuper.php","line":11,"column":21}}
 {"id":"super-Triple-class","tool":"ide_find_super_methods","params":{"file":"src/MultiSuper.php","line":16,"column":7}}
+{"id":"usage-RequiresImpl-trait","tool":"ide_find_usages","params":{"file":"src/AbstractTraitSuper.php","line":4,"column":7}}
+{"id":"hier-type-Implementer-trait","tool":"ide_type_hierarchy","params":{"file":"src/AbstractTraitSuper.php","line":8,"column":7}}
+{"id":"file-structure-AbstractTraitSuper","tool":"ide_file_structure","params":{"file":"src/AbstractTraitSuper.php"}}
+{"id":"hier-type-Severity-enum","tool":"ide_type_hierarchy","params":{"file":"src/EnumSuper.php","line":8,"column":6}}
+{"id":"usage-Severity.Low-enum","tool":"ide_find_usages","params":{"file":"src/EnumSuper.php","line":9,"column":10}}
+{"id":"usage-Labeled-interface","tool":"ide_find_usages","params":{"file":"src/EnumSuper.php","line":4,"column":11}}
+{"id":"file-structure-EnumSuper","tool":"ide_file_structure","params":{"file":"src/EnumSuper.php"}}

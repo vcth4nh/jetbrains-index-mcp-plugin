@@ -87,3 +87,7 @@
 {"id":"super-Repo.find-generic","tool":"ide_find_super_methods","params":{"file":"src/generic_super.py","line":13,"column":9}}
 {"id":"super-ChildDC.__post_init__-dataclass","tool":"ide_find_super_methods","params":{"file":"src/dataclass_super.py","line":17,"column":9}}
 {"id":"super-Triple-class","tool":"ide_find_super_methods","params":{"file":"src/multi_super.py","line":24,"column":7}}
+{"id":"hier-type-ChildDC-dataclass","tool":"ide_type_hierarchy","params":{"file":"src/dataclass_super.py","line":14,"column":7}}
+{"id":"usage-ParentDC-dataclass","tool":"ide_find_usages","params":{"file":"src/dataclass_super.py","line":6,"column":7}}
+{"id":"usage-name-field-dataclass","tool":"ide_find_usages","params":{"file":"src/dataclass_super.py","line":7,"column":5}}
+{"id":"file-structure-dataclass_super","tool":"ide_file_structure","params":{"file":"src/dataclass_super.py"}}
