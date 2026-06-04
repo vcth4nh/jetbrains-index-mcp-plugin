@@ -1,5 +1,6 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy
 
+import com.intellij.codeWithMe.ClientId
 import com.intellij.ide.hierarchy.CallHierarchyBrowserBase
 import com.intellij.ide.hierarchy.HierarchyBrowserBaseEx
 import com.intellij.ide.hierarchy.HierarchyNodeDescriptor
@@ -9,6 +10,8 @@ import com.intellij.ide.hierarchy.LanguageTypeHierarchy
 import com.intellij.ide.hierarchy.TypeHierarchyBrowserBase
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
+import com.intellij.openapi.client.ClientKind
+import com.intellij.openapi.client.ClientSessionsManager
 import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
@@ -155,16 +158,49 @@ internal object HierarchyTreeWalker {
         scope: HierarchyScope,
         maxDepth: Int
     ): Result<HierarchyWalkResult> {
+        // Pin the whole walk to the IDE GUI's client session (GH #17). The platform
+        // hierarchy browser ctor (reached via createBrowserHeadless) force-inits the
+        // `HierarchyBrowserManager` project service, which is registered client="all"
+        // (one instance PER client session) and whose ctor registers the global
+        // "Hierarchy" tool window. Our MCP server runs on a background thread with no
+        // ClientId, so `getService` resolves to the LOCAL session and creates a SECOND
+        // instance; in serverMode / remote-dev (Gateway) the GUI's interactive hierarchy
+        // runs under a remote (CONTROLLER) client session, so the two collide ->
+        // "Conflicting component name 'HierarchyBrowserManager'" + "window with
+        // id=\"Hierarchy\" is already registered" -> getInstance() returns null -> the
+        // interactive Hierarchy tool window NPEs on update and stops appearing. Running
+        // under the connected remote session makes us reuse the GUI's single instance.
+        // No remote client (plain local IDE / pure-headless agent use) -> localId, where
+        // there is only one session, so this is a no-op.
+        //
         // Flatten: walkInner returns Result<...>; runCatching wraps any unexpected
         // throw as Result.failure; combine so callers always see a single Result.
-        val result = runCatching { walkInner(project, element, kind, scope, maxDepth) }
-            .getOrElse { Result.failure(it) }
+        val result = ClientId.withExplicitClientId(guiClientId(project)) {
+            runCatching { walkInner(project, element, kind, scope, maxDepth) }
+                .getOrElse { Result.failure(it) }
+        }
         // Never swallow a read-action cancellation — rethrow it so the enclosing
         // readAction{} can perform its write-pending restart. Covers both a thrown
         // CannotReadException and one surfaced via Result.failure (e.g. Rust fallback).
         result.exceptionOrNull()?.let(::rethrowIfCancellation)
         return result
     }
+
+    /**
+     * The ClientId whose session our hierarchy work should run under so it shares the IDE
+     * GUI's single `HierarchyBrowserManager` instance instead of creating a second one in
+     * the LOCAL session (see [walk]). In remote-dev / serverMode the connected thin client
+     * is a remote (non-local) project session — pin to it. With no remote client connected
+     * (plain local IDE or pure-headless agent use) there is only one session and nothing to
+     * collide with, so fall back to the local id. Best-effort: any failure falls back to local.
+     */
+    private fun guiClientId(project: Project): ClientId =
+        runCatching {
+            val local = ClientId.localId
+            ClientSessionsManager.getProjectSessions(project, ClientKind.ALL)
+                .firstOrNull { session -> session.clientId != local }
+                ?.clientId
+        }.getOrNull() ?: ClientId.localId
 
     private fun walkInner(
         project: Project,
