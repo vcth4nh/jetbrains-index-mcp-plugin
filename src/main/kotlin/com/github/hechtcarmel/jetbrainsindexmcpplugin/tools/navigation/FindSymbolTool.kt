@@ -23,6 +23,7 @@ import com.intellij.psi.util.PsiModificationTracker
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
@@ -55,7 +56,7 @@ class FindSymbolTool : AbstractMcpTool() {
         Returns: matching symbols with qualified names, file paths, line/column numbers, and kind.
 
         Supports pagination: first call returns results + nextCursor. Pass cursor to get the next page.
-        Parameters: query (required for fresh search), scope (optional, default: "project_files"; supported: project_files, project_and_libraries, project_production_files, project_test_files), language (optional case-insensitive filter, e.g. "Kotlin"), pageSize (optional, default: 25, max: 500), cursor (for pagination, replaces search params; project_path may still be required).
+        Parameters: query (required for fresh search), scope (optional, default: "project_files"; supported: project_files, project_and_libraries, project_production_files, project_test_files), language (optional case-insensitive filter, e.g. "Kotlin"), fuzzySearch (optional boolean, default false = exact match; true = IDE fuzzy matching), pageSize (optional, default: 25, max: 500), cursor (for pagination, replaces search params; project_path may still be required).
 
         Example: {"query": "UserService"} or {"query": "find_user", "scope": "project_and_libraries"}
 
@@ -67,6 +68,7 @@ class FindSymbolTool : AbstractMcpTool() {
         .stringProperty(ParamNames.QUERY, "Search pattern. Matching follows IntelliJ's Go to Symbol popup, including qualified queries. Required for fresh search, ignored when cursor is provided.")
         .scopeProperty("Search scope. Default: project_files.")
         .stringProperty(ParamNames.LANGUAGE, "Filter results by language (e.g., \"Kotlin\", \"Java\", \"Python\"). Case-insensitive. Optional.")
+        .booleanProperty(ParamNames.FUZZY_SEARCH, "When true, use the IDE's Go to Symbol fuzzy matching (camelCase + substring). When false (default), match the symbol name exactly, case-insensitively. Default: false.")
         .intProperty(ParamNames.LIMIT, "Maximum results per page (deprecated, use pageSize). Default: $DEFAULT_PAGE_SIZE, max: $MAX_PAGE_SIZE.")
         .stringProperty("cursor", "Pagination cursor from a previous response. When provided, returns the next page of results. Search parameters are ignored; project_path and pageSize may still be provided.")
         .intProperty("pageSize", "Results per page. Default: $DEFAULT_PAGE_SIZE, max: $MAX_PAGE_SIZE.")
@@ -102,6 +104,7 @@ class FindSymbolTool : AbstractMcpTool() {
             return createInvalidScopeError(rawScope)
         }
         val languageFilter = arguments[ParamNames.LANGUAGE]?.jsonPrimitive?.content
+        val fuzzySearch = arguments[ParamNames.FUZZY_SEARCH]?.jsonPrimitive?.booleanOrNull ?: false
         val pageSize = resolvePageSize(arguments, DEFAULT_PAGE_SIZE, aliases = arrayOf("limit"))
         val collectLimit = maxOf(PaginationService.DEFAULT_OVERCOLLECT, pageSize)
 
@@ -119,14 +122,15 @@ class FindSymbolTool : AbstractMcpTool() {
                 pattern = query,
                 scope = searchScope,
                 limit = collectLimit,
-                languageFilter = nativeLanguageFilter
+                languageFilter = nativeLanguageFilter,
+                fuzzySearch = fuzzySearch
             )
 
             val matches = symbols.map { it.toSymbolMatch() }
 
             val searchExtender: suspend (Set<String>, Int) -> List<PaginationService.SerializedResult> = { seenKeys, limit ->
                 suspendingReadAction {
-                    extendSearchSymbols(project, query, scope, languageFilter, seenKeys, limit)
+                    extendSearchSymbols(project, query, scope, languageFilter, fuzzySearch, seenKeys, limit)
                 }
             }
 
@@ -169,7 +173,8 @@ class FindSymbolTool : AbstractMcpTool() {
      *
      * Owns the over-fetch loop: [PopupFaithfulSymbolSearch] returns NavigationItems, some of
      * which get filtered out by [SymbolDataConverter] (scope mismatch, language mismatch,
-     * dedup). When that happens, we re-request with a larger limit, doubling each iteration up
+     * dedup, and (when fuzzySearch is false) the exact-name filter). When that happens, we
+     * re-request with a larger limit, doubling each iteration up
      * to a cap of `max(limit * 8, limit + 200)`, until we have enough results, the popup
      * exhausts, or we hit the cap.
      *
@@ -182,7 +187,8 @@ class FindSymbolTool : AbstractMcpTool() {
         pattern: String,
         scope: GlobalSearchScope,
         limit: Int,
-        languageFilter: Set<String>?
+        languageFilter: Set<String>?,
+        fuzzySearch: Boolean
     ): List<SymbolData> {
         if (pattern.isBlank()) return emptyList()
         var popupLimit = limit
@@ -201,6 +207,7 @@ class FindSymbolTool : AbstractMcpTool() {
             }
             val results = popupResults.candidates
                 .mapNotNull { SymbolDataConverter.convert(it.item, project, scope, languageFilter) }
+                .filter { fuzzySearch || it.name.equals(popupResults.localPattern, ignoreCase = true) }
                 .distinctBy { "${it.file}:${it.line}:${it.column}:${it.name}" }
             if (results.size >= limit ||
                 popupResults.candidates.size < popupLimit ||
@@ -222,6 +229,7 @@ class FindSymbolTool : AbstractMcpTool() {
         query: String,
         scope: BuiltInSearchScope,
         languageFilter: String?,
+        fuzzySearch: Boolean,
         seenKeys: Set<String>,
         limit: Int
     ): List<PaginationService.SerializedResult> {
@@ -232,7 +240,8 @@ class FindSymbolTool : AbstractMcpTool() {
             pattern = query,
             scope = searchScope,
             limit = limit + seenKeys.size,
-            languageFilter = nativeLanguageFilter
+            languageFilter = nativeLanguageFilter,
+            fuzzySearch = fuzzySearch
         )
 
         return symbols.asSequence()

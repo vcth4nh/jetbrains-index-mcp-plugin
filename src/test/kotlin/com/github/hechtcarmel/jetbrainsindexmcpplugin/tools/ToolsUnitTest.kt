@@ -932,6 +932,20 @@ class ToolsUnitTest : TestCase() {
         )
     }
 
+    fun testFindSymbolToolSchemaHasFuzzySearchBoolean() {
+        val tool = FindSymbolTool()
+        val properties = tool.inputSchema[SchemaConstants.PROPERTIES]?.jsonObject
+        assertNotNull("Should have properties", properties)
+
+        val fuzzyProp = properties?.get(ParamNames.FUZZY_SEARCH)?.jsonObject
+        assertNotNull("Should have fuzzySearch property", fuzzyProp)
+        assertEquals(
+            "fuzzySearch should be a boolean",
+            SchemaConstants.TYPE_BOOLEAN,
+            fuzzyProp?.get(SchemaConstants.TYPE)?.jsonPrimitive?.content
+        )
+    }
+
     // ── language filter schema tests ───────────────────────────────────────────
 
     fun testFindSymbolToolSchemaHasLanguageFilter() {
