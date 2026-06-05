@@ -27,7 +27,8 @@ internal data class PopupSearchCandidate(
 
 internal data class PopupSearchResult(
     val candidates: List<PopupSearchCandidate>,
-    val isQualifiedQuery: Boolean
+    val isQualifiedQuery: Boolean,
+    val localPattern: String
 )
 
 /**
@@ -77,7 +78,8 @@ internal object PopupFaithfulSymbolSearch {
 
             return PopupSearchResult(
                 candidates = candidates,
-                isQualifiedQuery = isQualifiedQuery
+                isQualifiedQuery = isQualifiedQuery,
+                localPattern = localPattern
             )
         } finally {
             Disposer.dispose(disposable)
