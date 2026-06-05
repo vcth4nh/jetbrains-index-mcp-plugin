@@ -25,7 +25,7 @@
 <ul>
     <li><b>Find References</b> - Locate all usages of any symbol across your project</li>
     <li><b>Go to Definition</b> - Jump to symbol declarations instantly</li>
-    <li><b>Find Class</b> - Fast class/interface search by name with camelCase/substring/wildcard matching</li>
+    <li><b>Find Class</b> - Fast class/interface search by name (exact by default; optional fuzzy camelCase/substring matching)</li>
     <li><b>Find File</b> - Fast file search by name using IDE's file index</li>
     <li><b>Symbol Search</b> - Find classes, methods, functions, and fields by name with IntelliJ Go to Symbol matching (disabled by default)</li>
     <li><b>Search Text</b> - Text search using IDE's pre-built word index with context filtering</li>

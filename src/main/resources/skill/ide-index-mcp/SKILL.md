@@ -83,7 +83,7 @@ Omit `paths` to sync the entire project.
 3. `ide_find_super_methods` - what interface/base method it implements
 
 ### "I need to find a class/file/symbol"
-1. `ide_find_class` - classes by name (CamelCase: `USvc` finds `UserService`)
+1. `ide_find_class` - classes by name (exact by default; `fuzzySearch: true` for CamelCase: `USvc` finds `UserService`)
 2. `ide_find_file` - files by name
 3. `ide_search_text` - exact word occurrences across project
 

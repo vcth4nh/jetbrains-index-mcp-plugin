@@ -74,7 +74,7 @@ Search for classes/interfaces by name using IDE's class index. Equivalent to Ctr
 | `query` | string | yes | Class name pattern |
 | `scope` | enum | no | One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 | `language` | string | no | Filter: "Java", "Kotlin", "Python", etc. |
-| `matchMode` | enum | no | `substring` (default), `prefix`, `exact` |
+| `fuzzySearch` | boolean | no | `false` (default) = exact, case-insensitive name match; `true` = IDE camelCase/substring matching |
 | `limit` | integer | no | Deprecated alias for `pageSize`. Default 25, max 500 |
 | `cursor` | string | no | Pagination cursor from a previous response. When provided, search parameters are ignored; `project_path` and `pageSize` may still be provided. |
 | `pageSize` | integer | no | Results per page. Default 25, max 500 |
@@ -82,7 +82,7 @@ Search for classes/interfaces by name using IDE's class index. Equivalent to Ctr
 
 **Returns**: `{ classes: [{name, qualifiedName, file, line, kind, language}], totalCount, query }`
 **Path note**: Project results use relative paths. Dependency/library results may use absolute paths or `jar://` URLs.
-**Matching**: CamelCase (`USvc` -> `UserService`), substring, wildcard (`User*Impl`).
+**Matching**: exact (case-insensitive) by default; with `fuzzySearch: true`, IDE camelCase/substring matching (`USvc` -> `UserService`).
 
 ### ide_find_file
 Search for files by name using IDE's file index. Equivalent to Ctrl+Shift+N / Cmd+Shift+O.
@@ -140,6 +140,7 @@ Search for any code symbol (classes, methods, fields, functions) by name.
 | `query` | string | yes | Symbol name pattern. Matching follows IntelliJ's Go to Symbol popup, including qualified queries like `BasicSolver.run`. |
 | `scope` | enum | no | One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 | `language` | string | no | Filter by language |
+| `fuzzySearch` | boolean | no | `false` (default) = exact, case-insensitive name match; `true` = IDE Go to Symbol fuzzy matching |
 | `limit` | integer | no | Deprecated alias for `pageSize`. Default 25, max 500 |
 | `cursor` | string | no | Pagination cursor from a previous response. When provided, search parameters are ignored; `project_path` and `pageSize` may still be provided. |
 | `pageSize` | integer | no | Results per page. Default 25, max 500 |

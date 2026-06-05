@@ -5,6 +5,7 @@
 ## [Unreleased]
 
 ### Added
+- `ide_find_symbol` now accepts `fuzzySearch` (boolean, default `false`). `false` = exact, case-insensitive name match; `true` = the IDE's Go to Symbol fuzzy matching. This flips the default for symbol search from fuzzy to exact.
 - `ide_type_hierarchy` now accepts `direction` (`supertypes` | `subtypes` | `both`, default
   `both`) and `maxDepth` (default 5, max 20), reaching parity with `ide_call_hierarchy`. `both`
   returns the union of the supertypes and subtypes walks — deliberately not the IDE's single merged
@@ -18,7 +19,11 @@
 - `ide_find_super_methods` now supports Go — a method returns the interface method(s) it satisfies (via the Go plugin's `GoSuperMethodSearch.GO_SUPER_METHOD_SEARCH`); a type (interface/struct) returns the interfaces it satisfies, transitively (via `GoGotoSuperHandler.SUPER_SEARCH`). Both mirror GoLand's own Ctrl+U handler and `implementing` gutter. The tool is registered in GoLand for the first time.
 - `ide_find_super_methods` now resolves more anchor kinds, mirroring the IDE's Go-to-Super (Ctrl+U): **class / interface / struct / trait** declarations → their direct supertypes (Java, Kotlin, PHP, Python, JavaScript, TypeScript); **lambda / functional expressions** → the single abstract method they implement (Java); **field / constant** positions → the overridden member (TypeScript). The tool-layer gate was relaxed so these positions reach the language provider. Closes #22, #24, #26.
 
+### Breaking
+- `ide_find_class` replaced the `matchMode` enum (`substring | prefix | exact | camelCase`) with a `fuzzySearch` boolean (default `false`). `false` = exact case-insensitive name match; `true` = IDE fuzzy (camelCase + substring). Calls that still pass `matchMode` now fail strict validation with `invalid_arguments` / `unknown_parameter`.
+
 ### Changed
+- `ide_find_class` and `ide_find_symbol` now default to **exact** (case-insensitive) name matching; opt into the IDE's fuzzy matching with `fuzzySearch: true`.
 - Negotiate the MCP protocol version during `initialize` (supported: 2025-11-25, 2025-03-26, 2024-11-05) instead of returning a fixed per-transport version; streamable-HTTP now defaults to 2025-11-25.
 - All tool errors are now structured `{ "error": "<snake_case_code>", "message": "…", … }` objects (carried in both the text mirror and native `structuredContent`), replacing bare-text error strings. The ~100 `createErrorResult` sites became `{ "error": "tool_error", "message": … }` with no call-site changes. The dispatch catch-all now distinguishes client-caused `McpException`s (returned as structured tool errors with a stable code such as `index_not_ready`, no longer logged at ERROR) from genuine internal failures (`internal_error`, still logged at ERROR). `ProjectResolver` errors (`no_project_open` / `project_not_found` / `multiple_projects_open`) now also carry `structuredContent`. Closes #4.
 - Internal: 5 `SuperMethodsProvider` implementations (Java, Kotlin, Python, PHP, JavaScript/TypeScript) refactored to delegate to each language plugin's own super-method data API (the function its `GotoSuperHandler` uses internally) instead of bespoke recursive PSI walking. Same wire format and Ctrl+U semantics; smaller and more accurate per-language code. Closes #19.

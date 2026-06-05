@@ -33,7 +33,7 @@ Advanced tools work across multiple languages based on available plugins:
 - **Index Status** - Check if code intelligence is ready
 - **Sync Files** - Force sync VFS/PSI cache after external file changes
 - **Build Project** - Trigger IDE build with structured error/warning output (disabled by default)
-- **Find Class** - Fast class/interface search by name with camelCase matching
+- **Find Class** - Fast class/interface search by name (exact by default; opt into camelCase/substring matching with `fuzzySearch`)
 - **Find File** - Fast file search by name using IDE's file index
 - **Symbol Search** - Find code symbols by name with IntelliJ Go to Symbol matching (disabled by default)
 - **Search Text** - Text search using IDE's pre-built word index
@@ -235,7 +235,7 @@ These tools work in all supported JetBrains IDEs.
 |------|-------------|
 | `ide_find_usages` | Find all references to a symbol across the entire project |
 | `ide_find_definition` | Find the definition/declaration location of a symbol |
-| `ide_find_class` | Search for classes/interfaces by name with camelCase/substring/wildcard matching |
+| `ide_find_class` | Search for classes/interfaces by name; exact by default, `fuzzySearch: true` for camelCase/substring matching |
 | `ide_find_file` | Search for files by name using IDE's file index |
 | `ide_find_symbol` | Search for symbols (classes, methods, fields, functions) by name with IntelliJ Go to Symbol matching *(disabled by default)* |
 | `ide_search_text` | Text search using IDE's pre-built word index with context filtering |

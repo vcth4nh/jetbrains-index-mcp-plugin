@@ -398,9 +398,9 @@ Tools are organized by IDE availability.
 **Universal Tools (All Supported JetBrains IDEs):**
 - `ide_find_usages` - Find all usages of a symbol.
 - `ide_find_definition` - Find symbol definition location.
-- `ide_find_class` - Search for classes/interfaces by name with camelCase/substring/wildcard matching
+- `ide_find_class` - Search for classes/interfaces by name. Exact (case-insensitive) by default; set `fuzzySearch: true` for IDE camelCase/substring matching.
 - `ide_find_file` - Search for files by name using IDE's file index
-- `ide_find_symbol` - Search for symbols (classes, methods, fields, functions) by name with IntelliJ Go to Symbol matching (disabled by default)
+- `ide_find_symbol` - Search for symbols (classes, methods, fields, functions) by name. Exact (case-insensitive) by default; set `fuzzySearch: true` for IntelliJ Go to Symbol fuzzy matching (disabled by default)
 - `ide_search_text` - Text search using IDE's pre-built word index with context filtering
 - `ide_read_file` - Read file content by path or qualified name, including library/jar sources (disabled by default)
 - `ide_diagnostics` - Unified diagnostics tool: per-file code analysis (errors, warnings, intentions), build output from last build, and test results from open test run tabs. Supports `includeBuildErrors`, `includeTestResults`, `severity` filter, `testResultFilter`, `maxBuildErrors`, `maxTestResults`. The `file` parameter is now optional.
