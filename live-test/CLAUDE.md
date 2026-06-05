@@ -187,10 +187,12 @@ will just snapshot a different empty/odd result.
   `require` resolves) and after a forced reindex/re-stub. Verified against WebStorm's own
   Type Hierarchy widget. The type-hier scope no-op still holds (all/production/test
   identical at 1).
-- **Go `hier-type-*`**: returns empty `supertypes` / `subtypes`. Go uses
-  implicit (structural) interfaces, so the `Drawable` ↔ `Circle`
-  relationship doesn't appear here. Use `find_class` for Go interface
-  implementations.
+- **Go `hier-type-*` resolves structural interfaces**: a struct (`Circle`,
+  `Rectangle`, `Square`) lists the interfaces it implicitly satisfies as
+  `supertypes` (`Drawable`, `Shape`), and an interface (`Drawable`, `Shape`)
+  lists its implementers as `subtypes` — even though Go has no explicit
+  `implements`. Types with neither (`baseShape`, `ShapeCollection`) return
+  empty, as expected.
 - **Enum type hierarchy — `direction:both` returns the *supertypes* view, which the IDE's
   combined Type Hierarchy widget hides.** `hier-type-Direction` (TS numeric enum) blesses
   `supertypes: [Number ×3]`; `hier-type-Severity-enum` (PHP string-backed enum) blesses
@@ -199,9 +201,11 @@ will just snapshot a different empty/odd result.
   *nothing* for the enum — a rendering quirk of that view, not a tool error. Don't re-bless
   these to empty. (Whether `direction:both` should mirror the combined widget vs. the
   supertypes∪subtypes union is a separate open question — see the type_hierarchy follow-up.)
-- **Go `qualifiedName` universally `null`**: GoLand does not register a
-  `QualifiedNameProvider` for Go elements, and `QualifiedNameUtil` has no
-  Go-specific fallback. Tracked separately as a plugin enhancement.
+- **Go `qualifiedName` uses `package.Type.Method`** (e.g. `main.Circle.Area`,
+  `main.Drawable.Draw`): GoLand registers no `QualifiedNameProvider` for Go, so
+  `QualifiedNameUtil.goFallback` builds the FQN by reflection (`package.Function` /
+  `package.Receiver.Method` / `package.Interface.method`). Nearly all Go elements
+  resolve; a few positions still return `null`.
 - **Rust `qualifiedName` partially `null`**: when the Rust provider can't
   compute an FQN. The `name` field is unaffected.
 - **Rust `impls-` on a generic trait bound** (e.g. `<C: Coercer>`): returns
