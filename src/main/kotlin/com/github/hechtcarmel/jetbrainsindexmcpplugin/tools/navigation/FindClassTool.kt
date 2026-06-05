@@ -5,8 +5,6 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ToolNames
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScopeResolver
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.PopupFaithfulClassSearch
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.createMatcher
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.createNameFilter
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.PaginationService
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.ProjectResolver
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
@@ -31,6 +29,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonPrimitive
@@ -56,22 +55,22 @@ class FindClassTool : AbstractMcpTool() {
     override val description = """
         Search for classes and interfaces by name. Faster than ide_find_symbol when you only need classes.
 
-        Matching: camelCase ("USvc" → "UserService"), substring ("Service" → "UserService"), and wildcard ("User*Impl" → "UserServiceImpl").
+        Matching: exact by default (case-insensitive). Set fuzzySearch=true for the IDE's camelCase + substring matching ("USvc" → "UserService", "Service" → "UserService").
 
         Returns: matching classes with qualified names, file paths, line numbers, and kind (class/interface/enum).
 
         Supports pagination: first call returns results + nextCursor. Pass cursor to get the next page.
         Parameters: query (required for fresh search), scope (optional, default: "project_files"; supported: project_files, project_and_libraries, project_production_files, project_test_files), pageSize (optional, default: 25, max: 500), cursor (for pagination, replaces search params; project_path may still be required).
 
-        Example: {"query": "UserService"} or {"query": "U*Impl"} or {"query": "USvc", "scope": "project_and_libraries"}
+        Example: {"query": "UserService"} or {"query": "USvc", "fuzzySearch": true}
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
         .projectPath()
-        .stringProperty(ParamNames.QUERY, "Search pattern. Supports substring and camelCase matching. Required for fresh search, ignored when cursor is provided.")
+        .stringProperty(ParamNames.QUERY, "Search pattern. With fuzzySearch=true, uses IDE camelCase/substring matching; otherwise an exact (case-insensitive) name match. Required for fresh search, ignored when cursor is provided.")
         .scopeProperty("Search scope. Default: project_files.")
         .stringProperty(ParamNames.LANGUAGE, "Filter results by language (e.g., \"Kotlin\", \"Java\", \"Python\"). Case-insensitive. Optional.")
-        .enumProperty(ParamNames.MATCH_MODE, "How to match the query. Default: \"substring\".", listOf("substring", "prefix", "exact", "camelCase"))
+        .booleanProperty(ParamNames.FUZZY_SEARCH, "When true, use the IDE's Go to Class fuzzy matching (camelCase + substring, e.g. \"USvc\" matches \"UserService\"). When false (default), match the name exactly, case-insensitively. Default: false.")
         .intProperty(ParamNames.LIMIT, "Maximum results per page (deprecated, use pageSize). Default: $DEFAULT_PAGE_SIZE, max: $MAX_PAGE_SIZE.")
         .stringProperty("cursor", "Pagination cursor from a previous response. When provided, returns the next page of results. Search parameters are ignored; project_path and pageSize may still be provided.")
         .intProperty("pageSize", "Results per page. Default: $DEFAULT_PAGE_SIZE, max: $MAX_PAGE_SIZE.")
@@ -107,7 +106,7 @@ class FindClassTool : AbstractMcpTool() {
             return createInvalidScopeError(rawScope)
         }
         val languageFilter = arguments[ParamNames.LANGUAGE]?.jsonPrimitive?.content
-        val matchMode = arguments[ParamNames.MATCH_MODE]?.jsonPrimitive?.content ?: "substring"
+        val fuzzySearch = arguments[ParamNames.FUZZY_SEARCH]?.jsonPrimitive?.booleanOrNull ?: false
         val pageSize = resolvePageSize(arguments, DEFAULT_PAGE_SIZE, aliases = arrayOf("limit"))
         val collectLimit = maxOf(PaginationService.DEFAULT_OVERCOLLECT, pageSize)
 
@@ -119,11 +118,11 @@ class FindClassTool : AbstractMcpTool() {
 
         val cursorToken = suspendingReadAction {
             val searchScope = resolveSearchScope(project, scope)
-            val classes = searchAndConvertClasses(project, query, searchScope, collectLimit, languageFilter, matchMode)
+            val classes = searchAndConvertClasses(project, query, searchScope, collectLimit, languageFilter, fuzzySearch)
 
             val searchExtender: suspend (Set<String>, Int) -> List<PaginationService.SerializedResult> = { seenKeys, limit ->
                 suspendingReadAction {
-                    extendSearchClasses(project, query, scope, matchMode, languageFilter, seenKeys, limit)
+                    extendSearchClasses(project, query, scope, fuzzySearch, languageFilter, seenKeys, limit)
                 }
             }
 
@@ -170,13 +169,13 @@ class FindClassTool : AbstractMcpTool() {
         project: Project,
         query: String,
         scope: BuiltInSearchScope,
-        matchMode: String,
+        fuzzySearch: Boolean,
         languageFilter: String?,
         seenKeys: Set<String>,
         limit: Int
     ): List<PaginationService.SerializedResult> {
         val searchScope = resolveSearchScope(project, scope)
-        val classes = searchAndConvertClasses(project, query, searchScope, limit + seenKeys.size, languageFilter, matchMode)
+        val classes = searchAndConvertClasses(project, query, searchScope, limit + seenKeys.size, languageFilter, fuzzySearch)
 
         return classes.asSequence()
             .filter { cls -> "${cls.file}:${cls.line}:${cls.column}:${cls.name}" !in seenKeys }
@@ -194,8 +193,8 @@ class FindClassTool : AbstractMcpTool() {
      * Drive the headless Go to Class popup stack and convert results to [SymbolMatch].
      *
      * Owns the over-fetch loop: [PopupFaithfulClassSearch] returns NavigationItems, some of
-     * which get filtered out by [convertToSymbolMatch] (scope mismatch), the matchMode filter
-     * (popup matches substring/camelCase by default; "prefix" and "exact" narrow further),
+     * which get filtered out by [convertToSymbolMatch] (scope mismatch), the exact-name filter
+     * (when fuzzySearch is false),
      * the language filter, and dedup. When that happens, we re-request with a larger limit,
      * doubling each iteration up to a cap of `max(limit * 8, limit + 200)`, until we have
      * enough results, the popup exhausts, or we hit the cap.
@@ -210,11 +209,9 @@ class FindClassTool : AbstractMcpTool() {
         scope: GlobalSearchScope,
         limit: Int,
         languageFilter: String?,
-        matchMode: String
+        fuzzySearch: Boolean
     ): List<SymbolMatch> {
         if (pattern.isBlank()) return emptyList()
-        val matcher = createMatcher(pattern, matchMode)
-        val nameFilter = createNameFilter(pattern, matchMode, matcher)
         var popupLimit = limit
         val popupLimitCap = maxOf(limit * 8, limit + 200)
         while (true) {
@@ -231,7 +228,7 @@ class FindClassTool : AbstractMcpTool() {
             }
             val results = popupResults.candidates
                 .mapNotNull { convertToSymbolMatch(it.item, project, scope, languageFilter) }
-                .filter { nameFilter(it.name) }
+                .filter { fuzzySearch || it.name.equals(popupResults.localPattern, ignoreCase = true) }
                 .distinctBy { "${it.file}:${it.line}:${it.column}:${it.name}" }
             if (results.size >= limit ||
                 popupResults.candidates.size < popupLimit ||

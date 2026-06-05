@@ -916,23 +916,20 @@ class ToolsUnitTest : TestCase() {
         assertNull("ide_find_symbol should not expose matchMode", properties?.get(ParamNames.MATCH_MODE))
     }
 
-    fun testFindClassToolSchemaHasMatchModeEnum() {
+    fun testFindClassToolSchemaHasFuzzySearchBoolean() {
         val tool = FindClassTool()
         val properties = tool.inputSchema[SchemaConstants.PROPERTIES]?.jsonObject
         assertNotNull("Should have properties", properties)
 
-        val matchModeProp = properties?.get(ParamNames.MATCH_MODE)?.jsonObject
-        assertNotNull("Should have matchMode property", matchModeProp)
+        assertNull("ide_find_class should no longer expose matchMode", properties?.get("matchMode"))
 
-        val enumArray = matchModeProp?.get("enum")?.jsonArray
-        assertNotNull("matchMode should have an enum array", enumArray)
-
-        val values = enumArray?.map { it.jsonPrimitive.content }
-        assertTrue("enum should contain 'substring'", values?.contains("substring") == true)
-        assertTrue("enum should contain 'prefix'",    values?.contains("prefix")    == true)
-        assertTrue("enum should contain 'exact'",     values?.contains("exact")     == true)
-        assertTrue("enum should contain 'camelCase'", values?.contains("camelCase") == true)
-        assertEquals("enum should have exactly 4 values", 4, values?.size)
+        val fuzzyProp = properties?.get(ParamNames.FUZZY_SEARCH)?.jsonObject
+        assertNotNull("Should have fuzzySearch property", fuzzyProp)
+        assertEquals(
+            "fuzzySearch should be a boolean",
+            SchemaConstants.TYPE_BOOLEAN,
+            fuzzyProp?.get(SchemaConstants.TYPE)?.jsonPrimitive?.content
+        )
     }
 
     // ── language filter schema tests ───────────────────────────────────────────

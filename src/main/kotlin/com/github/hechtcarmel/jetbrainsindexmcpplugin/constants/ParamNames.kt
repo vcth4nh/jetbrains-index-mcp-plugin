@@ -56,6 +56,7 @@ object ParamNames {
     // Filter parameters
     const val LANGUAGE = "language"
     const val MATCH_MODE = "matchMode"
+    const val FUZZY_SEARCH = "fuzzySearch"
 
     // Build parameters
     const val REBUILD = "rebuild"
