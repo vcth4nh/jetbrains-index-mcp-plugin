@@ -148,7 +148,6 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
 
         val classResult = classTool.execute(project, buildJsonObject {
             put("query", fixture.className)
-            put("matchMode", "exact")
             put("scope", "project_production_files")
         })
         assertFalse("Find class should succeed: ${classResult.content}", classResult.isError)

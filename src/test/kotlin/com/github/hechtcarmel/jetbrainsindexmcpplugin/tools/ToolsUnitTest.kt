@@ -907,15 +907,6 @@ class ToolsUnitTest : TestCase() {
         assertTrue("Description should mention references", description.contains("references"))
     }
 
-    // ── matchMode enum schema tests ────────────────────────────────────────────
-
-    fun testFindSymbolToolSchemaDoesNotExposeMatchMode() {
-        val tool = FindSymbolTool()
-        val properties = tool.inputSchema[SchemaConstants.PROPERTIES]?.jsonObject
-        assertNotNull("Should have properties", properties)
-        assertNull("ide_find_symbol should not expose matchMode", properties?.get(ParamNames.MATCH_MODE))
-    }
-
     fun testFindClassToolSchemaHasFuzzySearchBoolean() {
         val tool = FindClassTool()
         val properties = tool.inputSchema[SchemaConstants.PROPERTIES]?.jsonObject
