@@ -59,7 +59,7 @@ Append to disambiguate parameter shapes or behaviors of the same probe:
 - direction: `-callers`, `-callees`, `-supertypes`, `-subtypes` — embedded in
   the hier-* prefix, never as a suffix.
 - depth: `-d1`, `-d2`, `-d3`.
-- matchMode: `-prefix`, `-exact`, `-substring`, `-wildcard`, `-camelcase`.
+- fuzzySearch: `-fuzzy` (fuzzySearch:true). Exact is the default — omit the suffix, or use `-exact` to be explicit.
 - scope: `-libraries-scope`, `-files-scope`.
 - pagination: `-paged`, `-page1`, `-page2`.
 - query shape: `-qualified` (e.g. `find-symbol-Shape.area-qualified`).
@@ -77,7 +77,7 @@ hyphen, don't dot. E.g. `usage-Drawable-trait`, `impls-Shape-struct`,
 - ❌ `refs-Circle-ctor` — use `usage-`
 - ❌ `call-hier-area-callers` — direction goes in the prefix: `hier-caller-area`
 - ❌ `type-hier-Shape-supertypes` — `hier-super-Shape`
-- ❌ `find-class-SC-camelCase` — lowercase variant: `find-class-SC-camelcase`
+- ❌ `find-class-SC-Fuzzy` — lowercase variant: `find-class-SC-fuzzy`
 - ❌ `find-symbol-qualified-Shape-area` — variant at end: `find-symbol-Shape.area-qualified`
 - ❌ `def-circle-area-decl` — preserve class casing: `def-Circle.area-decl`
 - ❌ `super-Circle-draw` — dot member access: `super-Circle.draw`
