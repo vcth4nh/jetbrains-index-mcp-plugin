@@ -89,6 +89,7 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
 
         val result = tool.execute(project, buildJsonObject {
             put("query", "RepositoryImpl")
+            put("fuzzySearch", true)
             put("scope", "project_test_files")
         })
 
@@ -233,6 +234,7 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
         // `*Solver` should match class names ending with "Solver" (BasicSolver, StackSolver).
         val result = tool.execute(project, buildJsonObject {
             put("query", "*Solver")
+            put("fuzzySearch", true)
             put("pageSize", 100)
         })
         assertFalse("Find symbol should succeed: ${result.content}", result.isError)
@@ -262,6 +264,7 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
         // `Batch*` should match names starting with "Batch" (BatchRunner).
         val result = tool.execute(project, buildJsonObject {
             put("query", "Batch*")
+            put("fuzzySearch", true)
             put("pageSize", 100)
         })
         assertFalse("Find symbol should succeed: ${result.content}", result.isError)
