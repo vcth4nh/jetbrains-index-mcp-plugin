@@ -3,10 +3,6 @@ package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ParamNames
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.SchemaConstants
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageHandlerRegistry
-import io.mockk.every
-import io.mockk.mockkObject
-import io.mockk.unmockkObject
 import junit.framework.TestCase
 import kotlinx.serialization.json.*
 
@@ -138,78 +134,4 @@ class SchemaBuilderUnitTest : TestCase() {
         assertTrue("custom should be required", required.contains("custom"))
     }
 
-    fun testLanguageAndSymbol() {
-        mockkObject(LanguageHandlerRegistry)
-        try {
-            every { LanguageHandlerRegistry.getSupportedLanguageNamesForSymbolReference() } returns listOf("Java", "Kotlin")
-
-            val schema = SchemaBuilder.tool()
-                .projectPath()
-                .languageAndSymbol()
-                .build()
-
-            val properties = schema[SchemaConstants.PROPERTIES]?.jsonObject!!
-            assertNotNull(properties[ParamNames.LANGUAGE])
-            assertNotNull(properties[ParamNames.SYMBOL])
-
-            val languageProp = properties[ParamNames.LANGUAGE]?.jsonObject!!
-            val enumValues = languageProp["enum"]?.jsonArray?.map { it.jsonPrimitive.content }!!
-            assertEquals(listOf("Java", "Kotlin"), enumValues)
-            assertTrue(
-                "language description should list supported languages",
-                languageProp[SchemaConstants.DESCRIPTION]?.jsonPrimitive?.content?.contains("Currently supported languages: Java, Kotlin.") == true
-            )
-
-            val required = schema[SchemaConstants.REQUIRED]?.jsonArray?.map { it.jsonPrimitive.content }!!
-            assertTrue("language should be required", required.contains(ParamNames.LANGUAGE))
-            assertTrue("symbol should be required", required.contains(ParamNames.SYMBOL))
-        } finally {
-            unmockkObject(LanguageHandlerRegistry)
-        }
-    }
-
-    fun testLanguageAndSymbolNoHandlers() {
-        mockkObject(LanguageHandlerRegistry)
-        try {
-            every { LanguageHandlerRegistry.getSupportedLanguageNamesForSymbolReference() } returns emptyList()
-
-            val schema = SchemaBuilder.tool()
-                .projectPath()
-                .languageAndSymbol()
-                .build()
-
-            val properties = schema[SchemaConstants.PROPERTIES]?.jsonObject!!
-            val languageProp = properties[ParamNames.LANGUAGE]?.jsonObject!!
-            assertNull("enum should be absent when no handlers registered", languageProp["enum"])
-            assertTrue(
-                "language description should explain when symbol references are unavailable",
-                languageProp[SchemaConstants.DESCRIPTION]?.jsonPrimitive?.content?.contains("No symbol reference handlers are currently available.") == true
-            )
-        } finally {
-            unmockkObject(LanguageHandlerRegistry)
-        }
-    }
-
-    fun testLanguageAndSymbolNotRequired() {
-        mockkObject(LanguageHandlerRegistry)
-        try {
-            every { LanguageHandlerRegistry.getSupportedLanguageNamesForSymbolReference() } returns listOf("Java")
-
-            val schema = SchemaBuilder.tool()
-                .projectPath()
-                .languageAndSymbol(required = false)
-                .build()
-
-            val properties = schema[SchemaConstants.PROPERTIES]?.jsonObject!!
-            assertNotNull(properties[ParamNames.LANGUAGE])
-            assertNotNull(properties[ParamNames.SYMBOL])
-
-            val required = schema[SchemaConstants.REQUIRED]?.jsonArray
-            val requiredNames = required?.map { it.jsonPrimitive.content } ?: emptyList()
-            assertFalse("language should not be required", requiredNames.contains(ParamNames.LANGUAGE))
-            assertFalse("symbol should not be required", requiredNames.contains(ParamNames.SYMBOL))
-        } finally {
-            unmockkObject(LanguageHandlerRegistry)
-        }
-    }
 }

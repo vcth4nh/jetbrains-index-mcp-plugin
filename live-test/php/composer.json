@@ -1,0 +1,9 @@
+{
+    "name": "live-test/php",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Demo\\": "src/"
+        }
+    }
+}

@@ -80,6 +80,9 @@ class ProjectResolverUnitTest : TestCase() {
         assertTrue(result.isError)
         assertEquals("project_not_found", parsed["error"]?.jsonPrimitive?.content)
         assertEquals("Missing project", parsed["message"]?.jsonPrimitive?.content)
+        assertNotNull("structuredContent now populated", result.structuredContent)
+        assertEquals("project_not_found", result.structuredContent!!["error"]?.jsonPrimitive?.content)
+        assertEquals("Missing project", result.structuredContent!!["message"]?.jsonPrimitive?.content)
     }
 
     fun testBuildStructuredErrorResultSupportsToon() {
@@ -97,5 +100,7 @@ class ProjectResolverUnitTest : TestCase() {
         assertFalse(text.trim().startsWith("{"))
         assertTrue(text.contains("error: project_not_found"))
         assertTrue(text.contains("message: Missing project"))
+        assertNotNull("structuredContent is JSON even in TOON mode", result.structuredContent)
+        assertEquals("project_not_found", result.structuredContent!!["error"]?.jsonPrimitive?.content)
     }
 }

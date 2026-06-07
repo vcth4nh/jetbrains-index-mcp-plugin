@@ -5,6 +5,7 @@ import junit.framework.TestCase
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 class McpModelsUnitTest : TestCase() {
@@ -201,7 +202,7 @@ class McpModelsUnitTest : TestCase() {
 
     fun testToolCallParamsSerialization() {
         val params = ToolCallParams(
-            name = "ide_find_references",
+            name = "ide_find_usages",
             arguments = buildJsonObject {
                 put("file", "src/Main.kt")
                 put("line", 10)
@@ -212,7 +213,7 @@ class McpModelsUnitTest : TestCase() {
         val serialized = json.encodeToString(params)
         val deserialized = json.decodeFromString<ToolCallParams>(serialized)
 
-        assertEquals("ide_find_references", deserialized.name)
+        assertEquals("ide_find_usages", deserialized.name)
         assertNotNull(deserialized.arguments)
     }
 
@@ -224,5 +225,23 @@ class McpModelsUnitTest : TestCase() {
 
         assertEquals("ide_index_status", deserialized.name)
         assertNull(deserialized.arguments)
+    }
+
+    fun testToolCallResultOmitsStructuredContentWhenNull() {
+        val result = ToolCallResult(content = listOf(ContentBlock.Text("hi")), isError = false)
+        val encoded = json.encodeToString(ToolCallResult.serializer(), result)
+        assertFalse("null structuredContent must be omitted", encoded.contains("structuredContent"))
+    }
+
+    fun testToolCallResultIncludesStructuredContentWhenPresent() {
+        val body = buildJsonObject { put("error", "tool_error"); put("message", "boom") }
+        val result = ToolCallResult(
+            content = listOf(ContentBlock.Text(body.toString())),
+            structuredContent = body,
+            isError = true,
+        )
+        val encoded = json.encodeToString(ToolCallResult.serializer(), result)
+        val decoded = json.decodeFromString(ToolCallResult.serializer(), encoded)
+        assertEquals("tool_error", decoded.structuredContent!!["error"]!!.jsonPrimitive.content)
     }
 }

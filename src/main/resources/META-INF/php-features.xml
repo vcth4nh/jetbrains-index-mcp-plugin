@@ -1,3 +1,8 @@
 <idea-plugin>
-    <!-- PHP-specific extensions can be added here if needed in the future -->
+    <extensions defaultExtensionNs="com.github.hechtcarmel.jetbrainsindexmcpplugin">
+        <languageKindResolver language="PHP"
+                              implementationClass="com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.php.PhpKindResolver"/>
+        <superMethodsProvider language="PHP"
+                              implementationClass="com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.php.PhpSuperMethodsProvider"/>
+    </extensions>
 </idea-plugin>

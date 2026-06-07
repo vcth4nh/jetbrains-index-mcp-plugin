@@ -192,7 +192,7 @@ class McpServerService(
 
     /**
      * Returns the Streamable HTTP endpoint URL for MCP connections (primary transport).
-     * Clients should use this URL for the MCP 2025-03-26 Streamable HTTP transport.
+     * Clients should use this URL for the MCP 2025-11-25 Streamable HTTP transport.
      *
      * @return The server URL, or null if server is not running
      */

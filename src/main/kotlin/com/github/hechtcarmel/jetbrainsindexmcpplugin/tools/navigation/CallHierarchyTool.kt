@@ -2,20 +2,24 @@ package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation
 
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ErrorMessages
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ParamNames
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScopeResolver
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.CallElementData
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageHandlerRegistry
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.AbstractMcpTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.CallElement
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.CallHierarchyResult
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.HierarchyKind
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.HierarchyScope
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.HierarchyTreeWalker
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PsiUtils
+import com.intellij.ide.hierarchy.HierarchyNodeDescriptor
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
-import kotlinx.serialization.json.JsonObject
+import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiNamedElement
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -28,7 +32,7 @@ import kotlinx.serialization.json.put
  *
  * Supports: Java, Kotlin, Python, JavaScript, TypeScript, PHP, Rust
  *
- * Delegates to language-specific handlers via [LanguageHandlerRegistry].
+ * Delegates to the IDE's LanguageCallHierarchy extension point via [HierarchyTreeWalker].
  */
 class CallHierarchyTool : AbstractMcpTool() {
 
@@ -43,91 +47,71 @@ class CallHierarchyTool : AbstractMcpTool() {
 
         Returns: recursive tree with method signatures, file locations (line/column), and nested call relationships.
 
-        Target (mutually exclusive):
-        - file + line + column: position-based lookup
-        - language + symbol: fully qualified symbol reference (currently supported for Java only)
-
-        Parameters: direction (required): "callers" or "callees". depth (optional, default: 3, max: 5). scope (optional, default: "project_files"; supported: project_files, project_and_libraries, project_production_files, project_test_files).
+        Parameters: file + line + column (required), direction (required): "callers" or "callees". maxDepth (optional, default: 7, max: 20). scope (optional, default: "all"; supported: all, production, test, this_class, this_module).
 
         Example: {"file": "src/Service.java", "line": 42, "column": 10, "direction": "callers"}
-        Example: {"language": "Java", "symbol": "com.example.Service#processRequest(String)", "direction": "callers", "scope": "project_and_libraries"}
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
         .projectPath()
-        .file(required = false, description = "Project-relative file path, or a dependency/library absolute path or jar:// URL previously returned by the plugin. Required for position-based lookup.")
-        .lineAndColumn(required = false)
-        .languageAndSymbol(required = false)
+        .file(description = "Project-relative file path, or a dependency/library absolute path or jar:// URL previously returned by the plugin.")
+        .lineAndColumn()
         .enumProperty("direction", "Direction: 'callers' (methods that call this method) or 'callees' (methods this method calls)", listOf("callers", "callees"), required = true)
-        .intProperty("depth", "How many levels deep to traverse the call hierarchy (default: 3, max: 5)")
-        .scopeProperty("Search scope. Default: project_files.")
+        .intProperty("maxDepth", "How many levels deep to traverse the call hierarchy (default: 7, max: 20)")
+        .hierarchyScopeProperty(
+            "Hierarchy scope. Default: all. (production = production sources only — empty in projects without production roots, same as the IDE.)",
+            HierarchyScope.wireValues(HierarchyScope.CALL_HIERARCHY_SCOPES)
+        )
         .build()
 
     companion object {
-        private const val DEFAULT_DEPTH = 3
-        private const val MAX_DEPTH = 5
+        private const val DEFAULT_DEPTH = 7
+        private const val MAX_DEPTH = 20
     }
 
     override suspend fun doExecute(project: Project, arguments: JsonObject): ToolCallResult {
         val direction = arguments["direction"]?.jsonPrimitive?.content
             ?: return createErrorResult("Missing required parameter: direction")
-        val depth = (arguments["depth"]?.jsonPrimitive?.int ?: DEFAULT_DEPTH).coerceIn(1, MAX_DEPTH)
+        val depth = (arguments["maxDepth"]?.jsonPrimitive?.int ?: DEFAULT_DEPTH).coerceIn(1, MAX_DEPTH)
         val rawScope = rawScopeValue(arguments[ParamNames.SCOPE])
         val scope = try {
-            BuiltInSearchScopeResolver.parse(arguments, BuiltInSearchScope.PROJECT_FILES)
+            HierarchyScope.parse(arguments)
         } catch (_: IllegalArgumentException) {
             return createInvalidScopeError(rawScope)
-        } catch (_: IllegalStateException) {
-            return createInvalidScopeError(rawScope)
         }
-        if (direction !in listOf("callers", "callees")) {
-            return createErrorResult("direction must be 'callers' or 'callees'")
+        val kind = when (direction) {
+            "callers" -> HierarchyKind.CALLERS
+            "callees" -> HierarchyKind.CALLEES
+            else -> return createErrorResult("direction must be 'callers' or 'callees'")
         }
 
         requireSmartMode(project)
 
         return suspendingReadAction {
-            ProgressManager.checkCanceled() // Allow cancellation
+            ProgressManager.checkCanceled()
 
             val element = resolveElementFromArguments(project, arguments, allowLibraryFilesForPosition = true).getOrElse {
                 return@suspendingReadAction createErrorResult(it.message ?: ErrorMessages.COULD_NOT_RESOLVE_SYMBOL)
             }
 
             // Tool-layer gate: reject position-based invocations where the caret is not on a
-            // resolvable navigation target (comment, whitespace, literal). Uses the full
-            // resolveTargetElement chain to include parent-reference lookup — required so
-            // real call sites like `obj.foo()` (where the leaf `.foo` has no direct reference
-            // but the parent PsiReferenceExpression does) are still accepted. Symbol-mode
-            // invocations (language+symbol) return a PsiNamedElement directly and bypass the
-            // check.
-            val isSymbolMode = arguments[ParamNames.LANGUAGE] != null
-            if (!isSymbolMode && PsiUtils.resolveTargetElement(element) == null) {
+            // resolvable navigation target (comment, whitespace, literal).
+            if (PsiUtils.resolveTargetElement(element) == null) {
                 return@suspendingReadAction createErrorResult("No method/function found at position")
             }
 
-            // Find appropriate handler for this element's language
-            val handler = LanguageHandlerRegistry.getCallHierarchyHandler(element)
-            if (handler == null) {
-                return@suspendingReadAction createErrorResult(
-                    "No call hierarchy handler available for language: ${element.language.id}. " +
-                    "Supported languages: ${LanguageHandlerRegistry.getSupportedLanguagesForCallHierarchy()}"
-                )
+            ProgressManager.checkCanceled()
+
+            val walkResult = HierarchyTreeWalker.walk(project, element, kind, scope, depth).getOrElse {
+                return@suspendingReadAction createErrorResult(it.message ?: "Failed to build call hierarchy")
             }
 
-            ProgressManager.checkCanceled() // Allow cancellation before heavy operation
+            val rootCallElement = convertDescriptorToCallElement(walkResult.root, walkResult.resolver, depth)
+                ?: return@suspendingReadAction createErrorResult("No method/function found at position")
 
-            val hierarchyData = handler.getCallHierarchy(element, project, direction, depth, scope)
-            if (hierarchyData == null) {
-                return@suspendingReadAction createErrorResult(
-                    if (isSymbolMode) "No method/function found for the specified symbol"
-                    else "No method/function found at position"
-                )
-            }
-
-            // Convert handler result to tool result
             createJsonResult(CallHierarchyResult(
-                element = convertToCallElement(hierarchyData.element),
-                calls = hierarchyData.calls.map { convertToCallElement(it) }
+                element = rootCallElement.copy(children = null),
+                calls = rootCallElement.children ?: emptyList()
             ))
         }
     }
@@ -144,21 +128,47 @@ class CallHierarchyTool : AbstractMcpTool() {
             put("parameter", JsonPrimitive(ParamNames.SCOPE))
             put("provided", JsonPrimitive(provided))
             put("supportedValues", buildJsonArray {
-                BuiltInSearchScope.supportedWireValues().forEach { add(JsonPrimitive(it)) }
+                HierarchyScope.wireValues(HierarchyScope.CALL_HIERARCHY_SCOPES).forEach { add(JsonPrimitive(it)) }
             })
         })
 
     /**
-     * Converts handler CallElementData to tool CallElement.
+     * Converts an IDE [HierarchyNodeDescriptor] tree (as returned by [HierarchyTreeWalker])
+     * into our wire-format [CallElement] tree. Recursive; bounded by [remainingDepth].
+     * Returns null if the descriptor's PSI element couldn't be resolved or has no source location.
      */
-    private fun convertToCallElement(data: CallElementData): CallElement {
+    private fun convertDescriptorToCallElement(
+        descriptor: HierarchyNodeDescriptor,
+        resolver: com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.LogicalElementResolver,
+        remainingDepth: Int
+    ): CallElement? {
+        val psi = resolver.resolve(descriptor) ?: return null
+        val virtualFile = psi.containingFile?.virtualFile ?: return null
+        val document = PsiDocumentManager.getInstance(psi.project)
+            .getDocument(psi.containingFile) ?: return null
+        val offset = PsiUtils.identifierOffset(psi)
+        val line = document.getLineNumber(offset) + 1
+        val column = offset - document.getLineStartOffset(line - 1) + 1
+
+        val children = if (remainingDepth <= 0) emptyList() else descriptor.cachedChildren
+            ?.filterIsInstance<HierarchyNodeDescriptor>()
+            ?.mapNotNull { convertDescriptorToCallElement(it, resolver, remainingDepth - 1) }
+            ?: emptyList()
+
+        val qualifiedName = com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.ClassLikePsi
+            .describeQualifiedName(psi)
+
         return CallElement(
-            name = data.name,
-            file = data.file,
-            line = data.line,
-            column = data.column,
-            language = data.language,
-            children = data.children?.map { convertToCallElement(it) }
+            name = com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.hierarchy.ClassLikePsi
+                .descriptorDisplayName(descriptor, psi),
+            qualifiedName = qualifiedName,
+            enclosingScope = if (qualifiedName == null) PsiUtils.getEnclosingScope(psi) else null,
+            kind = com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServices.getKind(psi),
+            file = ProjectUtils.getRelativePath(psi.project, virtualFile),
+            line = line,
+            column = column,
+            children = if (children.isEmpty()) null else children
         )
     }
+
 }

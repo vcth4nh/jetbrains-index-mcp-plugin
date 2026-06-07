@@ -1,5 +1,8 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models
 
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.McpConstants
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
@@ -12,9 +15,12 @@ data class ToolDefinition(
     val inputSchema: JsonObject
 )
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class ToolCallResult(
     val content: List<ContentBlock>,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    val structuredContent: JsonObject? = null,
     val isError: Boolean = false
 )
 
@@ -54,7 +60,7 @@ data class ToolCapability(
 
 @Serializable
 data class InitializeResult(
-    val protocolVersion: String = "2025-03-26",
+    val protocolVersion: String = McpConstants.STREAMABLE_HTTP_MCP_PROTOCOL_VERSION,
     val capabilities: ServerCapabilities = ServerCapabilities(),
     val serverInfo: ServerInfo
 )

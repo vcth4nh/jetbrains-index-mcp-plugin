@@ -12,7 +12,7 @@ These tools work in every supported JetBrains IDE:
 
 | Tool | Description | Default |
 |------|-------------|---------|
-| `ide_find_references` | Find all references to a symbol | Enabled |
+| `ide_find_usages` | Find all references to a symbol | Enabled |
 | `ide_find_definition` | Find symbol definition location | Enabled |
 | `ide_find_class` | Search classes/interfaces by name | Enabled |
 | `ide_find_file` | Search files by name | Enabled |
@@ -38,7 +38,7 @@ These tools activate based on available language plugins:
 | `ide_type_hierarchy` | Get type inheritance hierarchy | Java, Kotlin, Python, JS/TS, Go, PHP, Rust |
 | `ide_call_hierarchy` | Analyze method call relationships | Java, Kotlin, Python, JS/TS, Go, PHP, Rust |
 | `ide_find_implementations` | Find interface implementations | Java, Kotlin, Python, JS/TS, PHP, Rust |
-| `ide_find_super_methods` | Find overridden methods | Java, Kotlin, Python, JS/TS, PHP |
+| `ide_find_super_methods` | Find overridden methods | Java, Kotlin, Python, JS/TS, PHP, Go, Rust |
 | `ide_file_structure` | Hierarchical file structure *(disabled by default)* | Java, Kotlin, Python, JS/TS, Markdown |
 
 ### Java-Specific Refactoring Tools
@@ -54,7 +54,7 @@ These tools activate based on available language plugins:
 
 - [Common Parameters](#common-parameters)
 - [Universal Tools](#universal-tools)
-  - [ide_find_references](#ide_find_references)
+  - [ide_find_usages](#ide_find_usages)
   - [ide_find_definition](#ide_find_definition)
   - [ide_find_class](#ide_find_class)
   - [ide_find_file](#ide_find_file)
@@ -115,7 +115,7 @@ Some tools support identifying the target element by fully qualified symbol refe
 
 **Supported languages:** Java only today. Unsupported languages return an explicit error listing the currently supported symbol-reference languages.
 
-**Tools that support symbol references:** `ide_find_references`, `ide_find_definition`, `ide_call_hierarchy`, `ide_find_implementations`, `ide_find_super_methods`.
+**Tools that support symbol references:** `ide_find_usages`, `ide_find_definition`, `ide_call_hierarchy`, `ide_find_implementations`, `ide_find_super_methods`.
 
 ---
 
@@ -123,7 +123,7 @@ Some tools support identifying the target element by fully qualified symbol refe
 
 These tools work in all JetBrains IDEs (IntelliJ, PyCharm, WebStorm, GoLand, etc.).
 
-### ide_find_references
+### ide_find_usages
 
 Finds all references to a symbol across the entire project using IntelliJ's semantic index.
 
@@ -154,7 +154,7 @@ Finds all references to a symbol across the entire project using IntelliJ's sema
 {
   "method": "tools/call",
   "params": {
-    "name": "ide_find_references",
+    "name": "ide_find_usages",
     "arguments": {
       "file": "src/main/java/com/example/UserService.java",
       "line": 15,
@@ -170,7 +170,7 @@ Finds all references to a symbol across the entire project using IntelliJ's sema
 {
   "method": "tools/call",
   "params": {
-    "name": "ide_find_references",
+    "name": "ide_find_usages",
     "arguments": {
       "language": "Java",
       "symbol": "com.example.UserService#findUser(String)",
@@ -1494,7 +1494,7 @@ Finds all concrete implementations of an interface, abstract class, or abstract 
 
 Finds the complete inheritance hierarchy for a method - all parent methods it overrides or implements.
 
-**Languages:** Java, Kotlin, Python, JS/TS, PHP (not Go or Rust — they use composition/traits instead of classical inheritance).
+**Languages:** Java, Kotlin, Python, JS/TS, PHP, Go (returns interface method(s) a struct method satisfies via `GoSuperMethodSearch`), Rust (returns trait fn/const/type alias the impl satisfies via `RsGotoSuperHandlerKt.gotoSuperTargets`).
 
 **Use when:**
 - Finding which interface method an implementation overrides

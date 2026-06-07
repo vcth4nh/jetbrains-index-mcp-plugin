@@ -7,7 +7,7 @@ class ConstantsUnitTest : TestCase() {
     // ToolNames tests
 
     fun testToolNamesNavigationTools() {
-        assertEquals("ide_find_references", ToolNames.FIND_REFERENCES)
+        assertEquals("ide_find_usages", ToolNames.FIND_USAGES)
         assertEquals("ide_find_definition", ToolNames.FIND_DEFINITION)
         assertEquals("ide_type_hierarchy", ToolNames.TYPE_HIERARCHY)
         assertEquals("ide_call_hierarchy", ToolNames.CALL_HIERARCHY)
@@ -23,6 +23,8 @@ class ConstantsUnitTest : TestCase() {
     fun testToolNamesProjectTools() {
         assertEquals("ide_index_status", ToolNames.INDEX_STATUS)
         assertEquals("ide_build_project", ToolNames.BUILD_PROJECT)
+        assertEquals("ide_install_plugin", ToolNames.INSTALL_PLUGIN)
+        assertEquals("ide_restart", ToolNames.RESTART_IDE)
     }
 
     fun testToolNamesRefactoringTools() {
@@ -45,7 +47,7 @@ class ConstantsUnitTest : TestCase() {
 
     fun testToolNamesAllContainsEveryConstant() {
         val expectedNames = listOf(
-            ToolNames.FIND_REFERENCES,
+            ToolNames.FIND_USAGES,
             ToolNames.FIND_DEFINITION,
             ToolNames.TYPE_HIERARCHY,
             ToolNames.CALL_HIERARCHY,
@@ -61,6 +63,8 @@ class ConstantsUnitTest : TestCase() {
             ToolNames.INDEX_STATUS,
             ToolNames.SYNC_FILES,
             ToolNames.BUILD_PROJECT,
+            ToolNames.INSTALL_PLUGIN,
+            ToolNames.RESTART_IDE,
             ToolNames.REFACTOR_RENAME,
             ToolNames.REFACTOR_SAFE_DELETE,
             ToolNames.REFACTOR_MOVE,

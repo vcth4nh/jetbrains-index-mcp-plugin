@@ -87,6 +87,9 @@ dependencies {
         bundledModules(providers.gradleProperty("platformBundledModules").map { it.split(',') })
 
         testFramework(TestFrameworkType.Platform)
+        // Brings in `LightJavaCodeInsightFixtureTestCase`, `IdeaTestUtil`, and
+        // `DefaultLightProjectDescriptor` for Java-fixture tests that need a mock JDK.
+        testFramework(TestFrameworkType.Plugin.Java)
 
     }
 }

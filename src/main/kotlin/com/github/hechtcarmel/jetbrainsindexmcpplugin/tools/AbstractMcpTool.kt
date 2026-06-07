@@ -4,16 +4,16 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ErrorMessages
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ParamNames
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.toArgumentFailure
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.exceptions.IndexNotReadyException
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageHandlerRegistry
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.PaginationService
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.ProjectResolver
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.McpErrors
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.StructuredToolResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ContentBlock
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.settings.McpSettings
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ClassResolver
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ProjectUtils
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PsiUtils
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.ResponseFormatter
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.ModalityState
@@ -39,8 +39,8 @@ import com.intellij.psi.util.PsiModificationTracker
 import com.intellij.util.concurrency.annotations.RequiresReadLock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
@@ -435,12 +435,9 @@ abstract class AbstractMcpTool : McpTool {
     }
 
     /**
-     * Resolves a PSI element from arguments using either `language`+`symbol` or `file`+`line`+`column`.
+     * Resolves a PSI element from arguments using `file`+`line`+`column`.
      *
-     * These two parameter groups are mutually exclusive.
-     *
-     * The symbol path always returns a [com.intellij.psi.PsiNamedElement] (the declaration);
-     * the position path returns a leaf token that callers must resolve further.
+     * The position path returns a leaf token that callers must resolve further.
      *
      * @param project The project context
      * @param arguments The tool arguments
@@ -452,47 +449,22 @@ abstract class AbstractMcpTool : McpTool {
         arguments: JsonObject,
         allowLibraryFilesForPosition: Boolean = false
     ): Result<PsiElement> {
-        val language = arguments[ParamNames.LANGUAGE]?.jsonPrimitive?.content
-        val symbol = arguments[ParamNames.SYMBOL]?.jsonPrimitive?.content
         val file = arguments[ParamNames.FILE]?.jsonPrimitive?.content
         val line = arguments[ParamNames.LINE]?.jsonPrimitive?.int
         val column = arguments[ParamNames.COLUMN]?.jsonPrimitive?.int
 
-        val hasSymbol = language != null || symbol != null
-        val hasPosition = file != null || line != null || column != null
+        if (file == null) return ErrorMessages.missingParamForPosition(ParamNames.FILE, "line or column").toArgumentFailure()
+        if (line == null) return ErrorMessages.missingParamForPosition(ParamNames.LINE, "file or column").toArgumentFailure()
+        if (column == null) return ErrorMessages.missingParamForPosition(ParamNames.COLUMN, "file or line").toArgumentFailure()
 
-        if (hasSymbol && hasPosition) {
-            return ErrorMessages.SYMBOL_AND_POSITION_EXCLUSIVE.toArgumentFailure()
+        val element = if (allowLibraryFilesForPosition) {
+            findNavigablePsiElement(project, file, line, column)
+        } else {
+            findPsiElement(project, file, line, column)
         }
+            ?: return ErrorMessages.noElementAtPosition(file, line, column).toArgumentFailure()
 
-        if (hasSymbol) {
-            if (language == null) return ErrorMessages.missingParamForSymbol(ParamNames.LANGUAGE).toArgumentFailure()
-            if (symbol == null) return ErrorMessages.missingParamForSymbol(ParamNames.SYMBOL).toArgumentFailure()
-
-            val handler = LanguageHandlerRegistry.getSymbolReferenceHandlerByLanguageName(language)
-                ?: return ErrorMessages.noSymbolReferenceHandler(
-                    language, LanguageHandlerRegistry.getSupportedLanguageNamesForSymbolReference()
-                ).toArgumentFailure()
-
-            return handler.resolveSymbol(project, symbol)
-        }
-
-        if (hasPosition) {
-            if (file == null) return ErrorMessages.missingParamForPosition(ParamNames.FILE, "line or column").toArgumentFailure()
-            if (line == null) return ErrorMessages.missingParamForPosition(ParamNames.LINE, "file or column").toArgumentFailure()
-            if (column == null) return ErrorMessages.missingParamForPosition(ParamNames.COLUMN, "file or line").toArgumentFailure()
-
-            val element = if (allowLibraryFilesForPosition) {
-                findNavigablePsiElement(project, file, line, column)
-            } else {
-                findPsiElement(project, file, line, column)
-            }
-                ?: return ErrorMessages.noElementAtPosition(file, line, column).toArgumentFailure()
-
-            return Result.success(element)
-        }
-
-        return ErrorMessages.SYMBOL_OR_POSITION_REQUIRED.toArgumentFailure()
+        return Result.success(element)
     }
 
     /**
@@ -544,15 +516,21 @@ abstract class AbstractMcpTool : McpTool {
     }
 
     /**
-     * Finds a class by its fully qualified name.
+     * Finds an element by its fully qualified name.
      *
-     * Delegates to [ClassResolver] which supports multiple languages:
-     * - **PHP**: Uses `PhpIndex.getClassesByFQN()` and `getInterfacesByFQN()`
-     * - **Java/Kotlin**: Uses `JavaPsiFacade.findClass()`
+     * Delegates to [ClassResolver], which resolves via:
+     * 1. `QualifiedNameProvider.EP_NAME` — handles Java, Kotlin, Python, PHP classes,
+     *    JS/TS, Rust, Go, and any other language whose plugin registers a provider.
+     *    Results are unwrapped to their `navigationElement` so library `.class` wrappers
+     *    are replaced by their source-attached counterparts.
+     * 2. PHP-specific fallback: if EP iteration returns null and the PHP plugin is
+     *    present, queries `PhpIndex.getInterfacesByFQN` and `PhpIndex.getTraitsByFQN`
+     *    (the upstream `PhpQualifiedNameProvider` only resolves classes, not interfaces
+     *    or traits, because the stub indexes are mutually exclusive).
      *
      * @param project The project context
-     * @param qualifiedName Fully qualified class name (e.g., "com.example.MyClass" or "\App\Models\User")
-     * @return The PsiClass/PhpClass, or null if not found or no suitable plugin is available
+     * @param qualifiedName Fully qualified name (e.g., "com.example.MyClass", "\App\Contracts\Repo")
+     * @return The resolved [PsiElement], or null if not found
      */
     protected fun findClassByName(project: Project, qualifiedName: String): PsiElement? {
         return ClassResolver.findClassByName(project, qualifiedName)
@@ -638,33 +616,33 @@ abstract class AbstractMcpTool : McpTool {
     }
 
     /**
-     * Creates an error result with a message.
-     *
-     * @param message The error message
-     * @return A [ToolCallResult] with `isError = true`
+     * Creates an error result from a human-readable message. The message is wrapped in the
+     * canonical `{error:"tool_error", message}` body and emitted with `structuredContent`
+     * (MCP 2025-11-25) plus the text mirror. Delegates to [createStructuredErrorResult], whose
+     * formatting-failure fallback is inline — so this never recurses.
      */
     protected fun createErrorResult(message: String): ToolCallResult {
-        return ToolCallResult(
-            content = listOf(ContentBlock.Text(text = message)),
-            isError = true
-        )
+        return createStructuredErrorResult(McpErrors.generic("tool_error", message))
     }
 
     /**
-     * Creates an error result with a structured payload.
-     *
-     * The payload is emitted using the configured response format.
-     * If formatting fails, returns a plain-text formatting error instead.
+     * Creates an error result with a structured payload. The payload is emitted using the
+     * configured response format with native `structuredContent`. If formatting fails, falls back
+     * to a plain-text error built INLINE — it must not call [createErrorResult], which delegates
+     * here (that would form a cycle).
      */
     protected fun createStructuredErrorResult(data: JsonElement): ToolCallResult {
         return try {
-            val jsonText = json.encodeToString(JsonElement.serializer(), data)
-            ToolCallResult(
-                content = listOf(ContentBlock.Text(text = formatStructuredPayload(jsonText))),
-                isError = true
+            StructuredToolResult.fromElement(
+                element = data,
+                isError = true,
+                format = McpSettings.getInstance().responseFormat,
             )
         } catch (e: Exception) {
-            createErrorResult(formattingFailureMessage(e))
+            ToolCallResult(
+                content = listOf(ContentBlock.Text(text = formattingFailureMessage(e))),
+                isError = true,
+            )
         }
     }
 
@@ -676,20 +654,14 @@ abstract class AbstractMcpTool : McpTool {
      */
     protected inline fun <reified T> createJsonResult(data: T): ToolCallResult {
         return try {
-            val jsonText = json.encodeToString(data)
-            ToolCallResult(
-                content = listOf(ContentBlock.Text(text = formatStructuredPayload(jsonText))),
-                isError = false
+            StructuredToolResult.fromElement(
+                element = json.encodeToJsonElement(data),
+                isError = false,
+                format = McpSettings.getInstance().responseFormat,
             )
         } catch (e: Exception) {
             createErrorResult(formattingFailureMessage(e))
         }
-    }
-
-    @PublishedApi
-    internal fun formatStructuredPayload(jsonText: String): String {
-        val format = McpSettings.getInstance().responseFormat
-        return ResponseFormatter.formatStructuredPayload(jsonText, format)
     }
 
     @PublishedApi

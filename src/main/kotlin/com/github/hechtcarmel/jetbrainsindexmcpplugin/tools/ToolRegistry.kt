@@ -1,21 +1,25 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools
 
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageHandlerRegistry
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServices
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.McpServerService
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolDefinition
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.settings.McpSettings
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.editor.GetActiveFileTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.editor.OpenFileTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.intelligence.GetDiagnosticsTool
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FileStructureTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindClassTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindDefinitionTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindFileTool
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindImplementationsTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindSymbolTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindUsagesTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.ReadFileTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.SearchTextTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.BuildProjectTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.GetIndexStatusTool
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.InstallPluginTool
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.RestartIdeTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.SyncFilesTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.refactoring.MoveFileTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.refactoring.OptimizeImportsTool
@@ -39,7 +43,7 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * These tools work in all JetBrains IDEs (IntelliJ, PyCharm, WebStorm, GoLand, etc.):
  *
- * - `ide_find_references` - Find all usages of a symbol
+ * - `ide_find_usages` - Find all usages of a symbol
  * - `ide_find_definition` - Find symbol definition location
  * - `ide_find_class` - Class search using CLASS_EP_NAME index
  * - `ide_find_file` - File search using FILE_EP_NAME index
@@ -47,13 +51,15 @@ import java.util.concurrent.ConcurrentHashMap
  * - `ide_search_text` - Text search using word index
  * - `ide_diagnostics` - Analyze code for problems and available intentions
  * - `ide_build_project` - Build project using IDE's build system (disabled by default)
+ * - `ide_install_plugin` - Install a locally built plugin .zip into this IDE (disabled by default)
+ * - `ide_restart` - Restart this IDE to load a freshly installed plugin (disabled by default)
  * - `ide_index_status` - Check indexing status
  * - `ide_get_active_file` - Get the currently active file(s) in the editor (disabled by default)
  * - `ide_open_file` - Open a file in the editor (disabled by default)
  *
  * ### Language-Specific Navigation Tools
  *
- * These tools support multiple languages (Java, Kotlin, Python, JavaScript/TypeScript, PHP, Rust, Markdown)
+ * These tools support multiple languages (Java, Kotlin, Python, JavaScript/TypeScript, PHP, Rust)
  * and are registered when at least one language handler is available:
  *
  * - `ide_type_hierarchy` - Get class inheritance hierarchy
@@ -117,7 +123,7 @@ class ToolRegistry {
     /**
      * Gets a tool by name.
      *
-     * @param name The tool name (e.g., `ide_find_references`)
+     * @param name The tool name (e.g., `ide_find_usages`)
      * @return The tool, or null if not found
      */
     fun getTool(name: String): McpTool? {
@@ -178,9 +184,6 @@ class ToolRegistry {
      * - Refactoring tools are only registered when the Java plugin is available
      */
     fun registerBuiltInTools() {
-        // Initialize language handlers first
-        LanguageHandlerRegistry.registerHandlers()
-
         // Universal tools - work in all JetBrains IDEs
         registerUniversalTools()
 
@@ -202,19 +205,7 @@ class ToolRegistry {
     }
 
     private fun logAvailableLanguages() {
-        val typeHierarchyLangs = LanguageHandlerRegistry.getSupportedLanguagesForTypeHierarchy()
-        val implementationLangs = LanguageHandlerRegistry.getSupportedLanguagesForImplementations()
-        val callHierarchyLangs = LanguageHandlerRegistry.getSupportedLanguagesForCallHierarchy()
-        val superMethodsLangs = LanguageHandlerRegistry.getSupportedLanguagesForSuperMethods()
-        val structureLangs = LanguageHandlerRegistry.getSupportedLanguagesForStructure()
-        val symbolReferenceLangs = LanguageHandlerRegistry.getSupportedLanguagesForSymbolReference()
-
-        LOG.info("Language support - TypeHierarchy: $typeHierarchyLangs, " +
-            "Implementations: $implementationLangs, " +
-            "CallHierarchy: $callHierarchyLangs, " +
-            "SuperMethods: $superMethodsLangs, " +
-            "Structure: $structureLangs, " +
-            "SymbolReference: $symbolReferenceLangs")
+        LOG.info("Language services initialized")
     }
 
     /**
@@ -227,6 +218,7 @@ class ToolRegistry {
         // Navigation tools (universal)
         register(FindUsagesTool())
         register(FindDefinitionTool())
+        register(FileStructureTool())
 
         // Intelligence tools
         register(GetDiagnosticsTool())
@@ -235,6 +227,8 @@ class ToolRegistry {
         register(GetIndexStatusTool())
         register(SyncFilesTool())
         register(BuildProjectTool())
+        register(InstallPluginTool())
+        register(RestartIdeTool())
 
         // Refactoring tools (universal - uses platform APIs)
         register(RenameSymbolTool())
@@ -249,6 +243,9 @@ class ToolRegistry {
         register(SearchTextTool())
         register(ReadFileTool())
 
+        // Navigation tools (EP-delegated, universal)
+        register(FindImplementationsTool())
+
         // Editor tools (universal, disabled by default)
         register(GetActiveFileTool())
         register(OpenFileTool())
@@ -262,11 +259,9 @@ class ToolRegistry {
     )
 
     private val languageNavigationTools = listOf(
-        ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.TypeHierarchyTool") { LanguageHandlerRegistry.hasTypeHierarchyHandlers() },
-        ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindImplementationsTool") { LanguageHandlerRegistry.hasImplementationsHandlers() },
-        ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.CallHierarchyTool") { LanguageHandlerRegistry.hasCallHierarchyHandlers() },
-        ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindSuperMethodsTool") { LanguageHandlerRegistry.hasSuperMethodsHandlers() },
-        ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FileStructureTool") { LanguageHandlerRegistry.hasStructureHandlers() },
+        ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.TypeHierarchyTool") { true },
+        ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.CallHierarchyTool") { true },
+        ConditionalTool("com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.FindSuperMethodsTool") { LanguageServices.hasAnySuperMethodsProvider() },
     )
 
     /**

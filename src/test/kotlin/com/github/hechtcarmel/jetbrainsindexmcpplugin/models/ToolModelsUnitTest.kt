@@ -36,9 +36,9 @@ class ToolModelsUnitTest : TestCase() {
             file = "src/Service.kt",
             line = 25,
             column = 12,
-            context = "val service = UserService()",
-            type = "METHOD_CALL",
-            astPath = listOf("MyClass", "myMethod")
+            preview = "val service = UserService()",
+            usageType = "METHOD_CALL",
+            enclosingScope = listOf("MyClass", "myMethod")
         )
 
         val serialized = json.encodeToString(location)
@@ -47,9 +47,9 @@ class ToolModelsUnitTest : TestCase() {
         assertEquals("src/Service.kt", deserialized.file)
         assertEquals(25, deserialized.line)
         assertEquals(12, deserialized.column)
-        assertEquals("val service = UserService()", deserialized.context)
-        assertEquals("METHOD_CALL", deserialized.type)
-        assertEquals(listOf("MyClass", "myMethod"), deserialized.astPath)
+        assertEquals("val service = UserService()", deserialized.preview)
+        assertEquals("METHOD_CALL", deserialized.usageType)
+        assertEquals(listOf("MyClass", "myMethod"), deserialized.enclosingScope)
     }
 
     // FindUsagesResult tests
@@ -87,9 +87,11 @@ class ToolModelsUnitTest : TestCase() {
             file = "src/model/User.kt",
             line = 5,
             column = 1,
+            name = "User",
+            kind = "DATA_CLASS",
             preview = "data class User(val name: String)",
-            symbolName = "User",
-            astPath = listOf("UserService")
+            qualifiedName = "com.example.User",
+            enclosingScope = null
         )
 
         val serialized = json.encodeToString(result)
@@ -99,21 +101,23 @@ class ToolModelsUnitTest : TestCase() {
         assertEquals(5, deserialized.line)
         assertEquals(1, deserialized.column)
         assertEquals("data class User(val name: String)", deserialized.preview)
-        assertEquals("User", deserialized.symbolName)
-        assertEquals(listOf("UserService"), deserialized.astPath)
+        assertEquals("User", deserialized.name)
+        assertEquals("DATA_CLASS", deserialized.kind)
+        assertEquals("com.example.User", deserialized.qualifiedName)
+        assertNull(deserialized.enclosingScope)
     }
 
     // TypeHierarchyResult tests
 
     fun testTypeHierarchyResultSerialization() {
         val result = TypeHierarchyResult(
-            element = TypeElement("MyService", "src/MyService.kt", "CLASS"),
+            element = TypeElement(name = "MyService", kind = "CLASS", file = "src/MyService.kt", line = 4, column = 7),
             supertypes = listOf(
-                TypeElement("BaseService", "src/BaseService.kt", "CLASS"),
-                TypeElement("Service", null, "INTERFACE")
+                TypeElement(name = "BaseService", kind = "CLASS", file = "src/BaseService.kt", line = 4, column = 7),
+                TypeElement(name = "Service", kind = "INTERFACE", file = null, line = null, column = null)
             ),
             subtypes = listOf(
-                TypeElement("SpecialService", "src/SpecialService.kt", "CLASS")
+                TypeElement(name = "SpecialService", kind = "CLASS", file = "src/SpecialService.kt", line = 4, column = 7)
             )
         )
 
@@ -130,15 +134,28 @@ class ToolModelsUnitTest : TestCase() {
     fun testTypeElementWithNestedSupertypes() {
         val element = TypeElement(
             name = "Child",
-            file = "Child.kt",
+            qualifiedName = "demo.Child",
             kind = "CLASS",
+            file = "Child.kt",
+            line = 4,
+            column = 7,
             supertypes = listOf(
                 TypeElement(
                     name = "Parent",
-                    file = "Parent.kt",
+                    qualifiedName = "demo.Parent",
                     kind = "CLASS",
+                    file = "Parent.kt",
+                    line = 4,
+                    column = 7,
                     supertypes = listOf(
-                        TypeElement("GrandParent", "GrandParent.kt", "CLASS")
+                        TypeElement(
+                            name = "GrandParent",
+                            qualifiedName = "demo.GrandParent",
+                            kind = "CLASS",
+                            file = "GrandParent.kt",
+                            line = 4,
+                            column = 7
+                        )
                     )
                 )
             )
@@ -148,6 +165,7 @@ class ToolModelsUnitTest : TestCase() {
         val deserialized = json.decodeFromString<TypeElement>(serialized)
 
         assertEquals("Child", deserialized.name)
+        assertEquals("demo.Child", deserialized.qualifiedName)
         assertNotNull(deserialized.supertypes)
         assertEquals(1, deserialized.supertypes!!.size)
         assertEquals("Parent", deserialized.supertypes!![0].name)
@@ -157,8 +175,10 @@ class ToolModelsUnitTest : TestCase() {
     fun testTypeElementWithNullFile() {
         val element = TypeElement(
             name = "Serializable",
+            kind = "INTERFACE",
             file = null,
-            kind = "INTERFACE"
+            line = null,
+            column = null
         )
 
         val serialized = json.encodeToString(element)
@@ -166,6 +186,8 @@ class ToolModelsUnitTest : TestCase() {
 
         assertEquals("Serializable", deserialized.name)
         assertNull(deserialized.file)
+        assertNull(deserialized.line)
+        assertNull(deserialized.column)
         assertEquals("INTERFACE", deserialized.kind)
     }
 
@@ -173,10 +195,10 @@ class ToolModelsUnitTest : TestCase() {
 
     fun testCallHierarchyResultSerialization() {
         val result = CallHierarchyResult(
-            element = CallElement("processData", "src/Processor.kt", 50, 1),
+            element = CallElement(name = "processData", kind = "METHOD", file = "src/Processor.kt", line = 50, column = 1),
             calls = listOf(
-                CallElement("validateInput", "src/Validator.kt", 30, 1),
-                CallElement("saveResult", "src/Repository.kt", 100, 1)
+                CallElement(name = "validateInput", kind = "METHOD", file = "src/Validator.kt", line = 30, column = 1),
+                CallElement(name = "saveResult", kind = "METHOD", file = "src/Repository.kt", line = 100, column = 1)
             )
         )
 
@@ -192,14 +214,15 @@ class ToolModelsUnitTest : TestCase() {
     fun testCallElementWithChildren() {
         val element = CallElement(
             name = "main",
+            kind = "FUNCTION",
             file = "Main.kt",
             line = 5,
             column = 1,
             children = listOf(
-                CallElement("init", "Init.kt", 10, 1, children = listOf(
-                    CallElement("loadConfig", "Config.kt", 15, 1)
+                CallElement(name = "init", kind = "FUNCTION", file = "Init.kt", line = 10, column = 1, children = listOf(
+                    CallElement(name = "loadConfig", kind = "FUNCTION", file = "Config.kt", line = 15, column = 1)
                 )),
-                CallElement("run", "Runner.kt", 20, 1)
+                CallElement(name = "run", kind = "FUNCTION", file = "Runner.kt", line = 20, column = 1)
             )
         )
 
@@ -597,8 +620,8 @@ class ToolModelsUnitTest : TestCase() {
     fun testFindSymbolResultSerialization() {
         val result = FindSymbolResult(
             symbols = listOf(
-                SymbolMatch("UserService", "com.example.UserService", "CLASS", "src/UserService.kt", 10, 1, null),
-                SymbolMatch("findById", "com.example.UserRepository.findById", "METHOD", "src/UserRepository.kt", 25, 1, "UserRepository")
+                SymbolMatch("UserService", "com.example.UserService", "CLASS", "src/UserService.kt", 10, 1),
+                SymbolMatch("findById", "com.example.UserRepository#findById(java.lang.Long)", "METHOD", "src/UserRepository.kt", 25, 1)
             ),
             totalCount = 2,
             query = "User"
@@ -632,8 +655,7 @@ class ToolModelsUnitTest : TestCase() {
             kind = "INTERFACE",
             file = "src/main/java/com/example/service/UserService.java",
             line = 12,
-            column = 8,
-            containerName = null
+            column = 8
         )
 
         val serialized = json.encodeToString(match)
@@ -645,32 +667,13 @@ class ToolModelsUnitTest : TestCase() {
         assertEquals("src/main/java/com/example/service/UserService.java", deserialized.file)
         assertEquals(12, deserialized.line)
         assertEquals(8, deserialized.column)
-        assertNull(deserialized.containerName)
-    }
-
-    fun testSymbolMatchWithContainer() {
-        val match = SymbolMatch(
-            name = "findById",
-            qualifiedName = "com.example.UserRepository.findById",
-            kind = "METHOD",
-            file = "src/UserRepository.kt",
-            line = 25,
-            column = 1,
-            containerName = "UserRepository"
-        )
-
-        val serialized = json.encodeToString(match)
-        val deserialized = json.decodeFromString<SymbolMatch>(serialized)
-
-        assertEquals("findById", deserialized.name)
-        assertEquals("UserRepository", deserialized.containerName)
     }
 
     fun testSymbolMatchAllKinds() {
         val kinds = listOf("CLASS", "INTERFACE", "ENUM", "ANNOTATION", "RECORD", "ABSTRACT_CLASS", "METHOD", "FIELD")
 
         kinds.forEach { kind ->
-            val match = SymbolMatch("Test", "com.Test", kind, "file.kt", 1, 1, null)
+            val match = SymbolMatch("Test", "com.Test", kind, "file.kt", 1, 1)
             val serialized = json.encodeToString(match)
             val deserialized = json.decodeFromString<SymbolMatch>(serialized)
             assertEquals(kind, deserialized.kind)
@@ -683,8 +686,8 @@ class ToolModelsUnitTest : TestCase() {
         val result = SuperMethodsResult(
             method = MethodInfo(
                 name = "findUser",
-                signature = "findUser(String id): User",
-                containingClass = "com.example.UserServiceImpl",
+                qualifiedName = "com.example.UserServiceImpl#findUser",
+                kind = "METHOD",
                 file = "src/UserServiceImpl.kt",
                 line = 25,
                 column = 5
@@ -692,17 +695,13 @@ class ToolModelsUnitTest : TestCase() {
             hierarchy = listOf(
                 SuperMethodInfo(
                     name = "findUser",
-                    signature = "findUser(String id): User",
-                    containingClass = "com.example.UserService",
-                    containingClassKind = "INTERFACE",
+                    qualifiedName = "com.example.UserService#findUser",
+                    kind = "METHOD",
                     file = "src/UserService.kt",
                     line = 15,
                     column = 5,
-                    isInterface = true,
-                    depth = 1
                 )
             ),
-            totalCount = 1
         )
 
         val serialized = json.encodeToString(result)
@@ -710,22 +709,25 @@ class ToolModelsUnitTest : TestCase() {
 
         assertEquals("findUser", deserialized.method.name)
         assertEquals(1, deserialized.hierarchy.size)
-        assertEquals(1, deserialized.totalCount)
-        assertEquals(1, deserialized.hierarchy[0].depth)
     }
 
     fun testSuperMethodsResultEmpty() {
         val result = SuperMethodsResult(
-            method = MethodInfo("helperMethod", "helperMethod(): void", "com.example.Service", "file.kt", 50, 1),
+            method = MethodInfo(
+                name = "helperMethod",
+                qualifiedName = "com.example.Service#helperMethod",
+                kind = "METHOD",
+                file = "file.kt",
+                line = 50,
+                column = 1
+            ),
             hierarchy = emptyList(),
-            totalCount = 0
         )
 
         val serialized = json.encodeToString(result)
         val deserialized = json.decodeFromString<SuperMethodsResult>(serialized)
 
         assertTrue(deserialized.hierarchy.isEmpty())
-        assertEquals(0, deserialized.totalCount)
     }
 
     // MethodInfo tests
@@ -733,8 +735,8 @@ class ToolModelsUnitTest : TestCase() {
     fun testMethodInfoSerialization() {
         val info = MethodInfo(
             name = "processData",
-            signature = "processData(List<String> data): Result",
-            containingClass = "com.example.DataProcessor",
+            qualifiedName = "com.example.DataProcessor#processData",
+            kind = "METHOD",
             file = "src/DataProcessor.kt",
             line = 100,
             column = 12
@@ -744,8 +746,8 @@ class ToolModelsUnitTest : TestCase() {
         val deserialized = json.decodeFromString<MethodInfo>(serialized)
 
         assertEquals("processData", deserialized.name)
-        assertEquals("processData(List<String> data): Result", deserialized.signature)
-        assertEquals("com.example.DataProcessor", deserialized.containingClass)
+        assertEquals("com.example.DataProcessor#processData", deserialized.qualifiedName)
+        assertEquals("METHOD", deserialized.kind)
         assertEquals("src/DataProcessor.kt", deserialized.file)
         assertEquals(100, deserialized.line)
         assertEquals(12, deserialized.column)
@@ -756,71 +758,62 @@ class ToolModelsUnitTest : TestCase() {
     fun testSuperMethodInfoSerialization() {
         val info = SuperMethodInfo(
             name = "save",
-            signature = "save(Entity entity): void",
-            containingClass = "com.example.Repository",
-            containingClassKind = "INTERFACE",
+            qualifiedName = "com.example.Repository#save",
+            kind = "METHOD",
             file = "src/Repository.kt",
             line = 8,
             column = 5,
-            isInterface = true,
-            depth = 3
         )
 
         val serialized = json.encodeToString(info)
         val deserialized = json.decodeFromString<SuperMethodInfo>(serialized)
 
         assertEquals("save", deserialized.name)
-        assertEquals("INTERFACE", deserialized.containingClassKind)
+        assertEquals("com.example.Repository#save", deserialized.qualifiedName)
+        assertEquals("METHOD", deserialized.kind)
         assertEquals(5, deserialized.column)
-        assertTrue(deserialized.isInterface)
-        assertEquals(3, deserialized.depth)
     }
 
     fun testSuperMethodInfoWithNullFile() {
         val info = SuperMethodInfo(
             name = "toString",
-            signature = "toString(): String",
-            containingClass = "java.lang.Object",
-            containingClassKind = "CLASS",
+            qualifiedName = "java.lang.Object#toString",
+            kind = "METHOD",
             file = null,
             line = null,
             column = null,
-            isInterface = false,
-            depth = 2
         )
 
         val serialized = json.encodeToString(info)
         val deserialized = json.decodeFromString<SuperMethodInfo>(serialized)
 
         assertEquals("toString", deserialized.name)
+        assertEquals("java.lang.Object#toString", deserialized.qualifiedName)
+        assertEquals("METHOD", deserialized.kind)
         assertNull(deserialized.file)
         assertNull(deserialized.line)
         assertNull(deserialized.column)
-        assertFalse(deserialized.isInterface)
     }
 
     fun testSuperMethodInfoMultiLevelHierarchy() {
         val hierarchy = listOf(
-            SuperMethodInfo("save", "save(E e): void", "AbstractRepo", "ABSTRACT_CLASS", "file1.kt", 20, 1, false, 1),
-            SuperMethodInfo("save", "save(E e): void", "BaseRepo", "ABSTRACT_CLASS", "file2.kt", 15, 1, false, 2),
-            SuperMethodInfo("save", "save(E e): void", "Repository", "INTERFACE", "file3.kt", 8, 1, true, 3)
+            SuperMethodInfo("save", "AbstractRepo#save", "METHOD", "file1.kt", 20, 1),
+            SuperMethodInfo("save", "BaseRepo#save", "METHOD", "file2.kt", 15, 1),
+            SuperMethodInfo("save", "Repository#save", "METHOD", "file3.kt", 8, 1)
         )
 
         val result = SuperMethodsResult(
-            method = MethodInfo("save", "save(User u): void", "UserRepo", "file0.kt", 30, 1),
+            method = MethodInfo("save", "UserRepo#save", "METHOD", "file0.kt", 30, 1),
             hierarchy = hierarchy,
-            totalCount = 3
         )
 
         val serialized = json.encodeToString(result)
         val deserialized = json.decodeFromString<SuperMethodsResult>(serialized)
 
         assertEquals(3, deserialized.hierarchy.size)
-        assertEquals(1, deserialized.hierarchy[0].depth)
-        assertEquals(2, deserialized.hierarchy[1].depth)
-        assertEquals(3, deserialized.hierarchy[2].depth)
-        assertFalse(deserialized.hierarchy[0].isInterface)
-        assertTrue(deserialized.hierarchy[2].isInterface)
+        assertEquals("AbstractRepo#save", deserialized.hierarchy[0].qualifiedName)
+        assertEquals("BaseRepo#save", deserialized.hierarchy[1].qualifiedName)
+        assertEquals("Repository#save", deserialized.hierarchy[2].qualifiedName)
     }
 
     // FindClassResult tests
@@ -828,8 +821,8 @@ class ToolModelsUnitTest : TestCase() {
     fun testFindClassResultSerialization() {
         val result = FindClassResult(
             classes = listOf(
-                SymbolMatch("UserService", "com.example.UserService", "CLASS", "src/UserService.kt", 10, 1, null, "Kotlin"),
-                SymbolMatch("UserRepository", "com.example.UserRepository", "INTERFACE", "src/UserRepository.kt", 15, 1, null, "Kotlin")
+                SymbolMatch("UserService", "com.example.UserService", "CLASS", "src/UserService.kt", 10, 1),
+                SymbolMatch("UserRepository", "com.example.UserRepository", "INTERFACE", "src/UserRepository.kt", 15, 1)
             ),
             totalCount = 2,
             query = "User"
@@ -1063,5 +1056,88 @@ class ToolModelsUnitTest : TestCase() {
         assertEquals("src/Main.kt", deserialized.file)
         assertTrue(deserialized.opened)
         assertTrue(deserialized.message.contains("line 42"))
+    }
+
+    fun testImplementationLocationCarriesQualifiedName() {
+        val loc = ImplementationLocation(
+            name = "Anonymous in Foo.bar()",
+            file = "src/Foo.java",
+            line = 10,
+            column = 4,
+            kind = "CLASS",
+            qualifiedName = "com.example.Foo\$1"
+        )
+        val serialized = json.encodeToString(loc)
+        val deserialized = json.decodeFromString<ImplementationLocation>(serialized)
+        assertEquals("com.example.Foo\$1", deserialized.qualifiedName)
+    }
+
+    fun testImplementationLocationOmittedQualifiedNameDefaultsToNull() {
+        val loc = ImplementationLocation(
+            name = "Foo",
+            file = "Foo.java",
+            line = 1,
+            column = 1,
+            kind = "CLASS"
+        )
+        assertNull(loc.qualifiedName)
+    }
+
+    fun testTypeElementCarriesQualifiedName() {
+        val el = TypeElement(
+            name = "Foo",
+            qualifiedName = "com.example.Foo",
+            kind = "CLASS",
+            file = "Foo.java",
+            line = 1,
+            column = 7
+        )
+        val serialized = json.encodeToString(el)
+        val deserialized = json.decodeFromString<TypeElement>(serialized)
+        assertEquals("com.example.Foo", deserialized.qualifiedName)
+    }
+
+    fun testTypeElementCarriesEnclosingScope() {
+        val el = TypeElement(
+            name = "Comparator",
+            enclosingScope = listOf("UserService", "sortByName"),
+            kind = "CLASS",
+            file = "src/UserService.java",
+            line = 64,
+            column = 35
+        )
+        val serialized = json.encodeToString(el)
+        val deserialized = json.decodeFromString<TypeElement>(serialized)
+        assertNull(deserialized.qualifiedName)
+        assertEquals(listOf("UserService", "sortByName"), deserialized.enclosingScope)
+    }
+
+    fun testCallElementCarriesQualifiedName() {
+        val el = CallElement(
+            name = "bar",
+            qualifiedName = "com.example.Foo#bar()",
+            kind = "METHOD",
+            file = "Foo.java",
+            line = 5,
+            column = 2
+        )
+        val serialized = json.encodeToString(el)
+        val deserialized = json.decodeFromString<CallElement>(serialized)
+        assertEquals("com.example.Foo#bar()", deserialized.qualifiedName)
+    }
+
+    fun testCallElementCarriesEnclosingScope() {
+        val el = CallElement(
+            name = "lambda$0",
+            enclosingScope = listOf("UserService", "filterBy"),
+            kind = "FUNCTION",
+            file = "src/UserService.java",
+            line = 42,
+            column = 18
+        )
+        val serialized = json.encodeToString(el)
+        val deserialized = json.decodeFromString<CallElement>(serialized)
+        assertNull(deserialized.qualifiedName)
+        assertEquals(listOf("UserService", "filterBy"), deserialized.enclosingScope)
     }
 }

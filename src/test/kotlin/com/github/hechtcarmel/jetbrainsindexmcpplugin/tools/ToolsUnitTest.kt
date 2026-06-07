@@ -20,18 +20,15 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.SearchTex
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation.TypeHierarchyTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.GetIndexStatusTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.BuildProjectTool
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.InstallPluginTool
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.RestartIdeTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.SyncFilesTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.refactoring.MoveFileTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.refactoring.OptimizeImportsTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.refactoring.ReformatCodeTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.refactoring.RenameSymbolTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.refactoring.SafeDeleteTool
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageHandlerRegistry
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.isExcludedPath
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
-import io.mockk.every
-import io.mockk.mockkObject
-import io.mockk.unmockkObject
 import junit.framework.TestCase
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -49,18 +46,18 @@ class ToolsUnitTest : TestCase() {
         assertNull("Should not have includeTests property", properties?.get("includeTests"))
     }
 
-    override fun setUp() {
-        super.setUp()
-        mockkObject(LanguageHandlerRegistry)
-        every { LanguageHandlerRegistry.getSupportedLanguageNamesForSymbolReference() } returns listOf("Java", "Kotlin")
-    }
-
-    override fun tearDown() {
-        try {
-            unmockkObject(LanguageHandlerRegistry)
-        } finally {
-            super.tearDown()
-        }
+    private fun assertHasHierarchyScope(
+        properties: kotlinx.serialization.json.JsonObject?,
+        expectedValues: List<String>,
+    ) {
+        val scopeProperty = properties?.get(ParamNames.SCOPE)?.jsonObject
+        assertNotNull("Should have scope property", scopeProperty)
+        assertEquals(
+            expectedValues,
+            scopeProperty?.get("enum")?.jsonArray?.map { it.jsonPrimitive.content }
+        )
+        assertNull("Should not have includeLibraries property", properties?.get("includeLibraries"))
+        assertNull("Should not have includeTests property", properties?.get("includeTests"))
     }
 
     fun testGetIndexStatusToolSchema() {
@@ -127,10 +124,64 @@ class ToolsUnitTest : TestCase() {
         assertEquals(ToolNames.BUILD_PROJECT, tool?.name)
     }
 
+    fun testInstallPluginToolSchema() {
+        val tool = InstallPluginTool()
+
+        assertEquals(ToolNames.INSTALL_PLUGIN, tool.name)
+        assertNotNull(tool.description)
+
+        val schema = tool.inputSchema
+        assertEquals(SchemaConstants.TYPE_OBJECT, schema[SchemaConstants.TYPE]?.jsonPrimitive?.content)
+
+        val properties = schema[SchemaConstants.PROPERTIES]?.jsonObject
+        assertNotNull(properties)
+
+        assertNotNull("Should have project_path property", properties?.get(ParamNames.PROJECT_PATH))
+        assertNotNull("Should have path property", properties?.get(ParamNames.PATH))
+
+        assertNull("Should not have required array (all params optional)", schema[SchemaConstants.REQUIRED])
+    }
+
+    fun testInstallPluginToolIsRegistered() {
+        val registry = ToolRegistry()
+        registry.registerBuiltInTools()
+
+        val tool = registry.getTool(ToolNames.INSTALL_PLUGIN)
+        assertNotNull("ide_install_plugin should be registered", tool)
+        assertEquals(ToolNames.INSTALL_PLUGIN, tool?.name)
+    }
+
+    fun testRestartIdeToolSchema() {
+        val tool = RestartIdeTool()
+
+        assertEquals(ToolNames.RESTART_IDE, tool.name)
+        assertNotNull(tool.description)
+
+        val schema = tool.inputSchema
+        assertEquals(SchemaConstants.TYPE_OBJECT, schema[SchemaConstants.TYPE]?.jsonPrimitive?.content)
+
+        val properties = schema[SchemaConstants.PROPERTIES]?.jsonObject
+        assertNotNull(properties)
+
+        assertNotNull("Should have project_path property", properties?.get(ParamNames.PROJECT_PATH))
+        assertNotNull("Should have delaySeconds property", properties?.get(ParamNames.DELAY_SECONDS))
+
+        assertNull("Should not have required array (all params optional)", schema[SchemaConstants.REQUIRED])
+    }
+
+    fun testRestartIdeToolIsRegistered() {
+        val registry = ToolRegistry()
+        registry.registerBuiltInTools()
+
+        val tool = registry.getTool(ToolNames.RESTART_IDE)
+        assertNotNull("ide_restart should be registered", tool)
+        assertEquals(ToolNames.RESTART_IDE, tool?.name)
+    }
+
     fun testFindUsagesToolSchema() {
         val tool = FindUsagesTool()
 
-        assertEquals(ToolNames.FIND_REFERENCES, tool.name)
+        assertEquals(ToolNames.FIND_USAGES, tool.name)
         assertNotNull(tool.description)
 
         val schema = tool.inputSchema
@@ -143,8 +194,6 @@ class ToolsUnitTest : TestCase() {
         assertNotNull("Should have file property", properties?.get(ParamNames.FILE))
         assertNotNull("Should have line property", properties?.get(ParamNames.LINE))
         assertNotNull("Should have column property", properties?.get(ParamNames.COLUMN))
-        assertNotNull("Should have language property", properties?.get(ParamNames.LANGUAGE))
-        assertNotNull("Should have symbol property", properties?.get(ParamNames.SYMBOL))
         assertHasScopeAndNoLegacyFilters(properties)
         assertNotNull("Should have cursor property", properties?.get("cursor"))
         assertNotNull("Should have pageSize property", properties?.get("pageSize"))
@@ -169,10 +218,6 @@ class ToolsUnitTest : TestCase() {
         assertNotNull("Should have file property", properties?.get(ParamNames.FILE))
         assertNotNull("Should have line property", properties?.get(ParamNames.LINE))
         assertNotNull("Should have column property", properties?.get(ParamNames.COLUMN))
-        assertNotNull("Should have language property", properties?.get(ParamNames.LANGUAGE))
-        assertNotNull("Should have symbol property", properties?.get(ParamNames.SYMBOL))
-
-        assertNull("Should not have required array", schema[SchemaConstants.REQUIRED])
     }
 
     fun testTypeHierarchyToolSchema() {
@@ -192,7 +237,16 @@ class ToolsUnitTest : TestCase() {
         assertNotNull("Should have line property", properties?.get(ParamNames.LINE))
         assertNotNull("Should have column property", properties?.get(ParamNames.COLUMN))
         assertNotNull("Should have className property", properties?.get(ParamNames.CLASS_NAME))
-        assertHasScopeAndNoLegacyFilters(properties)
+        assertHasHierarchyScope(properties, listOf("all", "production", "test"))
+
+        // direction (supertypes|subtypes|both) + maxDepth — parity with call hierarchy
+        val directionProp = properties?.get(ParamNames.DIRECTION)?.jsonObject
+        assertNotNull("Should have direction property", directionProp)
+        assertEquals(
+            listOf("supertypes", "subtypes", "both"),
+            directionProp?.get("enum")?.jsonArray?.map { it.jsonPrimitive.content }
+        )
+        assertNotNull("Should have maxDepth property", properties?.get("maxDepth"))
     }
 
     fun testCallHierarchyToolSchema() {
@@ -208,9 +262,10 @@ class ToolsUnitTest : TestCase() {
         assertNotNull(properties)
 
         assertNotNull("Should have direction property", properties?.get(ParamNames.DIRECTION))
-        assertNotNull("Should have language property", properties?.get(ParamNames.LANGUAGE))
-        assertNotNull("Should have symbol property", properties?.get(ParamNames.SYMBOL))
-        assertHasScopeAndNoLegacyFilters(properties)
+        assertHasHierarchyScope(
+            properties,
+            listOf("all", "production", "test", "this_class", "this_module")
+        )
     }
 
     fun testFindImplementationsToolSchema() {
@@ -228,8 +283,6 @@ class ToolsUnitTest : TestCase() {
         assertNotNull("Should have file property", properties?.get(ParamNames.FILE))
         assertNotNull("Should have line property", properties?.get(ParamNames.LINE))
         assertNotNull("Should have column property", properties?.get(ParamNames.COLUMN))
-        assertNotNull("Should have language property", properties?.get(ParamNames.LANGUAGE))
-        assertNotNull("Should have symbol property", properties?.get(ParamNames.SYMBOL))
         assertHasScopeAndNoLegacyFilters(properties)
         assertNotNull("Should have cursor property", properties?.get("cursor"))
         assertNotNull("Should have pageSize property", properties?.get("pageSize"))
@@ -332,7 +385,7 @@ class ToolsUnitTest : TestCase() {
 
         // Universal tools - always available in all IDEs
         val universalTools = listOf(
-            ToolNames.FIND_REFERENCES,
+            ToolNames.FIND_USAGES,
             ToolNames.FIND_DEFINITION,
             ToolNames.FIND_SYMBOL,
             ToolNames.DIAGNOSTICS,
@@ -422,7 +475,6 @@ class ToolsUnitTest : TestCase() {
 
     /**
      * `ide_find_symbol` delegates to the platform's Go to Symbol popup stack (via
-     * [com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.OptimizedSymbolSearch] and
      * [com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.PopupFaithfulSymbolSearch]),
      * which works in any JetBrains IDE regardless of whether the plugin registers a
      * language-specific handler. The tool should therefore always be registered.
@@ -559,10 +611,6 @@ class ToolsUnitTest : TestCase() {
         assertNotNull("Should have file property", properties?.get(ParamNames.FILE))
         assertNotNull("Should have line property", properties?.get(ParamNames.LINE))
         assertNotNull("Should have column property", properties?.get(ParamNames.COLUMN))
-        assertNotNull("Should have language property", properties?.get(ParamNames.LANGUAGE))
-        assertNotNull("Should have symbol property", properties?.get(ParamNames.SYMBOL))
-
-        assertNull("Should not have required array", schema[SchemaConstants.REQUIRED])
     }
 
     fun testReformatCodeToolSchema() {
@@ -859,31 +907,34 @@ class ToolsUnitTest : TestCase() {
         assertTrue("Description should mention references", description.contains("references"))
     }
 
-    // ── matchMode enum schema tests ────────────────────────────────────────────
-
-    fun testFindSymbolToolSchemaDoesNotExposeMatchMode() {
-        val tool = FindSymbolTool()
-        val properties = tool.inputSchema[SchemaConstants.PROPERTIES]?.jsonObject
-        assertNotNull("Should have properties", properties)
-        assertNull("ide_find_symbol should not expose matchMode", properties?.get(ParamNames.MATCH_MODE))
-    }
-
-    fun testFindClassToolSchemaHasMatchModeEnum() {
+    fun testFindClassToolSchemaHasFuzzySearchBoolean() {
         val tool = FindClassTool()
         val properties = tool.inputSchema[SchemaConstants.PROPERTIES]?.jsonObject
         assertNotNull("Should have properties", properties)
 
-        val matchModeProp = properties?.get(ParamNames.MATCH_MODE)?.jsonObject
-        assertNotNull("Should have matchMode property", matchModeProp)
+        assertNull("ide_find_class should no longer expose matchMode", properties?.get("matchMode"))
 
-        val enumArray = matchModeProp?.get("enum")?.jsonArray
-        assertNotNull("matchMode should have an enum array", enumArray)
+        val fuzzyProp = properties?.get(ParamNames.FUZZY_SEARCH)?.jsonObject
+        assertNotNull("Should have fuzzySearch property", fuzzyProp)
+        assertEquals(
+            "fuzzySearch should be a boolean",
+            SchemaConstants.TYPE_BOOLEAN,
+            fuzzyProp?.get(SchemaConstants.TYPE)?.jsonPrimitive?.content
+        )
+    }
 
-        val values = enumArray?.map { it.jsonPrimitive.content }
-        assertTrue("enum should contain 'substring'", values?.contains("substring") == true)
-        assertTrue("enum should contain 'prefix'",    values?.contains("prefix")    == true)
-        assertTrue("enum should contain 'exact'",     values?.contains("exact")     == true)
-        assertEquals("enum should have exactly 3 values", 3, values?.size)
+    fun testFindSymbolToolSchemaHasFuzzySearchBoolean() {
+        val tool = FindSymbolTool()
+        val properties = tool.inputSchema[SchemaConstants.PROPERTIES]?.jsonObject
+        assertNotNull("Should have properties", properties)
+
+        val fuzzyProp = properties?.get(ParamNames.FUZZY_SEARCH)?.jsonObject
+        assertNotNull("Should have fuzzySearch property", fuzzyProp)
+        assertEquals(
+            "fuzzySearch should be a boolean",
+            SchemaConstants.TYPE_BOOLEAN,
+            fuzzyProp?.get(SchemaConstants.TYPE)?.jsonPrimitive?.content
+        )
     }
 
     // ── language filter schema tests ───────────────────────────────────────────
@@ -903,14 +954,6 @@ class ToolsUnitTest : TestCase() {
     }
 
     // ── maxPreviewLines schema test ────────────────────────────────────────────
-
-    fun testFindDefinitionToolSchemaHasMaxPreviewLines() {
-        val tool = FindDefinitionTool()
-        val properties = tool.inputSchema[SchemaConstants.PROPERTIES]?.jsonObject
-        assertNotNull("Should have properties", properties)
-        assertNotNull("Should have fullElementPreview property", properties?.get("fullElementPreview"))
-        assertNotNull("Should have maxPreviewLines property", properties?.get("maxPreviewLines"))
-    }
 
     // ── FindUsagesTool totalCount/truncated via maxResults schema ──────────────
 

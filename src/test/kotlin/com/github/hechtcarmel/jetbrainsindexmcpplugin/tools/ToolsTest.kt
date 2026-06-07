@@ -16,26 +16,10 @@ import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.project.GetIndexStat
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.refactoring.ReformatCodeTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.refactoring.RenameSymbolTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.refactoring.SafeDeleteTool
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ErrorMessages
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.SchemaConstants
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScope
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.BuiltInSearchScopeResolver
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageHandlerRegistry
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.OptimizedSymbolSearch
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.SymbolData
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.createMatcher
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.createNameFilter
-import com.intellij.navigation.ChooseByNameContributor
-import com.intellij.navigation.NavigationItem
-import com.intellij.openapi.roots.ModuleRootModificationUtil
-import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiManager
-import com.intellij.psi.codeStyle.MinusculeMatcher
-import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.testFramework.IndexingTestUtil
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
-import java.nio.file.Files
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
@@ -51,19 +35,6 @@ import kotlinx.serialization.json.put
  * For schema and registration tests that don't need the platform, see ToolsUnitTest.
  */
 class ToolsTest : BasePlatformTestCase() {
-
-    override fun setUp() {
-        super.setUp()
-        LanguageHandlerRegistry.registerHandlers()
-    }
-
-    override fun tearDown() {
-        try {
-            LanguageHandlerRegistry.clear()
-        } finally {
-            super.tearDown()
-        }
-    }
 
     private fun errorText(result: com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult): String =
         (result.content.first() as ContentBlock.Text).text
@@ -96,7 +67,6 @@ class ToolsTest : BasePlatformTestCase() {
 
         val result = tool.execute(project, buildJsonObject { })
         assertTrue("Should error with missing params", result.isError)
-        assertTrue("Should mention required params", errorText(result).contains(ErrorMessages.SYMBOL_OR_POSITION_REQUIRED))
     }
 
     fun testFindUsagesToolInvalidFile() = runBlocking {
@@ -123,61 +93,11 @@ class ToolsTest : BasePlatformTestCase() {
         assertTrue("Should mention missing column", errorText(result).contains("column"))
     }
 
-    fun testFindUsagesToolLanguageWithoutSymbol() = runBlocking {
-        val tool = FindUsagesTool()
-
-        val result = tool.execute(project, buildJsonObject {
-            put("language", "Java")
-        })
-
-        assertTrue("Should error when language provided without symbol", result.isError)
-        assertTrue("Should mention missing symbol", errorText(result).contains("symbol"))
-    }
-
-    fun testFindUsagesToolSymbolWithoutLanguage() = runBlocking {
-        val tool = FindUsagesTool()
-
-        val result = tool.execute(project, buildJsonObject {
-            put("symbol", "com.example.MyClass#method(String)")
-        })
-
-        assertTrue("Should error when symbol provided without language", result.isError)
-        assertTrue("Should mention missing language", errorText(result).contains("language"))
-    }
-
-    fun testFindUsagesToolLanguageAndPositionExclusive() = runBlocking {
-        val tool = FindUsagesTool()
-
-        val result = tool.execute(project, buildJsonObject {
-            put("language", "Java")
-            put("symbol", "com.example.MyClass")
-            put("file", "test.kt")
-            put("line", 1)
-            put("column", 1)
-        })
-
-        assertTrue("Should error when both language+symbol and file+line+column provided", result.isError)
-        assertTrue("Should mention mutual exclusivity", errorText(result).contains("Cannot specify both"))
-    }
-
-    fun testFindUsagesToolUnsupportedLanguage() = runBlocking {
-        val tool = FindUsagesTool()
-
-        val result = tool.execute(project, buildJsonObject {
-            put("language", "Cobol")
-            put("symbol", "com.example.MyClass")
-        })
-
-        assertTrue("Should error with unsupported language", result.isError)
-        assertTrue("Should mention unsupported language", errorText(result).contains("Cobol"))
-    }
-
     fun testFindDefinitionToolMissingParams() = runBlocking {
         val tool = FindDefinitionTool()
 
         val result = tool.execute(project, buildJsonObject { })
         assertTrue("Should error with missing params", result.isError)
-        assertTrue("Should mention required params", errorText(result).contains(ErrorMessages.SYMBOL_OR_POSITION_REQUIRED))
     }
 
     fun testFindDefinitionToolPartialPosition() = runBlocking {
@@ -189,32 +109,6 @@ class ToolsTest : BasePlatformTestCase() {
 
         assertTrue("Should error with partial position params", result.isError)
         assertTrue("Should mention missing line", errorText(result).contains("line"))
-    }
-
-    fun testFindDefinitionToolLanguageWithoutSymbol() = runBlocking {
-        val tool = FindDefinitionTool()
-
-        val result = tool.execute(project, buildJsonObject {
-            put("language", "Java")
-        })
-
-        assertTrue("Should error when language provided without symbol", result.isError)
-        assertTrue("Should mention missing symbol", errorText(result).contains("symbol"))
-    }
-
-    fun testFindDefinitionToolLanguageAndPositionExclusive() = runBlocking {
-        val tool = FindDefinitionTool()
-
-        val result = tool.execute(project, buildJsonObject {
-            put("language", "Java")
-            put("symbol", "com.example.MyClass")
-            put("file", "test.kt")
-            put("line", 1)
-            put("column", 1)
-        })
-
-        assertTrue("Should error when both language+symbol and file+line+column provided", result.isError)
-        assertTrue("Should mention mutual exclusivity", errorText(result).contains("Cannot specify both"))
     }
 
     // Navigation Tools Tests
@@ -255,31 +149,6 @@ class ToolsTest : BasePlatformTestCase() {
         assertTrue("Should error with invalid file", result.isError)
     }
 
-    fun testCallHierarchyToolSymbolWithoutLanguage() = runBlocking {
-        val tool = CallHierarchyTool()
-
-        val result = tool.execute(project, buildJsonObject {
-            put("symbol", "com.example.Service#processRequest(String)")
-            put("direction", "callers")
-        })
-
-        assertTrue("Should error when symbol provided without language", result.isError)
-        assertTrue("Should mention missing language", errorText(result).contains("language"))
-    }
-
-    fun testCallHierarchyToolUnsupportedLanguage() = runBlocking {
-        val tool = CallHierarchyTool()
-
-        val result = tool.execute(project, buildJsonObject {
-            put("language", "Cobol")
-            put("symbol", "com.example.Service#processRequest(String)")
-            put("direction", "callers")
-        })
-
-        assertTrue("Should error with unsupported language", result.isError)
-        assertTrue("Should mention unsupported language", errorText(result).contains("Cobol"))
-    }
-
     fun testFindImplementationsToolMissingParams() = runBlocking {
         val tool = FindImplementationsTool()
 
@@ -297,33 +166,6 @@ class ToolsTest : BasePlatformTestCase() {
         })
 
         assertTrue("Should error with invalid file", result.isError)
-    }
-
-    fun testFindImplementationsToolLanguageAndPositionExclusive() = runBlocking {
-        val tool = FindImplementationsTool()
-
-        val result = tool.execute(project, buildJsonObject {
-            put("language", "Java")
-            put("symbol", "com.example.Repository")
-            put("file", "test.kt")
-            put("line", 1)
-            put("column", 1)
-        })
-
-        assertTrue("Should error when both language+symbol and file+line+column provided", result.isError)
-        assertTrue("Should mention mutual exclusivity", errorText(result).contains("Cannot specify both"))
-    }
-
-    fun testFindImplementationsToolUnsupportedLanguage() = runBlocking {
-        val tool = FindImplementationsTool()
-
-        val result = tool.execute(project, buildJsonObject {
-            put("language", "Cobol")
-            put("symbol", "com.example.Repository")
-        })
-
-        assertTrue("Should error with unsupported language", result.isError)
-        assertTrue("Should mention unsupported language", errorText(result).contains("Cobol"))
     }
 
     fun testFindClassToolInvalidScopeReturnsStructuredError() = runBlocking {
@@ -366,76 +208,6 @@ class ToolsTest : BasePlatformTestCase() {
             listOf("project_files", "project_and_libraries", "project_production_files", "project_test_files"),
             errorJson["supportedValues"]?.jsonArray?.map { it.jsonPrimitive.content }
         )
-    }
-
-    fun testOptimizedSymbolSearchLegacyContributorHonorsProjectFilesScope() {
-        val projectFile = myFixture.addFileToProject(
-            "legacy/ProjectScopeSymbol.java",
-            """
-            package legacy;
-
-            public class ProjectScopeSymbol {}
-            """.trimIndent()
-        )
-
-        val libraryRoot = Files.createTempDirectory("legacy-contributor-lib")
-        val libraryPackageDir = Files.createDirectories(libraryRoot.resolve("legacy"))
-        val libraryPath = libraryPackageDir.resolve("LibraryScopeSymbol.java")
-        Files.writeString(
-            libraryPath,
-            """
-            package legacy;
-
-            public class LibraryScopeSymbol {}
-            """.trimIndent()
-        )
-
-        val libraryRootVFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(libraryRoot)
-        val libraryFileVFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(libraryPath)
-        assertNotNull("Expected library root in temp dir", libraryRootVFile)
-        assertNotNull("Expected library file in temp dir", libraryFileVFile)
-
-        ModuleRootModificationUtil.addModuleLibrary(
-            module,
-            "legacy-contributor-library",
-            emptyList(),
-            listOf(libraryRootVFile!!.url)
-        )
-        IndexingTestUtil.waitUntilIndexesAreReady(project)
-
-        val libraryFile = PsiManager.getInstance(project).findFile(libraryFileVFile!!)
-        assertNotNull("Expected library PSI file", libraryFile)
-
-        val projectSymbol = projectFile.children.filterIsInstance<PsiClass>().firstOrNull { it.name == "ProjectScopeSymbol" }
-        val librarySymbol = libraryFile!!.children.filterIsInstance<PsiClass>().firstOrNull { it.name == "LibraryScopeSymbol" }
-        assertNotNull("Expected project symbol", projectSymbol)
-        assertNotNull("Expected library symbol", librarySymbol)
-
-        val contributor = LegacyContributor(
-            mapOf(
-                "ProjectScopeSymbol" to arrayOf<NavigationItem>(projectSymbol!!),
-                "LibraryScopeSymbol" to arrayOf<NavigationItem>(librarySymbol!!)
-            )
-        )
-        val scope = BuiltInSearchScopeResolver.resolveGlobalScope(project, BuiltInSearchScope.PROJECT_FILES)
-        assertTrue("Project file should be inside project_files scope", scope.contains(projectFile.virtualFile))
-        assertFalse("Library file should be outside project_files scope", scope.contains(libraryFile.virtualFile))
-        val matcher = createMatcher("ScopeSymbol", "substring")
-        val results = mutableListOf<SymbolData>()
-        val seen = mutableSetOf<String>()
-
-        invokeLegacySymbolContributor(
-            contributor = contributor,
-            pattern = "ScopeSymbol",
-            scope = scope,
-            languageFilter = null,
-            nameFilter = { true },
-            matcher = matcher,
-            results = results,
-            seen = seen
-        )
-
-        assertEquals(listOf("ProjectScopeSymbol"), results.map { it.name })
     }
 
     // Intelligence Tools Tests
@@ -528,34 +300,6 @@ class ToolsTest : BasePlatformTestCase() {
         })
 
         assertTrue("Should error with invalid file", result.isError)
-    }
-
-    fun testMarkdownStructureHandlerBuildsHeadingHierarchy() {
-        val psiFile = myFixture.addFileToProject(
-            "docs/guide.md",
-            """
-            # Starter Pack
-            Intro text.
-            ## Installation
-            Install steps.
-            ### CLI Setup
-            CLI details.
-            ## Usage
-            Usage details.
-            """.trimIndent()
-        )
-        val handler = LanguageHandlerRegistry.getStructureHandler(psiFile)
-
-        assertNotNull("Expected Markdown structure handler", handler)
-        val nodes = handler!!.getFileStructure(psiFile, project)
-        val root = nodes.single()
-
-        assertEquals("Starter Pack", root.name)
-        assertEquals("HEADING", root.kind.name)
-        assertEquals(1, root.line)
-        assertEquals(listOf("Installation", "Usage"), root.children.map { it.name })
-        assertEquals("CLI Setup", root.children.first().children.single().name)
-        assertEquals(5, root.children.first().children.single().line)
     }
 
     // Editor Tools Tests
@@ -681,14 +425,13 @@ class ToolsTest : BasePlatformTestCase() {
         assertTrue("Should error when startLine < 1", result.isError)
     }
 
-    // FindSuperMethods Tool Tests (language+symbol)
+    // FindSuperMethods Tool Tests
 
     fun testFindSuperMethodsToolMissingParams() = runBlocking {
         val tool = FindSuperMethodsTool()
 
         val result = tool.execute(project, buildJsonObject { })
         assertTrue("Should error with missing params", result.isError)
-        assertTrue("Should mention required params", errorText(result).contains(ErrorMessages.SYMBOL_OR_POSITION_REQUIRED))
     }
 
     fun testFindSuperMethodsToolInvalidFile() = runBlocking {
@@ -715,44 +458,6 @@ class ToolsTest : BasePlatformTestCase() {
         assertTrue("Should mention missing file", errorText(result).contains("file"))
     }
 
-    fun testFindSuperMethodsToolSymbolWithoutLanguage() = runBlocking {
-        val tool = FindSuperMethodsTool()
-
-        val result = tool.execute(project, buildJsonObject {
-            put("symbol", "com.example.UserServiceImpl#getUser(String)")
-        })
-
-        assertTrue("Should error when symbol provided without language", result.isError)
-        assertTrue("Should mention missing language", errorText(result).contains("language"))
-    }
-
-    fun testFindSuperMethodsToolLanguageAndPositionExclusive() = runBlocking {
-        val tool = FindSuperMethodsTool()
-
-        val result = tool.execute(project, buildJsonObject {
-            put("language", "Java")
-            put("symbol", "com.example.UserServiceImpl#getUser(String)")
-            put("file", "test.kt")
-            put("line", 1)
-            put("column", 1)
-        })
-
-        assertTrue("Should error when both language+symbol and file+line+column provided", result.isError)
-        assertTrue("Should mention mutual exclusivity", errorText(result).contains("Cannot specify both"))
-    }
-
-    fun testFindSuperMethodsToolUnsupportedLanguage() = runBlocking {
-        val tool = FindSuperMethodsTool()
-
-        val result = tool.execute(project, buildJsonObject {
-            put("language", "Cobol")
-            put("symbol", "com.example.UserServiceImpl#getUser(String)")
-        })
-
-        assertTrue("Should error with unsupported language", result.isError)
-        assertTrue("Should mention unsupported language", errorText(result).contains("Cobol"))
-    }
-
     // Registry tests that require platform services (McpSettings)
 
     fun testToolDefinitionsHaveRequiredFields() {
@@ -773,46 +478,4 @@ class ToolsTest : BasePlatformTestCase() {
         }
     }
 
-    private fun invokeLegacySymbolContributor(
-        contributor: ChooseByNameContributor,
-        pattern: String,
-        scope: GlobalSearchScope,
-        languageFilter: Set<String>?,
-        nameFilter: (String) -> Boolean,
-        matcher: MinusculeMatcher,
-        results: MutableList<SymbolData>,
-        seen: MutableSet<String>
-    ) {
-        val method = OptimizedSymbolSearch::class.java.declaredMethods.first {
-            it.name == "processContributor" && it.parameterCount == 10
-        }
-        method.isAccessible = true
-        method.invoke(
-            OptimizedSymbolSearch,
-            contributor,
-            project,
-            pattern,
-            scope,
-            10,
-            languageFilter,
-            nameFilter,
-            matcher,
-            results,
-            seen
-        )
-    }
-
-    class LegacyContributor(
-        private val itemsByName: Map<String, Array<NavigationItem>>
-    ) : ChooseByNameContributor {
-        override fun getNames(project: com.intellij.openapi.project.Project, includeNonProjectItems: Boolean): Array<String> =
-            itemsByName.keys.toTypedArray()
-
-        override fun getItemsByName(
-            name: String,
-            pattern: String,
-            project: com.intellij.openapi.project.Project,
-            includeNonProjectItems: Boolean
-        ): Array<NavigationItem> = itemsByName[name] ?: emptyArray()
-    }
 }

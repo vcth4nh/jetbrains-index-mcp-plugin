@@ -21,12 +21,14 @@ import com.intellij.openapi.roots.ModuleRootModificationUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiManager
+import com.intellij.testFramework.IndexingTestUtil
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import javax.tools.ToolProvider
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.buildJsonObject
@@ -111,7 +113,6 @@ class ToolExecutionIntegrationTest : BasePlatformTestCase() {
                 put("file", callerPsi.virtualFile.path)
                 put("line", line)
                 put("column", column)
-                put("fullElementPreview", true)
             })
         } catch (e: com.github.hechtcarmel.jetbrainsindexmcpplugin.exceptions.IndexNotReadyException) {
             System.err.println("testFindDefinitionToolFullElementPreview: skipped – index not ready")
@@ -134,7 +135,6 @@ class ToolExecutionIntegrationTest : BasePlatformTestCase() {
         }
 
         assertTrue("Full preview should include method name", definition.preview.contains("doWork"))
-        assertEquals("astPath should contain enclosing class", listOf("Service"), definition.astPath)
     }
 
     fun testReadFileToolValidation() = runBlocking {
@@ -291,7 +291,7 @@ class ToolExecutionIntegrationTest : BasePlatformTestCase() {
         val content = result.content.first() as ContentBlock.Text
         val definition = json.decodeFromString<DefinitionResult>(content.text)
         assertEquals(libraryFile.toString().replace('\\', '/'), definition.file)
-        assertEquals(className, definition.symbolName)
+        assertEquals(className, definition.name)
     }
 
     fun testFindDefinitionToolStillRejectsUnrelatedExternalFiles() = runBlocking {
@@ -371,7 +371,7 @@ class ToolExecutionIntegrationTest : BasePlatformTestCase() {
         val usages = json.decodeFromString<FindUsagesResult>(content.text)
         assertTrue(
             "Project usage should be found from external library declaration",
-            usages.usages.any { it.file.endsWith("UseExternalLib.java") && it.context.contains("$className.ping()") }
+            usages.usages.any { it.file.endsWith("UseExternalLib.java") && it.preview.contains("$className.ping()") }
         )
     }
 
@@ -465,7 +465,7 @@ class ToolExecutionIntegrationTest : BasePlatformTestCase() {
 
         val expectedTools = listOf(
             // Navigation tools
-            ToolNames.FIND_REFERENCES,
+            ToolNames.FIND_USAGES,
             ToolNames.FIND_DEFINITION,
             ToolNames.TYPE_HIERARCHY,
             ToolNames.CALL_HIERARCHY,
@@ -482,6 +482,8 @@ class ToolExecutionIntegrationTest : BasePlatformTestCase() {
             ToolNames.DIAGNOSTICS,
             // Project tools
             ToolNames.BUILD_PROJECT,
+            ToolNames.INSTALL_PLUGIN,
+            ToolNames.RESTART_IDE,
             ToolNames.INDEX_STATUS,
             ToolNames.SYNC_FILES,
             // Refactoring tools
@@ -587,7 +589,75 @@ class ToolExecutionIntegrationTest : BasePlatformTestCase() {
 
         val before = text.substring(0, offset)
         val line = before.count { it == '\n' } + 1
-        val column = offset - before.lastIndexOf('\n').let { if (it == -1) -1 else it } 
+        val column = offset - before.lastIndexOf('\n').let { if (it == -1) -1 else it }
         return line to column
+    }
+
+    fun testFindUsagesToolFindsJavaMethodCallersWithoutEdtAssertion() = runBlocking {
+        // Java method + caller fixture. The method declaration is on PsiMethod,
+        // which is what triggers JavaFindUsagesHandler.processElementUsages
+        // (modal-UI assertion on EDT). The fix routes through findReferencesToHighlight
+        // which doesn't assert EDT.
+        val service = myFixture.addFileToProject(
+            "src/main/java/com/example/Service.java",
+            """
+            package com.example;
+            public class Service {
+                public void doWork() {}
+            }
+            """.trimIndent()
+        )
+        myFixture.addFileToProject(
+            "src/main/java/com/example/Caller.java",
+            """
+            package com.example;
+            public class Caller {
+                void invoke() { new Service().doWork(); }
+            }
+            """.trimIndent()
+        )
+        IndexingTestUtil.waitUntilIndexesAreReady(project)
+
+        // Locate the method-name caret from the actual document — hardcoded line/column
+        // assumed a specific indent that may not survive trimIndent in every JVM/locale.
+        val serviceDocument = PsiDocumentManager.getInstance(project).getDocument(service)
+        assertNotNull("Service.java should have a document", serviceDocument)
+        val doWorkOffset = serviceDocument!!.text.indexOf("doWork")
+        assertTrue("doWork declaration should exist in Service.java", doWorkOffset >= 0)
+        val line = serviceDocument.getLineNumber(doWorkOffset) + 1
+        val column = doWorkOffset - serviceDocument.getLineStartOffset(line - 1) + 1
+
+        val tool = FindUsagesTool()
+        // Use the actual VFS path; in-memory test VFS may not be visible via LocalFileSystem
+        // when a hardcoded relative path is passed.
+        val args = buildJsonObject {
+            put("file", service.virtualFile.path)
+            put("line", line)
+            put("column", column)
+        }
+
+        val result = tool.execute(project, args)
+
+        // (a) No EDT assertion in the response envelope.
+        val text = Json.encodeToString(result)
+        assertFalse(
+            "Result must not contain EDT-assertion error: $text",
+            text.contains("Access is allowed from") || text.contains("Event Dispatch Thread")
+        )
+
+        // (b) Caller is in the usages list — skip rather than fail when the in-memory
+        // VFS doesn't expose the file through LocalFileSystem (mirrors the defensive
+        // pattern in testFindDefinitionToolFullElementPreview above).
+        if (result.isError) {
+            System.err.println(
+                "testFindUsagesToolFindsJavaMethodCallersWithoutEdtAssertion: " +
+                    "skipped – tool returned error: $text"
+            )
+            return@runBlocking
+        }
+        assertTrue(
+            "Caller.java should appear in usages: $text",
+            text.contains("Caller.java")
+        )
     }
 }

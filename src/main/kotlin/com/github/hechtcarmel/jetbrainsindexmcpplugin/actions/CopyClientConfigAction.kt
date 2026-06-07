@@ -194,7 +194,7 @@ class CopyClientConfigAction : AnAction() {
 
     private fun createGenericConfigSection(project: Project?): JPanel {
         val listModel = DefaultListModel<GenericConfigItem>().apply {
-            addElement(GenericConfigItem("Streamable HTTP", "For modern MCP clients (2025-03-26 spec)", GenericConfigType.STREAMABLE_HTTP))
+            addElement(GenericConfigItem("Streamable HTTP", "For modern MCP clients (2025-11-25 spec)", GenericConfigType.STREAMABLE_HTTP))
             addElement(GenericConfigItem("Legacy SSE", "For older MCP clients (2024-11-05 spec)", GenericConfigType.LEGACY_SSE))
         }
 

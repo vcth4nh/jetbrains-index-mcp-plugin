@@ -15,9 +15,9 @@ data class UsageLocation(
     val file: String,
     val line: Int,
     val column: Int,
-    val context: String,
-    val type: String,
-    val astPath: List<String>,
+    val preview: String,
+    val usageType: String,
+    val enclosingScope: List<String>,
 )
 
 @Serializable
@@ -39,9 +39,11 @@ data class DefinitionResult(
     val file: String,
     val line: Int,
     val column: Int,
+    val name: String,
+    val kind: String,
     val preview: String,
-    val symbolName: String,
-    val astPath: List<String>
+    val qualifiedName: String? = null,
+    val enclosingScope: List<String>? = null,
 )
 
 // ide_read_file output
@@ -68,9 +70,12 @@ data class TypeHierarchyResult(
 @Serializable
 data class TypeElement(
     val name: String,
-    val file: String?,
+    val qualifiedName: String? = null,
+    val enclosingScope: List<String>? = null,
     val kind: String,
-    val language: String? = null,
+    val file: String? = null,
+    val line: Int? = null,
+    val column: Int? = null,
     val supertypes: List<TypeElement>? = null
 )
 
@@ -84,10 +89,12 @@ data class CallHierarchyResult(
 @Serializable
 data class CallElement(
     val name: String,
+    val qualifiedName: String? = null,
+    val enclosingScope: List<String>? = null,
+    val kind: String,
     val file: String,
     val line: Int,
     val column: Int,
-    val language: String? = null,
     val children: List<CallElement>? = null
 )
 
@@ -111,7 +118,7 @@ data class ImplementationLocation(
     val line: Int,
     val column: Int,
     val kind: String,
-    val language: String? = null
+    val qualifiedName: String? = null
 )
 
 
@@ -222,6 +229,26 @@ data class BuildProjectResult(
     val durationMs: Long
 )
 
+// ide_install_plugin output
+@Serializable
+data class InstallPluginResult(
+    val installed: Boolean,
+    val source: String,
+    val pluginDir: String,
+    val pluginId: String? = null,
+    val pluginVersion: String? = null,
+    val restartRequired: Boolean = true,
+    val message: String
+)
+
+// ide_restart output
+@Serializable
+data class RestartIdeResult(
+    val restarting: Boolean,
+    val delaySeconds: Int,
+    val message: String
+)
+
 // ide_find_symbol output
 @Serializable
 data class FindSymbolResult(
@@ -244,8 +271,6 @@ data class SymbolMatch(
     val file: String,
     val line: Int,
     val column: Int,
-    val containerName: String?,
-    val language: String? = null
 )
 
 // ide_find_super_methods output
@@ -253,32 +278,26 @@ data class SymbolMatch(
 data class SuperMethodsResult(
     val method: MethodInfo,
     val hierarchy: List<SuperMethodInfo>,
-    val totalCount: Int
 )
 
 @Serializable
 data class MethodInfo(
     val name: String,
-    val signature: String,
-    val containingClass: String,
+    val qualifiedName: String? = null,
+    val kind: String,
     val file: String,
     val line: Int,
     val column: Int,
-    val language: String? = null
 )
 
 @Serializable
 data class SuperMethodInfo(
     val name: String,
-    val signature: String,
-    val containingClass: String,
-    val containingClassKind: String,
+    val qualifiedName: String? = null,
+    val kind: String,
     val file: String?,
     val line: Int?,
     val column: Int?,
-    val isInterface: Boolean,
-    val depth: Int,
-    val language: String? = null
 )
 
 // ide_find_class output (reuses SymbolMatch)

@@ -1,0 +1,26 @@
+# IDE / editor metadata
+.idea/
+.vscode/
+.claude/
+.fleet/
+.zed/
+*.iml
+
+# EXCEPTION: the source-folder config for python/javascript/typescript/php is
+# force-tracked (git add -f) so the production/test hierarchy-scope split is
+# reproducible from git (those languages have no committed build file that marks
+# test roots, unlike Maven/Gradle/Cargo/go). Only <lang>/.idea/<lang>.iml and
+# <lang>/.idea/modules.xml are tracked; everything else under .idea stays ignored.
+# (Negation rules can't re-include these — the parent .idea dir is excluded — so
+# the files are committed via `git add -f`.)
+
+# OS / editor scratch
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Per-run output captured by run.py (raw IDE responses, not snapshots)
+output.jsonl
+__pycache__/

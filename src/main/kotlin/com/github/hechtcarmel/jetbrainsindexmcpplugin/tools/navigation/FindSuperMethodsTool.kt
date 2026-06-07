@@ -1,52 +1,42 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.navigation
 
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ErrorMessages
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ParamNames
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.constants.ToolNames
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageHandlerRegistry
+import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageServices
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ToolCallResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.AbstractMcpTool
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.MethodInfo
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.SuperMethodInfo
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.SuperMethodsResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.schema.SchemaBuilder
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.util.PsiUtils
 import com.intellij.openapi.project.Project
 import kotlinx.serialization.json.JsonObject
 
 /**
  * Tool for finding super methods across multiple languages.
  *
- * Supports: Java, Kotlin, Python, JavaScript, TypeScript, PHP, Rust
+ * Supports: Java, Kotlin, Python, JavaScript, TypeScript, PHP, Go (interface satisfaction — methods and types), Rust (trait fn/const/type alias overrides).
  *
- * Delegates to language-specific handlers via [LanguageHandlerRegistry].
+ * Delegates to language-specific providers via the [SuperMethodsProvider] extension point.
  */
 class FindSuperMethodsTool : AbstractMcpTool() {
 
     override val name = ToolNames.FIND_SUPER_METHODS
 
     override val description = """
-        Find parent methods that a method overrides or implements. Use to navigate up the inheritance chain—from implementation to interface, or from override to original declaration.
+        Navigate UP the hierarchy from a code element — what it overrides, implements, or extends. Mirrors the IDE's "Go to Super" (Ctrl+U). Anchor on a method (→ super-methods, full transitive chain), a class/interface/struct/trait (→ direct supertypes), a lambda (→ the single abstract method it implements), or a field/constant (→ the overridden member).
 
-        Languages: Java, Kotlin, Python, JavaScript, TypeScript, PHP.
+        Languages: Java, Kotlin, Python, JavaScript, TypeScript, PHP, Go (a method → the interface methods it satisfies; a type → the interfaces it satisfies), Rust (trait fn/const/type alias the impl satisfies).
 
-        NOT supported for Rust: Rust uses trait implementations rather than classical inheritance, so there are no "super methods" in the traditional sense. Use ide_find_definition or ide_type_hierarchy instead.
-
-        Returns: full hierarchy chain from immediate parent (depth=1) to root, with file locations (line/column) and containing class info.
-
-        Target (mutually exclusive):
-        - file + line + column: position-based lookup (position can be anywhere within the method body)
-        - language + symbol: fully qualified symbol reference (currently supported for Java only)
+        Returns: the matching supers with file locations (line/column), qualified names, and element kinds. Empty when the element has no super.
 
         Example: {"file": "src/UserServiceImpl.java", "line": 25, "column": 10}
-        Example: {"language": "Java", "symbol": "com.example.UserServiceImpl#getUser(String)"}
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
         .projectPath()
-        .file(required = false, description = "Project-relative file path, or a dependency/library absolute path or jar:// URL previously returned by the plugin. Required for position-based lookup.")
-        .lineAndColumn(required = false)
-        .languageAndSymbol(required = false)
+        .file(description = "Project-relative file path, or a dependency/library absolute path or jar:// URL previously returned by the plugin.")
+        .lineAndColumn()
         .build()
 
     override suspend fun doExecute(project: Project, arguments: JsonObject): ToolCallResult {
@@ -57,29 +47,13 @@ class FindSuperMethodsTool : AbstractMcpTool() {
                 return@suspendingReadAction createErrorResult(it.message ?: ErrorMessages.COULD_NOT_RESOLVE_SYMBOL)
             }
 
-            // Tool-layer gate: reject position-based invocations where the caret is not on a
-            // resolvable target. See CallHierarchyTool for rationale.
-            val isSymbolMode = arguments[ParamNames.LANGUAGE] != null
-            if (!isSymbolMode && PsiUtils.resolveTargetElement(element) == null) {
-                return@suspendingReadAction createErrorResult(
-                    "No method found at position. Ensure the position is within a method declaration or body."
-                )
-            }
-
-            // Find appropriate handler for this element's language
-            val handler = LanguageHandlerRegistry.getSuperMethodsHandler(element)
-            if (handler == null) {
-                return@suspendingReadAction createErrorResult(
-                    "No super methods handler available for language: ${element.language.id}. " +
-                    "Supported languages: ${LanguageHandlerRegistry.getSupportedLanguagesForSuperMethods()}"
-                )
-            }
-
-            val superMethodsData = handler.findSuperMethods(element, project)
+            // Anchor resolution is delegated entirely to the language provider: it returns null
+            // only when the caret is not on a super-navigable element (method, class, field/const,
+            // or lambda), and an empty hierarchy when the element is valid but has no super.
+            val superMethodsData = LanguageServices.findSuperMethods(element, project)
             if (superMethodsData == null) {
                 return@suspendingReadAction createErrorResult(
-                    if (isSymbolMode) "No method found for the specified symbol. Ensure the symbol refers to a method declaration."
-                    else "No method found at position. Ensure the position is within a method declaration or body."
+                    "No super-navigable element at position. Place the caret on a method, class, field/const, or lambda."
                 )
             }
 
@@ -87,28 +61,22 @@ class FindSuperMethodsTool : AbstractMcpTool() {
             createJsonResult(SuperMethodsResult(
                 method = MethodInfo(
                     name = superMethodsData.method.name,
-                    signature = superMethodsData.method.signature,
-                    containingClass = superMethodsData.method.containingClass,
+                    qualifiedName = superMethodsData.method.qualifiedName,
+                    kind = superMethodsData.method.kind,
                     file = superMethodsData.method.file,
                     line = superMethodsData.method.line,
                     column = superMethodsData.method.column,
-                    language = superMethodsData.method.language
                 ),
                 hierarchy = superMethodsData.hierarchy.map { superMethod ->
                     SuperMethodInfo(
                         name = superMethod.name,
-                        signature = superMethod.signature,
-                        containingClass = superMethod.containingClass,
-                        containingClassKind = superMethod.containingClassKind,
+                        qualifiedName = superMethod.qualifiedName,
+                        kind = superMethod.kind,
                         file = superMethod.file,
                         line = superMethod.line,
                         column = superMethod.column,
-                        isInterface = superMethod.isInterface,
-                        depth = superMethod.depth,
-                        language = superMethod.language
                     )
                 },
-                totalCount = superMethodsData.hierarchy.size
             ))
         }
     }

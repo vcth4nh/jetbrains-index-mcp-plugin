@@ -1,6 +1,5 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.integration
 
-import com.github.hechtcarmel.jetbrainsindexmcpplugin.handlers.LanguageHandlerRegistry
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.server.models.ContentBlock
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.CallHierarchyResult
 import com.github.hechtcarmel.jetbrainsindexmcpplugin.tools.models.FindClassResult
@@ -41,26 +40,13 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
         encodeDefaults = true
     }
 
-    override fun setUp() {
-        super.setUp()
-        LanguageHandlerRegistry.registerHandlers()
-    }
-
-    override fun tearDown() {
-        try {
-            LanguageHandlerRegistry.clear()
-        } finally {
-            super.tearDown()
-        }
-    }
-
-    fun testTypeHierarchyRespectsProjectProductionFilesScope() = runBlocking {
+    fun testTypeHierarchyRespectsProductionScope() = runBlocking {
         val fixture = createLibraryInterfaceFixture()
         val tool = TypeHierarchyTool()
 
         val result = tool.execute(project, buildJsonObject {
             put("className", fixture.interfaceFqn)
-            put("scope", "project_production_files")
+            put("scope", "production")
         })
 
         assertFalse("Type hierarchy should succeed: ${result.content}", result.isError)
@@ -70,8 +56,8 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
         val subtypeNames = hierarchy.subtypes.map { it.name }
 
         assertTrue("Production implementation should remain visible", subtypeNames.any { it.contains("ProdRepositoryImpl") })
-        assertFalse("Test implementation should be filtered out by project_production_files", subtypeNames.any { it.contains("TestRepositoryImpl") })
-        assertFalse("Library implementation should be filtered out by project_production_files", subtypeNames.any { it.contains("LibraryRepositoryImpl") })
+        assertFalse("Test implementation should be filtered out by production scope", subtypeNames.any { it.contains("TestRepositoryImpl") })
+        assertFalse("Library implementation should be filtered out by production scope", subtypeNames.any { it.contains("LibraryRepositoryImpl") })
     }
 
     fun testFindImplementationsRespectsProjectTestFilesScope() = runBlocking {
@@ -103,6 +89,7 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
 
         val result = tool.execute(project, buildJsonObject {
             put("query", "RepositoryImpl")
+            put("fuzzySearch", true)
             put("scope", "project_test_files")
         })
 
@@ -162,7 +149,6 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
 
         val classResult = classTool.execute(project, buildJsonObject {
             put("query", fixture.className)
-            put("matchMode", "exact")
             put("scope", "project_production_files")
         })
         assertFalse("Find class should succeed: ${classResult.content}", classResult.isError)
@@ -248,6 +234,7 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
         // `*Solver` should match class names ending with "Solver" (BasicSolver, StackSolver).
         val result = tool.execute(project, buildJsonObject {
             put("query", "*Solver")
+            put("fuzzySearch", true)
             put("pageSize", 100)
         })
         assertFalse("Find symbol should succeed: ${result.content}", result.isError)
@@ -277,6 +264,7 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
         // `Batch*` should match names starting with "Batch" (BatchRunner).
         val result = tool.execute(project, buildJsonObject {
             put("query", "Batch*")
+            put("fuzzySearch", true)
             put("pageSize", 100)
         })
         assertFalse("Find symbol should succeed: ${result.content}", result.isError)
@@ -379,7 +367,7 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
         )
         assertTrue(
             "All results must be Java when language=Java is specified",
-            filteredResult.symbols.all { it.language.equals("Java", ignoreCase = true) }
+            filteredResult.symbols.all { it.file.endsWith(".java", ignoreCase = true) }
         )
 
         // Case-insensitive: lowercase input should return the same results as canonical case.
@@ -411,7 +399,7 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
         )
     }
 
-    fun testCallHierarchyRespectsProjectProductionFilesScope() = runBlocking {
+    fun testCallHierarchyRespectsProductionScope() = runBlocking {
         val fixture = createProjectMethodFixture()
         val tool = CallHierarchyTool()
 
@@ -420,7 +408,7 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
             put("line", fixture.targetLine)
             put("column", fixture.targetColumn)
             put("direction", "callers")
-            put("scope", "project_production_files")
+            put("scope", "production")
         })
 
         assertFalse("Call hierarchy should succeed: ${result.content}", result.isError)
@@ -430,10 +418,10 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
         val callerNames = hierarchy.calls.map { it.name }
 
         assertTrue("Production caller should remain visible", callerNames.any { it.contains("ProdCaller.call") })
-        assertFalse("Test caller should be filtered out by project_production_files", callerNames.any { it.contains("TargetServiceTest.exercise") })
+        assertFalse("Test caller should be filtered out by production scope", callerNames.any { it.contains("TargetServiceTest.exercise") })
     }
 
-    fun testCallHierarchyRespectsProjectAndLibrariesScope() = runBlocking {
+    fun testCallHierarchyAllScopeIncludesLibraries() = runBlocking {
         val fixture = createLibraryMethodFixture()
         val tool = CallHierarchyTool()
 
@@ -442,7 +430,7 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
             put("line", fixture.targetLine)
             put("column", fixture.targetColumn)
             put("direction", "callers")
-            put("scope", "project_and_libraries")
+            put("scope", "all")
         })
 
         assertFalse("Call hierarchy should succeed: ${result.content}", result.isError)
@@ -474,6 +462,76 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
 
         assertTrue("Project usage should remain visible", usageFiles.any { it.endsWith("ProjectCaller.java") })
         assertTrue("Library usage should remain visible when scope includes libraries", usageFiles.any { it.contains("LibraryCaller.java") })
+    }
+
+    fun testFindUsagesCursorRoundTripVisitsEveryUsageExactlyOnce() = runBlocking {
+        val fixture = createMultiUsageFixture()
+        val tool = FindUsagesTool()
+
+        // Baseline: a single large page collects every usage in one shot (no cursor).
+        val baselinePage = tool.execute(project, buildJsonObject {
+            put("file", fixture.targetFilePath)
+            put("line", fixture.targetLine)
+            put("column", fixture.targetColumn)
+            put("pageSize", 100)
+        })
+        assertFalse("Baseline find_usages should succeed: ${baselinePage.content}", baselinePage.isError)
+        val baseline = json.decodeFromString<FindUsagesResult>(
+            (baselinePage.content.first() as ContentBlock.Text).text
+        )
+        assertNull("Every usage fits one large page, so there is no next cursor", baseline.nextCursor)
+        val baselineKeys = baseline.usages.map { Triple(it.file, it.line, it.column) }
+        assertTrue(
+            "Fixture must yield enough usages to force multiple pages, got ${baselineKeys.size}",
+            baselineKeys.size >= 4
+        )
+        assertEquals("Baseline usages must have distinct positions", baselineKeys.size, baselineKeys.toSet().size)
+
+        // Walk the same result set two-at-a-time, chaining each returned cursor into the next request.
+        val pageSize = 2
+        val firstPage = tool.execute(project, buildJsonObject {
+            put("file", fixture.targetFilePath)
+            put("line", fixture.targetLine)
+            put("column", fixture.targetColumn)
+            put("pageSize", pageSize)
+        })
+        assertFalse("First page should succeed: ${firstPage.content}", firstPage.isError)
+        var page = json.decodeFromString<FindUsagesResult>(
+            (firstPage.content.first() as ContentBlock.Text).text
+        )
+        assertEquals("First page should be full", pageSize, page.usages.size)
+        assertNotNull("First page must carry a cursor while results remain", page.nextCursor)
+
+        val collected = page.usages.map { Triple(it.file, it.line, it.column) }.toMutableList()
+        var cursor = page.nextCursor
+        var guard = 0
+        while (cursor != null) {
+            assertTrue("Pagination did not terminate", guard++ < 50)
+            val nextPage = tool.execute(project, buildJsonObject {
+                put("cursor", cursor)
+                put("pageSize", pageSize)
+            })
+            assertFalse("Cursor page should succeed: ${nextPage.content}", nextPage.isError)
+            page = json.decodeFromString<FindUsagesResult>(
+                (nextPage.content.first() as ContentBlock.Text).text
+            )
+            // Every page before the last is full.
+            if (page.nextCursor != null) {
+                assertEquals("Non-final page should be full", pageSize, page.usages.size)
+            }
+            collected += page.usages.map { Triple(it.file, it.line, it.column) }
+            cursor = page.nextCursor
+        }
+
+        // The paged walk must reproduce the baseline exactly: no omissions, no extras, no duplicates.
+        assertEquals(
+            "Paged walk must visit each usage once (no cross-page duplicates)",
+            collected.size, collected.toSet().size
+        )
+        assertEquals(
+            "Paged walk must cover exactly the single-page baseline",
+            baselineKeys.toSet(), collected.toSet()
+        )
     }
 
     private data class LibraryInterfaceFixture(
@@ -672,6 +730,54 @@ class NavigationFiltersIntegrationTest : BasePlatformTestCase() {
         val line = targetDocument.getLineNumber(offset) + 1
         val column = offset - targetDocument.getLineStartOffset(line - 1) + 1
 
+        return ProjectMethodFixture(
+            targetFilePath = ProjectUtils.getRelativePath(project, targetFile.toString().replace('\\', '/')),
+            targetLine = line,
+            targetColumn = column
+        )
+    }
+
+    /** A target method invoked from five distinct call sites — enough usages to span several pages. */
+    private fun createMultiUsageFixture(): ProjectMethodFixture {
+        val prodRootPath = createProjectDirectory("usage-pagination-src")
+        val prodRoot = refreshVfsDirectory(prodRootPath)
+        PsiTestUtil.addSourceRoot(module, prodRoot, false)
+
+        val targetSource = """
+            package paging;
+
+            public class UsageTarget {
+                public void ping() {
+                }
+            }
+        """.trimIndent()
+        val targetFile = writePathFile(prodRootPath, "paging/UsageTarget.java", targetSource)
+
+        // One caller invoking ping() on five distinct lines → five distinct usage positions.
+        val callerFile = writePathFile(
+            prodRootPath,
+            "paging/UsageCaller.java",
+            """
+                package paging;
+
+                public class UsageCaller {
+                    public void exercise(UsageTarget t) {
+                        t.ping();
+                        t.ping();
+                        t.ping();
+                        t.ping();
+                        t.ping();
+                    }
+                }
+            """.trimIndent()
+        )
+
+        refreshVfsFile(targetFile)
+        refreshVfsFile(callerFile)
+        PsiDocumentManager.getInstance(project).commitAllDocuments()
+        IndexingTestUtil.waitUntilIndexesAreReady(project)
+
+        val (line, column) = findPosition(targetSource, "ping")
         return ProjectMethodFixture(
             targetFilePath = ProjectUtils.getRelativePath(project, targetFile.toString().replace('\\', '/')),
             targetLine = line,

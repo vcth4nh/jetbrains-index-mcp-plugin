@@ -25,7 +25,7 @@ Parse the `text` field as JSON for structured data.
 
 ## Navigation Tools
 
-### ide_find_references
+### ide_find_usages
 Find all usages of a symbol (semantic, not text search).
 
 **Target (mutually exclusive):** `file`+`line`+`column` OR `language`+`symbol`
@@ -74,7 +74,7 @@ Search for classes/interfaces by name using IDE's class index. Equivalent to Ctr
 | `query` | string | yes | Class name pattern |
 | `scope` | enum | no | One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 | `language` | string | no | Filter: "Java", "Kotlin", "Python", etc. |
-| `matchMode` | enum | no | `substring` (default), `prefix`, `exact` |
+| `fuzzySearch` | boolean | no | `false` (default) = exact, case-insensitive name match; `true` = IDE camelCase/substring matching |
 | `limit` | integer | no | Deprecated alias for `pageSize`. Default 25, max 500 |
 | `cursor` | string | no | Pagination cursor from a previous response. When provided, search parameters are ignored; `project_path` and `pageSize` may still be provided. |
 | `pageSize` | integer | no | Results per page. Default 25, max 500 |
@@ -82,7 +82,7 @@ Search for classes/interfaces by name using IDE's class index. Equivalent to Ctr
 
 **Returns**: `{ classes: [{name, qualifiedName, file, line, kind, language}], totalCount, query }`
 **Path note**: Project results use relative paths. Dependency/library results may use absolute paths or `jar://` URLs.
-**Matching**: CamelCase (`USvc` -> `UserService`), substring, wildcard (`User*Impl`).
+**Matching**: exact (case-insensitive) by default; with `fuzzySearch: true`, IDE camelCase/substring matching (`USvc` -> `UserService`).
 
 ### ide_find_file
 Search for files by name using IDE's file index. Equivalent to Ctrl+Shift+N / Cmd+Shift+O.
@@ -140,6 +140,7 @@ Search for any code symbol (classes, methods, fields, functions) by name.
 | `query` | string | yes | Symbol name pattern. Matching follows IntelliJ's Go to Symbol popup, including qualified queries like `BasicSolver.run`. |
 | `scope` | enum | no | One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 | `language` | string | no | Filter by language |
+| `fuzzySearch` | boolean | no | `false` (default) = exact, case-insensitive name match; `true` = IDE Go to Symbol fuzzy matching |
 | `limit` | integer | no | Deprecated alias for `pageSize`. Default 25, max 500 |
 | `cursor` | string | no | Pagination cursor from a previous response. When provided, search parameters are ignored; `project_path` and `pageSize` may still be provided. |
 | `pageSize` | integer | no | Results per page. Default 25, max 500 |
@@ -175,7 +176,9 @@ Get complete type inheritance hierarchy (supertypes and subtypes).
 | `file` | string | no | Alternative: project-relative file path. Unlike other read-only navigation tools, `ide_type_hierarchy` file mode does not resolve dependency/library absolute paths or `jar://` URLs. |
 | `line` | integer | no | Required with file |
 | `column` | integer | no | Required with file |
-| `scope` | enum | no | One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
+| `scope` | enum | no | One of `all` (default), `production`, `test` |
+| `direction` | enum | no | `supertypes`, `subtypes`, or `both` (default) |
+| `maxDepth` | integer | no | Levels to traverse (default 5, max 20) |
 | `project_path` | string | no | Project root path |
 
 **Provide either** `className` **or** `file`+`line`+`column`.
@@ -196,7 +199,7 @@ Build call tree showing who calls a method or what a method calls.
 | `symbol` | string | conditional | Fully qualified symbol reference. Required for symbol-based lookup. |
 | `direction` | enum | yes | `callers` or `callees` |
 | `depth` | integer | no | Recursion depth (default 3, max 5) |
-| `scope` | enum | no | One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
+| `scope` | enum | no | One of `all` (default), `production`, `test`, `this_class`, `this_module` |
 | `project_path` | string | no | Project root path |
 
 **Returns**: `{ element: {name, file, line, column, language}, calls: [{name, file, line, column, language, children: [...]}] }`

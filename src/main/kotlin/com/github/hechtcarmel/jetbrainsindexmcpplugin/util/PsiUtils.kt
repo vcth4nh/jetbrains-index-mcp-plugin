@@ -1,5 +1,7 @@
 package com.github.hechtcarmel.jetbrainsindexmcpplugin.util
 
+import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.OrderEnumerator
 import com.intellij.openapi.util.SystemInfo
@@ -21,6 +23,8 @@ import java.nio.file.Path
 
 object PsiUtils {
 
+    private val LOG = logger<PsiUtils>()
+
     /**
      * Default depth for searching parent chain for references.
      * 3 levels covers common cases: identifier -> expression -> call expression.
@@ -28,24 +32,58 @@ object PsiUtils {
     private const val DEFAULT_PARENT_SEARCH_DEPTH = 3
 
     /**
-     * Resolves the target element from a position, using semantic reference resolution.
+     * Resolves the target element from a position, mirroring what the IDE's Ctrl+Click does
+     * (see `GotoDeclarationAction.findTargetElementsNoVS`).
      *
-     * This is the correct way to find what a position "refers to":
-     * 1. First tries `element.reference.resolve()` to follow references semantically
-     * 2. If no direct reference, walks up parent chain looking for references
-     * 3. Falls back to [findNamedElement] for declarations (when cursor is ON a declaration)
+     * Order of attempts:
+     * 1. Iterate `GotoDeclarationHandler.EP_NAME.extensionList`. Languages register handlers
+     *    here for special navigation rules (e.g. constructor calls → class declaration in
+     *    Java, or `int(x)` → `int.__new__` in Python). Use the first non-empty result.
+     * 2. Fall back to [resolveReferenceTarget] — pure reference-system resolution.
      *
-     * **Why this matters:**
-     * When the cursor is on a method call like `myService.doWork()`, the leaf element
-     * is the identifier "doWork". Using [findNamedElement] would walk up the tree and
-     * find the *containing* method, not the *referenced* method. This function correctly
-     * resolves through the reference system to find the actual `doWork` method declaration.
+     * Use this for `find_definition` (Ctrl+Click semantics). For `find_usages` use
+     * [resolveReferenceTarget] instead, so the search anchor is the user-intuitive entity
+     * rather than the navigation target (which can differ per language).
      *
      * @param element The leaf PSI element at a position (from `psiFile.findElementAt(offset)`)
      * @return The resolved target element (declaration), or null if resolution fails
      */
     fun resolveTargetElement(element: PsiElement): PsiElement? {
-        // Try direct reference first
+        // 1. Ask each registered GotoDeclarationHandler — same EP the IDE's Ctrl+Click iterates.
+        val gotoTarget = resolveViaGotoDeclarationHandler(element)
+        if (gotoTarget != null) {
+            val refined = PythonDefinitionResolver.refineResolvedTarget(element, gotoTarget)
+            if (refined != null) return refined
+        }
+
+        // 2. Reference-system fallback (the chain `find_usages` uses directly).
+        return resolveReferenceTarget(element)
+    }
+
+    /**
+     * Resolves the target element from a position using reference-system semantics ONLY,
+     * skipping the [GotoDeclarationHandler] step that [resolveTargetElement] tries first.
+     *
+     * Used by `find_usages` so the search anchor is the user-intuitive entity (the class for
+     * `new Foo()`, the variable for `fn = int`, etc.) rather than the navigation target
+     * (constructor / `__init__` / class declaration — different per language). This mirrors
+     * the IDE's Find Usages action (Alt+F7), which uses different element-resolution flags
+     * than Ctrl+Click — `TargetElementUtil.FIND_TARGET_FLAGS` does not invoke
+     * `GotoDeclarationHandler` extensions.
+     *
+     * Order:
+     * 1. `element.reference?.resolve()` — direct reference resolution.
+     * 2. Walk the parent chain looking for a reference (some PSI structures put the reference
+     *    on a parent rather than the leaf identifier).
+     * 3. Python refinement with no resolved target (handles edge cases inside
+     *    [PythonDefinitionResolver]).
+     * 4. As a last resort, [findNamedElement] when the caret is actually on a declaration's
+     *    name identifier. For comments/whitespace/literals, return null.
+     *
+     * Each attempt's result goes through [PythonDefinitionResolver.refineResolvedTarget].
+     */
+    fun resolveReferenceTarget(element: PsiElement): PsiElement? {
+        // 1. Direct reference on the leaf.
         val reference = element.reference
         if (reference != null) {
             val resolved = reference.resolve()
@@ -53,8 +91,7 @@ object PsiUtils {
             if (refined != null) return refined
         }
 
-        // Walk up parent chain looking for references (handles cases where
-        // the leaf element doesn't have a reference but its parent does)
+        // 2. Walk up parent chain looking for references.
         val parentReference = findReferenceInParent(element)
         if (parentReference != null) {
             val resolved = parentReference.resolve()
@@ -64,13 +101,33 @@ object PsiUtils {
 
         PythonDefinitionResolver.refineResolvedTarget(element, null)?.let { return it }
 
-        // Fallback: only walk to enclosing named ancestor if the caret is actually on a
-        // declaration's name identifier (the ONE case where syntactic walk is semantically
-        // justified — cursor on `foo` in `def foo()`, `fun foo()`, `public int foo()`, etc.).
-        // For comments, whitespace, literals, and keywords, return null so callers can report
-        // "no symbol at position" — bug B.1 fix.
+        // 3. Cursor-on-declaration-identifier fallback only — bug B.1 fix.
         if (!isOnDeclarationIdentifier(element)) return null
         return findNamedElement(element)
+    }
+
+    /**
+     * Iterates `GotoDeclarationHandler.EP_NAME.extensionList` and returns the first non-empty
+     * target list's first element. Returns null if no handler claims the element. Handler
+     * exceptions are logged at debug and treated as "no result" so a single misbehaving plugin
+     * doesn't block the whole resolution chain.
+     *
+     * Editor is passed as null — most handlers tolerate this for headless usage.
+     */
+    private fun resolveViaGotoDeclarationHandler(element: PsiElement): PsiElement? {
+        val offset = element.textOffset
+        for (handler in GotoDeclarationHandler.EP_NAME.extensionList) {
+            val targets = try {
+                handler.getGotoDeclarationTargets(element, offset, null)
+            } catch (_: Throwable) {
+                LOG.debug("GotoDeclarationHandler ${handler.javaClass.simpleName} threw; skipping")
+                continue
+            }
+            if (!targets.isNullOrEmpty()) {
+                return targets.first()
+            }
+        }
+        return null
     }
 
     /**
@@ -106,8 +163,13 @@ object PsiUtils {
      * [PsiNameIdentifierOwner.getNameIdentifier] as its name token.
      */
     fun isOnDeclarationIdentifier(element: PsiElement): Boolean {
-        val parent = element.parent ?: return false
-        return parent is PsiNameIdentifierOwner && parent.nameIdentifier === element
+        var current: PsiElement? = element.parent
+        while (current != null && current !is PsiFile) {
+            if (current is PsiNameIdentifierOwner && current.nameIdentifier === element) return true
+            if (current is PsiNamedElement && current.name == element.text) return true
+            current = current.parent
+        }
+        return false
     }
 
     fun findElementAtPosition(
@@ -296,7 +358,7 @@ object PsiUtils {
      * outermost (closest to file root) to the innermost (immediate named parent).
      * The [element] itself is never included, nor are anonymous (unnamed) nodes.
      */
-    fun getAstPath(element: PsiElement): List<String> {
+    fun getEnclosingScope(element: PsiElement): List<String> {
         val ancestors = mutableListOf<String>()
         var current: PsiElement? = element.parent
         while (current != null && current !is PsiFile) {
@@ -309,6 +371,21 @@ object PsiUtils {
             current = current.parent
         }
         return ancestors.asReversed()
+    }
+
+    /**
+     * Offset of [element]'s name identifier — the position the IDE's "Go to Declaration"
+     * navigates to.
+     *
+     * Uses the name identifier's `textRange`, which resolves the decompiled-class mirror
+     * the same way it does for source PSI. `element.textOffset` is deliberately avoided:
+     * it returns -1 for some decompiled `.class` stubs (the compiled-PSI mirror can be
+     * soft-collected between calls). Anonymous elements have no name identifier — they
+     * are never hierarchy nodes, so the element's own range start is used.
+     */
+    fun identifierOffset(element: PsiElement): Int {
+        val anchor = (element as? PsiNameIdentifierOwner)?.nameIdentifier ?: element
+        return anchor.textRange?.startOffset ?: 0
     }
 
     fun findNamedElement(element: PsiElement): PsiNamedElement? {

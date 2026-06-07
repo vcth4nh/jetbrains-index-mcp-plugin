@@ -37,7 +37,7 @@ import java.net.URI
  * Provides multiple transport modes for MCP clients with configurable port.
  *
  * Supports three transport modes:
- * 1. Streamable HTTP Transport (2025-03-26 spec) — PRIMARY:
+ * 1. Streamable HTTP Transport (2025-11-25 spec) — PRIMARY:
  *    - POST /index-mcp/streamable-http → Stateless JSON-RPC over HTTP
  *    - GET  /index-mcp/streamable-http → 405 Method Not Allowed
  *    - DELETE /index-mcp/streamable-http → 405 Method Not Allowed
@@ -143,7 +143,7 @@ class KtorMcpServer(
                 handleCorsPreflight(call)
             }
 
-            // === Streamable HTTP Transport (2025-03-26 spec) ===
+            // === Streamable HTTP Transport (2025-11-25 spec) ===
 
             post(McpConstants.STREAMABLE_HTTP_ENDPOINT_PATH) {
                 handleStreamableHttpPostRequest(call)
@@ -240,7 +240,7 @@ class KtorMcpServer(
     }
 
     /**
-     * Handles POST /index-mcp/streamable-http — Streamable HTTP transport (MCP 2025-03-26).
+     * Handles POST /index-mcp/streamable-http — Streamable HTTP transport (MCP 2025-11-25).
      *
      * - initialize request: returns JSON-RPC initialize result
      * - notifications (no id): returns 202 Accepted

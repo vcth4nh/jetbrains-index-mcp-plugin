@@ -33,7 +33,7 @@ Advanced tools work across multiple languages based on available plugins:
 - **Index Status** - Check if code intelligence is ready
 - **Sync Files** - Force sync VFS/PSI cache after external file changes
 - **Build Project** - Trigger IDE build with structured error/warning output (disabled by default)
-- **Find Class** - Fast class/interface search by name with camelCase matching
+- **Find Class** - Fast class/interface search by name (exact by default; opt into camelCase/substring matching with `fuzzySearch`)
 - **Find File** - Fast file search by name using IDE's file index
 - **Symbol Search** - Find code symbols by name with IntelliJ Go to Symbol matching (disabled by default)
 - **Search Text** - Text search using IDE's pre-built word index
@@ -233,9 +233,9 @@ These tools work in all supported JetBrains IDEs.
 
 | Tool | Description |
 |------|-------------|
-| `ide_find_references` | Find all references to a symbol across the entire project |
+| `ide_find_usages` | Find all references to a symbol across the entire project |
 | `ide_find_definition` | Find the definition/declaration location of a symbol |
-| `ide_find_class` | Search for classes/interfaces by name with camelCase/substring/wildcard matching |
+| `ide_find_class` | Search for classes/interfaces by name; exact by default, `fuzzySearch: true` for camelCase/substring matching |
 | `ide_find_file` | Search for files by name using IDE's file index |
 | `ide_find_symbol` | Search for symbols (classes, methods, fields, functions) by name with IntelliJ Go to Symbol matching *(disabled by default)* |
 | `ide_search_text` | Text search using IDE's pre-built word index with context filtering |
@@ -259,7 +259,7 @@ These tools activate based on available language plugins:
 | `ide_type_hierarchy` | Get the complete type hierarchy (supertypes and subtypes) | Java, Kotlin, Python, JS/TS, Go, PHP, Rust |
 | `ide_call_hierarchy` | Analyze method call relationships (callers or callees) | Java, Kotlin, Python, JS/TS, Go, PHP, Rust |
 | `ide_find_implementations` | Find all implementations of an interface or abstract method | Java, Kotlin, Python, JS/TS, PHP, Rust |
-| `ide_find_super_methods` | Find the full inheritance hierarchy of methods that a method overrides/implements | Java, Kotlin, Python, JS/TS, PHP |
+| `ide_find_super_methods` | Find the full inheritance hierarchy of methods that a method overrides/implements | Java, Kotlin, Python, JS/TS, PHP, Go, Rust |
 | `ide_file_structure` | Get hierarchical file structure (similar to IDE's Structure view) *(disabled by default)* | Java, Kotlin, Python, JS/TS, Markdown |
 
 ### Java-Specific Refactoring Tools
@@ -281,8 +281,8 @@ These tools activate based on available language plugins:
 | Android Studio | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat + safe delete + Java→Kotlin |
 | PyCharm | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat |
 | WebStorm | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat |
-| GoLand | ✓ 14 tools | ✓ 4 tools | ✓ rename + reformat |
-| RustRover | ✓ 14 tools | ✓ 5 tools | ✓ rename + reformat |
+| GoLand | ✓ 14 tools | ✓ 5 tools | ✓ rename + reformat |
+| RustRover | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat |
 | PhpStorm | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat |
 
 **May Work (Untested):**
@@ -293,7 +293,7 @@ These tools activate based on available language plugins:
 | CLion | ✓ 14 tools | ✓ 2 Markdown tools | ✓ rename + reformat |
 | DataGrip | ✓ 14 tools | ✓ 2 Markdown tools | ✓ rename + reformat |
 
-> **Note**: Navigation tools activate when language plugins are present. Markdown adds heading search and file-structure support when the bundled Markdown plugin is enabled. Go and Rust do not expose `ide_find_super_methods` due to language semantics, and Go does not expose `ide_find_implementations`. The rename and reformat tools work across all languages. `ide_convert_java_to_kotlin` is available only in IntelliJ IDEA and Android Studio, requires both Java and Kotlin plugins, and is disabled by default.
+> **Note**: Navigation tools activate when language plugins are present. Markdown adds heading search and file-structure support when the bundled Markdown plugin is enabled. Go does not expose `ide_find_implementations` (use `ide_find_class` for Go interface implementations). The rename and reformat tools work across all languages. `ide_convert_java_to_kotlin` is available only in IntelliJ IDEA and Android Studio, requires both Java and Kotlin plugins, and is disabled by default.
 
 For detailed tool documentation with parameters and examples, see [USAGE.md](USAGE.md).
 
@@ -303,7 +303,7 @@ When multiple projects are open in a single IDE window, you must specify which p
 
 ```json
 {
-  "name": "ide_find_references",
+  "name": "ide_find_usages",
   "arguments": {
     "project_path": "/Users/dev/myproject",
     "file": "src/Main.kt",
@@ -388,7 +388,7 @@ Configure the plugin at <kbd>Settings</kbd> > <kbd>Tools</kbd> > <kbd>Index MCP 
 
 - **JetBrains IDE** 2025.1 or later (any IDE based on IntelliJ Platform)
 - **JVM** 21 or later
-- **MCP Protocol** 2025-03-26 (primary Streamable HTTP), with 2024-11-05 legacy SSE compatibility
+- **MCP Protocol** 2025-11-25 (primary Streamable HTTP, negotiated; 2025-03-26 / 2024-11-05 also supported)
 
 ### Supported IDEs
 
@@ -412,7 +412,7 @@ Configure the plugin at <kbd>Settings</kbd> > <kbd>Tools</kbd> > <kbd>Index MCP 
 
 The plugin runs a **custom embedded Ktor CIO HTTP server** with **dual MCP transports**:
 
-### Streamable HTTP Transport (Primary, MCP 2025-03-26)
+### Streamable HTTP Transport (Primary, MCP 2025-11-25)
 
 ```
 AI Assistant ──────► POST /index-mcp/streamable-http (initialize or request)
@@ -436,7 +436,7 @@ AI Assistant ──────► GET /index-mcp/sse              (establish SS
 ```
 
 This dual approach:
-- **Primary MCP transport** - Streamable HTTP per MCP `2025-03-26`
+- **Primary MCP transport** - Streamable HTTP per MCP `2025-11-25` (negotiated; `2025-03-26` / `2024-11-05` also supported)
 - **MCP Inspector compatible** - Legacy SSE transport per MCP `2024-11-05`
 - **Configurable port** - IDE-specific default port, changeable in settings
 - Works with any MCP-compatible client

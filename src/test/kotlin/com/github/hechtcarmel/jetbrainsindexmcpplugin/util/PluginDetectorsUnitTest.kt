@@ -28,21 +28,15 @@ class PluginDetectorsUnitTest : TestCase() {
 
     fun testPluginDetectorsRegistryHasAllLanguages() {
         assertNotNull(PluginDetectors.java)
-        assertNotNull(PluginDetectors.python)
-        assertNotNull(PluginDetectors.javaScript)
-        assertNotNull(PluginDetectors.go)
         assertNotNull(PluginDetectors.php)
         assertNotNull(PluginDetectors.rust)
-        assertNotNull(PluginDetectors.markdown)
+        assertNotNull(PluginDetectors.kotlin)
     }
 
     fun testPluginDetectorsHaveCorrectNames() {
         assertEquals("Java", PluginDetectors.java.name)
-        assertEquals("Python", PluginDetectors.python.name)
-        assertEquals("JavaScript", PluginDetectors.javaScript.name)
-        assertEquals("Go", PluginDetectors.go.name)
         assertEquals("PHP", PluginDetectors.php.name)
         assertEquals("Rust", PluginDetectors.rust.name)
-        assertEquals("Markdown", PluginDetectors.markdown.name)
+        assertEquals("Kotlin", PluginDetectors.kotlin.name)
     }
 }
