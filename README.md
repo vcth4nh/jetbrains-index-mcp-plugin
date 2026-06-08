@@ -66,6 +66,12 @@ Unlike simple text-based code analysis, this plugin gives AI assistants access t
 Perfect for AI-assisted development workflows where accuracy and safety matter.
 <!-- Plugin description end -->
 
+## Documentation
+
+- **[USAGE.md](USAGE.md)** — full per-tool reference (parameters, examples, return shapes)
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — build, dev-loop, testing, PR checklist
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** — design, backing-mechanism model, internals
+
 ## Table of Contents
 
 - [Installation](#installation)
@@ -410,63 +416,11 @@ Configure the plugin at <kbd>Settings</kbd> > <kbd>Tools</kbd> > <kbd>Index MCP 
 
 ## Architecture
 
-The plugin runs a **custom embedded Ktor CIO HTTP server** with **dual MCP transports**:
-
-### Streamable HTTP Transport (Primary, MCP 2025-11-25)
-
-```
-AI Assistant ──────► POST /index-mcp/streamable-http (initialize or request)
-                     ◄── JSON-RPC response or HTTP 202 Accepted
-             ──────► POST /index-mcp/streamable-http (follow-up requests/notifications)
-                     ◄── JSON-RPC response or HTTP 202 Accepted
-```
-
-The plugin uses stateless Streamable HTTP for the primary MCP transport. It does not
-issue `Mcp-Session-Id` headers, does not require session resumption, and does not
-implement or advertise authentication capabilities.
-
-### Legacy SSE Transport (MCP Inspector, older clients)
-
-```
-AI Assistant ──────► GET /index-mcp/sse              (establish SSE stream)
-                     ◄── event: endpoint             (receive POST URL with sessionId)
-             ──────► POST /index-mcp?sessionId=x     (JSON-RPC requests)
-                     ◄── HTTP 202 Accepted
-                     ◄── event: message              (JSON-RPC response via SSE)
-```
-
-This dual approach:
-- **Primary MCP transport** - Streamable HTTP per MCP `2025-11-25` (negotiated; `2025-03-26` / `2024-11-05` also supported)
-- **MCP Inspector compatible** - Legacy SSE transport per MCP `2024-11-05`
-- **Configurable port** - IDE-specific default port, changeable in settings
-- Works with any MCP-compatible client
-- Single server instance across all open projects
+For design details, transport model, and internals, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Contributing
 
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests: `./gradlew test`
-5. Submit a pull request
-
-### Development Setup
-
-```bash
-# Build the plugin
-./gradlew build
-
-# Run IDE with plugin installed
-./gradlew runIde
-
-# Run tests
-./gradlew test
-
-# Run plugin verification
-./gradlew runPluginVerifier
-```
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for build instructions, the dev loop, testing guidelines, and the PR checklist.
 
 ## License
 
