@@ -1,0 +1,319 @@
+============================================================
+DECOMPILATION LOG: lib/modules/intellij.javascript.performanceTesting.jar
+============================================================
+
+Timestamp: 2026-05-27 16:59:06
+Input Path: /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin
+Relative Path: lib/modules/intellij.javascript.performanceTesting.jar
+Status: SUCCESS
+Return Code: 0
+
+------------------------------------------------------------
+STDOUT:
+------------------------------------------------------------
+INFO:  Loaded 0 plugins
+INFO:  JVM info: Oracle Corporation - 21.0.2 - 21.0.2+13-58
+INFO:  Scanning classes from Java runtime current
+INFO:  Scanning classes from module java.base@21.0.2
+INFO:  Scanning classes from module java.compiler@21.0.2
+INFO:  Scanning classes from module java.datatransfer@21.0.2
+INFO:  Scanning classes from module java.desktop@21.0.2
+INFO:  Scanning classes from module java.instrument@21.0.2
+INFO:  Scanning classes from module java.logging@21.0.2
+INFO:  Scanning classes from module java.management@21.0.2
+INFO:  Scanning classes from module java.management.rmi@21.0.2
+INFO:  Scanning classes from module java.naming@21.0.2
+INFO:  Scanning classes from module java.net.http@21.0.2
+INFO:  Scanning classes from module java.prefs@21.0.2
+INFO:  Scanning classes from module java.rmi@21.0.2
+INFO:  Scanning classes from module java.scripting@21.0.2
+INFO:  Scanning classes from module java.se@21.0.2
+INFO:  Scanning classes from module java.security.jgss@21.0.2
+INFO:  Scanning classes from module java.security.sasl@21.0.2
+INFO:  Scanning classes from module java.smartcardio@21.0.2
+INFO:  Scanning classes from module java.sql@21.0.2
+INFO:  Scanning classes from module java.sql.rowset@21.0.2
+INFO:  Scanning classes from module java.transaction.xa@21.0.2
+INFO:  Scanning classes from module java.xml@21.0.2
+INFO:  Scanning classes from module java.xml.crypto@21.0.2
+INFO:  Scanning classes from module jdk.accessibility@21.0.2
+INFO:  Scanning classes from module jdk.attach@21.0.2
+INFO:  Scanning classes from module jdk.charsets@21.0.2
+INFO:  Scanning classes from module jdk.compiler@21.0.2
+INFO:  Scanning classes from module jdk.crypto.cryptoki@21.0.2
+INFO:  Scanning classes from module jdk.crypto.ec@21.0.2
+INFO:  Scanning classes from module jdk.dynalink@21.0.2
+INFO:  Scanning classes from module jdk.editpad@21.0.2
+INFO:  Scanning classes from module jdk.hotspot.agent@21.0.2
+INFO:  Scanning classes from module jdk.httpserver@21.0.2
+INFO:  Scanning classes from module jdk.incubator.vector@21.0.2
+INFO:  Scanning classes from module jdk.internal.ed@21.0.2
+INFO:  Scanning classes from module jdk.internal.jvmstat@21.0.2
+INFO:  Scanning classes from module jdk.internal.le@21.0.2
+INFO:  Scanning classes from module jdk.internal.opt@21.0.2
+INFO:  Scanning classes from module jdk.internal.vm.ci@21.0.2
+INFO:  Scanning classes from module jdk.internal.vm.compiler@21.0.2
+INFO:  Scanning classes from module jdk.internal.vm.compiler.management@21.0.2
+INFO:  Scanning classes from module jdk.jartool@21.0.2
+INFO:  Scanning classes from module jdk.javadoc@21.0.2
+INFO:  Scanning classes from module jdk.jcmd@21.0.2
+INFO:  Scanning classes from module jdk.jconsole@21.0.2
+INFO:  Scanning classes from module jdk.jdeps@21.0.2
+INFO:  Scanning classes from module jdk.jdi@21.0.2
+INFO:  Scanning classes from module jdk.jdwp.agent@21.0.2
+INFO:  Scanning classes from module jdk.jfr@21.0.2
+INFO:  Scanning classes from module jdk.jlink@21.0.2
+INFO:  Scanning classes from module jdk.jpackage@21.0.2
+INFO:  Scanning classes from module jdk.jshell@21.0.2
+INFO:  Scanning classes from module jdk.jsobject@21.0.2
+INFO:  Scanning classes from module jdk.jstatd@21.0.2
+INFO:  Scanning classes from module jdk.localedata@21.0.2
+INFO:  Scanning classes from module jdk.management@21.0.2
+INFO:  Scanning classes from module jdk.management.agent@21.0.2
+INFO:  Scanning classes from module jdk.management.jfr@21.0.2
+INFO:  Scanning classes from module jdk.naming.dns@21.0.2
+INFO:  Scanning classes from module jdk.naming.rmi@21.0.2
+INFO:  Scanning classes from module jdk.net@21.0.2
+INFO:  Scanning classes from module jdk.nio.mapmode@21.0.2
+INFO:  Scanning classes from module jdk.random@21.0.2
+INFO:  Scanning classes from module jdk.sctp@21.0.2
+INFO:  Scanning classes from module jdk.security.auth@21.0.2
+INFO:  Scanning classes from module jdk.security.jgss@21.0.2
+INFO:  Scanning classes from module jdk.unsupported@21.0.2
+INFO:  Scanning classes from module jdk.unsupported.desktop@21.0.2
+INFO:  Scanning classes from module jdk.xml.dom@21.0.2
+INFO:  Scanning classes from module jdk.zipfs@21.0.2
+INFO:  Scanning classes from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.performanceTesting.jar
+INFO:  Loading Class: com/intellij/lang/javascript/performanceTesting/JSBuildGistsCommand from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.performanceTesting.jar
+INFO:  Loading Class: com/intellij/lang/javascript/performanceTesting/JSCheckParseErrorsCommand from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.performanceTesting.jar
+INFO:  Loading Class: com/intellij/lang/javascript/performanceTesting/JSFindElementsCommand$onCompleted$$inlined$compareBy$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.performanceTesting.jar
+INFO:  Loading Class: com/intellij/lang/javascript/performanceTesting/JSFindElementsCommand$onCompleted$$inlined$thenBy$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.performanceTesting.jar
+INFO:  Loading Class: com/intellij/lang/javascript/performanceTesting/JSFindElementsCommand from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.performanceTesting.jar
+INFO:  Loading Class: com/intellij/lang/javascript/performanceTesting/JSFindIncorrectHighlightingCommand from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.performanceTesting.jar
+INFO:  Loading Class: com/intellij/lang/javascript/performanceTesting/JSPerformanceCommands from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.performanceTesting.jar
+INFO:  Loading Class: com/intellij/lang/javascript/performanceTesting/JSResolveReferencesCommand from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.performanceTesting.jar
+INFO:  Loading Class: com/intellij/lang/javascript/performanceTesting/JSResolveReferencesCommandBase$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.performanceTesting.jar
+INFO:  Loading Class: com/intellij/lang/javascript/performanceTesting/JSResolveReferencesCommandBase from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.performanceTesting.jar
+INFO:  Loading Class: com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand$_execute$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.performanceTesting.jar
+INFO:  Loading Class: com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand$_execute$2$1$1$1$1$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.performanceTesting.jar
+INFO:  Loading Class: com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand$_execute$2$1$1$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.performanceTesting.jar
+INFO:  Loading Class: com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand$_execute$2$1$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.performanceTesting.jar
+INFO:  Loading Class: com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand$_execute$2$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.performanceTesting.jar
+INFO:  Loading Class: com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand$_execute$2$2 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.performanceTesting.jar
+INFO:  Loading Class: com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand$_execute$2 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.performanceTesting.jar
+INFO:  Loading Class: com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.performanceTesting.jar
+INFO:  Loading Class: com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommandService from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.performanceTesting.jar
+INFO:  Loading Class: java/lang/invoke/MethodHandles$Lookup from module java.base@21.0.2
+INFO:  Loading Class: java/lang/invoke/MethodHandles from module java.base@21.0.2
+INFO:  Preprocessing class com/intellij/lang/javascript/performanceTesting/JSBuildGistsCommand
+INFO:  Preprocessing class com/intellij/lang/javascript/performanceTesting/JSCheckParseErrorsCommand
+INFO:  Preprocessing class com/intellij/lang/javascript/performanceTesting/JSFindElementsCommand$onCompleted$$inlined$compareBy$1
+INFO:  Preprocessing class com/intellij/lang/javascript/performanceTesting/JSFindElementsCommand$onCompleted$$inlined$thenBy$1
+INFO:     Loading Class: java/lang/Object from module java.base@21.0.2
+INFO:  Preprocessing class com/intellij/lang/javascript/performanceTesting/JSFindElementsCommand
+INFO:     Loading Class: java/util/Comparator from module java.base@21.0.2
+INFO:  Preprocessing class com/intellij/lang/javascript/performanceTesting/JSFindIncorrectHighlightingCommand
+INFO:  Preprocessing class com/intellij/lang/javascript/performanceTesting/JSPerformanceCommands
+INFO:  Preprocessing class com/intellij/lang/javascript/performanceTesting/JSResolveReferencesCommand
+INFO:  Preprocessing class com/intellij/lang/javascript/performanceTesting/JSResolveReferencesCommandBase
+INFO:  Preprocessing class com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommandService
+INFO:  Preprocessing class com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand
+INFO:           Loading Class: java/util/Collections from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:           Loading Class: java/util/List from module java.base@21.0.2
+INFO:           Loading Class: java/util/SequencedCollection from module java.base@21.0.2
+INFO:           Loading Class: java/util/Collection from module java.base@21.0.2
+INFO:  ... done
+INFO:           Loading Class: java/lang/Iterable from module java.base@21.0.2
+INFO:           Loading Class: java/lang/IllegalStateException from module java.base@21.0.2
+INFO:           Loading Class: java/lang/RuntimeException from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Exception from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Throwable from module java.base@21.0.2
+INFO:           Loading Class: java/io/Serializable from module java.base@21.0.2
+INFO:           Loading Class: java/lang/IllegalArgumentException from module java.base@21.0.2
+INFO:           Loading Class: java/util/ArrayList from module java.base@21.0.2
+INFO:           Loading Class: java/util/AbstractList from module java.base@21.0.2
+INFO:           Loading Class: java/util/AbstractCollection from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:           Loading Class: java/lang/String from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Comparable from module java.base@21.0.2
+INFO:           Loading Class: java/lang/CharSequence from module java.base@21.0.2
+INFO:           Loading Class: java/lang/constant/Constable from module java.base@21.0.2
+INFO:           Loading Class: java/lang/constant/ConstantDesc from module java.base@21.0.2
+INFO:           Loading Class: java/nio/file/Path from module java.base@21.0.2
+INFO:           Loading Class: java/io/IOException from module java.base@21.0.2
+INFO:           Loading Class: java/nio/file/Watchable from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+WARN:           Method invokeSuspend (Ljava/lang/Object;)Ljava/lang/Object; in class com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand$_execute$2$1$1$1 couldn't be decompiled.
+java.lang.IndexOutOfBoundsException: Index -1 out of bounds for length 0
+	at java.base/jdk.internal.util.Preconditions.outOfBounds(Preconditions.java:100)
+	at java.base/jdk.internal.util.Preconditions.outOfBoundsCheckIndex(Preconditions.java:106)
+	at java.base/jdk.internal.util.Preconditions.checkIndex(Preconditions.java:302)
+	at java.base/java.util.Objects.checkIndex(Objects.java:385)
+	at java.base/java.util.ArrayList.remove(ArrayList.java:551)
+	at org.jetbrains.java.decompiler.modules.decompiler.FinallyProcessor.removeExceptionInstructionsEx(FinallyProcessor.java:1065)
+	at org.jetbrains.java.decompiler.modules.decompiler.FinallyProcessor.verifyFinallyEx(FinallyProcessor.java:566)
+	at org.jetbrains.java.decompiler.modules.decompiler.FinallyProcessor.iterateGraph(FinallyProcessor.java:90)
+	at org.jetbrains.java.decompiler.main.rels.MethodProcessor.codeToJava(MethodProcessor.java:185)
+	at org.jetbrains.java.decompiler.main.rels.ClassWrapper.init(ClassWrapper.java:93)
+	at org.jetbrains.java.decompiler.main.ClassesProcessor.initWrappers(ClassesProcessor.java:579)
+	at org.jetbrains.java.decompiler.main.ClassesProcessor.initWrappers(ClassesProcessor.java:584)
+	at org.jetbrains.java.decompiler.main.ClassesProcessor.initWrappers(ClassesProcessor.java:584)
+	at org.jetbrains.java.decompiler.main.ClassesProcessor.initWrappers(ClassesProcessor.java:584)
+	at org.jetbrains.java.decompiler.main.ClassesProcessor.initWrappers(ClassesProcessor.java:584)
+	at org.jetbrains.java.decompiler.main.ClassesProcessor.processClass(ClassesProcessor.java:466)
+	at org.jetbrains.java.decompiler.main.Fernflower.processClass(Fernflower.java:192)
+	at org.jetbrains.java.decompiler.struct.ContextUnit.lambda$save$2(ContextUnit.java:197)
+	at java.base/java.util.concurrent.ForkJoinTask$AdaptedRunnableAction.exec(ForkJoinTask.java:1403)
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:387)
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1312)
+	at java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1843)
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1808)
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:188)
+INFO:  ... done
+INFO:  Decompiling class com/intellij/lang/javascript/performanceTesting/JSFindElementsCommand$onCompleted$$inlined$compareBy$1
+INFO:  Decompiling class com/intellij/lang/javascript/performanceTesting/JSBuildGistsCommand
+INFO:  Decompiling class com/intellij/lang/javascript/performanceTesting/JSFindElementsCommand
+INFO:  Decompiling class com/intellij/lang/javascript/performanceTesting/JSCheckParseErrorsCommand
+INFO:  Decompiling class com/intellij/lang/javascript/performanceTesting/JSFindElementsCommand$onCompleted$$inlined$thenBy$1
+INFO:  Decompiling class com/intellij/lang/javascript/performanceTesting/JSFindIncorrectHighlightingCommand
+INFO:  Decompiling class com/intellij/lang/javascript/performanceTesting/JSPerformanceCommands
+INFO:  Decompiling class com/intellij/lang/javascript/performanceTesting/JSResolveReferencesCommand
+INFO:  Decompiling class com/intellij/lang/javascript/performanceTesting/JSResolveReferencesCommandBase
+INFO:  Decompiling class com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand
+INFO:  Decompiling class com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommandService
+INFO:        Loading Class: java/util/Map from module java.base@21.0.2
+INFO:        Loading Class: java/util/RandomAccess from module java.base@21.0.2
+INFO:        Loading Class: java/lang/Cloneable from module java.base@21.0.2
+INFO:        Loading Class: java/lang/Integer from module java.base@21.0.2
+INFO:        Loading Class: java/lang/Number from module java.base@21.0.2
+INFO:        Loading Class: java/util/Iterator from module java.base@21.0.2
+INFO:        Loading Class: java/nio/file/Paths from module java.base@21.0.2
+INFO:        Loading Class: java/lang/Class from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+WARN:           Descriptor and signature parameter counts mismatch, attempting to correct: com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand$_execute$1 <init>(Lcom/intellij/openapi/vfs/VirtualFile;Lcom/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand;Lcom/intellij/openapi/project/Project;Ljava/util/List;[Lcom/intellij/openapi/vfs/VirtualFileVisitor$Option;)V
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:           Loading Class: java/lang/Boolean from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+WARN:           Descriptor and signature parameter counts mismatch, attempting to correct: com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand$_execute$2 <init>(Lcom/intellij/openapi/project/Project;Ljava/util/List;Lcom/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand;Lcom/intellij/openapi/vfs/VirtualFile;Lcom/intellij/openapi/ui/playback/PlaybackContext;Lkotlin/coroutines/Continuation;)V
+WARN:              Descriptor and signature parameter counts mismatch, attempting to correct: com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand$_execute$2$1 <init>(Ljava/util/List;Lcom/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand;Lcom/intellij/openapi/vfs/VirtualFile;Lcom/intellij/openapi/ui/playback/PlaybackContext;Lcom/intellij/openapi/project/Project;Lkotlin/coroutines/Continuation;)V
+WARN:                 Descriptor and signature parameter counts mismatch, attempting to correct: com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand$_execute$2$1$1 <init>(Ljava/util/List;Lcom/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand;Lcom/intellij/openapi/vfs/VirtualFile;Lcom/intellij/openapi/ui/playback/PlaybackContext;Lcom/intellij/openapi/project/Project;Lkotlin/coroutines/Continuation;)V
+WARN:                 Class null couldn't be written.
+java.lang.NullPointerException: Cannot invoke "org.jetbrains.java.decompiler.modules.decompiler.stats.Statement.getVarDefinitions()" because "stat" is null
+	at org.jetbrains.java.decompiler.modules.decompiler.vars.VarDefinitionHelper.iterateClashingNames(VarDefinitionHelper.java:1592)
+	at org.jetbrains.java.decompiler.modules.decompiler.vars.VarDefinitionHelper.iterateClashingExprent(VarDefinitionHelper.java:1891)
+	at org.jetbrains.java.decompiler.modules.decompiler.vars.VarDefinitionHelper.iterateClashingExprent(VarDefinitionHelper.java:2029)
+	at org.jetbrains.java.decompiler.modules.decompiler.vars.VarDefinitionHelper.iterateClashingExprent(VarDefinitionHelper.java:2029)
+	at org.jetbrains.java.decompiler.modules.decompiler.vars.VarDefinitionHelper.iterateClashingNames(VarDefinitionHelper.java:1619)
+	at org.jetbrains.java.decompiler.modules.decompiler.vars.VarDefinitionHelper.iterateClashingNames(VarDefinitionHelper.java:1739)
+	at org.jetbrains.java.decompiler.modules.decompiler.vars.VarDefinitionHelper.remapClashingNames(VarDefinitionHelper.java:1584)
+	at org.jetbrains.java.decompiler.modules.decompiler.vars.VarProcessor.rerunClashing(VarProcessor.java:99)
+	at org.jetbrains.java.decompiler.main.ClassWriter.invokeProcessors(ClassWriter.java:145)
+	at org.jetbrains.java.decompiler.main.ClassWriter.writeClass(ClassWriter.java:379)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.NewExprent.toJava(NewExprent.java:408)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.FunctionExprent.wrapOperandString(FunctionExprent.java:770)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.FunctionExprent.wrapOperandString(FunctionExprent.java:736)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.FunctionExprent.toJava(FunctionExprent.java:621)
+	at org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor.getCastedExprent(ExprProcessor.java:1054)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.InvocationExprent.appendParamList(InvocationExprent.java:1151)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.InvocationExprent.toJava(InvocationExprent.java:921)
+	at org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor.listToJava(ExprProcessor.java:925)
+	at org.jetbrains.java.decompiler.modules.decompiler.stats.BasicBlockStatement.toJava(BasicBlockStatement.java:87)
+	at org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor.jmpWrapper(ExprProcessor.java:860)
+	at org.jetbrains.java.decompiler.modules.decompiler.stats.DoStatement.toJava(DoStatement.java:149)
+	at org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor.jmpWrapper(ExprProcessor.java:860)
+	at org.jetbrains.java.decompiler.modules.decompiler.stats.SequenceStatement.toJava(SequenceStatement.java:107)
+	at org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor.jmpWrapper(ExprProcessor.java:860)
+	at org.jetbrains.java.decompiler.modules.decompiler.stats.SwitchStatement.toJava(SwitchStatement.java:184)
+	at org.jetbrains.java.decompiler.modules.decompiler.stats.RootStatement.toJava(RootStatement.java:36)
+	at org.jetbrains.java.decompiler.main.ClassWriter.writeMethod(ClassWriter.java:1351)
+	at org.jetbrains.java.decompiler.main.ClassWriter.writeClass(ClassWriter.java:492)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.NewExprent.toJava(NewExprent.java:408)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.FunctionExprent.wrapOperandString(FunctionExprent.java:770)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.FunctionExprent.wrapOperandString(FunctionExprent.java:736)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.FunctionExprent.toJava(FunctionExprent.java:621)
+	at org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor.getCastedExprent(ExprProcessor.java:1054)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.AssignmentExprent.toJava(AssignmentExprent.java:161)
+	at org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor.listToJava(ExprProcessor.java:925)
+	at org.jetbrains.java.decompiler.modules.decompiler.stats.BasicBlockStatement.toJava(BasicBlockStatement.java:87)
+	at org.jetbrains.java.decompiler.modules.decompiler.stats.IfStatement.toJava(IfStatement.java:200)
+	at org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor.jmpWrapper(ExprProcessor.java:860)
+	at org.jetbrains.java.decompiler.modules.decompiler.stats.SwitchStatement.toJava(SwitchStatement.java:184)
+	at org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor.jmpWrapper(ExprProcessor.java:860)
+	at org.jetbrains.java.decompiler.modules.decompiler.stats.SequenceStatement.toJava(SequenceStatement.java:107)
+	at org.jetbrains.java.decompiler.modules.decompiler.stats.RootStatement.toJava(RootStatement.java:36)
+	at org.jetbrains.java.decompiler.main.ClassWriter.writeMethod(ClassWriter.java:1351)
+	at org.jetbrains.java.decompiler.main.ClassWriter.writeClass(ClassWriter.java:492)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.NewExprent.toJava(NewExprent.java:408)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.FunctionExprent.wrapOperandString(FunctionExprent.java:770)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.FunctionExprent.wrapOperandString(FunctionExprent.java:736)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.FunctionExprent.toJava(FunctionExprent.java:621)
+	at org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor.getCastedExprent(ExprProcessor.java:1054)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.AssignmentExprent.toJava(AssignmentExprent.java:161)
+	at org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor.listToJava(ExprProcessor.java:925)
+	at org.jetbrains.java.decompiler.modules.decompiler.stats.BasicBlockStatement.toJava(BasicBlockStatement.java:87)
+	at org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor.jmpWrapper(ExprProcessor.java:860)
+	at org.jetbrains.java.decompiler.modules.decompiler.stats.CatchAllStatement.toJava(CatchAllStatement.java:123)
+	at org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor.jmpWrapper(ExprProcessor.java:860)
+	at org.jetbrains.java.decompiler.modules.decompiler.stats.SequenceStatement.toJava(SequenceStatement.java:107)
+	at org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor.jmpWrapper(ExprProcessor.java:860)
+	at org.jetbrains.java.decompiler.modules.decompiler.stats.SwitchStatement.toJava(SwitchStatement.java:184)
+	at org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor.jmpWrapper(ExprProcessor.java:860)
+	at org.jetbrains.java.decompiler.modules.decompiler.stats.SequenceStatement.toJava(SequenceStatement.java:107)
+	at org.jetbrains.java.decompiler.modules.decompiler.stats.RootStatement.toJava(RootStatement.java:36)
+	at org.jetbrains.java.decompiler.main.ClassWriter.writeMethod(ClassWriter.java:1351)
+	at org.jetbrains.java.decompiler.main.ClassWriter.writeClass(ClassWriter.java:492)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.NewExprent.toJava(NewExprent.java:408)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.FunctionExprent.wrapOperandString(FunctionExprent.java:770)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.FunctionExprent.wrapOperandString(FunctionExprent.java:736)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.FunctionExprent.toJava(FunctionExprent.java:621)
+	at org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor.getCastedExprent(ExprProcessor.java:1054)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.InvocationExprent.appendParamList(InvocationExprent.java:1151)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.InvocationExprent.toJava(InvocationExprent.java:921)
+	at org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor.getCastedExprent(ExprProcessor.java:1054)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.InvocationExprent.appendParamList(InvocationExprent.java:1151)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.InvocationExprent.toJava(InvocationExprent.java:921)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.FunctionExprent.wrapOperandString(FunctionExprent.java:770)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.FunctionExprent.wrapOperandString(FunctionExprent.java:736)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.FunctionExprent.toJava(FunctionExprent.java:621)
+	at org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor.getCastedExprent(ExprProcessor.java:1054)
+	at org.jetbrains.java.decompiler.modules.decompiler.exps.ExitExprent.toJava(ExitExprent.java:85)
+	at org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor.listToJava(ExprProcessor.java:925)
+	at org.jetbrains.java.decompiler.modules.decompiler.stats.BasicBlockStatement.toJava(BasicBlockStatement.java:87)
+	at org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor.jmpWrapper(ExprProcessor.java:860)
+	at org.jetbrains.java.decompiler.modules.decompiler.stats.IfStatement.toJava(IfStatement.java:258)
+	at org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor.jmpWrapper(ExprProcessor.java:860)
+	at org.jetbrains.java.decompiler.modules.decompiler.stats.IfStatement.toJava(IfStatement.java:258)
+	at org.jetbrains.java.decompiler.modules.decompiler.stats.RootStatement.toJava(RootStatement.java:36)
+	at org.jetbrains.java.decompiler.main.ClassWriter.writeMethod(ClassWriter.java:1351)
+	at org.jetbrains.java.decompiler.main.ClassWriter.writeClass(ClassWriter.java:492)
+	at org.jetbrains.java.decompiler.main.ClassesProcessor.writeClass(ClassesProcessor.java:521)
+	at org.jetbrains.java.decompiler.main.Fernflower.getClassContent(Fernflower.java:200)
+	at org.jetbrains.java.decompiler.struct.ContextUnit.lambda$save$3(ContextUnit.java:221)
+	at java.base/java.util.concurrent.ForkJoinTask$AdaptedRunnableAction.exec(ForkJoinTask.java:1403)
+	at java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:387)
+	at java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1312)
+	at java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1843)
+	at java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1808)
+	at java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:188)
+WARN:              Descriptor and signature parameter counts mismatch, attempting to correct: com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand$_execute$2$2 <init>(Lcom/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand;Lkotlin/coroutines/Continuation;)V
+WARN:              Descriptor and signature parameter counts mismatch, attempting to correct: com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand$_execute$2$2 <init>(Lcom/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand;Lkotlin/coroutines/Continuation;)V
+WARN:              Descriptor and signature parameter counts mismatch, attempting to correct: com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand$_execute$2$2 <init>(Lcom/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand;Lkotlin/coroutines/Continuation;)V
+WARN:              Descriptor and signature parameter counts mismatch, attempting to correct: com/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand$_execute$2$2 <init>(Lcom/intellij/lang/javascript/performanceTesting/VirtualFilesVisitorCommand;Lkotlin/coroutines/Continuation;)V
+INFO:  ... done
+
+
+============================================================

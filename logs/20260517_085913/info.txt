@@ -1,0 +1,31 @@
+============================================================
+DECOMPILATION RUN INFO
+============================================================
+
+Timestamp: 2026-05-17 08:59:13
+Run ID: 20260517_085913
+
+Command Line:
+  /home/ubuntu/.local/bin/java-decom -i /home/ubuntu/.gradle/caches/9.0.0/transforms/fe86177916735fd27e97c54af6b75426/transformed/ideaIC-2025.1.3/lib/app-client.jar -o /tmp/decom-platform --no-prefer-source -d vineflower
+
+Decompiler Configuration:
+  Name: vineflower
+  Path: /home/ubuntu/.local/share/uv/tools/java-decom/lib/python3.12/site-packages/java_decom/decompilers/vineflower/vineflower-1.12.0-slim.jar
+  JVM Args: -Xmx7G
+
+Source Download Configuration:
+  Enabled: True
+  Rate Limit: 5 req/s
+  Verify Timeout: 5s
+  Download Timeout: 30s
+
+  Force Decompile Patterns: 3 pattern(s)
+    - .*-SNAPSHOT\.jar$
+    - .*-internal-.*\.jar$
+    - ^mycompany-.*\.jar$
+
+Processing Configuration:
+  Threads: 8
+  Preserve Namespace: True
+
+============================================================

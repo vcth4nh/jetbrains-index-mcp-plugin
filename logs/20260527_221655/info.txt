@@ -1,0 +1,47 @@
+============================================================
+DECOMPILATION RUN INFO
+============================================================
+
+Timestamp: 2026-05-27 22:16:55
+Run ID: 20260527_221655
+
+Command Line:
+  /home/ubuntu/.local/bin/java-decom -i /tmp/php-goto/com/jetbrains/php/lang/actions/PhpGotoSuperMethodHandler.class -o /tmp/php-goto-src
+
+Decompiler Configuration:
+  Name: vineflower
+  Path: /home/ubuntu/.local/share/uv/tools/java-decom/lib/python3.12/site-packages/java_decom/decompilers/vineflower/vineflower-1.12.0-slim.jar
+  JVM Args: -Xmx7G
+
+Source Download Configuration:
+  Enabled: True
+  Rate Limit: 5 req/s
+  Verify Timeout: 5s
+  Download Timeout: 30s
+
+  Force Decompile Patterns: 3 pattern(s)
+    - .*-SNAPSHOT\.jar$
+    - .*-internal-.*\.jar$
+    - ^mycompany-.*\.jar$
+
+Processing Configuration:
+  Threads: 8
+  Preserve Namespace: True
+
+============================================================
+
+
+============================================================
+RUN SUMMARY
+============================================================
+
+Total Files Processed: 1
+Successfully Processed: 0
+  - Sources Downloaded: 0
+  - Decompiled: 0
+Failed: 1
+Skipped: 0
+
+Total time: 1
+Completed: 2026-05-27 22:16:56
+Log Directory: /home/ubuntu/dev/jetbrains-index-mcp-plugin/logs/20260527_221655

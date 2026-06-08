@@ -1,0 +1,441 @@
+============================================================
+DECOMPILATION LOG: lib/modules/intellij.javascript.langInjection.jar
+============================================================
+
+Timestamp: 2026-05-27 16:54:42
+Input Path: /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin
+Relative Path: lib/modules/intellij.javascript.langInjection.jar
+Status: SUCCESS
+Return Code: 0
+
+------------------------------------------------------------
+STDOUT:
+------------------------------------------------------------
+INFO:  Loaded 0 plugins
+INFO:  JVM info: Oracle Corporation - 21.0.2 - 21.0.2+13-58
+INFO:  Scanning classes from Java runtime current
+INFO:  Scanning classes from module java.base@21.0.2
+INFO:  Scanning classes from module java.compiler@21.0.2
+INFO:  Scanning classes from module java.datatransfer@21.0.2
+INFO:  Scanning classes from module java.desktop@21.0.2
+INFO:  Scanning classes from module java.instrument@21.0.2
+INFO:  Scanning classes from module java.logging@21.0.2
+INFO:  Scanning classes from module java.management@21.0.2
+INFO:  Scanning classes from module java.management.rmi@21.0.2
+INFO:  Scanning classes from module java.naming@21.0.2
+INFO:  Scanning classes from module java.net.http@21.0.2
+INFO:  Scanning classes from module java.prefs@21.0.2
+INFO:  Scanning classes from module java.rmi@21.0.2
+INFO:  Scanning classes from module java.scripting@21.0.2
+INFO:  Scanning classes from module java.se@21.0.2
+INFO:  Scanning classes from module java.security.jgss@21.0.2
+INFO:  Scanning classes from module java.security.sasl@21.0.2
+INFO:  Scanning classes from module java.smartcardio@21.0.2
+INFO:  Scanning classes from module java.sql@21.0.2
+INFO:  Scanning classes from module java.sql.rowset@21.0.2
+INFO:  Scanning classes from module java.transaction.xa@21.0.2
+INFO:  Scanning classes from module java.xml@21.0.2
+INFO:  Scanning classes from module java.xml.crypto@21.0.2
+INFO:  Scanning classes from module jdk.accessibility@21.0.2
+INFO:  Scanning classes from module jdk.attach@21.0.2
+INFO:  Scanning classes from module jdk.charsets@21.0.2
+INFO:  Scanning classes from module jdk.compiler@21.0.2
+INFO:  Scanning classes from module jdk.crypto.cryptoki@21.0.2
+INFO:  Scanning classes from module jdk.crypto.ec@21.0.2
+INFO:  Scanning classes from module jdk.dynalink@21.0.2
+INFO:  Scanning classes from module jdk.editpad@21.0.2
+INFO:  Scanning classes from module jdk.hotspot.agent@21.0.2
+INFO:  Scanning classes from module jdk.httpserver@21.0.2
+INFO:  Scanning classes from module jdk.incubator.vector@21.0.2
+INFO:  Scanning classes from module jdk.internal.ed@21.0.2
+INFO:  Scanning classes from module jdk.internal.jvmstat@21.0.2
+INFO:  Scanning classes from module jdk.internal.le@21.0.2
+INFO:  Scanning classes from module jdk.internal.opt@21.0.2
+INFO:  Scanning classes from module jdk.internal.vm.ci@21.0.2
+INFO:  Scanning classes from module jdk.internal.vm.compiler@21.0.2
+INFO:  Scanning classes from module jdk.internal.vm.compiler.management@21.0.2
+INFO:  Scanning classes from module jdk.jartool@21.0.2
+INFO:  Scanning classes from module jdk.javadoc@21.0.2
+INFO:  Scanning classes from module jdk.jcmd@21.0.2
+INFO:  Scanning classes from module jdk.jconsole@21.0.2
+INFO:  Scanning classes from module jdk.jdeps@21.0.2
+INFO:  Scanning classes from module jdk.jdi@21.0.2
+INFO:  Scanning classes from module jdk.jdwp.agent@21.0.2
+INFO:  Scanning classes from module jdk.jfr@21.0.2
+INFO:  Scanning classes from module jdk.jlink@21.0.2
+INFO:  Scanning classes from module jdk.jpackage@21.0.2
+INFO:  Scanning classes from module jdk.jshell@21.0.2
+INFO:  Scanning classes from module jdk.jsobject@21.0.2
+INFO:  Scanning classes from module jdk.jstatd@21.0.2
+INFO:  Scanning classes from module jdk.localedata@21.0.2
+INFO:  Scanning classes from module jdk.management@21.0.2
+INFO:  Scanning classes from module jdk.management.agent@21.0.2
+INFO:  Scanning classes from module jdk.management.jfr@21.0.2
+INFO:  Scanning classes from module jdk.naming.dns@21.0.2
+INFO:  Scanning classes from module jdk.naming.rmi@21.0.2
+INFO:  Scanning classes from module jdk.net@21.0.2
+INFO:  Scanning classes from module jdk.nio.mapmode@21.0.2
+INFO:  Scanning classes from module jdk.random@21.0.2
+INFO:  Scanning classes from module jdk.sctp@21.0.2
+INFO:  Scanning classes from module jdk.security.auth@21.0.2
+INFO:  Scanning classes from module jdk.security.jgss@21.0.2
+INFO:  Scanning classes from module jdk.unsupported@21.0.2
+INFO:  Scanning classes from module jdk.unsupported.desktop@21.0.2
+INFO:  Scanning classes from module jdk.xml.dom@21.0.2
+INFO:  Scanning classes from module jdk.zipfs@21.0.2
+INFO:  Scanning classes from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/HtmlUrlPathReferenceAsFileReferenceProvider from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/HtmlUrlPathReferenceAsFileReferenceProviderKt from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/HtmlUrlPathReferenceContributor$OpenInBrowserUrlPathReferenceProvider from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/HtmlUrlPathReferenceContributor from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/HttpClientIndexingHandler from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/HttpClientIndexingHandlerKt from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/JSPartiallyKnownStringUtilsKt$flattenJsBinaryExpression$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/JSPartiallyKnownStringUtilsKt from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/JSUrlParameterIndexingHandler from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/JSUrlParameterIndexingHandlerKt from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/JSUrlPathReferenceContributor$httpRequestWithContext$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/JSUrlPathReferenceContributor$jsArgumentForUrlParameter$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/JSUrlPathReferenceContributor$registerReferenceProviders$3$accepts$$inlined$filterIsInstance$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/JSUrlPathReferenceContributor$registerReferenceProviders$3 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/JSUrlPathReferenceContributor from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/JSUrlPathReferenceContributorKt from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/JSUrlPathReferenceProvider$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/JSUrlPathReferenceProvider from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/JSUrlPathReferenceProviderKt from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/JSWebSocketUrlPathReferenceContributor from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/JavaScriptHttpBodyCompletionContributor from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/JsRequestBodyAutoPopupHandler from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/JsRequestBodyAutoPopupHandlerKt from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/JsRequestBodyDetectionKt$findRequestBodyDeclaration$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/JsRequestBodyDetectionKt$findRequestBodyDeclaration$2 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/JsRequestBodyDetectionKt from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/RequestBodyDeclaration from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/RequestBodyParentsWalker$findRootSkippingStringify$unwrappers$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/RequestBodyParentsWalker$findRootSkippingStringify$unwrappers$2 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/RequestBodyParentsWalker$findRootSkippingStringify$unwrappers$3 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/RequestBodyParentsWalker$findRootSkippingStringify$unwrappers$4 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/RequestBodyParentsWalker$findRootSkippingStringify$unwrappers$5 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/RequestBodyParentsWalker$findRootSkippingStringify$unwrappers$6 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/RequestBodyParentsWalker from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/client/generator/FetchClientGenerator$Body from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/client/generator/FetchClientGenerator$MethodBuilder from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/client/generator/FetchClientGenerator$Parameter from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/client/generator/FetchClientGenerator$WhenMappings from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/client/generator/FetchClientGenerator from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/client/generator/FetchClientGeneratorKt from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/express/ExpressEndpointsProvider from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/express/ExpressEndpointsProviderKt from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/express/ExpressFrameworkHandler$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/express/ExpressFrameworkHandler from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/express/ExpressFrameworkUrlPathSpecification$parser$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/express/ExpressFrameworkUrlPathSpecification from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/express/ExpressMapping from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/express/ExpressModel from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/express/ExpressUrlResolver$Factory from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/express/ExpressUrlResolver from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/express/ExpressUrlTargetInfo from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/nestjs/NestJSController from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/nestjs/NestJSEndpointsAvailabilityProvider from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/nestjs/NestJSEndpointsKt$getMappingDecorator$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/nestjs/NestJSEndpointsKt from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/nestjs/NestJSEndpointsProvider from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/nestjs/NestJSIndexingHandler from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/nestjs/NestJSIndexingHandlerKt from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/nestjs/NestJSMapping from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/nestjs/NestJSMethodDecorator$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/nestjs/NestJSMethodDecorator from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/nestjs/NestJSUrlResolver$Factory from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/nestjs/NestJSUrlResolver$resolve$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/nestjs/NestJSUrlResolver$resolve$2 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/nestjs/NestJSUrlResolver from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/javascript/microservices/nestjs/NestJSUrlTargetInfo from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/plugins/intelliLang/inject/JSAnnotateInjectionWithCommentIntentionAction from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/plugins/intelliLang/inject/JSCommentInjector from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/plugins/intelliLang/inject/JSConfigurationInjector from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/plugins/intelliLang/inject/JSDontFormatInjectionAction from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/plugins/intelliLang/inject/JSInjection$Priority from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/plugins/intelliLang/inject/JSInjection from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/plugins/intelliLang/inject/JSInjectorBase$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/plugins/intelliLang/inject/JSInjectorBase from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/plugins/intelliLang/inject/JSLanguageInjectionSupport$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/plugins/intelliLang/inject/JSLanguageInjectionSupport$2 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/plugins/intelliLang/inject/JSLanguageInjectionSupport from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/plugins/intelliLang/inject/JSTaggedLiteralInjection from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: com/intellij/plugins/intelliLang/inject/JSTaggedLiteralPanel from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.langInjection.jar
+INFO:  Loading Class: java/util/Map$Entry from module java.base@21.0.2
+INFO:  Loading Class: java/util/Map from module java.base@21.0.2
+INFO:  Loading Class: java/lang/invoke/MethodHandles$Lookup from module java.base@21.0.2
+INFO:  Loading Class: java/lang/invoke/MethodHandles from module java.base@21.0.2
+INFO:  Preprocessing class com/intellij/javascript/microservices/HtmlUrlPathReferenceAsFileReferenceProviderKt
+INFO:  Preprocessing class com/intellij/javascript/microservices/HtmlUrlPathReferenceAsFileReferenceProvider
+INFO:     Loading Class: java/lang/Object from module java.base@21.0.2
+INFO:  Preprocessing class com/intellij/javascript/microservices/HttpClientIndexingHandler
+INFO:  Preprocessing class com/intellij/javascript/microservices/JSPartiallyKnownStringUtilsKt
+INFO:  Preprocessing class com/intellij/javascript/microservices/HtmlUrlPathReferenceContributor
+INFO:  Preprocessing class com/intellij/javascript/microservices/HttpClientIndexingHandlerKt
+INFO:  Preprocessing class com/intellij/javascript/microservices/JSUrlParameterIndexingHandler
+INFO:  Preprocessing class com/intellij/javascript/microservices/JSUrlParameterIndexingHandlerKt
+INFO:  Preprocessing class com/intellij/javascript/microservices/JSUrlPathReferenceContributor$registerReferenceProviders$3$accepts$$inlined$filterIsInstance$1
+INFO:  Preprocessing class com/intellij/javascript/microservices/JSUrlPathReferenceContributor
+INFO:  Preprocessing class com/intellij/javascript/microservices/JSUrlPathReferenceContributorKt
+INFO:  Preprocessing class com/intellij/javascript/microservices/JSUrlPathReferenceProvider
+INFO:  Preprocessing class com/intellij/javascript/microservices/JSUrlPathReferenceProviderKt
+INFO:  Preprocessing class com/intellij/javascript/microservices/JSWebSocketUrlPathReferenceContributor
+INFO:  Preprocessing class com/intellij/javascript/microservices/JavaScriptHttpBodyCompletionContributor
+INFO:  Preprocessing class com/intellij/javascript/microservices/JsRequestBodyAutoPopupHandler
+INFO:  Preprocessing class com/intellij/javascript/microservices/JsRequestBodyAutoPopupHandlerKt
+INFO:  Preprocessing class com/intellij/javascript/microservices/JsRequestBodyDetectionKt
+INFO:  Preprocessing class com/intellij/javascript/microservices/RequestBodyDeclaration
+INFO:  Preprocessing class com/intellij/javascript/microservices/RequestBodyParentsWalker
+INFO:  Preprocessing class com/intellij/javascript/microservices/client/generator/FetchClientGenerator
+INFO:  Preprocessing class com/intellij/javascript/microservices/client/generator/FetchClientGeneratorKt
+INFO:  Preprocessing class com/intellij/javascript/microservices/express/ExpressEndpointsProviderKt
+INFO:  Preprocessing class com/intellij/javascript/microservices/express/ExpressEndpointsProvider
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/microservices/express/ExpressFrameworkHandler
+INFO:           Loading Class: java/lang/String from module java.base@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/microservices/express/ExpressFrameworkUrlPathSpecification
+INFO:           Loading Class: java/io/Serializable from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Comparable from module java.base@21.0.2
+INFO:           Loading Class: java/lang/CharSequence from module java.base@21.0.2
+INFO:           Loading Class: java/lang/constant/Constable from module java.base@21.0.2
+INFO:           Loading Class: java/lang/constant/ConstantDesc from module java.base@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/microservices/express/ExpressMapping
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/microservices/express/ExpressModel
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/microservices/express/ExpressUrlResolver
+INFO:           Loading Class: java/util/Collection from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Iterable from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Appendable from module java.base@21.0.2
+INFO:           Loading Class: java/lang/StringBuilder from module java.base@21.0.2
+INFO:           Loading Class: java/util/List from module java.base@21.0.2
+INFO:           Loading Class: java/util/SequencedCollection from module java.base@21.0.2
+INFO:           Loading Class: java/lang/AbstractStringBuilder from module java.base@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/microservices/express/ExpressUrlTargetInfo
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/microservices/nestjs/NestJSController
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/microservices/nestjs/NestJSEndpointsAvailabilityProvider
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/microservices/nestjs/NestJSEndpointsKt
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/microservices/nestjs/NestJSEndpointsProvider
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/microservices/nestjs/NestJSIndexingHandler
+INFO:  ... done
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/microservices/nestjs/NestJSIndexingHandlerKt
+INFO:  Preprocessing class com/intellij/javascript/microservices/nestjs/NestJSMapping
+INFO:           Loading Class: java/util/ArrayList from module java.base@21.0.2
+INFO:           Loading Class: java/util/AbstractList from module java.base@21.0.2
+INFO:           Loading Class: java/util/AbstractCollection from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Character from module java.base@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/microservices/nestjs/NestJSMethodDecorator
+INFO:     Loading Class: java/lang/Enum from module java.base@21.0.2
+INFO:  ... done
+INFO:           Loading Class: java/util/Set from module java.base@21.0.2
+INFO:  Preprocessing class com/intellij/javascript/microservices/nestjs/NestJSUrlResolver
+INFO:           Loading Class: javax/swing/Icon from module java.desktop@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/microservices/nestjs/NestJSUrlTargetInfo
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/plugins/intelliLang/inject/JSAnnotateInjectionWithCommentIntentionAction
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/plugins/intelliLang/inject/JSCommentInjector
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/plugins/intelliLang/inject/JSConfigurationInjector
+INFO:           Loading Class: java/lang/Integer from module java.base@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/plugins/intelliLang/inject/JSDontFormatInjectionAction
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/plugins/intelliLang/inject/JSInjection
+INFO:  ... done
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/plugins/intelliLang/inject/JSLanguageInjectionSupport
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/plugins/intelliLang/inject/JSTaggedLiteralInjection
+INFO:  Preprocessing class com/intellij/plugins/intelliLang/inject/JSInjectorBase
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/plugins/intelliLang/inject/JSTaggedLiteralPanel
+INFO:  ... done
+INFO:  ... done
+INFO:           Loading Class: java/lang/IllegalArgumentException from module java.base@21.0.2
+INFO:           Loading Class: java/lang/RuntimeException from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Exception from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Throwable from module java.base@21.0.2
+INFO:           Loading Class: java/lang/IllegalStateException from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:           Loading Class: java/lang/Boolean from module java.base@21.0.2
+INFO:           Loading Class: java/awt/Component from module java.desktop@21.0.2
+INFO:           Loading Class: java/awt/image/ImageObserver from module java.desktop@21.0.2
+INFO:           Loading Class: java/awt/MenuContainer from module java.desktop@21.0.2
+INFO:           Loading Class: javax/swing/JPanel from module java.desktop@21.0.2
+INFO:           Loading Class: javax/swing/JComponent from module java.desktop@21.0.2
+INFO:           Loading Class: java/awt/Container from module java.desktop@21.0.2
+INFO:  ... done
+INFO:           Loading Class: javax/swing/JLabel from module java.desktop@21.0.2
+INFO:  ... done
+INFO:           Loading Class: javax/swing/TransferHandler$HasGetTransferHandler from module java.desktop@21.0.2
+INFO:           Loading Class: javax/swing/SwingConstants from module java.desktop@21.0.2
+INFO:           Loading Class: javax/accessibility/Accessible from module java.desktop@21.0.2
+INFO:  ... done
+INFO:           Loading Class: java/util/Iterator from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:           Loading Class: java/util/Locale from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Cloneable from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/microservices/HtmlUrlPathReferenceAsFileReferenceProvider
+INFO:  Decompiling class com/intellij/javascript/microservices/HtmlUrlPathReferenceAsFileReferenceProviderKt
+INFO:  Decompiling class com/intellij/javascript/microservices/HttpClientIndexingHandler
+INFO:  Decompiling class com/intellij/javascript/microservices/HttpClientIndexingHandlerKt
+INFO:  Decompiling class com/intellij/javascript/microservices/JSPartiallyKnownStringUtilsKt
+INFO:  Decompiling class com/intellij/javascript/microservices/JSUrlParameterIndexingHandler
+INFO:  Decompiling class com/intellij/javascript/microservices/JSUrlParameterIndexingHandlerKt
+INFO:  Decompiling class com/intellij/javascript/microservices/HtmlUrlPathReferenceContributor
+INFO:  Decompiling class com/intellij/javascript/microservices/JSUrlPathReferenceContributor$registerReferenceProviders$3$accepts$$inlined$filterIsInstance$1
+INFO:  Decompiling class com/intellij/javascript/microservices/JSUrlPathReferenceContributor
+INFO:  Decompiling class com/intellij/javascript/microservices/JSUrlPathReferenceContributorKt
+INFO:  Decompiling class com/intellij/javascript/microservices/JSUrlPathReferenceProvider
+INFO:  Decompiling class com/intellij/javascript/microservices/JSUrlPathReferenceProviderKt
+INFO:  Decompiling class com/intellij/javascript/microservices/JSWebSocketUrlPathReferenceContributor
+INFO:  Decompiling class com/intellij/javascript/microservices/JavaScriptHttpBodyCompletionContributor
+INFO:  Decompiling class com/intellij/javascript/microservices/JsRequestBodyAutoPopupHandler
+INFO:  Decompiling class com/intellij/javascript/microservices/JsRequestBodyAutoPopupHandlerKt
+INFO:  Decompiling class com/intellij/javascript/microservices/JsRequestBodyDetectionKt
+INFO:  Decompiling class com/intellij/javascript/microservices/RequestBodyDeclaration
+INFO:  Decompiling class com/intellij/javascript/microservices/RequestBodyParentsWalker
+INFO:  Decompiling class com/intellij/javascript/microservices/client/generator/FetchClientGenerator
+INFO:  Decompiling class com/intellij/javascript/microservices/client/generator/FetchClientGeneratorKt
+INFO:  Decompiling class com/intellij/javascript/microservices/express/ExpressEndpointsProvider
+INFO:  Decompiling class com/intellij/javascript/microservices/express/ExpressEndpointsProviderKt
+INFO:        Loading Class: java/util/RandomAccess from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:        Loading Class: java/util/LinkedHashMap from module java.base@21.0.2
+INFO:  Decompiling class com/intellij/javascript/microservices/express/ExpressFrameworkHandler
+INFO:        Loading Class: java/util/SequencedMap from module java.base@21.0.2
+INFO:        Loading Class: java/util/HashMap from module java.base@21.0.2
+INFO:  Decompiling class com/intellij/javascript/microservices/express/ExpressFrameworkUrlPathSpecification
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/microservices/express/ExpressUrlTargetInfo
+INFO:        Loading Class: java/util/AbstractMap from module java.base@21.0.2
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/microservices/express/ExpressMapping
+INFO:  Decompiling class com/intellij/javascript/microservices/nestjs/NestJSController
+INFO:        Loading Class: java/lang/Number from module java.base@21.0.2
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/microservices/nestjs/NestJSEndpointsAvailabilityProvider
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/microservices/nestjs/NestJSEndpointsKt
+INFO:  Decompiling class com/intellij/javascript/microservices/express/ExpressModel
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/microservices/nestjs/NestJSEndpointsProvider
+INFO:  Decompiling class com/intellij/javascript/microservices/express/ExpressUrlResolver
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/microservices/nestjs/NestJSIndexingHandler
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/microservices/nestjs/NestJSIndexingHandlerKt
+INFO:        Loading Class: java/util/Arrays from module java.base@21.0.2
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/microservices/nestjs/NestJSMapping
+INFO:  ... done
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/microservices/nestjs/NestJSMethodDecorator
+INFO:  Decompiling class com/intellij/javascript/microservices/nestjs/NestJSUrlResolver
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/microservices/nestjs/NestJSUrlTargetInfo
+INFO:  ... done
+INFO:  Decompiling class com/intellij/plugins/intelliLang/inject/JSAnnotateInjectionWithCommentIntentionAction
+INFO:  ... done
+INFO:  ... done
+INFO:  Decompiling class com/intellij/plugins/intelliLang/inject/JSCommentInjector
+INFO:  ... done
+INFO:  Decompiling class com/intellij/plugins/intelliLang/inject/JSConfigurationInjector
+INFO:  ... done
+INFO:  ... done
+INFO:        Loading Class: java/util/Comparator from module java.base@21.0.2
+INFO:  ... done
+INFO:  Decompiling class com/intellij/plugins/intelliLang/inject/JSInjection
+INFO:        Loading Class: java/util/function/Function from module java.base@21.0.2
+INFO:  Decompiling class com/intellij/plugins/intelliLang/inject/JSDontFormatInjectionAction
+INFO:  ... done
+INFO:  Decompiling class com/intellij/plugins/intelliLang/inject/JSInjectorBase
+INFO:  Decompiling class com/intellij/plugins/intelliLang/inject/JSLanguageInjectionSupport
+INFO:        Loading Class: java/lang/Runnable from module java.base@21.0.2
+INFO:  Decompiling class com/intellij/plugins/intelliLang/inject/JSTaggedLiteralInjection
+INFO:        Loading Class: java/util/Objects from module java.base@21.0.2
+INFO:  ... done
+INFO:  Decompiling class com/intellij/plugins/intelliLang/inject/JSTaggedLiteralPanel
+INFO:        Loading Class: java/lang/Class from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+WARN:           Descriptor and signature parameter counts mismatch, attempting to correct: com/intellij/javascript/microservices/JSUrlPathReferenceContributor$httpRequestWithContext$1 <init>(Ljava/lang/String;Ljava/lang/String;Lcom/intellij/javascript/microservices/JSUrlPathReferenceContributor;Ljava/util/List;)V
+INFO:        Loading Class: java/awt/Insets from module java.desktop@21.0.2
+INFO:  ... done
+INFO:        Loading Class: javax/swing/border/TitledBorder from module java.desktop@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:        Loading Class: java/util/Collections from module java.base@21.0.2
+INFO:  ... done
+INFO:        Loading Class: javax/swing/border/AbstractBorder from module java.desktop@21.0.2
+INFO:  ... done
+INFO:        Loading Class: java/util/function/BiConsumer from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:        Loading Class: java/awt/Dimension from module java.desktop@21.0.2
+INFO:  ... done
+INFO:  ... done
+WARN:           Descriptor and signature parameter counts mismatch, attempting to correct: com/intellij/javascript/microservices/JSPartiallyKnownStringUtilsKt$flattenJsBinaryExpression$1 <init>(Lcom/intellij/lang/javascript/psi/JSBinaryExpression;Lkotlin/coroutines/Continuation;)V
+INFO:        Loading Class: java/util/LinkedHashSet from module java.base@21.0.2
+INFO:        Loading Class: java/util/SequencedSet from module java.base@21.0.2
+INFO:        Loading Class: java/util/HashSet from module java.base@21.0.2
+INFO:        Loading Class: java/util/AbstractSet from module java.base@21.0.2
+INFO:        Loading Class: javax/swing/JTextField from module java.desktop@21.0.2
+INFO:        Loading Class: javax/swing/text/JTextComponent from module java.desktop@21.0.2
+INFO:        Loading Class: javax/swing/Scrollable from module java.desktop@21.0.2
+INFO:  ... done
+INFO:        Loading Class: java/lang/ClassLoader from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:        Loading Class: java/lang/reflect/Method from module java.base@21.0.2
+INFO:  ... done
+INFO:        Loading Class: java/util/ResourceBundle from module java.base@21.0.2
+INFO:  ... done
+INFO:        Loading Class: java/lang/StringBuffer from module java.base@21.0.2
+INFO:        Loading Class: java/util/function/Predicate from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+
+
+============================================================

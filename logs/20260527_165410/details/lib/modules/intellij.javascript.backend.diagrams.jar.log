@@ -1,0 +1,237 @@
+============================================================
+DECOMPILATION LOG: lib/modules/intellij.javascript.backend.diagrams.jar
+============================================================
+
+Timestamp: 2026-05-27 16:57:27
+Input Path: /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin
+Relative Path: lib/modules/intellij.javascript.backend.diagrams.jar
+Status: SUCCESS
+Return Code: 0
+
+------------------------------------------------------------
+STDOUT:
+------------------------------------------------------------
+INFO:  Loaded 0 plugins
+INFO:  JVM info: Oracle Corporation - 21.0.2 - 21.0.2+13-58
+INFO:  Scanning classes from Java runtime current
+INFO:  Scanning classes from module java.base@21.0.2
+INFO:  Scanning classes from module java.compiler@21.0.2
+INFO:  Scanning classes from module java.datatransfer@21.0.2
+INFO:  Scanning classes from module java.desktop@21.0.2
+INFO:  Scanning classes from module java.instrument@21.0.2
+INFO:  Scanning classes from module java.logging@21.0.2
+INFO:  Scanning classes from module java.management@21.0.2
+INFO:  Scanning classes from module java.management.rmi@21.0.2
+INFO:  Scanning classes from module java.naming@21.0.2
+INFO:  Scanning classes from module java.net.http@21.0.2
+INFO:  Scanning classes from module java.prefs@21.0.2
+INFO:  Scanning classes from module java.rmi@21.0.2
+INFO:  Scanning classes from module java.scripting@21.0.2
+INFO:  Scanning classes from module java.se@21.0.2
+INFO:  Scanning classes from module java.security.jgss@21.0.2
+INFO:  Scanning classes from module java.security.sasl@21.0.2
+INFO:  Scanning classes from module java.smartcardio@21.0.2
+INFO:  Scanning classes from module java.sql@21.0.2
+INFO:  Scanning classes from module java.sql.rowset@21.0.2
+INFO:  Scanning classes from module java.transaction.xa@21.0.2
+INFO:  Scanning classes from module java.xml@21.0.2
+INFO:  Scanning classes from module java.xml.crypto@21.0.2
+INFO:  Scanning classes from module jdk.accessibility@21.0.2
+INFO:  Scanning classes from module jdk.attach@21.0.2
+INFO:  Scanning classes from module jdk.charsets@21.0.2
+INFO:  Scanning classes from module jdk.compiler@21.0.2
+INFO:  Scanning classes from module jdk.crypto.cryptoki@21.0.2
+INFO:  Scanning classes from module jdk.crypto.ec@21.0.2
+INFO:  Scanning classes from module jdk.dynalink@21.0.2
+INFO:  Scanning classes from module jdk.editpad@21.0.2
+INFO:  Scanning classes from module jdk.hotspot.agent@21.0.2
+INFO:  Scanning classes from module jdk.httpserver@21.0.2
+INFO:  Scanning classes from module jdk.incubator.vector@21.0.2
+INFO:  Scanning classes from module jdk.internal.ed@21.0.2
+INFO:  Scanning classes from module jdk.internal.jvmstat@21.0.2
+INFO:  Scanning classes from module jdk.internal.le@21.0.2
+INFO:  Scanning classes from module jdk.internal.opt@21.0.2
+INFO:  Scanning classes from module jdk.internal.vm.ci@21.0.2
+INFO:  Scanning classes from module jdk.internal.vm.compiler@21.0.2
+INFO:  Scanning classes from module jdk.internal.vm.compiler.management@21.0.2
+INFO:  Scanning classes from module jdk.jartool@21.0.2
+INFO:  Scanning classes from module jdk.javadoc@21.0.2
+INFO:  Scanning classes from module jdk.jcmd@21.0.2
+INFO:  Scanning classes from module jdk.jconsole@21.0.2
+INFO:  Scanning classes from module jdk.jdeps@21.0.2
+INFO:  Scanning classes from module jdk.jdi@21.0.2
+INFO:  Scanning classes from module jdk.jdwp.agent@21.0.2
+INFO:  Scanning classes from module jdk.jfr@21.0.2
+INFO:  Scanning classes from module jdk.jlink@21.0.2
+INFO:  Scanning classes from module jdk.jpackage@21.0.2
+INFO:  Scanning classes from module jdk.jshell@21.0.2
+INFO:  Scanning classes from module jdk.jsobject@21.0.2
+INFO:  Scanning classes from module jdk.jstatd@21.0.2
+INFO:  Scanning classes from module jdk.localedata@21.0.2
+INFO:  Scanning classes from module jdk.management@21.0.2
+INFO:  Scanning classes from module jdk.management.agent@21.0.2
+INFO:  Scanning classes from module jdk.management.jfr@21.0.2
+INFO:  Scanning classes from module jdk.naming.dns@21.0.2
+INFO:  Scanning classes from module jdk.naming.rmi@21.0.2
+INFO:  Scanning classes from module jdk.net@21.0.2
+INFO:  Scanning classes from module jdk.nio.mapmode@21.0.2
+INFO:  Scanning classes from module jdk.random@21.0.2
+INFO:  Scanning classes from module jdk.sctp@21.0.2
+INFO:  Scanning classes from module jdk.security.auth@21.0.2
+INFO:  Scanning classes from module jdk.security.jgss@21.0.2
+INFO:  Scanning classes from module jdk.unsupported@21.0.2
+INFO:  Scanning classes from module jdk.unsupported.desktop@21.0.2
+INFO:  Scanning classes from module jdk.xml.dom@21.0.2
+INFO:  Scanning classes from module jdk.zipfs@21.0.2
+INFO:  Scanning classes from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/ES6ModuleDataNode from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/ImportedData from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSDiagramColorManager from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSModuleConnectionProvider$Link from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSModuleConnectionProvider from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSModuleDependencyData from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSModulesDiagramProvider$1$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSModulesDiagramProvider$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSModulesDiagramProvider$2 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSModulesDiagramProvider$3$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSModulesDiagramProvider$3 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSModulesDiagramProvider$4$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSModulesDiagramProvider$4 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSModulesDiagramProvider$Holder from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSModulesDiagramProvider$MyEditSourceAction from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSModulesDiagramProvider from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSModulesDiagramUtils$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSModulesDiagramUtils$ChildData from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSModulesDiagramUtils from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSModulesDiagramVfsResolver from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSModulesVisibilityManager from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSStructuralDiagramItem from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSStructuralDiagramModel$CachedColorGenerator from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSStructuralDiagramModel from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSStructuralUiEdge from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/JSStructuralUiNode from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/Rainbow$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/Rainbow$ColorGenerator from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/Rainbow$ColorGroup from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: com/intellij/lang/javascript/modules/diagram/Rainbow from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.backend.diagrams.jar
+INFO:  Loading Class: java/util/Map$Entry from module java.base@21.0.2
+INFO:  Loading Class: java/util/Map from module java.base@21.0.2
+INFO:  Loading Class: java/lang/invoke/MethodHandles$Lookup from module java.base@21.0.2
+INFO:  Loading Class: java/lang/invoke/MethodHandles from module java.base@21.0.2
+INFO:  Preprocessing class com/intellij/lang/javascript/modules/diagram/ES6ModuleDataNode
+INFO:  Preprocessing class com/intellij/lang/javascript/modules/diagram/JSModuleConnectionProvider
+INFO:  Preprocessing class com/intellij/lang/javascript/modules/diagram/ImportedData
+INFO:  Preprocessing class com/intellij/lang/javascript/modules/diagram/JSModuleDependencyData
+INFO:  Preprocessing class com/intellij/lang/javascript/modules/diagram/JSDiagramColorManager
+INFO:     Loading Class: java/lang/Object from module java.base@21.0.2
+INFO:  Preprocessing class com/intellij/lang/javascript/modules/diagram/JSModulesDiagramProvider
+INFO:  Preprocessing class com/intellij/lang/javascript/modules/diagram/JSModulesDiagramUtils
+INFO:  Preprocessing class com/intellij/lang/javascript/modules/diagram/JSModulesDiagramVfsResolver
+INFO:     Loading Class: java/lang/Record from module java.base@21.0.2
+INFO:  Preprocessing class com/intellij/lang/javascript/modules/diagram/JSModulesVisibilityManager
+INFO:  Preprocessing class com/intellij/lang/javascript/modules/diagram/JSStructuralDiagramItem
+INFO:  Preprocessing class com/intellij/lang/javascript/modules/diagram/JSStructuralDiagramModel
+INFO:  Preprocessing class com/intellij/lang/javascript/modules/diagram/JSStructuralUiEdge
+INFO:  Preprocessing class com/intellij/lang/javascript/modules/diagram/JSStructuralUiNode
+INFO:  Preprocessing class com/intellij/lang/javascript/modules/diagram/Rainbow
+INFO:     Loading Class: java/lang/Enum from module java.base@21.0.2
+INFO:     Loading Class: java/lang/constant/Constable from module java.base@21.0.2
+INFO:     Loading Class: java/lang/Comparable from module java.base@21.0.2
+INFO:     Loading Class: java/io/Serializable from module java.base@21.0.2
+INFO:           Loading Class: java/util/ArrayList from module java.base@21.0.2
+INFO:           Loading Class: java/util/AbstractList from module java.base@21.0.2
+INFO:           Loading Class: java/util/AbstractCollection from module java.base@21.0.2
+INFO:           Loading Class: java/util/Collection from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Iterable from module java.base@21.0.2
+INFO:           Loading Class: java/util/HashSet from module java.base@21.0.2
+INFO:           Loading Class: java/util/AbstractSet from module java.base@21.0.2
+INFO:           Loading Class: java/util/HashMap from module java.base@21.0.2
+INFO:           Loading Class: java/util/AbstractMap from module java.base@21.0.2
+INFO:           Loading Class: java/util/TreeSet from module java.base@21.0.2
+INFO:           Loading Class: java/util/Set from module java.base@21.0.2
+INFO:           Loading Class: java/lang/IllegalStateException from module java.base@21.0.2
+INFO:           Loading Class: java/lang/RuntimeException from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Exception from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Throwable from module java.base@21.0.2
+INFO:           Loading Class: java/lang/IllegalArgumentException from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:           Loading Class: javax/swing/JList from module java.desktop@21.0.2
+INFO:           Loading Class: javax/swing/JComponent from module java.desktop@21.0.2
+INFO:           Loading Class: java/awt/Container from module java.desktop@21.0.2
+INFO:           Loading Class: java/awt/Component from module java.desktop@21.0.2
+INFO:  ... done
+INFO:           Loading Class: java/awt/image/ImageObserver from module java.desktop@21.0.2
+INFO:           Loading Class: java/awt/MenuContainer from module java.desktop@21.0.2
+INFO:  ... done
+INFO:           Loading Class: javax/swing/TransferHandler$HasGetTransferHandler from module java.desktop@21.0.2
+INFO:           Loading Class: javax/swing/Scrollable from module java.desktop@21.0.2
+INFO:           Loading Class: javax/accessibility/Accessible from module java.desktop@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:           Loading Class: java/util/List from module java.base@21.0.2
+INFO:           Loading Class: java/util/SequencedCollection from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  Decompiling class com/intellij/lang/javascript/modules/diagram/ES6ModuleDataNode
+INFO:  Decompiling class com/intellij/lang/javascript/modules/diagram/ImportedData
+INFO:  Decompiling class com/intellij/lang/javascript/modules/diagram/JSDiagramColorManager
+INFO:  Decompiling class com/intellij/lang/javascript/modules/diagram/JSModuleConnectionProvider
+INFO:  Decompiling class com/intellij/lang/javascript/modules/diagram/JSModuleDependencyData
+INFO:  Decompiling class com/intellij/lang/javascript/modules/diagram/JSModulesDiagramProvider
+INFO:  Decompiling class com/intellij/lang/javascript/modules/diagram/JSModulesDiagramUtils
+INFO:  Decompiling class com/intellij/lang/javascript/modules/diagram/JSModulesDiagramVfsResolver
+INFO:  Decompiling class com/intellij/lang/javascript/modules/diagram/JSModulesVisibilityManager
+INFO:  Decompiling class com/intellij/lang/javascript/modules/diagram/JSStructuralDiagramItem
+INFO:  Decompiling class com/intellij/lang/javascript/modules/diagram/JSStructuralDiagramModel
+INFO:  Decompiling class com/intellij/lang/javascript/modules/diagram/JSStructuralUiEdge
+INFO:  Decompiling class com/intellij/lang/javascript/modules/diagram/JSStructuralUiNode
+INFO:  Decompiling class com/intellij/lang/javascript/modules/diagram/Rainbow
+INFO:        Loading Class: java/util/RandomAccess from module java.base@21.0.2
+INFO:        Loading Class: java/lang/Cloneable from module java.base@21.0.2
+INFO:        Loading Class: java/awt/Color from module java.desktop@21.0.2
+INFO:        Loading Class: java/util/Comparator from module java.base@21.0.2
+INFO:        Loading Class: java/lang/String from module java.base@21.0.2
+INFO:        Loading Class: java/lang/Class from module java.base@21.0.2
+INFO:        Loading Class: java/util/Collections from module java.base@21.0.2
+INFO:        Loading Class: java/util/NavigableSet from module java.base@21.0.2
+INFO:        Loading Class: java/util/SortedSet from module java.base@21.0.2
+INFO:        Loading Class: java/lang/Runnable from module java.base@21.0.2
+INFO:        Loading Class: java/util/SequencedSet from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:        Loading Class: javax/swing/Icon from module java.desktop@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:        Loading Class: java/util/function/IntFunction from module java.base@21.0.2
+INFO:        Loading Class: java/util/Arrays from module java.base@21.0.2
+INFO:        Loading Class: java/lang/Integer from module java.base@21.0.2
+INFO:        Loading Class: java/util/stream/Stream from module java.base@21.0.2
+INFO:        Loading Class: java/util/function/Predicate from module java.base@21.0.2
+INFO:  ... done
+INFO:        Loading Class: java/lang/StringBuilder from module java.base@21.0.2
+INFO:        Loading Class: java/util/function/Consumer from module java.base@21.0.2
+INFO:        Loading Class: java/lang/CharSequence from module java.base@21.0.2
+INFO:        Loading Class: java/lang/constant/ConstantDesc from module java.base@21.0.2
+INFO:  ... done
+INFO:           Loading Class: java/io/File from module java.base@21.0.2
+INFO:           Loading Class: java/util/Objects from module java.base@21.0.2
+INFO:              Loading Class: javax/swing/JPanel from module java.desktop@21.0.2
+INFO:        Loading Class: java/util/function/Function from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+
+
+============================================================

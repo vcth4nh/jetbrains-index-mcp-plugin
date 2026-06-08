@@ -1,0 +1,213 @@
+============================================================
+DECOMPILATION LOG: lib/modules/intellij.javascript.coverage.jar
+============================================================
+
+Timestamp: 2026-05-27 16:56:24
+Input Path: /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin
+Relative Path: lib/modules/intellij.javascript.coverage.jar
+Status: SUCCESS
+Return Code: 0
+
+------------------------------------------------------------
+STDOUT:
+------------------------------------------------------------
+INFO:  Loaded 0 plugins
+INFO:  JVM info: Oracle Corporation - 21.0.2 - 21.0.2+13-58
+INFO:  Scanning classes from Java runtime current
+INFO:  Scanning classes from module java.base@21.0.2
+INFO:  Scanning classes from module java.compiler@21.0.2
+INFO:  Scanning classes from module java.datatransfer@21.0.2
+INFO:  Scanning classes from module java.desktop@21.0.2
+INFO:  Scanning classes from module java.instrument@21.0.2
+INFO:  Scanning classes from module java.logging@21.0.2
+INFO:  Scanning classes from module java.management@21.0.2
+INFO:  Scanning classes from module java.management.rmi@21.0.2
+INFO:  Scanning classes from module java.naming@21.0.2
+INFO:  Scanning classes from module java.net.http@21.0.2
+INFO:  Scanning classes from module java.prefs@21.0.2
+INFO:  Scanning classes from module java.rmi@21.0.2
+INFO:  Scanning classes from module java.scripting@21.0.2
+INFO:  Scanning classes from module java.se@21.0.2
+INFO:  Scanning classes from module java.security.jgss@21.0.2
+INFO:  Scanning classes from module java.security.sasl@21.0.2
+INFO:  Scanning classes from module java.smartcardio@21.0.2
+INFO:  Scanning classes from module java.sql@21.0.2
+INFO:  Scanning classes from module java.sql.rowset@21.0.2
+INFO:  Scanning classes from module java.transaction.xa@21.0.2
+INFO:  Scanning classes from module java.xml@21.0.2
+INFO:  Scanning classes from module java.xml.crypto@21.0.2
+INFO:  Scanning classes from module jdk.accessibility@21.0.2
+INFO:  Scanning classes from module jdk.attach@21.0.2
+INFO:  Scanning classes from module jdk.charsets@21.0.2
+INFO:  Scanning classes from module jdk.compiler@21.0.2
+INFO:  Scanning classes from module jdk.crypto.cryptoki@21.0.2
+INFO:  Scanning classes from module jdk.crypto.ec@21.0.2
+INFO:  Scanning classes from module jdk.dynalink@21.0.2
+INFO:  Scanning classes from module jdk.editpad@21.0.2
+INFO:  Scanning classes from module jdk.hotspot.agent@21.0.2
+INFO:  Scanning classes from module jdk.httpserver@21.0.2
+INFO:  Scanning classes from module jdk.incubator.vector@21.0.2
+INFO:  Scanning classes from module jdk.internal.ed@21.0.2
+INFO:  Scanning classes from module jdk.internal.jvmstat@21.0.2
+INFO:  Scanning classes from module jdk.internal.le@21.0.2
+INFO:  Scanning classes from module jdk.internal.opt@21.0.2
+INFO:  Scanning classes from module jdk.internal.vm.ci@21.0.2
+INFO:  Scanning classes from module jdk.internal.vm.compiler@21.0.2
+INFO:  Scanning classes from module jdk.internal.vm.compiler.management@21.0.2
+INFO:  Scanning classes from module jdk.jartool@21.0.2
+INFO:  Scanning classes from module jdk.javadoc@21.0.2
+INFO:  Scanning classes from module jdk.jcmd@21.0.2
+INFO:  Scanning classes from module jdk.jconsole@21.0.2
+INFO:  Scanning classes from module jdk.jdeps@21.0.2
+INFO:  Scanning classes from module jdk.jdi@21.0.2
+INFO:  Scanning classes from module jdk.jdwp.agent@21.0.2
+INFO:  Scanning classes from module jdk.jfr@21.0.2
+INFO:  Scanning classes from module jdk.jlink@21.0.2
+INFO:  Scanning classes from module jdk.jpackage@21.0.2
+INFO:  Scanning classes from module jdk.jshell@21.0.2
+INFO:  Scanning classes from module jdk.jsobject@21.0.2
+INFO:  Scanning classes from module jdk.jstatd@21.0.2
+INFO:  Scanning classes from module jdk.localedata@21.0.2
+INFO:  Scanning classes from module jdk.management@21.0.2
+INFO:  Scanning classes from module jdk.management.agent@21.0.2
+INFO:  Scanning classes from module jdk.management.jfr@21.0.2
+INFO:  Scanning classes from module jdk.naming.dns@21.0.2
+INFO:  Scanning classes from module jdk.naming.rmi@21.0.2
+INFO:  Scanning classes from module jdk.net@21.0.2
+INFO:  Scanning classes from module jdk.nio.mapmode@21.0.2
+INFO:  Scanning classes from module jdk.random@21.0.2
+INFO:  Scanning classes from module jdk.sctp@21.0.2
+INFO:  Scanning classes from module jdk.security.auth@21.0.2
+INFO:  Scanning classes from module jdk.security.jgss@21.0.2
+INFO:  Scanning classes from module jdk.unsupported@21.0.2
+INFO:  Scanning classes from module jdk.unsupported.desktop@21.0.2
+INFO:  Scanning classes from module jdk.xml.dom@21.0.2
+INFO:  Scanning classes from module jdk.zipfs@21.0.2
+INFO:  Scanning classes from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/CoverageProjectDataLoader from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/jest/JestCoverageAnnotator from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/jest/JestCoverageEnabledConfiguration from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/jest/JestCoverageEngine$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/jest/JestCoverageEngine from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/jest/JestCoverageProgramRunner$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/jest/JestCoverageProgramRunner$2$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/jest/JestCoverageProgramRunner$2 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/jest/JestCoverageProgramRunner from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/jest/JestCoverageRunner from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/jest/JestCoverageSuite from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/vitest/VitestCoverageAnnotator from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/vitest/VitestCoverageEnabledConfiguration from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/vitest/VitestCoverageEngine$createCoverageViewExtension$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/vitest/VitestCoverageEngine from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/vitest/VitestCoverageEngineKt from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/vitest/VitestCoverageProgramRunner$Handler$doExecute$1$onTestingFinished$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/vitest/VitestCoverageProgramRunner$Handler$doExecute$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/vitest/VitestCoverageProgramRunner$Handler$getCoverageConfigSupplier$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/vitest/VitestCoverageProgramRunner$Handler from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/vitest/VitestCoverageProgramRunner from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/vitest/VitestCoverageRunner$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/vitest/VitestCoverageRunner from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: com/intellij/javascript/testing/coverage/vitest/VitestCoverageSuite from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.coverage.jar
+INFO:  Loading Class: java/util/Map$Entry from module java.base@21.0.2
+INFO:  Loading Class: java/util/Map from module java.base@21.0.2
+INFO:  Loading Class: java/lang/invoke/MethodHandles$Lookup from module java.base@21.0.2
+INFO:  Loading Class: java/lang/invoke/MethodHandles from module java.base@21.0.2
+INFO:  Preprocessing class com/intellij/javascript/testing/coverage/CoverageProjectDataLoader
+INFO:  Preprocessing class com/intellij/javascript/testing/coverage/jest/JestCoverageAnnotator
+INFO:  Preprocessing class com/intellij/javascript/testing/coverage/jest/JestCoverageEnabledConfiguration
+INFO:     Loading Class: java/lang/Object from module java.base@21.0.2
+INFO:  Preprocessing class com/intellij/javascript/testing/coverage/jest/JestCoverageEngine
+INFO:  Preprocessing class com/intellij/javascript/testing/coverage/jest/JestCoverageProgramRunner
+INFO:  Preprocessing class com/intellij/javascript/testing/coverage/jest/JestCoverageRunner
+INFO:  Preprocessing class com/intellij/javascript/testing/coverage/jest/JestCoverageSuite
+INFO:  Preprocessing class com/intellij/javascript/testing/coverage/vitest/VitestCoverageAnnotator
+INFO:  Preprocessing class com/intellij/javascript/testing/coverage/vitest/VitestCoverageEnabledConfiguration
+INFO:  Preprocessing class com/intellij/javascript/testing/coverage/vitest/VitestCoverageEngine
+INFO:  Preprocessing class com/intellij/javascript/testing/coverage/vitest/VitestCoverageEngineKt
+INFO:  Preprocessing class com/intellij/javascript/testing/coverage/vitest/VitestCoverageProgramRunner
+INFO:  Preprocessing class com/intellij/javascript/testing/coverage/vitest/VitestCoverageRunner
+INFO:  Preprocessing class com/intellij/javascript/testing/coverage/vitest/VitestCoverageSuite
+INFO:           Loading Class: java/util/Objects from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:           Loading Class: java/lang/Throwable from module java.base@21.0.2
+INFO:           Loading Class: java/io/Serializable from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Exception from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:           Loading Class: java/nio/file/InvalidPathException from module java.base@21.0.2
+INFO:           Loading Class: java/lang/IllegalArgumentException from module java.base@21.0.2
+INFO:           Loading Class: java/lang/RuntimeException from module java.base@21.0.2
+INFO:  ... done
+INFO:           Loading Class: java/io/IOException from module java.base@21.0.2
+INFO:           Loading Class: java/lang/IllegalStateException from module java.base@21.0.2
+INFO:           Loading Class: java/lang/String from module java.base@21.0.2
+INFO:           Loading Class: java/nio/file/Path from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:           Loading Class: java/lang/Iterable from module java.base@21.0.2
+INFO:           Loading Class: java/util/List from module java.base@21.0.2
+INFO:           Loading Class: java/util/SequencedCollection from module java.base@21.0.2
+INFO:           Loading Class: java/util/Collection from module java.base@21.0.2
+INFO:  ... done
+INFO:           Loading Class: java/lang/Comparable from module java.base@21.0.2
+INFO:           Loading Class: java/nio/file/Watchable from module java.base@21.0.2
+INFO:           Loading Class: java/io/File from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/testing/coverage/CoverageProjectDataLoader
+INFO:  Decompiling class com/intellij/javascript/testing/coverage/jest/JestCoverageAnnotator
+INFO:  Decompiling class com/intellij/javascript/testing/coverage/jest/JestCoverageEnabledConfiguration
+INFO:  Decompiling class com/intellij/javascript/testing/coverage/jest/JestCoverageEngine
+INFO:  Decompiling class com/intellij/javascript/testing/coverage/jest/JestCoverageProgramRunner
+INFO:  Decompiling class com/intellij/javascript/testing/coverage/jest/JestCoverageRunner
+INFO:  Decompiling class com/intellij/javascript/testing/coverage/jest/JestCoverageSuite
+INFO:  Decompiling class com/intellij/javascript/testing/coverage/vitest/VitestCoverageAnnotator
+INFO:  Decompiling class com/intellij/javascript/testing/coverage/vitest/VitestCoverageEnabledConfiguration
+INFO:  Decompiling class com/intellij/javascript/testing/coverage/vitest/VitestCoverageEngine
+INFO:  Decompiling class com/intellij/javascript/testing/coverage/vitest/VitestCoverageEngineKt
+INFO:  Decompiling class com/intellij/javascript/testing/coverage/vitest/VitestCoverageProgramRunner
+INFO:  Decompiling class com/intellij/javascript/testing/coverage/vitest/VitestCoverageRunner
+INFO:  Decompiling class com/intellij/javascript/testing/coverage/vitest/VitestCoverageSuite
+INFO:        Loading Class: java/lang/Class from module java.base@21.0.2
+INFO:        Loading Class: java/util/function/Function from module java.base@21.0.2
+INFO:        Loading Class: java/lang/Integer from module java.base@21.0.2
+INFO:        Loading Class: java/lang/CharSequence from module java.base@21.0.2
+INFO:        Loading Class: java/lang/constant/Constable from module java.base@21.0.2
+INFO:        Loading Class: java/lang/constant/ConstantDesc from module java.base@21.0.2
+INFO:        Loading Class: java/util/Collections from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:        Loading Class: java/util/function/Consumer from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:        Loading Class: java/util/function/Supplier from module java.base@21.0.2
+INFO:           Loading Class: java/util/concurrent/atomic/AtomicReference from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+WARN:              Descriptor and signature parameter counts mismatch, attempting to correct: com/intellij/javascript/testing/coverage/vitest/VitestCoverageProgramRunner$Handler$getCoverageConfigSupplier$1 <init>(Lcom/intellij/execution/configurations/RunProfile;Ljava/util/concurrent/atomic/AtomicReference;)V
+INFO:           Loading Class: java/util/concurrent/atomic/AtomicBoolean from module java.base@21.0.2
+INFO:           Loading Class: java/util/concurrent/atomic/AtomicLong from module java.base@21.0.2
+WARN:              Descriptor and signature parameter counts mismatch, attempting to correct: com/intellij/javascript/testing/coverage/vitest/VitestCoverageProgramRunner$Handler$doExecute$1 <init>(Ljava/util/concurrent/atomic/AtomicBoolean;Lcom/intellij/execution/process/ProcessHandler;Lcom/intellij/javascript/testing/vitest/VitestConsoleProperties;Ljava/util/function/Supplier;Lcom/intellij/execution/runners/ExecutionEnvironment;Lcom/intellij/javascript/nodejs/execution/NodeTargetRun;Ljava/util/concurrent/atomic/AtomicLong;Lcom/intellij/javascript/testing/vitest/VitestRunProfileState;)V
+INFO:        Loading Class: java/nio/file/LinkOption from module java.base@21.0.2
+INFO:              Loading Class: java/util/Set from module java.base@21.0.2
+INFO:        Loading Class: java/lang/Character from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:        Loading Class: java/util/stream/Stream from module java.base@21.0.2
+INFO:           Loading Class: java/util/function/BooleanSupplier from module java.base@21.0.2
+INFO:              Loading Class: java/lang/Runnable from module java.base@21.0.2
+INFO:        Loading Class: java/util/function/Predicate from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+
+
+============================================================

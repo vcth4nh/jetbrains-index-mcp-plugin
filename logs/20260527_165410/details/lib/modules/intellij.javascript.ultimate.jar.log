@@ -1,0 +1,658 @@
+============================================================
+DECOMPILATION LOG: lib/modules/intellij.javascript.ultimate.jar
+============================================================
+
+Timestamp: 2026-05-27 16:55:21
+Input Path: /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin
+Relative Path: lib/modules/intellij.javascript.ultimate.jar
+Status: SUCCESS
+Return Code: 0
+
+------------------------------------------------------------
+STDOUT:
+------------------------------------------------------------
+INFO:  Loaded 0 plugins
+INFO:  JVM info: Oracle Corporation - 21.0.2 - 21.0.2+13-58
+INFO:  Scanning classes from Java runtime current
+INFO:  Scanning classes from module java.base@21.0.2
+INFO:  Scanning classes from module java.compiler@21.0.2
+INFO:  Scanning classes from module java.datatransfer@21.0.2
+INFO:  Scanning classes from module java.desktop@21.0.2
+INFO:  Scanning classes from module java.instrument@21.0.2
+INFO:  Scanning classes from module java.logging@21.0.2
+INFO:  Scanning classes from module java.management@21.0.2
+INFO:  Scanning classes from module java.management.rmi@21.0.2
+INFO:  Scanning classes from module java.naming@21.0.2
+INFO:  Scanning classes from module java.net.http@21.0.2
+INFO:  Scanning classes from module java.prefs@21.0.2
+INFO:  Scanning classes from module java.rmi@21.0.2
+INFO:  Scanning classes from module java.scripting@21.0.2
+INFO:  Scanning classes from module java.se@21.0.2
+INFO:  Scanning classes from module java.security.jgss@21.0.2
+INFO:  Scanning classes from module java.security.sasl@21.0.2
+INFO:  Scanning classes from module java.smartcardio@21.0.2
+INFO:  Scanning classes from module java.sql@21.0.2
+INFO:  Scanning classes from module java.sql.rowset@21.0.2
+INFO:  Scanning classes from module java.transaction.xa@21.0.2
+INFO:  Scanning classes from module java.xml@21.0.2
+INFO:  Scanning classes from module java.xml.crypto@21.0.2
+INFO:  Scanning classes from module jdk.accessibility@21.0.2
+INFO:  Scanning classes from module jdk.attach@21.0.2
+INFO:  Scanning classes from module jdk.charsets@21.0.2
+INFO:  Scanning classes from module jdk.compiler@21.0.2
+INFO:  Scanning classes from module jdk.crypto.cryptoki@21.0.2
+INFO:  Scanning classes from module jdk.crypto.ec@21.0.2
+INFO:  Scanning classes from module jdk.dynalink@21.0.2
+INFO:  Scanning classes from module jdk.editpad@21.0.2
+INFO:  Scanning classes from module jdk.hotspot.agent@21.0.2
+INFO:  Scanning classes from module jdk.httpserver@21.0.2
+INFO:  Scanning classes from module jdk.incubator.vector@21.0.2
+INFO:  Scanning classes from module jdk.internal.ed@21.0.2
+INFO:  Scanning classes from module jdk.internal.jvmstat@21.0.2
+INFO:  Scanning classes from module jdk.internal.le@21.0.2
+INFO:  Scanning classes from module jdk.internal.opt@21.0.2
+INFO:  Scanning classes from module jdk.internal.vm.ci@21.0.2
+INFO:  Scanning classes from module jdk.internal.vm.compiler@21.0.2
+INFO:  Scanning classes from module jdk.internal.vm.compiler.management@21.0.2
+INFO:  Scanning classes from module jdk.jartool@21.0.2
+INFO:  Scanning classes from module jdk.javadoc@21.0.2
+INFO:  Scanning classes from module jdk.jcmd@21.0.2
+INFO:  Scanning classes from module jdk.jconsole@21.0.2
+INFO:  Scanning classes from module jdk.jdeps@21.0.2
+INFO:  Scanning classes from module jdk.jdi@21.0.2
+INFO:  Scanning classes from module jdk.jdwp.agent@21.0.2
+INFO:  Scanning classes from module jdk.jfr@21.0.2
+INFO:  Scanning classes from module jdk.jlink@21.0.2
+INFO:  Scanning classes from module jdk.jpackage@21.0.2
+INFO:  Scanning classes from module jdk.jshell@21.0.2
+INFO:  Scanning classes from module jdk.jsobject@21.0.2
+INFO:  Scanning classes from module jdk.jstatd@21.0.2
+INFO:  Scanning classes from module jdk.localedata@21.0.2
+INFO:  Scanning classes from module jdk.management@21.0.2
+INFO:  Scanning classes from module jdk.management.agent@21.0.2
+INFO:  Scanning classes from module jdk.management.jfr@21.0.2
+INFO:  Scanning classes from module jdk.naming.dns@21.0.2
+INFO:  Scanning classes from module jdk.naming.rmi@21.0.2
+INFO:  Scanning classes from module jdk.net@21.0.2
+INFO:  Scanning classes from module jdk.nio.mapmode@21.0.2
+INFO:  Scanning classes from module jdk.random@21.0.2
+INFO:  Scanning classes from module jdk.sctp@21.0.2
+INFO:  Scanning classes from module jdk.security.auth@21.0.2
+INFO:  Scanning classes from module jdk.security.jgss@21.0.2
+INFO:  Scanning classes from module jdk.unsupported@21.0.2
+INFO:  Scanning classes from module jdk.unsupported.desktop@21.0.2
+INFO:  Scanning classes from module jdk.xml.dom@21.0.2
+INFO:  Scanning classes from module jdk.zipfs@21.0.2
+INFO:  Scanning classes from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/JSUltimateHelperFilesLocator from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/JavaScriptCssReferenceContributor$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/JavaScriptCssReferenceContributor$2 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/JavaScriptCssReferenceContributor$3 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/JavaScriptCssReferenceContributor$4 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/JavaScriptCssReferenceContributor$5 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/JavaScriptCssReferenceContributor$6 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/JavaScriptCssReferenceContributor$MyCssClassOrIdReference from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/JavaScriptCssReferenceContributor from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/BinFileInfo from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestConfigIconProvider from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestConfigurationType from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestConsoleProperties$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestConsoleProperties$JestOutputToGeneralTestEventsConverter from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestConsoleProperties from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestCoverageConfig from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestCoverageConfigListener from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestCoverageConfigurator from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestDetector$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestDetector from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestDisposable$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestDisposable from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestFailedTest from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestFilter from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestPackage$createDescriptor$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestPackage from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestPackageProvider from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestPackageProviderImpl from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestPkgInfo from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestPkgInfoKt from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestReferenceContributor$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestReferenceContributor$JestReferenceProvider from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestReferenceContributor from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestRerunFailedTestAction from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestRunConfiguration from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestRunConfigurationEditor$Companion$createConfigurationFileTextField$2 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestRunConfigurationEditor$Companion$createConfigurationFileTextField$3$createEditorComponent$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestRunConfigurationEditor$Companion$createConfigurationFileTextField$3 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestRunConfigurationEditor$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestRunConfigurationEditor from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestRunConfigurationProducer$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestRunConfigurationProducer$Context from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestRunConfigurationProducer$ExtendedSettings from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestRunConfigurationProducer from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestRunProfileState$Companion$sendInput$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestRunProfileState$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestRunProfileState from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestRunSettings$Builder from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestRunSettings from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestSchemaProviderFactory$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestSchemaProviderFactory from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestUtil$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestUtil from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/JestWatchProvider from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/scope/JestScopeKind from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/snapshot/JestSnapshotEventsListener from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/jest/snapshot/JestUpdateSnapshotHyperlinkInfo from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorConfigIconProvider from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorConfigurationType from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorConsoleFilter from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorConsoleProperties from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorDetector$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorDetector from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorDisposable from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorFailedTest from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorOutputToGeneralTestEventsConverter$TextChunk from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorOutputToGeneralTestEventsConverter from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorRerunFailedTestAction$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorRerunFailedTestAction from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorRunConfiguration from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorRunConfigurationBuilder from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorRunConfigurationEditor$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorRunConfigurationEditor from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorRunConfigurationProducer$TestElementInfo from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorRunConfigurationProducer from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorRunLineMarkerContributor from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorRunSettings$Builder from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorRunSettings from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorRunState from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/ProtractorUtil from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/scope/ProtractorAllScopeView from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/scope/ProtractorScopeKind$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/scope/ProtractorScopeKind$2 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/scope/ProtractorScopeKind$3 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/scope/ProtractorScopeKind$4 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/scope/ProtractorScopeKind from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/scope/ProtractorScopeView from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/scope/ProtractorSuiteOrTestScopeView from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/protractor/scope/ProtractorTestFileScopeView from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/CliOption from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/CliOptionFlag from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestCliOptionsCompletionProvider from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestCliOptionsCompletionProviderKt from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestConfigurationType$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestConfigurationType from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestConsoleProperties$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestConsoleProperties$VitestTestEventsConverter from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestConsoleProperties$createConsole$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestConsoleProperties from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestCoverageConfig from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestCoverageConfigListener from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestDetector$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestDetector from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestInstallMissingDependencyFilter$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestInstallMissingDependencyFilter$InstallDependencyHyperlinkInfo$navigate$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestInstallMissingDependencyFilter$InstallDependencyHyperlinkInfo from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestInstallMissingDependencyFilter$TextModifier from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestInstallMissingDependencyFilter from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestRerunFailedTestAction from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestRunConfiguration$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestRunConfiguration from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestRunConfigurationEditor$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestRunConfigurationEditor from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestRunConfigurationProducer$Context from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestRunConfigurationProducer$ExtendedSettings from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestRunConfigurationProducer from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestRunProfileState$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestRunProfileState$PkgVersions from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestRunProfileState$createTestNamePatternComponentJoiner$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestRunProfileState from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestRunSettings$Builder from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestRunSettings from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestStacktraceFilter$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestStacktraceFilter$VitestStacktraceFinder$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestStacktraceFilter$VitestStacktraceFinder from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestStacktraceFilter from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestUtil from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestWatchProvider$Util from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/VitestWatchProvider from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/config/VitestConfig from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/config/VitestConfigRunLineMarkerContributor from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/snapshot/VitestSnapshotEventsListener$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/snapshot/VitestSnapshotEventsListener from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/javascript/testing/vitest/snapshot/VitestUpdateSnapshotHyperlinkInfo from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/lang/css/refactoring/TSDeclarationCssRenameProcessorFactory$CssClassAutomaticRenamer from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/lang/css/refactoring/TSDeclarationCssRenameProcessorFactory from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/lang/javascript/frameworks/jsx/JSXReferenceContributor$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/lang/javascript/frameworks/jsx/JSXReferenceContributor$2$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/lang/javascript/frameworks/jsx/JSXReferenceContributor$2 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/lang/javascript/frameworks/jsx/JSXReferenceContributor$3 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/lang/javascript/frameworks/jsx/JSXReferenceContributor$4 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/lang/javascript/frameworks/jsx/JSXReferenceContributor$5 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/lang/javascript/frameworks/jsx/JSXReferenceContributor from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: com/intellij/lang/javascript/resolve/BackendCssResolveSupport from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.ultimate.jar
+INFO:  Loading Class: java/lang/invoke/MethodHandles$Lookup from module java.base@21.0.2
+INFO:  Loading Class: java/lang/invoke/MethodHandles from module java.base@21.0.2
+INFO:  Loading Class: java/util/Map$Entry from module java.base@21.0.2
+INFO:  Loading Class: java/util/Map from module java.base@21.0.2
+INFO:  Preprocessing class com/intellij/javascript/JSUltimateHelperFilesLocator
+INFO:  Preprocessing class com/intellij/javascript/jest/BinFileInfo
+INFO:  Preprocessing class com/intellij/javascript/JavaScriptCssReferenceContributor
+INFO:  Preprocessing class com/intellij/javascript/jest/JestConfigurationType
+INFO:  Preprocessing class com/intellij/javascript/jest/JestConfigIconProvider
+INFO:  Preprocessing class com/intellij/javascript/jest/JestConsoleProperties
+INFO:  Preprocessing class com/intellij/javascript/jest/JestCoverageConfig
+INFO:     Loading Class: java/lang/Object from module java.base@21.0.2
+INFO:  Preprocessing class com/intellij/javascript/jest/JestCoverageConfigListener
+INFO:  Preprocessing class com/intellij/javascript/jest/JestDetector
+INFO:  Preprocessing class com/intellij/javascript/jest/JestCoverageConfigurator
+INFO:  Preprocessing class com/intellij/javascript/jest/JestFailedTest
+INFO:  Preprocessing class com/intellij/javascript/jest/JestFilter
+INFO:  Preprocessing class com/intellij/javascript/jest/JestDisposable
+INFO:  Preprocessing class com/intellij/javascript/jest/JestPackageProvider
+INFO:  Preprocessing class com/intellij/javascript/jest/JestPackage
+INFO:  Preprocessing class com/intellij/javascript/jest/JestPackageProviderImpl
+INFO:  Preprocessing class com/intellij/javascript/jest/JestPkgInfo
+INFO:  Preprocessing class com/intellij/javascript/jest/JestPkgInfoKt
+INFO:  Preprocessing class com/intellij/javascript/jest/JestReferenceContributor
+INFO:  Preprocessing class com/intellij/javascript/jest/JestRerunFailedTestAction
+INFO:  Preprocessing class com/intellij/javascript/jest/JestRunConfiguration
+INFO:  Preprocessing class com/intellij/javascript/jest/JestRunConfigurationProducer
+INFO:  Preprocessing class com/intellij/javascript/jest/JestRunConfigurationEditor
+INFO:     Loading Class: javax/swing/plaf/basic/BasicComboBoxEditor from module java.desktop@21.0.2
+INFO:  Preprocessing class com/intellij/javascript/jest/JestRunProfileState
+INFO:     Loading Class: java/awt/event/KeyAdapter from module java.desktop@21.0.2
+INFO:     Loading Class: java/awt/event/KeyListener from module java.desktop@21.0.2
+INFO:     Loading Class: java/util/EventListener from module java.base@21.0.2
+INFO:     Loading Class: javax/swing/ComboBoxEditor from module java.desktop@21.0.2
+INFO:     Loading Class: java/awt/event/FocusListener from module java.desktop@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/jest/JestRunSettings
+INFO:           Loading Class: javax/swing/JPanel from module java.desktop@21.0.2
+INFO:           Loading Class: javax/swing/JComponent from module java.desktop@21.0.2
+INFO:           Loading Class: java/util/concurrent/atomic/AtomicReference from module java.base@21.0.2
+INFO:           Loading Class: java/awt/Container from module java.desktop@21.0.2
+INFO:           Loading Class: java/awt/Component from module java.desktop@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/jest/JestSchemaProviderFactory
+INFO:           Loading Class: java/awt/image/ImageObserver from module java.desktop@21.0.2
+INFO:           Loading Class: java/awt/MenuContainer from module java.desktop@21.0.2
+INFO:           Loading Class: java/io/Serializable from module java.base@21.0.2
+INFO:           Loading Class: javax/swing/TransferHandler$HasGetTransferHandler from module java.desktop@21.0.2
+INFO:           Loading Class: javax/accessibility/Accessible from module java.desktop@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/jest/JestUtil
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/jest/JestWatchProvider
+INFO:           Loading Class: java/lang/IllegalStateException from module java.base@21.0.2
+INFO:           Loading Class: java/lang/RuntimeException from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Exception from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Throwable from module java.base@21.0.2
+INFO:           Loading Class: java/lang/IllegalArgumentException from module java.base@21.0.2
+INFO:           Loading Class: java/lang/String from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Comparable from module java.base@21.0.2
+INFO:           Loading Class: java/lang/CharSequence from module java.base@21.0.2
+INFO:           Loading Class: java/lang/constant/Constable from module java.base@21.0.2
+INFO:           Loading Class: java/lang/constant/ConstantDesc from module java.base@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/jest/scope/JestScopeKind
+INFO:     Loading Class: java/lang/Enum from module java.base@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/jest/snapshot/JestSnapshotEventsListener
+INFO:           Loading Class: java/util/Set from module java.base@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/jest/snapshot/JestUpdateSnapshotHyperlinkInfo
+INFO:           Loading Class: java/util/Collection from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Iterable from module java.base@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/ProtractorConfigIconProvider
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/ProtractorConfigurationType
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/ProtractorConsoleFilter
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/ProtractorConsoleProperties
+INFO:           Loading Class: java/util/List from module java.base@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/ProtractorDetector
+INFO:           Loading Class: java/util/SequencedCollection from module java.base@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/ProtractorDisposable
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/ProtractorFailedTest
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/ProtractorOutputToGeneralTestEventsConverter
+INFO:           Loading Class: java/util/Objects from module java.base@21.0.2
+INFO:           Loading Class: java/util/ArrayList from module java.base@21.0.2
+INFO:           Loading Class: java/util/AbstractList from module java.base@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/ProtractorRerunFailedTestAction
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/ProtractorRunConfiguration
+INFO:           Loading Class: java/util/AbstractCollection from module java.base@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/ProtractorRunConfigurationBuilder
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/ProtractorRunConfigurationEditor
+INFO:     Loading Class: java/awt/event/ActionListener from module java.desktop@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/ProtractorRunConfigurationProducer
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/ProtractorRunLineMarkerContributor
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/ProtractorRunSettings
+INFO:           Loading Class: java/util/HashMap from module java.base@21.0.2
+INFO:           Loading Class: java/util/AbstractMap from module java.base@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/ProtractorRunState
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/ProtractorUtil
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/scope/ProtractorAllScopeView
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/scope/ProtractorScopeKind
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/scope/ProtractorScopeView
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/scope/ProtractorSuiteOrTestScopeView
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/protractor/scope/ProtractorTestFileScopeView
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/CliOption
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/CliOptionFlag
+INFO:           Loading Class: javax/swing/JRadioButton from module java.desktop@21.0.2
+INFO:           Loading Class: javax/swing/JToggleButton from module java.desktop@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/VitestCliOptionsCompletionProvider
+INFO:           Loading Class: javax/swing/AbstractButton from module java.desktop@21.0.2
+INFO:           Loading Class: java/awt/ItemSelectable from module java.desktop@21.0.2
+INFO:           Loading Class: javax/swing/SwingConstants from module java.desktop@21.0.2
+INFO:           Loading Class: javax/swing/JTextField from module java.desktop@21.0.2
+INFO:           Loading Class: javax/swing/text/JTextComponent from module java.desktop@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/VitestCliOptionsCompletionProviderKt
+INFO:           Loading Class: javax/swing/Scrollable from module java.desktop@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/VitestConfigurationType
+INFO:           Loading Class: javax/swing/text/Document from module java.desktop@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/VitestConsoleProperties
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/VitestCoverageConfig
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/VitestCoverageConfigListener
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/VitestDetector
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/VitestInstallMissingDependencyFilter
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/VitestRerunFailedTestAction
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/VitestRunConfiguration
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/VitestRunConfigurationEditor
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/VitestRunConfigurationProducer
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/VitestRunProfileState
+INFO:           Loading Class: java/io/IOException from module java.base@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/VitestRunSettings
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/VitestStacktraceFilter
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/VitestUtil
+INFO:           Loading Class: java/util/Collections from module java.base@21.0.2
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/VitestWatchProvider
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/config/VitestConfig
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/config/VitestConfigRunLineMarkerContributor
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/snapshot/VitestSnapshotEventsListener
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/javascript/testing/vitest/snapshot/VitestUpdateSnapshotHyperlinkInfo
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/lang/css/refactoring/TSDeclarationCssRenameProcessorFactory
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/lang/javascript/frameworks/jsx/JSXReferenceContributor
+INFO:  ... done
+INFO:  Preprocessing class com/intellij/lang/javascript/resolve/BackendCssResolveSupport
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:           Loading Class: java/nio/file/Path from module java.base@21.0.2
+INFO:           Loading Class: java/nio/file/Watchable from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:           Loading Class: java/lang/Integer from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/JSUltimateHelperFilesLocator
+INFO:  Decompiling class com/intellij/javascript/JavaScriptCssReferenceContributor
+INFO:  Decompiling class com/intellij/javascript/jest/BinFileInfo
+INFO:  Decompiling class com/intellij/javascript/jest/JestConfigIconProvider
+INFO:  Decompiling class com/intellij/javascript/jest/JestConfigurationType
+INFO:  Decompiling class com/intellij/javascript/jest/JestConsoleProperties
+INFO:  Decompiling class com/intellij/javascript/jest/JestCoverageConfig
+INFO:  Decompiling class com/intellij/javascript/jest/JestCoverageConfigListener
+INFO:  Decompiling class com/intellij/javascript/jest/JestDetector
+INFO:  Decompiling class com/intellij/javascript/jest/JestCoverageConfigurator
+INFO:  Decompiling class com/intellij/javascript/jest/JestDisposable
+INFO:  Decompiling class com/intellij/javascript/jest/JestFailedTest
+INFO:  Decompiling class com/intellij/javascript/jest/JestFilter
+INFO:  Decompiling class com/intellij/javascript/jest/JestPackage
+INFO:  Decompiling class com/intellij/javascript/jest/JestPackageProvider
+INFO:  Decompiling class com/intellij/javascript/jest/JestPackageProviderImpl
+INFO:  Decompiling class com/intellij/javascript/jest/JestPkgInfoKt
+INFO:  Decompiling class com/intellij/javascript/jest/JestPkgInfo
+INFO:  Decompiling class com/intellij/javascript/jest/JestReferenceContributor
+INFO:  Decompiling class com/intellij/javascript/jest/JestRerunFailedTestAction
+INFO:  Decompiling class com/intellij/javascript/jest/JestRunConfiguration
+INFO:  Decompiling class com/intellij/javascript/jest/JestRunConfigurationEditor
+INFO:  Decompiling class com/intellij/javascript/jest/JestRunConfigurationProducer
+INFO:  Decompiling class com/intellij/javascript/jest/JestRunProfileState
+INFO:        Loading Class: java/util/stream/Stream from module java.base@21.0.2
+INFO:        Loading Class: java/lang/Boolean from module java.base@21.0.2
+INFO:        Loading Class: java/util/Arrays from module java.base@21.0.2
+INFO:  ... done
+INFO:        Loading Class: java/util/function/Function from module java.base@21.0.2
+INFO:        Loading Class: java/util/concurrent/atomic/AtomicBoolean from module java.base@21.0.2
+INFO:  ... done
+INFO:           Loading Class: java/lang/Class from module java.base@21.0.2
+INFO:  Decompiling class com/intellij/javascript/jest/JestRunSettings
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/jest/JestSchemaProviderFactory
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/jest/JestUtil
+INFO:  Decompiling class com/intellij/javascript/jest/JestWatchProvider
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/jest/scope/JestScopeKind
+INFO:  Decompiling class com/intellij/javascript/jest/snapshot/JestSnapshotEventsListener
+INFO:  Decompiling class com/intellij/javascript/jest/snapshot/JestUpdateSnapshotHyperlinkInfo
+INFO:        Loading Class: java/util/function/Supplier from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/protractor/ProtractorConfigurationType
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/protractor/ProtractorConsoleFilter
+INFO:  Decompiling class com/intellij/javascript/protractor/ProtractorConfigIconProvider
+INFO:        Loading Class: java/lang/Runnable from module java.base@21.0.2
+INFO:        Loading Class: java/awt/Dimension from module java.desktop@21.0.2
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/protractor/ProtractorConsoleProperties
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/protractor/ProtractorDetector
+INFO:        Loading Class: java/util/RandomAccess from module java.base@21.0.2
+INFO:        Loading Class: java/lang/Cloneable from module java.base@21.0.2
+INFO:        Loading Class: java/util/stream/Collectors from module java.base@21.0.2
+INFO:        Loading Class: java/awt/geom/Dimension2D from module java.desktop@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:        Loading Class: javax/swing/JLabel from module java.desktop@21.0.2
+INFO:        Loading Class: java/util/stream/Collector from module java.base@21.0.2
+INFO:  Decompiling class com/intellij/javascript/protractor/ProtractorDisposable
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/protractor/ProtractorOutputToGeneralTestEventsConverter
+INFO:  Decompiling class com/intellij/javascript/protractor/ProtractorFailedTest
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/protractor/ProtractorRerunFailedTestAction
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/protractor/ProtractorRunConfiguration
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/protractor/ProtractorRunConfigurationBuilder
+INFO:        Loading Class: java/util/function/BiConsumer from module java.base@21.0.2
+INFO:        Loading Class: java/nio/file/Paths from module java.base@21.0.2
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/protractor/ProtractorRunConfigurationEditor
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/protractor/ProtractorRunConfigurationProducer
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/protractor/ProtractorRunLineMarkerContributor
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/protractor/ProtractorRunSettings
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/protractor/ProtractorRunState
+INFO:        Loading Class: java/lang/Deprecated from module java.base@21.0.2
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/protractor/ProtractorUtil
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/protractor/scope/ProtractorAllScopeView
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/protractor/scope/ProtractorScopeKind
+INFO:        Loading Class: java/util/LinkedHashMap from module java.base@21.0.2
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/protractor/scope/ProtractorScopeView
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/protractor/scope/ProtractorSuiteOrTestScopeView
+INFO:        Loading Class: java/util/SequencedMap from module java.base@21.0.2
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/protractor/scope/ProtractorTestFileScopeView
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/CliOption
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/CliOptionFlag
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/VitestCliOptionsCompletionProvider
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/VitestCliOptionsCompletionProviderKt
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/VitestConfigurationType
+INFO:        Loading Class: java/io/File from module java.base@21.0.2
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/VitestConsoleProperties
+INFO:        Loading Class: java/awt/BorderLayout from module java.desktop@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/VitestCoverageConfigListener
+INFO:        Loading Class: java/awt/LayoutManager2 from module java.desktop@21.0.2
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/VitestCoverageConfig
+INFO:        Loading Class: java/util/Iterator from module java.base@21.0.2
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/VitestDetector
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/VitestInstallMissingDependencyFilter
+INFO:        Loading Class: javax/swing/JSeparator from module java.desktop@21.0.2
+INFO:        Loading Class: java/lang/Character from module java.base@21.0.2
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/VitestRerunFailedTestAction
+INFO:  ... done
+INFO:        Loading Class: java/lang/StringBuilder from module java.base@21.0.2
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/VitestRunConfiguration
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/VitestRunConfigurationEditor
+INFO:        Loading Class: java/nio/charset/StandardCharsets from module java.base@21.0.2
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/VitestRunConfigurationProducer
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/VitestRunProfileState
+INFO:        Loading Class: java/util/function/Predicate from module java.base@21.0.2
+INFO:        Loading Class: java/util/concurrent/TimeUnit from module java.base@21.0.2
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/VitestRunSettings
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/VitestStacktraceFilter
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/VitestUtil
+INFO:              Loading Class: java/util/HashSet from module java.base@21.0.2
+INFO:           Loading Class: java/util/concurrent/ConcurrentHashMap from module java.base@21.0.2
+INFO:              Loading Class: java/util/AbstractSet from module java.base@21.0.2
+INFO:        Loading Class: java/util/Optional from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/VitestWatchProvider
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/config/VitestConfig
+INFO:        Loading Class: java/util/Locale from module java.base@21.0.2
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/config/VitestConfigRunLineMarkerContributor
+INFO:        Loading Class: java/util/LinkedHashSet from module java.base@21.0.2
+INFO:        Loading Class: java/awt/FlowLayout from module java.desktop@21.0.2
+INFO:           Loading Class: java/util/regex/Pattern from module java.base@21.0.2
+INFO:        Loading Class: java/nio/file/Files from module java.base@21.0.2
+INFO:           Loading Class: java/util/concurrent/ConcurrentMap from module java.base@21.0.2
+INFO:        Loading Class: java/nio/file/LinkOption from module java.base@21.0.2
+INFO:           Loading Class: java/lang/AbstractStringBuilder from module java.base@21.0.2
+INFO:        Loading Class: java/util/SequencedSet from module java.base@21.0.2
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/snapshot/VitestSnapshotEventsListener
+INFO:        Loading Class: javax/swing/ButtonGroup from module java.desktop@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/testing/vitest/snapshot/VitestUpdateSnapshotHyperlinkInfo
+INFO:  Decompiling class com/intellij/lang/css/refactoring/TSDeclarationCssRenameProcessorFactory
+INFO:  ... done
+INFO:  Decompiling class com/intellij/lang/javascript/frameworks/jsx/JSXReferenceContributor
+INFO:  Decompiling class com/intellij/lang/javascript/resolve/BackendCssResolveSupport
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:        Loading Class: java/awt/GridBagConstraints from module java.desktop@21.0.2
+INFO:  ... done
+INFO:        Loading Class: javax/swing/Box from module java.desktop@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:        Loading Class: java/awt/LayoutManager from module java.desktop@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+WARN:              Descriptor and signature parameter counts mismatch, attempting to correct: com/intellij/javascript/jest/JestRunProfileState$Companion$sendInput$1 <init>(Ljava/util/Map;Lcom/intellij/execution/process/ProcessHandler;)V
+INFO:              Loading Class: java/awt/event/KeyEvent from module java.desktop@21.0.2
+INFO:              Loading Class: java/lang/Number from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:              Loading Class: java/io/OutputStream from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+
+
+============================================================
