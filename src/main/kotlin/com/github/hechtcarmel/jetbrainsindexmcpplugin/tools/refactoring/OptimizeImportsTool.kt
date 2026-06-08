@@ -32,13 +32,15 @@ class OptimizeImportsTool : AbstractMcpTool() {
     override val name = ToolNames.OPTIMIZE_IMPORTS
 
     override val description = """
-        Optimize imports in a file: remove unused imports and organize remaining imports according to project code style. Equivalent to the IDE's "Optimize Imports" action (Ctrl+Alt+O / Cmd+Opt+O). Does NOT reformat code. Supports undo (Ctrl+Z).
+        Remove unused imports and organize remaining imports in a file without touching the rest of
+        the code — the IDE's Optimize Imports (Ctrl+Alt+O). Use when you only want import cleanup;
+        prefer ide_reformat_code when you also want whitespace/indentation formatting. Supports
+        undo (Ctrl+Z).
 
-        Returns: success status, affected file, and description of operation performed.
+        Returns: success status and affected file.
 
-        Parameters: file (required).
-
-        Example: {"file": "src/MyClass.java"}
+        Gotchas: disabled by default — must be enabled in Settings → Index MCP Server. Does not
+        require smart mode.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()

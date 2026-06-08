@@ -16,13 +16,14 @@ class GetIndexStatusTool : AbstractMcpTool() {
     override val name = "ide_index_status"
 
     override val description = """
-        Check if the IDE is ready for code intelligence operations. Use when other tools fail with indexing errors, or to verify IDE readiness before batch operations.
+        Check whether the IDE has finished indexing and is ready for code-intelligence operations.
+        Call this before batch operations or when other tools return index_not_ready errors; prefer
+        this over retrying blindly.
 
-        Returns: isDumbMode (true = indexing in progress, limited functionality), isIndexing flag. When isDumbMode is true, wait and retry—most tools require indexing to complete.
+        Returns: isDumbMode (true = indexing in progress, most tools will fail), isIndexing flag.
+        When isDumbMode is true, wait and retry — indexing will complete automatically.
 
-        Parameters: project_path (optional, only needed with multiple projects open).
-
-        Example: {}
+        Gotchas: this tool always succeeds regardless of mode; it is read-only and very fast.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()

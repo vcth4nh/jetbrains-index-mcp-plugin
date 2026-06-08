@@ -21,15 +21,18 @@ class ReadFileTool : AbstractMcpTool() {
     override val name = ToolNames.READ_FILE
 
     override val description = """
-    File lookup: by file path (relative, absolute, jar path with !/or jar://) or qualifiedName (e.g., java.util.ArrayList).
-    Best for library/dependency Java sources (jars/external libs). For project files, prefer native tools; enable only when needed.
+        Read file content by path or qualified name. Prefer this over shell `cat` for library/jar
+        sources — it transparently decompresses and decompiles jars (jar:// URLs, qualified names).
+        For project source files prefer the editor; enable this tool only when you actually need
+        to read content the IDE's other tools don't surface.
 
-    Returns: file content (full or line range) with metadata (language, lineCount, start/end, isLibraryFile).
+        Returns: file content (full or line-range slice) with metadata: language, lineCount,
+        startLine, endLine, isLibraryFile.
 
-    Parameters: file or qualifiedName (one required), startLine (optional), endLine (optional).
-
-    Examples: {"file": "src/main/java/MyClass.java"} or {"qualifiedName": "java.util.ArrayList"} or {"file": "MyClass.java", "startLine": 10, "endLine": 20}
-""".trimIndent()
+        Gotchas: disabled by default — must be enabled in Settings → Index MCP Server.
+        Either file or qualifiedName is required; when both endLine is given, startLine is also
+        required.
+    """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
         .projectPath()

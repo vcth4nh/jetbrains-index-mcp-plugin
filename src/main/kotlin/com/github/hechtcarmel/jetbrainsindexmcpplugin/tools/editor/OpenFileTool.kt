@@ -19,11 +19,14 @@ class OpenFileTool : AbstractMcpTool() {
     override val name = ToolNames.OPEN_FILE
 
     override val description = """
-        Open a file in the IDE editor, optionally navigating to a specific line and column.
+        Open a file in the IDE editor, optionally jumping to a specific line and column. Use when
+        you want to surface a file to the user or pre-position the caret before a subsequent
+        operation that requires an open editor (e.g. ide_diagnostics intentions).
 
-        Parameters: file (required, relative to project root or absolute), line (optional, 1-based), column (optional, 1-based, requires line), project_path (optional).
+        Returns: the opened file's project-relative path and a confirmation message.
 
-        Example: {"file": "src/Main.kt"} or {"file": "src/Main.kt", "line": 42, "column": 10}
+        Gotchas: disabled by default — must be enabled in Settings → Index MCP Server. column
+        requires line to be specified.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()

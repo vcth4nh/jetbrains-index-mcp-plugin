@@ -47,25 +47,25 @@ class FindSymbolTool : AbstractMcpTool() {
     override val name = ToolNames.FIND_SYMBOL
 
     override val description = """
-        Search for symbols by name across the codebase. Use when you know a symbol name but not its location—finds classes, methods, fields, and functions. Faster and more accurate than grep for code navigation.
+        Search for any code symbol (classes, methods, fields, functions) by name using the IDE's
+        Go to Symbol popup (Ctrl+Alt+Shift+N). Use when you need symbols beyond classes — prefer
+        ide_find_class when you only need class-like types (faster). Supports qualified queries
+        like "BasicSolver.run".
 
-        Works in any supported JetBrains IDE. Result quality is best for Java, Kotlin, Python, JavaScript, TypeScript, Go, PHP, and Rust; other IDE-supplied languages (Ruby, C/C++, SQL, …) are also returned with their IDE-provided metadata.
+        Exact match by default (case-insensitive). Set fuzzySearch=true for camelCase + substring
+        matching. Note: when methods share a name through inheritance, results collapse to the topmost
+        super — use ide_find_implementations for the full override set.
 
-        Matching and ranking follow IntelliJ's Go to Symbol popup, including qualified queries like "BasicSolver.run".
+        Returns: symbols with qualified names, file paths, line/column numbers, and kind. Paginated
+        — pass the returned cursor for the next page.
 
-        Returns: matching symbols with qualified names, file paths, line/column numbers, and kind.
-
-        Supports pagination: first call returns results + nextCursor. Pass cursor to get the next page.
-        Parameters: query (required for fresh search), scope (optional, default: "project_files"; supported: project_files, project_and_libraries, project_production_files, project_test_files), language (optional case-insensitive filter, e.g. "Kotlin"), fuzzySearch (optional boolean, default false = exact match; true = IDE fuzzy matching), pageSize (optional, default: 25, max: 500), cursor (for pagination, replaces search params; project_path may still be required).
-
-        Example: {"query": "UserService"} or {"query": "find_user", "scope": "project_and_libraries"}
-
-        Note: when multiple methods share a name through inheritance, results are collapsed to the topmost super (matching IntelliJ's "Go to Symbol" popup behavior). For the full set of overriding methods, use `ide_find_implementations` instead.
+        Gotchas: disabled by default — must be enabled in Settings → Index MCP Server. Requires
+        smart mode.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
         .projectPath()
-        .stringProperty(ParamNames.QUERY, "Search pattern. Matching follows IntelliJ's Go to Symbol popup, including qualified queries. Required for fresh search, ignored when cursor is provided.")
+        .stringProperty(ParamNames.QUERY, "Symbol name pattern, including qualified queries (e.g. \"BasicSolver.run\"). Required for fresh search; ignored when cursor is provided.")
         .scopeProperty("Search scope. Default: project_files.")
         .stringProperty(ParamNames.LANGUAGE, "Filter results by language (e.g., \"Kotlin\", \"Java\", \"Python\"). Case-insensitive. Optional.")
         .booleanProperty(ParamNames.FUZZY_SEARCH, "When true, use the IDE's Go to Symbol fuzzy matching (camelCase + substring). When false (default), match the symbol name exactly, case-insensitively. Default: false.")

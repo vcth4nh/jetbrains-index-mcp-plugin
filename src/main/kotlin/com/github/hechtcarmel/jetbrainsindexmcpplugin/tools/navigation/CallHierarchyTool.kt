@@ -39,17 +39,15 @@ class CallHierarchyTool : AbstractMcpTool() {
     override val name = "ide_call_hierarchy"
 
     override val description = """
-        Build a call hierarchy tree for a method/function. Use to trace execution flow—find what calls this method (callers) or what this method calls (callees).
+        Build a call hierarchy tree for a method/function — who calls it (callers) or what it calls
+        (callees). Use over ide_find_usages when you need the full call chain as a tree rather than
+        a flat reference list.
 
-        Languages: Java, Kotlin, Python, JavaScript, TypeScript, PHP, Rust.
+        Returns: recursive tree with method names, qualified names, file locations (line/column),
+        and nested call relationships up to maxDepth.
 
-        Rust note: "callers" direction works well; "callees" direction may have limited results due to Rust plugin PSI resolution constraints.
-
-        Returns: recursive tree with method signatures, file locations (line/column), and nested call relationships.
-
-        Parameters: file + line + column (required), direction (required): "callers" or "callees". maxDepth (optional, default: 7, max: 20). scope (optional, default: "all"; supported: all, production, test, this_class, this_module).
-
-        Example: {"file": "src/Service.java", "line": 42, "column": 10, "direction": "callers"}
+        Gotchas: requires smart mode. Languages: Java, Kotlin, Python, JS/TS, PHP, Rust. Rust
+        "callees" may be incomplete due to PSI resolution limits.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()

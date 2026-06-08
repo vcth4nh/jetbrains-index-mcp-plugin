@@ -40,23 +40,23 @@ class SafeDeleteTool : AbstractRefactoringTool() {
     override val name = "ide_refactor_safe_delete"
 
     override val description = """
-        Delete a symbol or file safely by first checking for usages. Use when removing code to avoid breaking references.
+        Delete a symbol or file after verifying it has no external usages. Use over a plain delete
+        when you want to avoid silently breaking callers; prefer ide_refactor_rename if the goal is
+        to remove and replace.
 
-        Modes:
-        - target_type='symbol' (default): Delete the symbol at line/column (REQUIRED: file, line, column).
-          If position is whitespace/comment, returns nearby symbol suggestions.
-        - target_type='file': Delete the entire file (REQUIRED: file only).
-          Only succeeds if no symbols have external usages. Internal call chains don't block deletion.
+        Two modes:
+        - target_type='symbol' (default): Delete the symbol at the caret. (REQUIRED: file, line, column)
+          If the position is whitespace/comment, returns nearby symbol suggestions.
+        - target_type='file': Delete the entire file if no symbols have external usages. (REQUIRED: file only)
+          Internal call chains don't block deletion.
 
-        Behavior: If usages exist and force=false, returns the usage list instead of deleting.
-        Use force=true to delete anyway (may break compilation).
+        If usages exist and force=false, returns the blocking usage list instead of deleting — inspect,
+        then re-call with force=true to proceed.
 
-        Returns: success status and affected files, OR blocking usages list, OR nearby symbol suggestions.
+        Returns: on success: affected files + change count; on blocked: canDelete=false + external usages;
+        on whitespace/comment: nearby symbol suggestions.
 
-        Examples:
-        - Symbol: {"file": "src/OldClass.java", "line": 10, "column": 14}
-        - Symbol with force: {"file": "src/OldClass.java", "line": 10, "column": 14, "force": true}
-        - File: {"file": "src/UnusedUtils.java", "target_type": "file"}
+        Gotchas: requires smart mode. Java/Kotlin only (requires Java plugin).
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
