@@ -43,7 +43,7 @@ class BuildProjectTool : AbstractMcpTool() {
     override val name = ToolNames.BUILD_PROJECT
 
     override val description = """
-        Trigger a project build (JPS, Gradle, Maven) and return the results. Use after code changes
+        Build a project (JPS, Gradle, Maven) and return the results. Use after code changes
         to verify compilation; prefer ide_diagnostics when you want diagnostics without triggering
         a new build.
 
