@@ -44,36 +44,19 @@ class FileStructureTool : AbstractMcpTool() {
     override val name = "ide_file_structure"
 
     override val description = """
-        Get the hierarchical structure of a source file (similar to IDE's Structure view).
+        Get the hierarchical outline of a source file, mirroring the IDE's Structure tool window.
+        Use over ide_read_file when you need a quick structural overview (classes, methods, fields)
+        without reading all the code; use ide_read_file when you need the actual source text.
 
-        Output mirrors what the IDE shows in its Structure tool window for the file's language,
-        formatted as an indented tree with element names, optional signature info, and line numbers.
+        Returns: an indented tree with element names, optional signatures, line numbers, and
+        visibility modifiers — driven by the IDE's own StructureViewBuilder for the file's language.
 
-        Parameters:
-          file (required) - Path relative to project root.
-          show (optional) - List of filter names to enable. Omit to use language defaults.
-                            If provided, only these filters are active; anything not listed is
-                            hidden, even if it'd be on by default.
-          sort (optional) - Sort order. Default: declaration order (with language-specific kind
-                            grouping where applicable). 'visibility' groups public/exported
-                            members before non-public ones. Has no effect for Python and JS/TS,
-                            which don't ship a visibility sorter.
+        Supports per-language category filters (show) and visibility sort; see property descriptions
+        for per-language filter names.
 
-        Available filters per language (* = on by default):
-          python:                   fields*, inherited
-          java:                     anonymous_classes, fields*, inherited, lambdas*, non_public*
-          kotlin:                   inherited, non_public*, properties*
-          javascript / typescript:  fields*, inherited, inherited_from_object*
-          php:                      anonymous_classes, inherited, lambdas*, constants*, includes*,
-                                    private_members*, properties*, protected_members*
-          go:                       package_structure*, private_members*
-          rust:                     macro_expanded
-
-        Examples:
-          {"file": "src/main.py"}                                   - language defaults
-          {"file": "src/main.py", "show": ["fields", "inherited"]}  - explicit (both visible)
-          {"file": "src/main.py", "show": []}                       - hide every filterable category (minimum)
-          {"file": "Foo.java", "sort": "visibility"}                - public members first
+        Gotchas: disabled by default — must be enabled in Settings → Index MCP Server. Languages:
+        Java, Kotlin, Python, JS/TS, Go, PHP, Rust. Other file types return an error if the IDE has
+        no structure view for them.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
@@ -81,8 +64,14 @@ class FileStructureTool : AbstractMcpTool() {
         .file(description = "Path to file relative to project root (e.g., 'src/main/java/com/example/MyClass.java'). REQUIRED.")
         .stringArrayProperty(
             "show",
-            "Optional list of filter names to enable. See tool description for per-language filter names. " +
-                "Omit to use language defaults. Pass an explicit array to override.",
+            "Optional list of filter category names to show. Omit to use language defaults. Pass an " +
+                "explicit array to override (anything not listed is hidden). Per-language values " +
+                "(* = on by default): python: fields*, inherited; java: anonymous_classes, fields*, " +
+                "inherited, lambdas*, non_public*; kotlin: inherited, non_public*, properties*; " +
+                "javascript/typescript: fields*, inherited, inherited_from_object*; " +
+                "php: anonymous_classes, inherited, lambdas*, constants*, includes*, private_members*, " +
+                "properties*, protected_members*; go: package_structure*, private_members*; " +
+                "rust: macro_expanded.",
         )
         .enumProperty(
             "sort",

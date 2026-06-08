@@ -38,17 +38,18 @@ class RestartIdeTool : AbstractMcpTool() {
     override val name = ToolNames.RESTART_IDE
 
     override val description = """
-        Restart THIS IDE. Use after ide_install_plugin to load a freshly installed plugin build.
+        Restart this IDE. Use as the second half of the plugin dev loop after ide_install_plugin —
+        the plugin is not dynamically reloadable, so restart is required to pick up new code.
 
-        The restart is scheduled AFTER this tool's response is sent (default 2s delay) so the MCP client receives the result before the connection drops. This plugin's own MCP server goes down during the restart; reconnect once the IDE is back. In remote-dev / serverMode (headless backend) the backend process relaunches and the thin client reconnects automatically.
+        The restart fires after a short delay (default 2 s) so this response reaches the client
+        before the connection drops. The MCP server goes down with the IDE; reconnect once the IDE
+        is back. In remote-dev / serverMode, the backend relaunches and the thin client reconnects
+        automatically.
 
-        Parameters: project_path (optional), delaySeconds (optional, default 2, range 0-60) — delay before the restart fires.
+        Returns: restarting flag and effective delaySeconds.
 
-        Returns: restarting flag, effective delaySeconds.
-
-        WARNING: unsaved in-memory state is lost. Dev-loop tool; disabled by default.
-
-        Example: {} or {"delaySeconds": 5}
+        Gotchas: disabled by default — must be enabled in Settings → Index MCP Server. Unsaved
+        in-memory state is lost on restart.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()

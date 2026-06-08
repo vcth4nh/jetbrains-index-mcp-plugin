@@ -54,17 +54,18 @@ class GetDiagnosticsTool : AbstractMcpTool() {
     override val name = "ide_diagnostics"
 
     override val description = """
-        Get code diagnostics from multiple sources: file analysis (errors, warnings, intentions), build output (compiler errors/warnings from last build), and test results (from open test run tabs).
+        Unified diagnostics: per-file code analysis, last-build compiler output, and test results
+        from open run tabs — all in one call. Use over ide_build_project when you want diagnostics
+        without triggering a new build; use ide_build_project when you need a fresh compilation.
 
-        Returns: problems with severity and location, available intentions/quick fixes, build errors, and test results with error messages and stack traces.
+        At least one source must be active: file for per-file analysis, includeBuildErrors for last
+        build output, includeTestResults for open test-run tabs. Combine freely.
 
-        At least one source must be active: provide 'file' for code analysis, 'includeBuildErrors' for build output, or 'includeTestResults' for test results. Can combine all three.
+        Returns: problems with severity/location, available quick-fix intentions (file must be open in
+        an editor for full intention coverage), build messages, and test results with stack traces.
 
-        File analysis uses fresh daemon highlights for files that are already open in an editor. Closed files use public batch analysis, so weak warnings and quick-fix intentions may be less complete unless the file is open.
-
-        Parameters: file (optional, enables code analysis), line + column (optional, for intentions, requires file), startLine/endLine (optional, requires file), includeBuildErrors (optional), includeTestResults (optional), severity (optional, default 'all'), testResultFilter (optional, default 'failed'), maxBuildErrors (optional, default 100), maxTestResults (optional, default 100).
-
-        Example: {"file": "src/MyClass.java"} or {"includeBuildErrors": true, "severity": "errors"} or {"file": "src/MyClass.java", "includeBuildErrors": true, "includeTestResults": true}
+        Gotchas: requires smart mode for file analysis. Intentions are only available when the file
+        is already open in an editor tab.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()

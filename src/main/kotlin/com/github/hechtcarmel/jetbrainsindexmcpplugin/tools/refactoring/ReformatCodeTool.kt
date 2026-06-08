@@ -43,18 +43,18 @@ class ReformatCodeTool : AbstractMcpTool() {
     override val name = ToolNames.REFORMAT_CODE
 
     override val description = """
-        Reformat code in a file according to the project's code style settings (.editorconfig, IDE code style). Equivalent to the IDE's "Reformat Code" action (Ctrl+Alt+L / Cmd+Opt+L). Supports undo (Ctrl+Z).
+        Reformat a file's code according to the project's code style (.editorconfig, IDE settings)
+        — the IDE's Reformat Code action (Ctrl+Alt+L). Use when you want both whitespace/indentation
+        formatting AND import cleanup in one call; prefer ide_optimize_imports when you only want to
+        organize imports without touching formatting. Supports undo (Ctrl+Z).
 
-        By default also optimizes imports and rearranges code members. Use optimizeImports=false and rearrangeCode=false to only reformat whitespace/indentation.
+        By default also optimizes imports and rearranges code members. Set optimizeImports=false /
+        rearrangeCode=false to limit the operation.
 
-        Respects: .editorconfig, project code style, language-specific formatting rules.
+        Returns: success status, affected file, and a description of which operations ran.
 
-        Returns: success status, affected file, and description of operations performed.
-
-        Parameters: file (required), startLine/endLine (optional range), optimizeImports (default: true), rearrangeCode (default: true).
-
-        Example: {"file": "src/MyClass.java"}
-        Example: {"file": "src/MyClass.java", "startLine": 10, "endLine": 50, "optimizeImports": false}
+        Gotchas: disabled by default — must be enabled in Settings → Index MCP Server. Does not
+        require smart mode (formatting is index-free).
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()

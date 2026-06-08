@@ -54,21 +54,20 @@ class FindFileTool : AbstractMcpTool() {
     override val name = ToolNames.FIND_FILE
 
     override val description = """
-        Search for files by name. Very fast file lookup using IDE's file index.
+        Find files by name using the IDE's file index — the fastest way to locate a file when you
+        know its name. Use this over ide_search_text or ide_find_symbol for file-by-name lookups.
+        Supports camelCase ("USJ" → "UserService.java"), substring ("User" → "UserService.java"),
+        and wildcards ("*Test.kt").
 
-        Matching: camelCase ("USJ" → "UserService.java"), substring ("User" → "UserService.java"), and wildcard ("*Test.kt").
+        Returns: matching files with name, project-relative path, and parent directory. Paginated
+        — pass the returned cursor for the next page.
 
-        Returns: matching files with name, path, and containing directory.
-
-        Supports pagination: first call returns results + nextCursor. Pass cursor to get the next page.
-        Parameters: query (required for fresh search), scope (optional, default: "project_files"; supported: project_files, project_and_libraries, project_production_files, project_test_files), pageSize (optional, default: 25, max: 500), cursor (for pagination, replaces search params; project_path may still be required).
-
-        Example: {"query": "UserService.java"} or {"query": "build.gradle"} or {"query": "BG"} (matches build.gradle)
+        Gotchas: requires smart mode. Searches file names only — not content.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
         .projectPath()
-        .stringProperty(ParamNames.QUERY, "File name pattern. Supports substring and fuzzy matching. Required for fresh search, ignored when cursor is provided.")
+        .stringProperty(ParamNames.QUERY, "File name pattern. Supports camelCase, substring, and wildcard matching. Required for fresh search; ignored when cursor is provided.")
         .scopeProperty("Search scope. Default: project_files.")
         .intProperty(ParamNames.LIMIT, "Maximum results per page (deprecated, use pageSize). Default: $DEFAULT_PAGE_SIZE, max: $MAX_PAGE_SIZE.")
         .stringProperty("cursor", "Pagination cursor from a previous response. When provided, returns the next page of results. Search parameters are ignored; project_path and pageSize may still be provided.")

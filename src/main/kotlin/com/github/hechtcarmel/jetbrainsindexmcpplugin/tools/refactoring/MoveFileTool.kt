@@ -54,19 +54,18 @@ open class MoveFileTool : AbstractRefactoringTool() {
     override val name = "ide_move_file"
 
     override val description = """
-        Move a file to a new directory using the IDE's refactoring engine. Applies language-aware reference and namespace/package updates when the IDE provides a semantic move backend for that file type.
+        Move a file to a new directory using the IDE's refactoring engine, updating all imports,
+        references, and package declarations automatically. Use over a plain file-system move when
+        you need references kept intact; prefer ide_refactor_rename when only the file name changes.
 
-        Use when relocating files to maintain correct imports and references.
+        The destination directory is created automatically if it does not exist. PHP class files
+        with a single top-level declaration are moved using PhpStorm's semantic PHP class move
+        (namespace-aware); all other files use the generic file-move backend.
 
-        Parameters:
-        - file (REQUIRED): Source file path relative to project root
-        - destination (REQUIRED): Target directory path relative to project root. Created automatically if it doesn't exist.
+        Returns: success status, list of affected files, and a message identifying the backend used.
 
-        Returns: success status, list of affected files, and result message.
-
-        Examples:
-        - Move file: {"file": "src/main/java/com/old/MyClass.java", "destination": "src/main/java/com/new"}
-        - Move config file: {"file": "config/old.yml", "destination": "config/archive"}
+        Gotchas: requires smart mode. Multi-declaration PHP files are not supported by the semantic
+        move — use PhpStorm's interactive refactoring for those.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()

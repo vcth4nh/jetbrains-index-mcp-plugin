@@ -23,10 +23,15 @@ class SyncFilesTool : AbstractMcpTool() {
     override val name = ToolNames.SYNC_FILES
 
     override val description = """
-        Force the IDE to synchronize its virtual file system and PSI cache with external file changes. Use when files were created, modified, or deleted outside the IDE (e.g., by coding agents) and other IDE tools report stale results or miss references in recently changed files.
-        call it on-demand only when needed.
-        Parameters: paths (optional array of relative file/directory paths to sync; if omitted, syncs entire project), project_path (optional).
-        Example: {} or {"paths": ["src/main/java/com/example/NewFile.java", "src/main/java/com/example/ModifiedFile.java"]}
+        Force the IDE's virtual file system and PSI cache to sync with external file changes. Use
+        when files were created, modified, or deleted outside the IDE (e.g. by a coding agent) and
+        other tools return stale results or miss references in recently changed files. Call
+        on-demand only — it is not needed for normal workflows.
+
+        Returns: list of synced paths and whether the entire project was synced.
+
+        Gotchas: syncing the entire project can be slow on large repos; prefer passing specific
+        paths when you know which files changed.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()

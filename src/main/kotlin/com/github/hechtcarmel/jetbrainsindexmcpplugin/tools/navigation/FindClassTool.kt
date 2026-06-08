@@ -53,21 +53,22 @@ class FindClassTool : AbstractMcpTool() {
     override val name = ToolNames.FIND_CLASS
 
     override val description = """
-        Search for classes and interfaces by name. Faster than ide_find_symbol when you only need classes.
+        Search for classes and interfaces by name. Prefer this over ide_find_symbol when you only need
+        class-like types — it is faster and has better ranking. Uses the IDE's Go to Class popup
+        (Ctrl+N) headlessly.
 
-        Matching: exact by default (case-insensitive). Set fuzzySearch=true for the IDE's camelCase + substring matching ("USvc" → "UserService", "Service" → "UserService").
+        Exact match by default (case-insensitive). Set fuzzySearch=true for camelCase + substring
+        matching ("USvc" → "UserService").
 
-        Returns: matching classes with qualified names, file paths, line numbers, and kind (class/interface/enum).
+        Returns: matching classes with qualified names, file paths, line numbers, and kind
+        (class/interface/enum/…). Paginated — pass the returned cursor for the next page.
 
-        Supports pagination: first call returns results + nextCursor. Pass cursor to get the next page.
-        Parameters: query (required for fresh search), scope (optional, default: "project_files"; supported: project_files, project_and_libraries, project_production_files, project_test_files), pageSize (optional, default: 25, max: 500), cursor (for pagination, replaces search params; project_path may still be required).
-
-        Example: {"query": "UserService"} or {"query": "USvc", "fuzzySearch": true}
+        Gotchas: requires smart mode. For methods, fields, or functions use ide_find_symbol instead.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
         .projectPath()
-        .stringProperty(ParamNames.QUERY, "Search pattern. With fuzzySearch=true, uses IDE camelCase/substring matching; otherwise an exact (case-insensitive) name match. Required for fresh search, ignored when cursor is provided.")
+        .stringProperty(ParamNames.QUERY, "Class name pattern. With fuzzySearch=true, uses IDE camelCase/substring matching (e.g. \"USvc\" → \"UserService\"); otherwise an exact (case-insensitive) name match. Required for fresh search; ignored when cursor is provided.")
         .scopeProperty("Search scope. Default: project_files.")
         .stringProperty(ParamNames.LANGUAGE, "Filter results by language (e.g., \"Kotlin\", \"Java\", \"Python\"). Case-insensitive. Optional.")
         .booleanProperty(ParamNames.FUZZY_SEARCH, "When true, use the IDE's Go to Class fuzzy matching (camelCase + substring, e.g. \"USvc\" matches \"UserService\"). When false (default), match the name exactly, case-insensitively. Default: false.")

@@ -38,17 +38,17 @@ class TypeHierarchyTool : AbstractMcpTool() {
     override val name = "ide_type_hierarchy"
 
     override val description = """
-        Get the complete inheritance hierarchy for a class or interface. Use when you need to understand class relationships, find parent classes, or discover all subclasses.
+        Get the inheritance hierarchy for a class or interface — supertypes, subtypes, or both. Use
+        when you need the full tree of ancestors or descendants; prefer ide_find_super_methods for a
+        single element's direct super (cheaper), or ide_find_implementations for a flat list of
+        implementors.
 
-        Languages: Java, Kotlin, Python, JavaScript, TypeScript, PHP, Rust.
+        Returns: root class info, recursive supertypes chain, and flat subtypes list — per direction.
+        "both" unions the two walks rather than producing the IDE's combined tree view.
 
-        Rust note: className parameter not supported for Rust; use file + line + column instead.
-
-        Returns: target class info, supertype chain (recursive), and subtypes in the project — per the requested direction.
-
-        Parameters: Either className (e.g., "com.example.MyClass") OR file + line + column. direction (optional: "supertypes", "subtypes", or "both"; default: "both"). maxDepth (optional, default: 5, max: 20). scope (optional, default: "all"; supported: all, production, test).
-
-        Example: {"className": "com.example.UserService", "direction": "subtypes"} or {"file": "src/MyClass.java", "line": 10, "column": 14, "direction": "supertypes"}
+        Gotchas: requires smart mode. Languages: Java, Kotlin, Python, JS/TS, PHP, Rust. Rust does
+        not support the className shortcut — use file + line + column. Kotlin K2: direction=both/
+        supertypes requires EDT context; may show empty for some Kotlin classes.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
