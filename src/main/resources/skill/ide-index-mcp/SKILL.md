@@ -5,9 +5,7 @@ description: >
   TRIGGER: When ANY of these MCP tools are available in the current session: ide_find_usages,
   ide_find_definition, ide_find_class, ide_find_file, ide_search_text, ide_diagnostics,
   ide_index_status, ide_sync_files, ide_refactor_rename, ide_move_file, ide_type_hierarchy,
-  ide_call_hierarchy, ide_find_implementations, ide_find_symbol, ide_find_super_methods,
-  ide_file_structure, ide_refactor_safe_delete, ide_reformat_code, ide_build_project,
-  ide_read_file, ide_get_active_file, ide_open_file.
+  ide_call_hierarchy, ide_find_implementations, ide_find_super_methods, ide_refactor_safe_delete.
   Use when performing code navigation (find usages, go to definition, find class),
   code analysis (diagnostics, type hierarchy, call hierarchy),
   refactoring (rename, move, safe delete, reformat),

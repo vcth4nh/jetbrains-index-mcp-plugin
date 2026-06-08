@@ -28,6 +28,9 @@ These tools work in every supported JetBrains IDE:
 | `ide_refactor_rename` | Rename symbol with reference updates (all languages) | Enabled |
 | `ide_move_file` | Move file to new directory with IDE-aware move semantics | Enabled |
 | `ide_reformat_code` | Reformat code using project code style | Disabled |
+| `ide_optimize_imports` | Remove unused imports and organize remaining imports | Disabled |
+| `ide_install_plugin` | Install a locally built plugin `.zip` into this IDE (dev loop) | Disabled |
+| `ide_restart` | Restart this IDE (pair with `ide_install_plugin`) | Disabled |
 
 ### Extended Tools (Language-Aware)
 
@@ -64,10 +67,13 @@ These tools activate based on available language plugins:
   - [ide_index_status](#ide_index_status)
   - [ide_sync_files](#ide_sync_files)
   - [ide_build_project](#ide_build_project)
+  - [ide_install_plugin](#ide_install_plugin)
+  - [ide_restart](#ide_restart)
   - [ide_read_file](#ide_read_file)
   - [ide_get_active_file](#ide_get_active_file)
   - [ide_open_file](#ide_open_file)
 - [Refactoring Tools](#refactoring-tools)
+  - [ide_optimize_imports](#ide_optimize_imports)
   - [ide_refactor_rename](#ide_refactor_rename)
   - [ide_move_file](#ide_move_file)
   - [ide_reformat_code](#ide_reformat_code)
@@ -893,9 +899,117 @@ For Markdown heading outlines, use `ide_file_structure`.
 
 ---
 
+### ide_install_plugin
+
+> **Default**: Disabled - enable in Settings > Tools > Index MCP Server
+
+Install a locally built plugin distribution (`.zip`) into THIS IDE's custom plugins directory, replacing any existing copy of the same plugin. Used as half of the local plugin dev loop: build → `ide_install_plugin` → `ide_restart`.
+
+The new code only takes effect after an IDE restart — call `ide_restart` afterward.
+
+**Use when:**
+- Deploying a freshly built plugin zip to the running IDE during development
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `path` | string | No | Path to the plugin `.zip`. Absolute, or relative to the project root. Default: newest `*.zip` in `<project>/build/distributions/`. |
+
+**Example Request:**
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "ide_install_plugin",
+    "arguments": {}
+  }
+}
+```
+
+**Returns**: `{ "installed": true, "source": "/abs/path/plugin.zip", "pluginDir": "/abs/path/plugins/myplugin", "pluginId": "com.example.plugin", "pluginVersion": "1.0.0", "restartRequired": true, "message": "…" }`
+
+> **Disabled by default.** Enable in Settings > Tools > Index MCP Server.
+
+---
+
+### ide_restart
+
+> **Default**: Disabled - enable in Settings > Tools > Index MCP Server
+
+Restart THIS IDE. Use after `ide_install_plugin` to load a freshly installed plugin build.
+
+The restart is scheduled after this tool's response is flushed (default 2 s delay) so the MCP client receives the result before the connection drops. In remote-dev / serverMode the backend relaunches and the thin client reconnects automatically.
+
+**Use when:**
+- Loading a freshly installed plugin build (pair with `ide_install_plugin`)
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `delaySeconds` | integer | No | Seconds to wait before restarting (lets the response flush). Default: 2. Range: 0–60. |
+
+**Example Request:**
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "ide_restart",
+    "arguments": {
+      "delaySeconds": 5
+    }
+  }
+}
+```
+
+**Returns**: `{ "restarting": true, "delaySeconds": 5, "message": "IDE will restart in 5s. …" }`
+
+> **Disabled by default.** Enable in Settings > Tools > Index MCP Server.
+
+---
+
 ## Refactoring Tools
 
 > **Note**: All refactoring tools modify source files. Changes can be undone with Ctrl/Cmd+Z.
+
+### ide_optimize_imports
+
+> **Default**: Disabled - enable in Settings > Tools > Index MCP Server
+
+Optimize imports in a file: remove unused imports and organize remaining imports according to project code style. Equivalent to the IDE's "Optimize Imports" action (<kbd>Ctrl+Alt+O</kbd> / <kbd>Cmd+Opt+O</kbd>). Does NOT reformat code. Supports undo (Ctrl/Cmd+Z).
+
+**Use when:**
+- Removing unused imports after editing or refactoring
+- Organizing imports without changing any formatting
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `file` | string | Yes | File path relative to project root |
+
+**Example Request:**
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "ide_optimize_imports",
+    "arguments": {
+      "file": "src/main/kotlin/com/example/UserService.kt"
+    }
+  }
+}
+```
+
+**Returns**: `{ "success": true, "affectedFiles": ["src/…"], "changesCount": 1, "message": "Optimized imports in …" }`
+
+> **Disabled by default.** Enable in Settings > Tools > Index MCP Server.
+
+---
 
 ### ide_refactor_rename (Universal - All Languages)
 
