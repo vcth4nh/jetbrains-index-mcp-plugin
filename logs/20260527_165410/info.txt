@@ -1,0 +1,47 @@
+============================================================
+DECOMPILATION RUN INFO
+============================================================
+
+Timestamp: 2026-05-27 16:54:10
+Run ID: 20260527_165410
+
+Command Line:
+  /home/ubuntu/.local/bin/java-decom -i /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/ -o /tmp/lsi-decomp/javascript/
+
+Decompiler Configuration:
+  Name: vineflower
+  Path: /home/ubuntu/.local/share/uv/tools/java-decom/lib/python3.12/site-packages/java_decom/decompilers/vineflower/vineflower-1.12.0-slim.jar
+  JVM Args: -Xmx7G
+
+Source Download Configuration:
+  Enabled: True
+  Rate Limit: 5 req/s
+  Verify Timeout: 5s
+  Download Timeout: 30s
+
+  Force Decompile Patterns: 3 pattern(s)
+    - .*-SNAPSHOT\.jar$
+    - .*-internal-.*\.jar$
+    - ^mycompany-.*\.jar$
+
+Processing Configuration:
+  Threads: 8
+  Preserve Namespace: True
+
+============================================================
+
+
+============================================================
+RUN SUMMARY
+============================================================
+
+Total Files Processed: 29
+Successfully Processed: 29
+  - Sources Downloaded: 1
+  - Decompiled: 28
+Failed: 0
+Skipped: 0
+
+Total time: 407
+Completed: 2026-05-27 17:00:57
+Log Directory: /home/ubuntu/dev/jetbrains-index-mcp-plugin/logs/20260527_165410

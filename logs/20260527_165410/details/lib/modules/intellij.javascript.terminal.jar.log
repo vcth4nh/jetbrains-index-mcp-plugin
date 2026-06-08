@@ -1,0 +1,165 @@
+============================================================
+DECOMPILATION LOG: lib/modules/intellij.javascript.terminal.jar
+============================================================
+
+Timestamp: 2026-05-27 16:58:15
+Input Path: /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin
+Relative Path: lib/modules/intellij.javascript.terminal.jar
+Status: SUCCESS
+Return Code: 0
+
+------------------------------------------------------------
+STDOUT:
+------------------------------------------------------------
+INFO:  Loaded 0 plugins
+INFO:  JVM info: Oracle Corporation - 21.0.2 - 21.0.2+13-58
+INFO:  Scanning classes from Java runtime current
+INFO:  Scanning classes from module java.base@21.0.2
+INFO:  Scanning classes from module java.compiler@21.0.2
+INFO:  Scanning classes from module java.datatransfer@21.0.2
+INFO:  Scanning classes from module java.desktop@21.0.2
+INFO:  Scanning classes from module java.instrument@21.0.2
+INFO:  Scanning classes from module java.logging@21.0.2
+INFO:  Scanning classes from module java.management@21.0.2
+INFO:  Scanning classes from module java.management.rmi@21.0.2
+INFO:  Scanning classes from module java.naming@21.0.2
+INFO:  Scanning classes from module java.net.http@21.0.2
+INFO:  Scanning classes from module java.prefs@21.0.2
+INFO:  Scanning classes from module java.rmi@21.0.2
+INFO:  Scanning classes from module java.scripting@21.0.2
+INFO:  Scanning classes from module java.se@21.0.2
+INFO:  Scanning classes from module java.security.jgss@21.0.2
+INFO:  Scanning classes from module java.security.sasl@21.0.2
+INFO:  Scanning classes from module java.smartcardio@21.0.2
+INFO:  Scanning classes from module java.sql@21.0.2
+INFO:  Scanning classes from module java.sql.rowset@21.0.2
+INFO:  Scanning classes from module java.transaction.xa@21.0.2
+INFO:  Scanning classes from module java.xml@21.0.2
+INFO:  Scanning classes from module java.xml.crypto@21.0.2
+INFO:  Scanning classes from module jdk.accessibility@21.0.2
+INFO:  Scanning classes from module jdk.attach@21.0.2
+INFO:  Scanning classes from module jdk.charsets@21.0.2
+INFO:  Scanning classes from module jdk.compiler@21.0.2
+INFO:  Scanning classes from module jdk.crypto.cryptoki@21.0.2
+INFO:  Scanning classes from module jdk.crypto.ec@21.0.2
+INFO:  Scanning classes from module jdk.dynalink@21.0.2
+INFO:  Scanning classes from module jdk.editpad@21.0.2
+INFO:  Scanning classes from module jdk.hotspot.agent@21.0.2
+INFO:  Scanning classes from module jdk.httpserver@21.0.2
+INFO:  Scanning classes from module jdk.incubator.vector@21.0.2
+INFO:  Scanning classes from module jdk.internal.ed@21.0.2
+INFO:  Scanning classes from module jdk.internal.jvmstat@21.0.2
+INFO:  Scanning classes from module jdk.internal.le@21.0.2
+INFO:  Scanning classes from module jdk.internal.opt@21.0.2
+INFO:  Scanning classes from module jdk.internal.vm.ci@21.0.2
+INFO:  Scanning classes from module jdk.internal.vm.compiler@21.0.2
+INFO:  Scanning classes from module jdk.internal.vm.compiler.management@21.0.2
+INFO:  Scanning classes from module jdk.jartool@21.0.2
+INFO:  Scanning classes from module jdk.javadoc@21.0.2
+INFO:  Scanning classes from module jdk.jcmd@21.0.2
+INFO:  Scanning classes from module jdk.jconsole@21.0.2
+INFO:  Scanning classes from module jdk.jdeps@21.0.2
+INFO:  Scanning classes from module jdk.jdi@21.0.2
+INFO:  Scanning classes from module jdk.jdwp.agent@21.0.2
+INFO:  Scanning classes from module jdk.jfr@21.0.2
+INFO:  Scanning classes from module jdk.jlink@21.0.2
+INFO:  Scanning classes from module jdk.jpackage@21.0.2
+INFO:  Scanning classes from module jdk.jshell@21.0.2
+INFO:  Scanning classes from module jdk.jsobject@21.0.2
+INFO:  Scanning classes from module jdk.jstatd@21.0.2
+INFO:  Scanning classes from module jdk.localedata@21.0.2
+INFO:  Scanning classes from module jdk.management@21.0.2
+INFO:  Scanning classes from module jdk.management.agent@21.0.2
+INFO:  Scanning classes from module jdk.management.jfr@21.0.2
+INFO:  Scanning classes from module jdk.naming.dns@21.0.2
+INFO:  Scanning classes from module jdk.naming.rmi@21.0.2
+INFO:  Scanning classes from module jdk.net@21.0.2
+INFO:  Scanning classes from module jdk.nio.mapmode@21.0.2
+INFO:  Scanning classes from module jdk.random@21.0.2
+INFO:  Scanning classes from module jdk.sctp@21.0.2
+INFO:  Scanning classes from module jdk.security.auth@21.0.2
+INFO:  Scanning classes from module jdk.security.jgss@21.0.2
+INFO:  Scanning classes from module jdk.unsupported@21.0.2
+INFO:  Scanning classes from module jdk.unsupported.desktop@21.0.2
+INFO:  Scanning classes from module jdk.xml.dom@21.0.2
+INFO:  Scanning classes from module jdk.zipfs@21.0.2
+INFO:  Scanning classes from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.terminal.jar
+INFO:  Loading Class: com/intellij/javascript/terminal/DownloadedNodeInterpreterTerminalCustomizer from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.terminal.jar
+INFO:  Loading Class: com/intellij/javascript/terminal/NodeModulesEnvTerminalCustomizer$NodeModulesBinConfigurable$createContent$1$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.terminal.jar
+INFO:  Loading Class: com/intellij/javascript/terminal/NodeModulesEnvTerminalCustomizer$NodeModulesBinConfigurable from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.terminal.jar
+INFO:  Loading Class: com/intellij/javascript/terminal/NodeModulesEnvTerminalCustomizer$NodeModulesBinSettingsProvider from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.terminal.jar
+INFO:  Loading Class: com/intellij/javascript/terminal/NodeModulesEnvTerminalCustomizer$TerminalSettings$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.terminal.jar
+INFO:  Loading Class: com/intellij/javascript/terminal/NodeModulesEnvTerminalCustomizer$TerminalSettings$SettingsState from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.terminal.jar
+INFO:  Loading Class: com/intellij/javascript/terminal/NodeModulesEnvTerminalCustomizer$TerminalSettings from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.terminal.jar
+INFO:  Loading Class: com/intellij/javascript/terminal/NodeModulesEnvTerminalCustomizer from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.terminal.jar
+INFO:  Loading Class: com/intellij/javascript/terminal/NodeModulesEnvTerminalCustomizerKt from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.terminal.jar
+INFO:  Loading Class: com/intellij/javascript/terminal/NpmShellCommandSpecsProvider$createNpmCommandSpec$1$1$1$1$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.terminal.jar
+INFO:  Loading Class: com/intellij/javascript/terminal/NpmShellCommandSpecsProvider$createNpmCommandSpec$1$1$2$1$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.terminal.jar
+INFO:  Loading Class: com/intellij/javascript/terminal/NpmShellCommandSpecsProvider$createNpmCommandSpec$1$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.terminal.jar
+INFO:  Loading Class: com/intellij/javascript/terminal/NpmShellCommandSpecsProvider$suggestAvailablePackageNames$packagesGenerator$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.terminal.jar
+INFO:  Loading Class: com/intellij/javascript/terminal/NpmShellCommandSpecsProvider from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.terminal.jar
+INFO:  Loading Class: com/intellij/javascript/terminal/NpmShellCommandSpecsProviderKt$WhenMappings from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.terminal.jar
+INFO:  Loading Class: com/intellij/javascript/terminal/NpmShellCommandSpecsProviderKt from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.terminal.jar
+INFO:  Loading Class: com/intellij/javascript/terminal/PackageManager from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/webstorm/plugins/javascript-plugin/lib/modules/intellij.javascript.terminal.jar
+INFO:  Preprocessing class com/intellij/javascript/terminal/NodeModulesEnvTerminalCustomizer
+INFO:  Preprocessing class com/intellij/javascript/terminal/DownloadedNodeInterpreterTerminalCustomizer
+INFO:     Loading Class: java/lang/Object from module java.base@21.0.2
+INFO:  Preprocessing class com/intellij/javascript/terminal/NodeModulesEnvTerminalCustomizerKt
+INFO:  Preprocessing class com/intellij/javascript/terminal/NpmShellCommandSpecsProvider
+INFO:  Preprocessing class com/intellij/javascript/terminal/NpmShellCommandSpecsProviderKt
+INFO:  Preprocessing class com/intellij/javascript/terminal/PackageManager
+INFO:     Loading Class: java/lang/Enum from module java.base@21.0.2
+INFO:     Loading Class: java/lang/constant/Constable from module java.base@21.0.2
+INFO:     Loading Class: java/lang/Comparable from module java.base@21.0.2
+INFO:     Loading Class: java/io/Serializable from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:           Loading Class: java/util/Collection from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Iterable from module java.base@21.0.2
+INFO:           Loading Class: java/util/ArrayList from module java.base@21.0.2
+INFO:           Loading Class: java/util/AbstractList from module java.base@21.0.2
+INFO:           Loading Class: java/util/AbstractCollection from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Throwable from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Exception from module java.base@21.0.2
+INFO:  ... done
+INFO:           Loading Class: java/util/Set from module java.base@21.0.2
+INFO:           Loading Class: java/util/List from module java.base@21.0.2
+INFO:           Loading Class: java/util/SequencedCollection from module java.base@21.0.2
+INFO:           Loading Class: java/util/Collections from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  Decompiling class com/intellij/javascript/terminal/DownloadedNodeInterpreterTerminalCustomizer
+INFO:  Decompiling class com/intellij/javascript/terminal/NodeModulesEnvTerminalCustomizer
+INFO:  Decompiling class com/intellij/javascript/terminal/NodeModulesEnvTerminalCustomizerKt
+INFO:  Decompiling class com/intellij/javascript/terminal/NpmShellCommandSpecsProvider
+INFO:  Decompiling class com/intellij/javascript/terminal/NpmShellCommandSpecsProviderKt
+INFO:  Decompiling class com/intellij/javascript/terminal/PackageManager
+INFO:        Loading Class: java/lang/String from module java.base@21.0.2
+INFO:        Loading Class: java/util/RandomAccess from module java.base@21.0.2
+INFO:        Loading Class: java/lang/Cloneable from module java.base@21.0.2
+INFO:        Loading Class: java/nio/file/Path from module java.base@21.0.2
+INFO:        Loading Class: java/lang/invoke/MethodHandles$Lookup from module java.base@21.0.2
+INFO:        Loading Class: java/lang/invoke/MethodHandles from module java.base@21.0.2
+INFO:              Loading Class: java/lang/Boolean from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:              Loading Class: java/lang/RuntimeException from module java.base@21.0.2
+INFO:              Loading Class: java/lang/CharSequence from module java.base@21.0.2
+INFO:              Loading Class: java/lang/constant/ConstantDesc from module java.base@21.0.2
+INFO:              Loading Class: java/lang/Class from module java.base@21.0.2
+INFO:        Loading Class: java/util/function/Predicate from module java.base@21.0.2
+WARN:           Descriptor and signature parameter counts mismatch, attempting to correct: com/intellij/javascript/terminal/NpmShellCommandSpecsProvider$suggestAvailablePackageNames$packagesGenerator$1 <init>(Lcom/intellij/javascript/terminal/PackageManager;Lkotlin/coroutines/Continuation;)V
+INFO:        Loading Class: java/util/function/Consumer from module java.base@21.0.2
+INFO:           Loading Class: java/lang/IllegalStateException from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+WARN:           Descriptor and signature parameter counts mismatch, attempting to correct: com/intellij/javascript/terminal/NpmShellCommandSpecsProvider$createNpmCommandSpec$1$1 <init>(Lcom/intellij/javascript/terminal/PackageManager;Lcom/intellij/javascript/terminal/NpmShellCommandSpecsProvider;Lkotlin/coroutines/Continuation;)V
+INFO:           Loading Class: java/util/Arrays from module java.base@21.0.2
+WARN:              Descriptor and signature parameter counts mismatch, attempting to correct: com/intellij/javascript/terminal/NpmShellCommandSpecsProvider$createNpmCommandSpec$1$1$1$1$1 <init>(Lcom/intellij/javascript/terminal/PackageManager;Lkotlin/coroutines/Continuation;)V
+WARN:              Descriptor and signature parameter counts mismatch, attempting to correct: com/intellij/javascript/terminal/NpmShellCommandSpecsProvider$createNpmCommandSpec$1$1$2$1$1 <init>(Lcom/intellij/javascript/terminal/PackageManager;Lkotlin/coroutines/Continuation;)V
+INFO:  ... done
+
+
+============================================================

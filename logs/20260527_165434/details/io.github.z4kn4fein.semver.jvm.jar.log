@@ -1,0 +1,255 @@
+============================================================
+DECOMPILATION LOG: io.github.z4kn4fein.semver.jvm.jar
+============================================================
+
+Timestamp: 2026-05-27 16:56:00
+Input Path: /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib
+Relative Path: io.github.z4kn4fein.semver.jvm.jar
+Status: SUCCESS
+Return Code: 0
+
+------------------------------------------------------------
+STDOUT:
+------------------------------------------------------------
+INFO:  Loaded 0 plugins
+INFO:  JVM info: Oracle Corporation - 21.0.2 - 21.0.2+13-58
+INFO:  Scanning classes from Java runtime current
+INFO:  Scanning classes from module java.base@21.0.2
+INFO:  Scanning classes from module java.compiler@21.0.2
+INFO:  Scanning classes from module java.datatransfer@21.0.2
+INFO:  Scanning classes from module java.desktop@21.0.2
+INFO:  Scanning classes from module java.instrument@21.0.2
+INFO:  Scanning classes from module java.logging@21.0.2
+INFO:  Scanning classes from module java.management@21.0.2
+INFO:  Scanning classes from module java.management.rmi@21.0.2
+INFO:  Scanning classes from module java.naming@21.0.2
+INFO:  Scanning classes from module java.net.http@21.0.2
+INFO:  Scanning classes from module java.prefs@21.0.2
+INFO:  Scanning classes from module java.rmi@21.0.2
+INFO:  Scanning classes from module java.scripting@21.0.2
+INFO:  Scanning classes from module java.se@21.0.2
+INFO:  Scanning classes from module java.security.jgss@21.0.2
+INFO:  Scanning classes from module java.security.sasl@21.0.2
+INFO:  Scanning classes from module java.smartcardio@21.0.2
+INFO:  Scanning classes from module java.sql@21.0.2
+INFO:  Scanning classes from module java.sql.rowset@21.0.2
+INFO:  Scanning classes from module java.transaction.xa@21.0.2
+INFO:  Scanning classes from module java.xml@21.0.2
+INFO:  Scanning classes from module java.xml.crypto@21.0.2
+INFO:  Scanning classes from module jdk.accessibility@21.0.2
+INFO:  Scanning classes from module jdk.attach@21.0.2
+INFO:  Scanning classes from module jdk.charsets@21.0.2
+INFO:  Scanning classes from module jdk.compiler@21.0.2
+INFO:  Scanning classes from module jdk.crypto.cryptoki@21.0.2
+INFO:  Scanning classes from module jdk.crypto.ec@21.0.2
+INFO:  Scanning classes from module jdk.dynalink@21.0.2
+INFO:  Scanning classes from module jdk.editpad@21.0.2
+INFO:  Scanning classes from module jdk.hotspot.agent@21.0.2
+INFO:  Scanning classes from module jdk.httpserver@21.0.2
+INFO:  Scanning classes from module jdk.incubator.vector@21.0.2
+INFO:  Scanning classes from module jdk.internal.ed@21.0.2
+INFO:  Scanning classes from module jdk.internal.jvmstat@21.0.2
+INFO:  Scanning classes from module jdk.internal.le@21.0.2
+INFO:  Scanning classes from module jdk.internal.opt@21.0.2
+INFO:  Scanning classes from module jdk.internal.vm.ci@21.0.2
+INFO:  Scanning classes from module jdk.internal.vm.compiler@21.0.2
+INFO:  Scanning classes from module jdk.internal.vm.compiler.management@21.0.2
+INFO:  Scanning classes from module jdk.jartool@21.0.2
+INFO:  Scanning classes from module jdk.javadoc@21.0.2
+INFO:  Scanning classes from module jdk.jcmd@21.0.2
+INFO:  Scanning classes from module jdk.jconsole@21.0.2
+INFO:  Scanning classes from module jdk.jdeps@21.0.2
+INFO:  Scanning classes from module jdk.jdi@21.0.2
+INFO:  Scanning classes from module jdk.jdwp.agent@21.0.2
+INFO:  Scanning classes from module jdk.jfr@21.0.2
+INFO:  Scanning classes from module jdk.jlink@21.0.2
+INFO:  Scanning classes from module jdk.jpackage@21.0.2
+INFO:  Scanning classes from module jdk.jshell@21.0.2
+INFO:  Scanning classes from module jdk.jsobject@21.0.2
+INFO:  Scanning classes from module jdk.jstatd@21.0.2
+INFO:  Scanning classes from module jdk.localedata@21.0.2
+INFO:  Scanning classes from module jdk.management@21.0.2
+INFO:  Scanning classes from module jdk.management.agent@21.0.2
+INFO:  Scanning classes from module jdk.management.jfr@21.0.2
+INFO:  Scanning classes from module jdk.naming.dns@21.0.2
+INFO:  Scanning classes from module jdk.naming.rmi@21.0.2
+INFO:  Scanning classes from module jdk.net@21.0.2
+INFO:  Scanning classes from module jdk.nio.mapmode@21.0.2
+INFO:  Scanning classes from module jdk.random@21.0.2
+INFO:  Scanning classes from module jdk.sctp@21.0.2
+INFO:  Scanning classes from module jdk.security.auth@21.0.2
+INFO:  Scanning classes from module jdk.security.jgss@21.0.2
+INFO:  Scanning classes from module jdk.unsupported@21.0.2
+INFO:  Scanning classes from module jdk.unsupported.desktop@21.0.2
+INFO:  Scanning classes from module jdk.xml.dom@21.0.2
+INFO:  Scanning classes from module jdk.zipfs@21.0.2
+INFO:  Scanning classes from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/Inc from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/LooseVersionSerializer from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/Patterns from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/PreRelease$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/PreRelease from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/StringExtensionsKt from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/Version$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/Version from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/VersionExtensionsKt$WhenMappings from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/VersionExtensionsKt from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/VersionFormatException from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/VersionSerializer from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/CaretComparatorBuilder from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/ComparatorBuilder from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/Condition$WhenMappings from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/Condition from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/ConditionProcessor from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/Constraint$Companion$parse$comparators$1$1$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/Constraint$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/Constraint$toString$1 from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/Constraint from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/ConstraintExtensionsKt from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/ConstraintFormatException from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/ConstraintSerializer from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/HyphenConditionProcessor from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/Op from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/OpKt from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/OperatorConditionProcessor from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/Range$WhenMappings from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/Range from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/RegularComparatorBuilder from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/TildeComparatorBuilder from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/VersionComparator$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/VersionComparator from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/VersionDescriptor$Companion from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/VersionDescriptor$WhenMappings from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Loading Class: io/github/z4kn4fein/semver/constraints/VersionDescriptor from archive /home/ubuntu/.local/share/JetBrains/Toolbox/apps/rustrover/plugins/intellij-rust/lib/io.github.z4kn4fein.semver.jvm.jar
+INFO:  Preprocessing class io/github/z4kn4fein/semver/Inc
+INFO:  Preprocessing class io/github/z4kn4fein/semver/LooseVersionSerializer
+INFO:  Preprocessing class io/github/z4kn4fein/semver/Patterns
+INFO:     Loading Class: java/lang/Object from module java.base@21.0.2
+INFO:  Preprocessing class io/github/z4kn4fein/semver/PreRelease
+INFO:  Preprocessing class io/github/z4kn4fein/semver/StringExtensionsKt
+INFO:     Loading Class: java/lang/Enum from module java.base@21.0.2
+INFO:     Loading Class: java/lang/Comparable from module java.base@21.0.2
+INFO:  Preprocessing class io/github/z4kn4fein/semver/Version
+INFO:  Preprocessing class io/github/z4kn4fein/semver/VersionExtensionsKt
+INFO:  Preprocessing class io/github/z4kn4fein/semver/VersionFormatException
+INFO:     Loading Class: java/lang/Exception from module java.base@21.0.2
+INFO:  Preprocessing class io/github/z4kn4fein/semver/constraints/ComparatorBuilder
+INFO:  Preprocessing class io/github/z4kn4fein/semver/VersionSerializer
+INFO:  Preprocessing class io/github/z4kn4fein/semver/constraints/CaretComparatorBuilder
+INFO:  Preprocessing class io/github/z4kn4fein/semver/constraints/Condition
+INFO:     Loading Class: java/lang/Throwable from module java.base@21.0.2
+INFO:  Preprocessing class io/github/z4kn4fein/semver/constraints/ConditionProcessor
+INFO:     Loading Class: java/io/Serializable from module java.base@21.0.2
+INFO:     Loading Class: java/lang/constant/Constable from module java.base@21.0.2
+INFO:  Preprocessing class io/github/z4kn4fein/semver/constraints/Constraint
+INFO:  Preprocessing class io/github/z4kn4fein/semver/constraints/ConstraintExtensionsKt
+INFO:  Preprocessing class io/github/z4kn4fein/semver/constraints/ConstraintFormatException
+INFO:  Preprocessing class io/github/z4kn4fein/semver/constraints/ConstraintSerializer
+INFO:  Preprocessing class io/github/z4kn4fein/semver/constraints/HyphenConditionProcessor
+INFO:  Preprocessing class io/github/z4kn4fein/semver/constraints/Op
+INFO:  Preprocessing class io/github/z4kn4fein/semver/constraints/OpKt
+INFO:  Preprocessing class io/github/z4kn4fein/semver/constraints/OperatorConditionProcessor
+INFO:  Preprocessing class io/github/z4kn4fein/semver/constraints/Range
+INFO:  Preprocessing class io/github/z4kn4fein/semver/constraints/RegularComparatorBuilder
+INFO:  Preprocessing class io/github/z4kn4fein/semver/constraints/TildeComparatorBuilder
+INFO:  ... done
+INFO:  ... done
+INFO:  Preprocessing class io/github/z4kn4fein/semver/constraints/VersionComparator
+INFO:  Preprocessing class io/github/z4kn4fein/semver/constraints/VersionDescriptor
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:           Loading Class: java/lang/Iterable from module java.base@21.0.2
+INFO:           Loading Class: java/util/Collection from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:           Loading Class: java/util/List from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Integer from module java.base@21.0.2
+INFO:  ... done
+INFO:           Loading Class: java/util/SequencedCollection from module java.base@21.0.2
+INFO:           Loading Class: java/lang/String from module java.base@21.0.2
+INFO:           Loading Class: java/lang/CharSequence from module java.base@21.0.2
+INFO:           Loading Class: java/lang/constant/ConstantDesc from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:           Loading Class: java/util/ArrayList from module java.base@21.0.2
+INFO:           Loading Class: java/util/AbstractList from module java.base@21.0.2
+INFO:           Loading Class: java/util/AbstractCollection from module java.base@21.0.2
+INFO:           Loading Class: java/util/Iterator from module java.base@21.0.2
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  Decompiling class io/github/z4kn4fein/semver/Inc
+INFO:  Decompiling class io/github/z4kn4fein/semver/LooseVersionSerializer
+INFO:  Decompiling class io/github/z4kn4fein/semver/Patterns
+INFO:  Decompiling class io/github/z4kn4fein/semver/PreRelease
+INFO:  Decompiling class io/github/z4kn4fein/semver/StringExtensionsKt
+INFO:  Decompiling class io/github/z4kn4fein/semver/Version
+INFO:  Decompiling class io/github/z4kn4fein/semver/VersionExtensionsKt
+INFO:  Decompiling class io/github/z4kn4fein/semver/VersionFormatException
+INFO:  Decompiling class io/github/z4kn4fein/semver/VersionSerializer
+INFO:  Decompiling class io/github/z4kn4fein/semver/constraints/Condition
+INFO:  Decompiling class io/github/z4kn4fein/semver/constraints/CaretComparatorBuilder
+INFO:  Decompiling class io/github/z4kn4fein/semver/constraints/OperatorConditionProcessor
+INFO:  Decompiling class io/github/z4kn4fein/semver/constraints/Range
+INFO:  Decompiling class io/github/z4kn4fein/semver/constraints/ConditionProcessor
+INFO:  Decompiling class io/github/z4kn4fein/semver/constraints/Constraint
+INFO:  Decompiling class io/github/z4kn4fein/semver/constraints/TildeComparatorBuilder
+INFO:  Decompiling class io/github/z4kn4fein/semver/constraints/ComparatorBuilder
+INFO:  Decompiling class io/github/z4kn4fein/semver/constraints/ConstraintFormatException
+INFO:  Decompiling class io/github/z4kn4fein/semver/constraints/ConstraintExtensionsKt
+INFO:  Decompiling class io/github/z4kn4fein/semver/constraints/ConstraintSerializer
+INFO:  Decompiling class io/github/z4kn4fein/semver/constraints/HyphenConditionProcessor
+INFO:  Decompiling class io/github/z4kn4fein/semver/constraints/OpKt
+INFO:  Decompiling class io/github/z4kn4fein/semver/constraints/Op
+INFO:  Decompiling class io/github/z4kn4fein/semver/constraints/RegularComparatorBuilder
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  Decompiling class io/github/z4kn4fein/semver/constraints/VersionComparator
+INFO:  Decompiling class io/github/z4kn4fein/semver/constraints/VersionDescriptor
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:        Loading Class: java/util/ListIterator from module java.base@21.0.2
+INFO:  ... done
+INFO:           Loading Class: java/util/RandomAccess from module java.base@21.0.2
+INFO:           Loading Class: java/lang/Cloneable from module java.base@21.0.2
+INFO:        Loading Class: java/lang/StringBuilder from module java.base@21.0.2
+INFO:        Loading Class: java/lang/Math from module java.base@21.0.2
+INFO:  ... done
+WARN:              Descriptor and signature parameter counts mismatch, attempting to correct: io/github/z4kn4fein/semver/constraints/Constraint$Companion$parse$comparators$1$1$1 <init>(Ljava/util/List;Lio/github/z4kn4fein/semver/constraints/ConditionProcessor;)V
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+INFO:  ... done
+
+
+============================================================
