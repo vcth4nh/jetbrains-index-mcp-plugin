@@ -125,10 +125,8 @@ Omit `paths` to sync the entire project.
 
 ## Disabled-by-Default Tools
 
-These tools exist but are disabled by default. If you get "tool not found", they need to be enabled in IDE settings (Settings > Tools > Index MCP Server):
+Disabled-by-default tools are marked in [references/tools-reference.md](references/tools-reference.md); enable them in Settings → Tools → Index MCP Server.
 
-`ide_build_project`, `ide_file_structure`, `ide_find_symbol`, `ide_read_file`, `ide_get_active_file`, `ide_open_file`, `ide_reformat_code`
+## Return Shapes and Tool Selection
 
-## Detailed Tool Parameters
-
-For complete parameter reference with types, defaults, and return formats, see [tools-reference.md](references/tools-reference.md).
+For return shapes and tool selection guidance, see [tools-reference.md](references/tools-reference.md).
