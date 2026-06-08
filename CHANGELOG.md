@@ -4,6 +4,25 @@
 
 ## [Unreleased]
 
+## [5.0.2] - 2026-06-09
+
+### Fixed
+- Docs advertised a removed `language`/`symbol` symbol-reference target (deleted in v5.0.0); the strict
+  argument validator rejected it. Removed from USAGE.md and the agent tools-reference. Also fixed other
+  stale params (`matchMode`→`fuzzySearch`, `depth`→`maxDepth`, removed `filePattern`/`maxPreviewLines`).
+
+### Changed
+- Reorganized docs by audience: new CONTRIBUTING.md (process) + ARCHITECTURE.md (design); CLAUDE.md
+  thinned to agent rules + pointers. Rewrote the 26 MCP tool descriptions for tool-selection signal
+  (params now deferred to the JSON schema). tools-reference.md reframed around return-shapes.
+
+### Added
+- DocsDriftUnitTest: a pure unit test pinning the doc tool catalog + params to code (ToolNames,
+  McpSettings, tool schemas) so the docs can't silently drift again.
+
+### Removed
+- Six stray review/audit markdown files accidentally committed in the 5.0.1 fix.
+
 ## [5.0.1] - 2026-06-08
 
 ### Fixed
