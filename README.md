@@ -236,82 +236,9 @@ Each JetBrains IDE has a unique default port and server name to allow running mu
 
 ## Available Tools
 
-The plugin provides **26 MCP tools** organized by availability. Tools marked *(disabled by default)* can be enabled in <kbd>Settings</kbd> > <kbd>Tools</kbd> > <kbd>Index MCP Server</kbd>.
+The plugin provides **26 MCP tools** — 15 enabled by default, 11 opt-in (toggle any tool in <kbd>Settings</kbd> > <kbd>Tools</kbd> > <kbd>Index MCP Server</kbd>). The matrix below shows per-language support and live-test coverage; for parameters, examples, and return shapes, see **[USAGE.md](USAGE.md)**.
 
-### Universal Tools
-
-These tools work in all supported JetBrains IDEs.
-
-| Tool | Description |
-|------|-------------|
-| `ide_find_usages` | Find all references to a symbol across the entire project |
-| `ide_find_definition` | Find the definition/declaration location of a symbol |
-| `ide_find_class` | Search for classes/interfaces by name; exact by default, `fuzzySearch: true` for camelCase/substring matching |
-| `ide_find_file` | Search for files by name using IDE's file index |
-| `ide_find_symbol` | Search for symbols (classes, methods, fields, functions) by name with IntelliJ Go to Symbol matching *(disabled by default)* |
-| `ide_search_text` | Text search using IDE's pre-built word index with context filtering |
-| `ide_diagnostics` | Analyze file problems with fresh editor diagnostics for open files or public batch diagnostics for closed files, plus optional build/test results; intentions are best-effort |
-| `ide_index_status` | Check if the IDE is in dumb mode or smart mode |
-| `ide_sync_files` | Force sync IDE's virtual file system and PSI cache with external file changes |
-| `ide_build_project` | Build project using IDE's build system (JPS, Gradle, Maven) with structured errors *(disabled by default)* |
-| `ide_read_file` | Read file content by path or qualified name, including library/jar sources *(disabled by default)* |
-| `ide_get_active_file` | Get the currently active file(s) in the editor with cursor position *(disabled by default)* |
-| `ide_open_file` | Open a file in the editor with optional line/column navigation *(disabled by default)* |
-| `ide_refactor_rename` | Rename a symbol and update all references across the project (all languages) |
-| `ide_move_file` | Move a file to a new directory, applying language-aware reference/package updates when the IDE provides a semantic move backend |
-| `ide_reformat_code` | Reformat code using project code style with import optimization *(disabled by default)* |
-| `ide_optimize_imports` | Optimize imports in a file without reformatting code *(disabled by default)* |
-| `ide_install_plugin` | Install a plugin ZIP into the IDE's plugin directory (dev-loop tool) *(disabled by default)* |
-| `ide_restart` | Schedule an IDE restart (dev-loop tool) *(disabled by default)* |
-
-### Extended Tools (Language-Aware)
-
-These tools activate based on available language plugins:
-
-| Tool | Description | Languages |
-|------|-------------|-----------|
-| `ide_type_hierarchy` | Get the complete type hierarchy (supertypes and subtypes) | Java, Kotlin, Python, JS/TS, Go, PHP, Rust |
-| `ide_call_hierarchy` | Analyze method call relationships (callers or callees) | Java, Kotlin, Python, JS/TS, Go, PHP, Rust |
-| `ide_find_implementations` | Find all implementations of an interface or abstract method | Java, Kotlin, Python, JS/TS, Go, PHP, Rust |
-| `ide_find_super_methods` | Find the full inheritance hierarchy of methods that a method overrides/implements | Java, Kotlin, Python, JS/TS, PHP, Go, Rust |
-| `ide_file_structure` | Get hierarchical file structure (similar to IDE's Structure view) *(disabled by default)* | Java, Kotlin, Python, JS/TS, Go, PHP, Rust, Markdown |
-
-### Java-Specific Refactoring Tools
-
-| Tool | Description |
-|------|-------------|
-| `ide_convert_java_to_kotlin` | Convert Java files to Kotlin using IntelliJ's built-in converter *(disabled by default, requires Java + Kotlin plugins)* |
-| `ide_refactor_safe_delete` | Safely delete an element, checking for usages first (Java/Kotlin only) |
-
-> **Note**: Refactoring tools modify source files. All changes support undo via <kbd>Ctrl/Cmd+Z</kbd>.
-
-### Tool Availability by IDE
-
-**Fully Tested:**
-
-| IDE | Universal | Navigation | Refactoring |
-|-----|-----------|------------|-------------|
-| IntelliJ IDEA | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat + safe delete + Java→Kotlin |
-| Android Studio | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat + safe delete + Java→Kotlin |
-| PyCharm | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat |
-| WebStorm | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat |
-| GoLand | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat |
-| RustRover | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat |
-| PhpStorm | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat |
-
-**May Work (Untested):**
-
-| IDE | Universal | Navigation | Refactoring |
-|-----|-----------|------------|-------------|
-| RubyMine | ✓ 14 tools | ✓ 2 Markdown tools | ✓ rename + reformat |
-| CLion | ✓ 14 tools | ✓ 2 Markdown tools | ✓ rename + reformat |
-| DataGrip | ✓ 14 tools | ✓ 2 Markdown tools | ✓ rename + reformat |
-
-> **Note**: Navigation tools activate when language plugins are present. Markdown adds heading search and file-structure support when the bundled Markdown plugin is enabled. The rename and reformat tools work across all languages. `ide_convert_java_to_kotlin` is available only in IntelliJ IDEA and Android Studio, requires both Java and Kotlin plugins, and is disabled by default.
-
-### Tool Support by Language
-
-Per-language support and test coverage. **✅** supported & covered by the per-language live-test suite · **⚠️** supported, not yet in the per-language suite · **⛔** not supported.
+**Legend:** **✅** supported & covered by the per-language live-test suite · **⚠️** supported, not yet in the per-language suite · **⛔** not supported.
 
 **Navigation & search**
 
@@ -365,8 +292,6 @@ Per-language support and test coverage. **✅** supported & covered by the per-l
 | `ide_open_file` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
 
 > `ide_find_implementations` works in Go (verified live) but isn't in the snapshot suite yet. `ide_refactor_safe_delete` and `ide_convert_java_to_kotlin` require the Java plugin. Project & editor tools are language-agnostic; `index_status` / `install_plugin` / `restart` are exercised on every IDE by the test harness.
-
-For detailed tool documentation with parameters and examples, see [USAGE.md](USAGE.md).
 
 ## Multi-Project Support
 
