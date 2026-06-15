@@ -15,22 +15,22 @@ be passed back unchanged. Line and column numbers are **1-based**.
 ### ide_find_usages
 Find all usages of a symbol (semantic, not text search).
 
-**Returns**: `{ usages: [{ file, line, column, context, type, astPath }], totalCount, truncated, nextCursor?, hasMore, totalCollected, offset, pageSize, stale }`
+**Returns**: `{ usages: [{ file, line, column, preview, usageType, enclosingScope }], totalCount, truncated, nextCursor?, hasMore, totalCollected, offset, pageSize, stale }`
 
 `truncated` mirrors `hasMore`; when `hasMore` is `true`, pass `nextCursor` to fetch the next page.
-`type` values: `METHOD_CALL`, `FIELD_ACCESS`, `IMPORT`, `PARAMETER`, `VARIABLE`, `REFERENCE`.
+`usageType` values: `METHOD_CALL`, `FIELD_ACCESS`, `IMPORT`, `PARAMETER`, `VARIABLE`, `REFERENCE`.
 
 ### ide_find_definition
 Go to where a symbol is defined.
 
-**Returns**: `{ file, line, column, preview, symbolName, astPath }`
+**Returns**: `{ file, line, column, name, kind, preview, qualifiedName?, enclosingScope? }`
 
 Handles packages, compiled classes, and library sources (`jar://` URLs).
 
 ### ide_find_class
 Search for classes/interfaces by name using IDE's class index (Ctrl+N / Cmd+O equivalent).
 
-**Returns**: `{ classes: [{name, qualifiedName, file, line, kind, language}], totalCount, query }`
+**Returns**: `{ classes: [{name, qualifiedName, kind, file, line, column}], totalCount, query }`
 
 Project results use relative paths; dependency/library results may use absolute paths or `jar://` URLs.
 Exact (case-insensitive) by default; with `fuzzySearch: true`, IDE camelCase/substring matching applies (`USvc` → `UserService`).
@@ -45,21 +45,22 @@ Project results use relative paths; dependency/library results may use absolute 
 ### ide_search_text
 Search for exact words using IDE's pre-built word index. O(1) lookups, not file scanning.
 
-**Returns**: `{ matches: [{file, line, column, context}], totalCount, query }`
+**Returns**: `{ matches: [{file, line, column, context, contextType}], totalCount, query }`
 
+`contextType` values: `CODE`, `COMMENT`, `STRING_LITERAL`.
 **Selection note**: exact-word only (uses word index, not regex). Use `Grep` for regex patterns.
 
 ### ide_find_implementations
 Find implementations of interfaces, abstract classes, or abstract methods.
 
-**Returns**: `{ implementations: [{name, file, line, column, kind, language}], totalCount, nextCursor?, hasMore, totalCollected, offset, pageSize, stale }`
+**Returns**: `{ implementations: [{name, qualifiedName?, file, line, column, kind}], totalCount, nextCursor?, hasMore, totalCollected, offset, pageSize, stale }`
 
 **Languages**: Java, Kotlin, Python, JS/TS, PHP, Rust (not Go).
 
 ### ide_find_symbol (disabled by default)
 Search for any code symbol (classes, methods, fields, functions) by name.
 
-**Returns**: `{ symbols: [{name, qualifiedName, file, line, kind, language}], totalCount, query }`
+**Returns**: `{ symbols: [{name, qualifiedName, kind, file, line, column}], totalCount, query }`
 
 **Languages**: Java, Kotlin, Python, JS/TS, Go, PHP, Rust, plus other IDE-supplied symbol contributors where available.
 Project results use relative paths; dependency/library results may use absolute paths or `jar://` URLs.
@@ -67,14 +68,14 @@ Project results use relative paths; dependency/library results may use absolute 
 ### ide_find_super_methods
 Find parent methods that a given method overrides or implements.
 
-**Returns**: `{ method: {name, class, file, line}, hierarchy: [{name, class, file, line, isInterface}], totalCount }`
+**Returns**: `{ method: {name, qualifiedName?, kind, file, line, column}, hierarchy: [{name, qualifiedName?, kind, file?, line?, column?}] }`
 
 **Languages**: Java, Kotlin, Python, JS/TS, PHP. Go returns interface methods a type satisfies. Rust returns trait fn/const/type alias the impl satisfies.
 
 ### ide_type_hierarchy
 Get complete type inheritance hierarchy (supertypes and subtypes).
 
-**Returns**: `{ element: {name, file, kind, language, supertypes?}, supertypes: [{name, file, kind, language, supertypes?}], subtypes: [{name, file, kind, language, supertypes?}] }`
+**Returns**: `{ element: {name, qualifiedName?, enclosingScope?, kind, file?, line?, column?, supertypes?}, supertypes: [{name, qualifiedName?, enclosingScope?, kind, file?, line?, column?, supertypes?}], subtypes: [{name, qualifiedName?, enclosingScope?, kind, file?, line?, column?, supertypes?}] }`
 
 Provide either `className` (FQN, preferred) or `file`+`line`+`column`. Unlike other read-only navigation tools, file mode does not resolve dependency/library absolute paths or `jar://` URLs.
 **Languages**: Java, Kotlin, Python, JS/TS, PHP, Rust.
@@ -82,7 +83,7 @@ Provide either `className` (FQN, preferred) or `file`+`line`+`column`. Unlike ot
 ### ide_call_hierarchy
 Build call tree showing who calls a method or what a method calls.
 
-**Returns**: `{ element: {name, file, line, column, language}, calls: [{name, file, line, column, language, children: [...]}] }`
+**Returns**: `{ element: {name, qualifiedName?, enclosingScope?, kind, file, line, column}, calls: [{name, qualifiedName?, enclosingScope?, kind, file, line, column, children?: [...]}] }`
 
 **Languages**: Java, Kotlin, Python, JS/TS, Go, PHP, Rust.
 
@@ -107,7 +108,7 @@ Provide either `file` or `qualifiedName`.
 ### ide_diagnostics
 Analyze a file for errors, warnings, and available quick fixes/intentions.
 
-**Returns**: `{ problems: [{message, severity, line, column, source}], intentions: [{name, description, familyName}], problemCount, intentionCount, analysisFresh, analysisTimedOut, analysisMessage }`
+**Returns**: `{ problems: [{message, severity, file, line, column, endLine?, endColumn?}], intentions: [{name, description?}], problemCount, intentionCount, analysisFresh, analysisTimedOut, analysisMessage }`
 
 `severity` values: `ERROR`, `WARNING`, `WEAK_WARNING`. Open files use fresh daemon highlights; closed files use public batch analysis so `WEAK_WARNING` results and quick-fix intentions may be less complete.
 
@@ -133,7 +134,7 @@ Supports IDE undo (Ctrl+Z).
 Delete a symbol or file, checking for usages first.
 
 **Returns (success)**: `{ success, affectedFiles, changesCount, message }`
-**Returns (blocked)**: `{ canDelete: false, elementName, usageCount, blockingUsages: [...], message }`
+**Returns (blocked)**: `{ canDelete: false, elementName, elementType, usageCount, blockingUsages: [{file, line, column, context}], message }`
 
 **Availability**: IntelliJ IDEA, Android Studio (requires Java plugin).
 
@@ -150,8 +151,9 @@ Remove unused imports and organize them without reformatting code (Ctrl+Alt+O eq
 ### ide_convert_java_to_kotlin (disabled by default)
 Convert Java files to Kotlin using IntelliJ's built-in J2K converter.
 
-**Returns**: `{ convertedFiles: [path], warnings: [string], message }`
+**Returns**: `{ files: [{requestedPath, status, kotlinFile?, linesConverted?, javaFileDeleted?, reason?}], summary: {totalRequested, converted, skipped, failed} }`
 
+`status` values: `CONVERTED`, `SKIPPED`, `FAILED`. Success fields (`kotlinFile`, `linesConverted`, `javaFileDeleted`) are set only when `status == CONVERTED`; `reason` is set only when `status != CONVERTED`.
 **Availability**: IntelliJ IDEA, Android Studio (requires both Java and Kotlin plugins).
 
 ---
@@ -175,21 +177,21 @@ Call when files were created or modified outside the IDE and search tools miss t
 ### ide_build_project (disabled by default)
 Build project using IDE's build system (JPS, Gradle, Maven).
 
-**Returns**: `{ success, aborted, errors?, warnings?, buildMessages: [{message, file, line, column, severity}], truncated, rawOutput?, durationMs }`
+**Returns**: `{ success, aborted, errors?, warnings?, buildMessages: [{category, message, file?, line?, column?}], truncated, rawOutput?, durationMs }`
 
 `errors`/`warnings` are `null` when no messages were captured (not 0).
 
 ### ide_install_plugin (disabled by default)
 Install a locally built plugin distribution (`.zip`) into this IDE's custom plugins directory.
 
-**Returns**: `{ installed, path, restartRequired, message }`
+**Returns**: `{ installed, source, pluginDir, pluginId?, pluginVersion?, restartRequired, message }`
 
 Always reports `restartRequired: true`. Pair with `ide_restart`.
 
 ### ide_restart (disabled by default)
 Restart this IDE, scheduled after the response is flushed.
 
-**Returns**: `{ scheduled, delaySeconds, message }`
+**Returns**: `{ restarting, delaySeconds, message }`
 
 Used with `ide_install_plugin` for the local plugin dev loop.
 
@@ -200,7 +202,7 @@ Used with `ide_install_plugin` for the local plugin dev loop.
 ### ide_get_active_file (disabled by default)
 Get currently active file(s) in editor with cursor position and selection.
 
-**Returns**: `{ activeFiles: [{file, line, column, selectedText, language}] }`
+**Returns**: `{ activeFiles: [{file, line?, column?, selectedText?, hasSelection, language?}] }`
 
 ### ide_open_file (disabled by default)
 Open a file in the editor with optional navigation.
