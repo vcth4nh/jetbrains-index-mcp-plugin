@@ -236,9 +236,12 @@ Each JetBrains IDE has a unique default port and server name to allow running mu
 
 ## Available Tools
 
-The plugin provides **26 MCP tools** — 15 enabled by default, 11 opt-in (toggle any tool in <kbd>Settings</kbd> > <kbd>Tools</kbd> > <kbd>Index MCP Server</kbd>). The matrix below shows per-language support and live-test coverage; for parameters, examples, and return shapes, see **[USAGE.md](USAGE.md)**.
+The plugin provides **26 MCP tools** — 15 enabled by default, 11 opt-in (toggle any tool in <kbd>Settings</kbd> > <kbd>Tools</kbd> > <kbd>Index MCP Server</kbd>). The matrix below shows per-language support and test status; for parameters, examples, and return shapes, see **[USAGE.md](USAGE.md)**.
 
-**Legend:** **✅** supported & covered by the per-language live-test suite · **⚠️** supported, not yet in the per-language suite · **⛔** not supported.
+**Legend:**
+- **✅** supported & tested
+- **⚠️** should work, not tested
+- **⛔** not supported
 
 **Navigation & search**
 
@@ -248,8 +251,8 @@ The plugin provides **26 MCP tools** — 15 enabled by default, 11 opt-in (toggl
 | `ide_find_definition` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `ide_find_class` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `ide_find_symbol` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `ide_find_file` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
-| `ide_search_text` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_find_file` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_search_text` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 **Hierarchy & structure**
 
@@ -257,7 +260,7 @@ The plugin provides **26 MCP tools** — 15 enabled by default, 11 opt-in (toggl
 |------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
 | `ide_type_hierarchy` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `ide_call_hierarchy` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `ide_find_implementations` | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ✅ | ✅ |
+| `ide_find_implementations` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `ide_find_super_methods` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `ide_file_structure` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
@@ -265,7 +268,7 @@ The plugin provides **26 MCP tools** — 15 enabled by default, 11 opt-in (toggl
 
 | Tool | Java | Kotlin | Python | JS | TS | Go | PHP | Rust |
 |------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| `ide_diagnostics` | ✅ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_diagnostics` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 **Refactoring**
 
@@ -285,17 +288,15 @@ The plugin provides **26 MCP tools** — 15 enabled by default, 11 opt-in (toggl
 | `ide_index_status` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `ide_install_plugin` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `ide_restart` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `ide_sync_files` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
-| `ide_build_project` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
-| `ide_read_file` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
-| `ide_get_active_file` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
-| `ide_open_file` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_sync_files` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_build_project` | ✅ | ✅ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_read_file` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_get_active_file` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_open_file` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 > **Notes:**
-> - `ide_find_implementations` works in Go (verified live) but isn't in the snapshot suite yet.
-> - `ide_refactor_safe_delete` and `ide_convert_java_to_kotlin` require the Java plugin.
-> - Most Project & editor tools are language-agnostic; `index_status` / `install_plugin` / `restart` are exercised on every IDE by the test harness.
-> - `ide_build_project` is build-system-driven (JPS/Gradle/Maven), not language-driven — on a project with no IDE-driven build system it returns trivial success without compiling, so its ⚠️ marks tool reachability, not that a real build occurs.
+> - `ide_refactor_safe_delete` and `ide_convert_java_to_kotlin` require the Java plugin; refactoring tools are supported but not yet live-tested here (⚠️).
+> - `ide_build_project` does a real build on JVM projects (Java/Kotlin, via JPS — ✅). It's build-system-driven (JPS/Gradle/Maven), so on non-JVM projects with no such build it returns trivial success without compiling — those stay ⚠️.
 > - `ide_find_file` works across all languages, but a bare `*.ext` wildcard may return nothing — pass a name fragment instead (e.g. `*Super.java`). Tracked in [#32](https://github.com/vcth4nh/jetbrains-index-mcp-plugin/issues/32).
 > - `ide_search_text` is backed by the IDE's word index, so language keywords (e.g. Kotlin `fun`) may not be matched even though identifiers and most words are.
 
