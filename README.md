@@ -295,7 +295,7 @@ These tools activate based on available language plugins:
 | Android Studio | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat + safe delete + Java→Kotlin |
 | PyCharm | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat |
 | WebStorm | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat |
-| GoLand | ✓ 14 tools | ✓ 5 tools | ✓ rename + reformat |
+| GoLand | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat |
 | RustRover | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat |
 | PhpStorm | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat |
 
