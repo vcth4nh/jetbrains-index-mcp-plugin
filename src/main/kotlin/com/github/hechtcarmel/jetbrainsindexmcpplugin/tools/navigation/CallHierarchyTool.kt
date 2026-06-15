@@ -30,7 +30,7 @@ import kotlinx.serialization.json.put
 /**
  * Tool for analyzing method call relationships across multiple languages.
  *
- * Supports: Java, Kotlin, Python, JavaScript, TypeScript, PHP, Rust
+ * Supports: Java, Kotlin, Python, JavaScript, TypeScript, Go, PHP, Rust
  *
  * Delegates to the IDE's LanguageCallHierarchy extension point via [HierarchyTreeWalker].
  */
@@ -46,7 +46,7 @@ class CallHierarchyTool : AbstractMcpTool() {
         Returns: recursive tree with method names, qualified names, file locations (line/column),
         and nested call relationships up to maxDepth.
 
-        Gotchas: requires smart mode. Languages: Java, Kotlin, Python, JS/TS, PHP, Rust. Rust
+        Gotchas: requires smart mode. Languages: Java, Kotlin, Python, JS/TS, Go, PHP, Rust. Rust
         "callees" may be incomplete due to PSI resolution limits.
     """.trimIndent()
 

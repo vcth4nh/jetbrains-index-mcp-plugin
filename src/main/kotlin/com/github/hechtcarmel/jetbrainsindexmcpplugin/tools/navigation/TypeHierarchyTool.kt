@@ -29,7 +29,7 @@ import kotlinx.serialization.json.put
 /**
  * Tool for retrieving type hierarchies across multiple languages.
  *
- * Supports: Java, Kotlin, Python, JavaScript, TypeScript, PHP, Rust
+ * Supports: Java, Kotlin, Python, JavaScript, TypeScript, Go, PHP, Rust
  *
  * Delegates to the IDE's LanguageTypeHierarchy extension point via [HierarchyTreeWalker].
  */
@@ -46,8 +46,8 @@ class TypeHierarchyTool : AbstractMcpTool() {
         Returns: root class info, recursive supertypes chain, and flat subtypes list — per direction.
         "both" unions the two walks rather than producing the IDE's combined tree view.
 
-        Gotchas: requires smart mode. Languages: Java, Kotlin, Python, JS/TS, PHP, Rust. Rust does
-        not support the className shortcut — use file + line + column. Kotlin K2: direction=both/
+        Gotchas: requires smart mode. Languages: Java, Kotlin, Python, JS/TS, Go, PHP, Rust. Rust
+        does not support the className shortcut — use file + line + column. Kotlin K2: direction=both/
         supertypes requires EDT context; may show empty for some Kotlin classes.
     """.trimIndent()
 

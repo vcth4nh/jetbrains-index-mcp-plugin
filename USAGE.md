@@ -40,9 +40,9 @@ These tools activate based on available language plugins:
 |------|-------------|-----------|
 | `ide_type_hierarchy` | Get type inheritance hierarchy | Java, Kotlin, Python, JS/TS, Go, PHP, Rust |
 | `ide_call_hierarchy` | Analyze method call relationships | Java, Kotlin, Python, JS/TS, Go, PHP, Rust |
-| `ide_find_implementations` | Find interface implementations | Java, Kotlin, Python, JS/TS, PHP, Rust |
+| `ide_find_implementations` | Find interface implementations | Java, Kotlin, Python, JS/TS, Go, PHP, Rust |
 | `ide_find_super_methods` | Find overridden methods | Java, Kotlin, Python, JS/TS, PHP, Go, Rust |
-| `ide_file_structure` | Hierarchical file structure *(disabled by default)* | Java, Kotlin, Python, JS/TS, Markdown |
+| `ide_file_structure` | Hierarchical file structure *(disabled by default)* | Java, Kotlin, Python, JS/TS, Go, PHP, Rust, Markdown |
 
 ### Java-Specific Refactoring Tools
 
@@ -1465,7 +1465,7 @@ Analyzes method call relationships to find callers or callees.
 
 Finds all concrete implementations of an interface, abstract class, or abstract method.
 
-**Languages:** Java, Kotlin, Python, JS/TS, PHP, Rust (not Go — Go uses implicit interfaces).
+**Languages:** Java, Kotlin, Python, JS/TS, Go, PHP, Rust.
 
 **Use when:**
 - Locating classes that implement an interface
@@ -1619,7 +1619,7 @@ Finds the complete inheritance hierarchy for a method - all parent methods it ov
 
 Get the hierarchical structure of a source file, similar to the IDE's Structure view (<kbd>Cmd+7</kbd> / <kbd>Alt+7</kbd>).
 
-**Languages:** Java, Kotlin, Python, JavaScript, TypeScript, Markdown.
+**Languages:** Java, Kotlin, Python, JavaScript, TypeScript, Go, PHP, Rust, Markdown.
 
 **Use when:**
 - Getting an overview of a file's classes, methods, fields, or Markdown heading outline
