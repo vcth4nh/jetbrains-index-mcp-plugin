@@ -160,17 +160,17 @@ Finds all references to a symbol across the entire project using IntelliJ's sema
       "file": "src/main/java/com/example/UserController.java",
       "line": 42,
       "column": 15,
-      "context": "userService.findUser(id)",
-      "type": "METHOD_CALL",
-      "astPath": ["UserController", "getUser"]
+      "preview": "userService.findUser(id)",
+      "usageType": "METHOD_CALL",
+      "enclosingScope": ["UserController", "getUser"]
     },
     {
       "file": "src/test/java/com/example/UserServiceTest.java",
       "line": 28,
       "column": 10,
-      "context": "service.findUser(\"test\")",
-      "type": "METHOD_CALL",
-      "astPath": ["UserServiceTest", "testFindUser"]
+      "preview": "service.findUser(\"test\")",
+      "usageType": "METHOD_CALL",
+      "enclosingScope": ["UserServiceTest", "testFindUser"]
     }
   ],
   "totalCount": 2,
@@ -233,9 +233,11 @@ Finds the definition/declaration location of a symbol at a given source location
   "file": "src/main/java/com/example/UserService.java",
   "line": 15,
   "column": 17,
+  "name": "findUser",
+  "kind": "METHOD",
   "preview": "14:     \n15:     public User findUser(String id) {\n16:         return userRepository.findById(id);\n17:     }",
-  "symbolName": "findUser",
-  "astPath": ["UserService"]
+  "qualifiedName": "com.example.UserService.findUser",
+  "enclosingScope": ["UserService"]
 }
 ```
 
@@ -538,9 +540,8 @@ Checks if the IDE is in dumb mode (indexing) or smart mode.
 ```json
 {
   "isDumbMode": false,
-  "isSmartMode": true,
   "isIndexing": false,
-  "projectName": "my-application"
+  "indexingProgress": null
 }
 ```
 
@@ -627,7 +628,7 @@ Build the project using the IDE's build system (supports JPS, Gradle, Maven).
   "warnings": 2,
   "buildMessages": [
     {
-      "severity": "ERROR",
+      "category": "ERROR",
       "message": "Unresolved reference: fooBar",
       "file": "src/main/kotlin/com/example/App.kt",
       "line": 15,
@@ -857,8 +858,7 @@ Searches for code symbols (classes, interfaces, methods, fields, and functions) 
       "kind": "INTERFACE",
       "file": "src/main/java/com/example/service/UserService.java",
       "line": 12,
-      "column": 18,
-      "containerName": null
+      "column": 18
     },
     {
       "name": "UserServiceImpl",
@@ -866,8 +866,7 @@ Searches for code symbols (classes, interfaces, methods, fields, and functions) 
       "kind": "CLASS",
       "file": "src/main/java/com/example/service/UserServiceImpl.java",
       "line": 15,
-      "column": 14,
-      "containerName": null
+      "column": 14
     },
     {
       "name": "findUser",
@@ -875,8 +874,7 @@ Searches for code symbols (classes, interfaces, methods, fields, and functions) 
       "kind": "METHOD",
       "file": "src/main/java/com/example/service/UserService.java",
       "line": 18,
-      "column": 10,
-      "containerName": "UserService"
+      "column": 10
     }
   ],
   "totalCount": 3,
@@ -1350,31 +1348,31 @@ Retrieves the complete type hierarchy for a class or interface.
 ```json
 {
   "element": {
-    "name": "com.example.UserServiceImpl",
-    "file": "src/main/java/com/example/UserServiceImpl.java",
+    "name": "UserServiceImpl",
+    "qualifiedName": "com.example.UserServiceImpl",
     "kind": "CLASS",
-    "language": "Java"
+    "file": "src/main/java/com/example/UserServiceImpl.java"
   },
   "supertypes": [
     {
-      "name": "com.example.UserService",
-      "file": "src/main/java/com/example/UserService.java",
+      "name": "UserService",
+      "qualifiedName": "com.example.UserService",
       "kind": "INTERFACE",
-      "language": "Java"
+      "file": "src/main/java/com/example/UserService.java"
     },
     {
-      "name": "com.example.BaseService",
-      "file": "src/main/java/com/example/BaseService.java",
+      "name": "BaseService",
+      "qualifiedName": "com.example.BaseService",
       "kind": "ABSTRACT_CLASS",
-      "language": "Java"
+      "file": "src/main/java/com/example/BaseService.java"
     }
   ],
   "subtypes": [
     {
-      "name": "com.example.AdminUserServiceImpl",
-      "file": "src/main/java/com/example/AdminUserServiceImpl.java",
+      "name": "AdminUserServiceImpl",
+      "qualifiedName": "com.example.AdminUserServiceImpl",
       "kind": "CLASS",
-      "language": "Java"
+      "file": "src/main/java/com/example/AdminUserServiceImpl.java"
     }
   ]
 }
@@ -1433,26 +1431,29 @@ Analyzes method call relationships to find callers or callees.
 ```json
 {
   "element": {
-    "name": "UserService.validateUser(String)",
+    "name": "validateUser",
+    "qualifiedName": "com.example.UserService.validateUser",
+    "kind": "METHOD",
     "file": "src/main/java/com/example/UserService.java",
     "line": 20,
-    "column": 17,
-    "language": "Java"
+    "column": 17
   },
   "calls": [
     {
-      "name": "UserController.createUser(UserRequest)",
+      "name": "createUser",
+      "qualifiedName": "com.example.UserController.createUser",
+      "kind": "METHOD",
       "file": "src/main/java/com/example/UserController.java",
       "line": 45,
-      "column": 17,
-      "language": "Java"
+      "column": 17
     },
     {
-      "name": "UserController.updateUser(String, UserRequest)",
+      "name": "updateUser",
+      "qualifiedName": "com.example.UserController.updateUser",
+      "kind": "METHOD",
       "file": "src/main/java/com/example/UserController.java",
       "line": 62,
-      "column": 17,
-      "language": "Java"
+      "column": 17
     }
   ]
 }
@@ -1504,14 +1505,16 @@ Finds all concrete implementations of an interface, abstract class, or abstract 
 {
   "implementations": [
     {
-      "name": "com.example.JpaUserRepository",
+      "name": "JpaUserRepository",
+      "qualifiedName": "com.example.JpaUserRepository",
       "file": "src/main/java/com/example/JpaUserRepository.java",
       "line": 12,
       "column": 14,
       "kind": "CLASS"
     },
     {
-      "name": "com.example.InMemoryUserRepository",
+      "name": "InMemoryUserRepository",
+      "qualifiedName": "com.example.InMemoryUserRepository",
       "file": "src/main/java/com/example/InMemoryUserRepository.java",
       "line": 8,
       "column": 14,
@@ -1574,8 +1577,8 @@ Finds the complete inheritance hierarchy for a method - all parent methods it ov
 {
   "method": {
     "name": "findUser",
-    "signature": "findUser(String id): User",
-    "containingClass": "com.example.UserServiceImpl",
+    "qualifiedName": "com.example.UserServiceImpl.findUser",
+    "kind": "METHOD",
     "file": "src/main/java/com/example/UserServiceImpl.java",
     "line": 25,
     "column": 17
@@ -1583,40 +1586,30 @@ Finds the complete inheritance hierarchy for a method - all parent methods it ov
   "hierarchy": [
     {
       "name": "findUser",
-      "signature": "findUser(String id): User",
-      "containingClass": "com.example.AbstractUserService",
-      "containingClassKind": "ABSTRACT_CLASS",
+      "qualifiedName": "com.example.AbstractUserService.findUser",
+      "kind": "METHOD",
       "file": "src/main/java/com/example/AbstractUserService.java",
       "line": 18,
-      "column": 17,
-      "isInterface": false,
-      "depth": 1
+      "column": 17
     },
     {
       "name": "findUser",
-      "signature": "findUser(String id): User",
-      "containingClass": "com.example.UserService",
-      "containingClassKind": "INTERFACE",
+      "qualifiedName": "com.example.UserService.findUser",
+      "kind": "METHOD",
       "file": "src/main/java/com/example/UserService.java",
       "line": 12,
-      "column": 10,
-      "isInterface": true,
-      "depth": 2
+      "column": 10
     }
-  ],
-  "totalCount": 2
+  ]
 }
 ```
 
-**Depth field:** The `depth` field indicates the level in the hierarchy:
-- `depth: 1` = immediate parent (first level up)
-- `depth: 2` = grandparent (two levels up)
-- And so on...
+**hierarchy entries** walk from the immediate parent upward; the first entry is the nearest ancestor that defines or declares the method.
 
-**containingClassKind Values:**
-- `CLASS` - Concrete class
-- `ABSTRACT_CLASS` - Abstract class
-- `INTERFACE` - Interface
+**kind Values** (for both `method` and `hierarchy` entries):
+- `METHOD` - Regular method
+- `FUNCTION` - Function (dynamic languages)
+- `FIELD` - Field or property override
 
 ---
 
