@@ -309,6 +309,63 @@ These tools activate based on available language plugins:
 
 > **Note**: Navigation tools activate when language plugins are present. Markdown adds heading search and file-structure support when the bundled Markdown plugin is enabled. The rename and reformat tools work across all languages. `ide_convert_java_to_kotlin` is available only in IntelliJ IDEA and Android Studio, requires both Java and Kotlin plugins, and is disabled by default.
 
+### Tool Support by Language
+
+Per-language support and test coverage. **✅** supported & covered by the per-language live-test suite · **⚠️** supported, not yet in the per-language suite · **⛔** not supported.
+
+**Navigation & search**
+
+| Tool | Java | Kotlin | Python | JS | TS | Go | PHP | Rust |
+|------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| `ide_find_usages` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_find_definition` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_find_class` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_find_symbol` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_find_file` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_search_text` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+
+**Hierarchy & structure**
+
+| Tool | Java | Kotlin | Python | JS | TS | Go | PHP | Rust |
+|------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| `ide_type_hierarchy` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_call_hierarchy` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_find_implementations` | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ | ✅ | ✅ |
+| `ide_find_super_methods` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_file_structure` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+**Analysis**
+
+| Tool | Java | Kotlin | Python | JS | TS | Go | PHP | Rust |
+|------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| `ide_diagnostics` | ✅ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+
+**Refactoring**
+
+| Tool | Java | Kotlin | Python | JS | TS | Go | PHP | Rust |
+|------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| `ide_refactor_rename` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_move_file` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_reformat_code` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_optimize_imports` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_refactor_safe_delete` | ⚠️ | ⚠️ | ⛔ | ⛔ | ⛔ | ⛔ | ⛔ | ⛔ |
+| `ide_convert_java_to_kotlin` | ⚠️ | ⛔ | ⛔ | ⛔ | ⛔ | ⛔ | ⛔ | ⛔ |
+
+**Project & editor** — language-agnostic (operate on the project/IDE, not language-specific code)
+
+| Tool | Java | Kotlin | Python | JS | TS | Go | PHP | Rust |
+|------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| `ide_index_status` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_install_plugin` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_restart` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_sync_files` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_build_project` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_read_file` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_get_active_file` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_open_file` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+
+> `ide_find_implementations` works in Go (verified live) but isn't in the snapshot suite yet. `ide_refactor_safe_delete` and `ide_convert_java_to_kotlin` require the Java plugin. Project & editor tools are language-agnostic; `index_status` / `install_plugin` / `restart` are exercised on every IDE by the test harness.
+
 For detailed tool documentation with parameters and examples, see [USAGE.md](USAGE.md).
 
 ## Multi-Project Support
