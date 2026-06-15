@@ -81,9 +81,8 @@ class FindImplementationsTool : AbstractMcpTool() {
         Returns: implementing classes/methods with file paths, 1-based line/column, kind, and
         qualified name. Paginated — pass the returned cursor for the next page.
 
-        Gotchas: requires smart mode. Go is not supported (no DefinitionsScopedSearch provider).
-        For the supertype chain use ide_type_hierarchy; for "who extends X" in a tree use
-        ide_type_hierarchy with direction=subtypes.
+        Gotchas: requires smart mode. For the supertype chain use ide_type_hierarchy; for "who
+        extends X" in a tree use ide_type_hierarchy with direction=subtypes.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()

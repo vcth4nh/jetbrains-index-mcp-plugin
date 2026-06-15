@@ -55,7 +55,7 @@ Find implementations of interfaces, abstract classes, or abstract methods.
 
 **Returns**: `{ implementations: [{name, qualifiedName?, file, line, column, kind}], totalCount, nextCursor?, hasMore, totalCollected, offset, pageSize, stale }`
 
-**Languages**: Java, Kotlin, Python, JS/TS, PHP, Rust (not Go).
+**Languages**: Java, Kotlin, Python, JS/TS, Go, PHP, Rust.
 
 ### ide_find_symbol (disabled by default)
 Search for any code symbol (classes, methods, fields, functions) by name.
@@ -78,7 +78,7 @@ Get complete type inheritance hierarchy (supertypes and subtypes).
 **Returns**: `{ element: {name, qualifiedName?, enclosingScope?, kind, file?, line?, column?, supertypes?}, supertypes: [{name, qualifiedName?, enclosingScope?, kind, file?, line?, column?, supertypes?}], subtypes: [{name, qualifiedName?, enclosingScope?, kind, file?, line?, column?, supertypes?}] }`
 
 Provide either `className` (FQN, preferred) or `file`+`line`+`column`. Unlike other read-only navigation tools, file mode does not resolve dependency/library absolute paths or `jar://` URLs.
-**Languages**: Java, Kotlin, Python, JS/TS, PHP, Rust.
+**Languages**: Java, Kotlin, Python, JS/TS, Go, PHP, Rust.
 
 ### ide_call_hierarchy
 Build call tree showing who calls a method or what a method calls.
@@ -92,7 +92,7 @@ Get hierarchical file structure like IDE's Structure panel.
 
 **Returns**: `{ file, language, structure }` (formatted tree with types, modifiers, signatures, line numbers)
 
-**Languages**: Java, Kotlin, Python, JS/TS, Markdown.
+**Languages**: Java, Kotlin, Python, JS/TS, Go, PHP, Rust, Markdown.
 
 ### ide_read_file (disabled by default)
 Read file content by path or qualified name, including library/jar sources.
