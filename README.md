@@ -53,7 +53,7 @@ These tools activate based on installed language plugins:
 - **Rename Refactoring** - Safe renaming with automatic related element renaming (getters/setters, overriding methods) - works across ALL languages, fully headless
 - **Reformat Code** - Reformat using project code style with import optimization (disabled by default)
 - **Safe Delete** - Remove code with usage checking (Java/Kotlin only)
-- **Java to Kotlin Conversion** - Convert Java to Kotlin using Intellij's built-in converter (Java only)
+- **Java to Kotlin Conversion** - Convert Java to Kotlin using IntelliJ's built-in converter (Java only)
 
 ### Why Use This Plugin?
 
@@ -71,6 +71,9 @@ Perfect for AI-assisted development workflows where accuracy and safety matter.
 - **[USAGE.md](USAGE.md)** — full per-tool reference (parameters, examples, return shapes)
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** — build, dev-loop, testing, PR checklist
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** — design, backing-mechanism model, internals
+- **[CHANGELOG.md](CHANGELOG.md)** — release notes and version history
+- **[Agent skill](src/main/resources/skill/ide-index-mcp/SKILL.md)** — runtime guidance for AI agents on tool selection and conventions
+- **[Live-test harness](live-test/README.md)** — snapshot regression suite for verifying tool behavior against real IDEs
 
 ## Table of Contents
 
@@ -228,6 +231,8 @@ Each JetBrains IDE has a unique default port and server name to allow running mu
 | DataGrip | `datagrip-index` | 29179 |
 
 > **Tip**: Use the "Install on Coding Agents" button in the tool window - it automatically uses the correct server name and port for your IDE.
+>
+> **Note**: The full IDE port list (including Aqua, DataSpell, and Rider) is documented in [ARCHITECTURE.md](ARCHITECTURE.md#ide-specific-defaults). Rider has a port entry but is currently marked incompatible in the plugin manifest and is not supported.
 
 ## Available Tools
 
@@ -255,6 +260,9 @@ These tools work in all supported JetBrains IDEs.
 | `ide_refactor_rename` | Rename a symbol and update all references across the project (all languages) |
 | `ide_move_file` | Move a file to a new directory, applying language-aware reference/package updates when the IDE provides a semantic move backend |
 | `ide_reformat_code` | Reformat code using project code style with import optimization *(disabled by default)* |
+| `ide_optimize_imports` | Optimize imports in a file without reformatting code *(disabled by default)* |
+| `ide_install_plugin` | Install a plugin ZIP into the IDE's plugin directory (dev-loop tool) *(disabled by default)* |
+| `ide_restart` | Schedule an IDE restart (dev-loop tool) *(disabled by default)* |
 
 ### Extended Tools (Language-Aware)
 
@@ -368,14 +376,29 @@ The plugin adds an "Index MCP Server" tool window (bottom panel) that shows:
 | -32602 | Invalid Params | Invalid or missing parameters |
 | -32603 | Internal Error | Unexpected internal error |
 
-### Custom MCP Errors
+### Tool Errors (resolved tool failures)
 
-| Code | Name | Description |
-|------|------|-------------|
-| -32001 | Index Not Ready | IDE is in dumb mode (indexing in progress) |
-| -32002 | File Not Found | Specified file does not exist |
-| -32003 | Symbol Not Found | No symbol found at the specified position |
-| -32004 | Refactoring Conflict | Refactoring cannot be completed (e.g., name conflict) |
+Pre-dispatch failures (parse error, unknown method, missing params) use JSON-RPC numeric error objects. Once a tool is dispatched and fails, it returns a **normal MCP result** with `isError: true` and a structured payload:
+
+```json
+{
+  "error": "<snake_case_code>",
+  "message": "<human-readable description>"
+}
+```
+
+Common `error` codes:
+
+| Code | When It Occurs |
+|------|----------------|
+| `index_not_ready` | IDE is in dumb mode (indexing in progress) |
+| `file_not_found` | Specified file does not exist |
+| `symbol_not_found` | No symbol found at the specified position |
+| `refactoring_conflict` | Refactoring cannot be completed (e.g., name conflict) |
+| `invalid_arguments` | Parameter validation failed (includes a `violations` array) |
+| `tool_error` | Generic tool failure |
+| `internal_error` | Unexpected server error |
+| `no_project_open` / `project_not_found` / `multiple_projects_open` | Project resolution errors |
 
 ## Settings
 
@@ -388,11 +411,12 @@ Configure the plugin at <kbd>Settings</kbd> > <kbd>Tools</kbd> > <kbd>Index MCP 
 | Max History Size | 100 | Maximum number of commands to keep in history |
 | Project List in Error Responses | Expanded | Controls `available_projects` detail for invalid/missing `project_path` errors. `Expanded` includes workspace sub-projects; `Compact` returns only top-level project roots |
 | Sync External Changes | false | Sync external file changes before operations (**WARNING: significant performance impact**) |
-| Disabled Tools | 7 tools | Per-tool enable/disable toggles. Some tools are disabled by default to keep the tool list focused |
+| Disabled Tools | 11 tools | Per-tool enable/disable toggles. Some tools are disabled by default to keep the tool list focused |
+| Response Format | `JSON` | Format for tool result text content block: `JSON` (default) mirrors the structured JSON; `TOON` converts it to a compact text-object notation for older clients |
 
 ## Requirements
 
-- **JetBrains IDE** 2025.1 or later (any IDE based on IntelliJ Platform)
+- **JetBrains IDE** 2025.3 or later (any IDE based on IntelliJ Platform)
 - **JVM** 21 or later
 - **MCP Protocol** 2025-11-25 (primary Streamable HTTP, negotiated; 2025-03-26 / 2024-11-05 also supported)
 

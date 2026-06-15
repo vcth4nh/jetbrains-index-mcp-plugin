@@ -1844,24 +1844,48 @@ If usages exist and `force=false`, returns the blocking usage list instead of de
 | -32602 | Invalid Params | Missing or invalid parameters |
 | -32603 | Internal Error | Unexpected server error |
 
-### Custom MCP Errors
+### Tool Errors (resolved tool failures)
 
-| Code | Name | When It Occurs |
-|------|------|----------------|
-| -32001 | Index Not Ready | IDE is indexing (dumb mode) |
-| -32002 | File Not Found | Specified file doesn't exist |
-| -32003 | Symbol Not Found | No symbol at the specified position |
-| -32004 | Refactoring Conflict | Refactoring cannot be completed |
+Pre-dispatch failures (parse error, unknown method, missing params) use JSON-RPC numeric error objects. Once a tool is dispatched and fails, it returns a **normal MCP result** with `isError: true` and a structured payload:
 
-### Example Error Response
+```json
+{
+  "error": "<snake_case_code>",
+  "message": "<human-readable description>"
+}
+```
+
+Common `error` codes:
+
+| When It Occurs | Code |
+|----------------|------|
+| IDE is indexing (dumb mode) | `index_not_ready` |
+| Specified file doesn't exist | `file_not_found` |
+| No symbol at the specified position | `symbol_not_found` |
+| Refactoring cannot be completed | `refactoring_conflict` |
+| Parameter validation failed (includes a `violations` array) | `invalid_arguments` |
+| Generic tool failure | `tool_error` |
+| Unexpected server error | `internal_error` |
+| Project resolution errors | `no_project_open` / `project_not_found` / `multiple_projects_open` |
+
+### Example Tool Error Response
 
 ```json
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "error": {
-    "code": -32001,
-    "message": "IDE is in dumb mode, indexes not available. Please wait for indexing to complete."
+  "result": {
+    "isError": true,
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"error\":\"index_not_ready\",\"message\":\"IDE is in dumb mode, indexes not available. Please wait for indexing to complete.\"}"
+      }
+    ],
+    "structuredContent": {
+      "error": "index_not_ready",
+      "message": "IDE is in dumb mode, indexes not available. Please wait for indexing to complete."
+    }
   }
 }
 ```

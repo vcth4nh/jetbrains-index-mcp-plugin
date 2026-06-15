@@ -154,7 +154,7 @@ response shapes changed. Read **Breaking** before upgrading.
 
 ## [4.10.5] - 2026-04-15
 ### Changed
-- Relaxed IDE compatability requirements to 2025.3+ build, to support Android Studio which doesn't have 2026 yet 
+- Relaxed IDE compatibility requirements to 2025.3+ build, to support Android Studio which doesn't have 2026 yet
 
 ## [4.10.4] - 2026-04-12
 ### Fixed
@@ -237,7 +237,7 @@ response shapes changed. Read **Breaking** before upgrading.
 
 ## [4.4.1] - 2026-03-19
 ### Fixed
-- **2026.1 compatability issues** 
+- **2026.1 compatibility issues**
 
 ## [4.4.0] - 2026-03-18
 ### Added
@@ -268,7 +268,7 @@ response shapes changed. Read **Breaking** before upgrading.
 
 ### Fixed
 - **Fixed exception introduced in 4.0.0 that could occur when `ide_sync_files` was used after external file changes**
-- **Fixed contructor param renaming forcing modal popup**
+- **Fixed constructor param renaming forcing modal popup**
 
 ## [4.0.0] - 2026-03-11
 

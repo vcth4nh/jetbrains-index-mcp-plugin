@@ -14,7 +14,7 @@ The "verified against" column cites the exact call site so a future reader can r
 | `ide_find_file` | EP iteration: `ChooseByNameContributor.FILE_EP_NAME` (Go-to-File, Ctrl+Shift+N) | `FindFileTool.kt` |
 | `ide_find_symbol` | headless Go-to-Symbol popup: `PopupFaithfulSymbolSearch` → `GotoSymbolModel2` (Ctrl+Alt+Shift+N) | `FindSymbolTool.kt` / `PopupFaithfulSymbolSearch.kt` |
 | `ide_find_implementations` | EP: `DefinitionsScopedSearch.search()` (Ctrl+Alt+B) | `FindImplementationsTool.kt` |
-| `ide_find_super_methods` | `LanguageServiceRegistry.findSuperMethods()` — per-language via reflection (Ctrl+U) | `FindSuperMethodsTool.kt` / `handlers/{java,kotlin,python,javascript,go,php,rust}/*LanguageService.kt` |
+| `ide_find_super_methods` | `LanguageServices.findSuperMethods()` — dispatches to `SuperMethodsProvider` EP per language (Ctrl+U) | `FindSuperMethodsTool.kt` / `handlers/LanguageServices.kt` |
 | `ide_search_text` | service: `PsiSearchHelper.getInstance(project).processElementsWithWord` (word index) | `SearchTextTool.kt` |
 | `ide_type_hierarchy` | EP: `LanguageTypeHierarchy` via `HierarchyTreeWalker`; Rust fallback: `RustTypeHierarchyFallback` (Strategy II) | `TypeHierarchyTool.kt` / `HierarchyTreeWalker.kt` |
 | `ide_call_hierarchy` | EP: `LanguageCallHierarchy` via `HierarchyTreeWalker` | `CallHierarchyTool.kt` / `HierarchyTreeWalker.kt` |
@@ -102,13 +102,12 @@ Package map under `src/main/kotlin/com/github/hechtcarmel/jetbrainsindexmcpplugi
   `ide_call_hierarchy`/`ide_type_hierarchy`. `HierarchyTreeWalker` drives the IDE's own
   `HierarchyProvider` browser/tree-structure headlessly; `ClassLikePsi` is the cross-IDE
   PSI reflection layer (kind/qualifiedName/name without compile-time language deps);
-  `HierarchyScopeMapping`; `RustTypeHierarchyFallback`/`Impl` (Strategy II — RustRover
+  `HierarchyScope`; `RustTypeHierarchyFallback`/`Impl` (Strategy II — RustRover
   ships no type-hierarchy provider). See "Hierarchy Tools" below.
-- `handlers/` — `LanguageService` (abstract base) + `LanguageServiceRegistry` (singleton
-  lookup). Per-language subclasses in `{java,kotlin,python,javascript,go,php,rust}/`
-  provide kind resolution + super methods (non-Java use reflection to avoid
-  `NoClassDefFoundError`). Also: `PopupFaithfulSymbolSearch`/`ClassSearch` (headless
-  Go-to-Symbol popup model), `SymbolDataConverter`, `LanguageDisplayName`,
+- `handlers/` — `LanguageServices` (object with `getKind`/`findSuperMethods` dispatch)
+  backed by `LanguageKindResolver` and `SuperMethodsProvider` IntelliJ `LanguageExtension`
+  EPs (registered in `plugin.xml`). Also: `PopupFaithfulSymbolSearch`/`ClassSearch`
+  (headless Go-to-Symbol popup model), `SymbolDataConverter`, `LanguageDisplayName`,
   `BuiltInSearchScope*`, `FindUsagesHandlerSearch`, `HandlerDataClasses` (wire-format
   data classes).
 - `util/` — `QualifiedNameUtil` (QualifiedNameProvider EP delegation + Go/Rust
@@ -165,7 +164,7 @@ MCP servers expose:
 **Server Infrastructure:**
 - Custom embedded **Ktor CIO** HTTP server (not IntelliJ's built-in server)
 - Configurable port with IDE-specific defaults (e.g., IntelliJ: 29170, PyCharm: 29172) via Settings → Index MCP Server → Server Port
-- Binds to `127.0.0.1` only (localhost) for security
+- Binds to `127.0.0.1` (localhost) by default; configurable via **Server Host** setting. Change to `0.0.0.0` for remote/WSL access — **security note**: a non-local host exposes the server to all network interfaces
 - Single server instance across all open projects
 - Auto-restart on port change
 
@@ -175,7 +174,7 @@ MCP servers expose:
 - `KtorSseSessionManager` - SSE session management using Kotlin channels
 - `JsonRpcHandler` - JSON-RPC 2.0 request processing
 
-**Transport**: This plugin supports two transports with JSON-RPC 2.0. All tool results include native `structuredContent` (MCP 2025-11-25); the serialized JSON is also mirrored in the text content block for backward compatibility. This applies regardless of which transport is in use.
+**Transport**: This plugin supports two transports with JSON-RPC 2.0. All tool results include native `structuredContent` (MCP 2025-11-25). The text content block mirrors the structured content for backward compatibility: in **JSON** mode (default) it contains the serialized JSON; in **TOON** mode it contains the TOON representation instead. The format is controlled by the **Response Format** setting.
 
 *Streamable HTTP (Primary, MCP 2025-11-25):*
 - `POST /index-mcp/streamable-http` → Stateless JSON-RPC requests/responses
@@ -207,6 +206,8 @@ MCP servers expose:
 | DataSpell | `dataspell-index` | 29181 |
 | Rider | `rider-index` | 29182 |
 
+> **Note**: Rider has a port entry but is currently marked incompatible in `plugin.xml` and is not supported.
+
 ## Multi-Language Architecture
 
 Two distinct mechanisms — pick by whether the platform exposes a usable extension point
@@ -217,31 +218,29 @@ Two distinct mechanisms — pick by whether the platform exposes a usable extens
 "Hierarchy Tools" below. Qualified names everywhere go through `QualifiedNameUtil` →
 `QualifiedNameProvider` EP.
 
-**2. `LanguageService` OOP hierarchy (where no universal EP fits).** Used for kind
+**2. `LanguageServices` dispatch object (where no universal EP fits).** Used for kind
 resolution and `ide_find_super_methods`.
 
-- `LanguageService` — abstract base class with template-method `getKind()` (subclass
-  `resolveKind()` hook → `LanguageFindUsages.getType()` fallback → className fallback).
-  Per-language subclasses override only what the platform gets wrong.
-- `LanguageServiceRegistry` — singleton; maps language IDs → service instances.
-  `getKind(element)` always returns a value. `findSuperMethods(element, project)`
-  delegates to the matching service.
-- `handlers/{java,kotlin,python,javascript,go,php,rust}/*LanguageService.kt` — 7
-  subclasses. Java via direct PSI; the rest via reflection to avoid compile-time deps
-  on language plugins (prevents `NoClassDefFoundError` in IDEs lacking them).
+- `LanguageServices` (`handlers/LanguageServices.kt`) — object with `getKind(element)`
+  (dispatches to `LanguageKindResolver` EP → `LanguageFindUsages.getType()` fallback →
+  className fallback) and `findSuperMethods(element, project)` (dispatches to
+  `SuperMethodsProvider` EP). Both EPs are registered in `plugin.xml` per language.
+- `LanguageKindResolver` / `SuperMethodsProvider` — IntelliJ `LanguageExtension` EPs;
+  implementations are registered for each supported language and use reflection where
+  needed to avoid compile-time deps on language plugins (prevents `NoClassDefFoundError`
+  in IDEs lacking them).
 
 **3. `DefinitionsScopedSearch` EP delegation.** `ide_find_implementations` calls the
 platform's `DefinitionsScopedSearch.search()` directly — the same API behind Ctrl+Alt+B.
 Works for all languages (each plugin registers its own `QueryExecutor`).
 
 **Registration flow** (`ToolRegistry`, during `McpServerService` init):
-1. `LanguageServiceRegistry.registerServices()` — reflectively loads per-language services
-2. `registerUniversalTools()` — tools that work in every IDE (incl. `ide_refactor_rename`,
+1. `registerUniversalTools()` — tools that work in every IDE (incl. `ide_refactor_rename`,
    `ide_sync_files`, the hierarchy tools, `ide_find_implementations`,
    `ide_install_plugin`/`ide_restart`)
-3. `registerLanguageNavigationTools()` — `ide_find_super_methods` (gated by
-   `LanguageServiceRegistry.hasSuperMethodsSupport()`), hierarchy tools
-4. `registerJavaRefactoringTools()` — `ide_refactor_safe_delete` if Java plugin present
+2. `registerLanguageNavigationTools()` — `ide_find_super_methods` (gated by
+   `LanguageServices.hasAnySuperMethodsProvider()`), hierarchy tools
+3. `registerJavaRefactoringTools()` — `ide_refactor_safe_delete` if Java plugin present
 
 ## Hierarchy Tools (IDE Extension-Point Delegation)
 
@@ -259,15 +258,16 @@ window. Code in `tools/navigation/hierarchy/`:
   notion) over the browser's `getElementFromDescriptor`. Normalizes Rust callers (whose
   browser returns the call site) to the enclosing method like every other language.
 - **`ClassLikePsi`** — cross-IDE PSI reflection: `kind` (delegates to
-  `LanguageServiceRegistry.getKind()`), qualified/display name, walk-up to
+  `LanguageServices.getKind()`), qualified/display name, walk-up to
   class-/method-like. Uses `Class.forName` + `isInstance` so a single binary runs in
   PyCharm/GoLand/RustRover/etc. without compile-time language-plugin refs. Element
   `kind` is the one thing with no universal
   API — classification here is unavoidably per-language.
-- **`HierarchyScopeMapping`** — maps our `BuiltInSearchScope` to the IDE's hierarchy
-  scope strings. `PROJECT_FILES → SCOPE_ALL` deliberately (matches the IDE's
-  default-selected tab; `SCOPE_PROJECT`="Production" yields an empty scope in projects
-  with no production source roots, e.g. JS/TS — which silently emptied callers).
+- **`HierarchyScope`** — enum mapping wire values (`all`, `production`, `test`,
+  `this_class`, `this_module`) to the IDE's hierarchy scope-type strings. `all` maps
+  to `SCOPE_ALL` deliberately (matches the IDE's default-selected tab; `SCOPE_PROJECT`
+  = "Production" yields an empty scope in projects with no production source roots,
+  e.g. JS/TS — which silently emptied callers).
 - **`RustTypeHierarchyFallback` / `RustTypeHierarchyImpl`** — **Strategy II.** RustRover
   registers a call-hierarchy provider but **no** type-hierarchy provider, so Rust type
   hierarchy uses a relocated hand-rolled algorithm that synthesizes descriptors. This is
