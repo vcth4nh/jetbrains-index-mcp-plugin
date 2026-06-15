@@ -77,16 +77,81 @@ Perfect for AI-assisted development workflows where accuracy and safety matter.
 
 ## Table of Contents
 
+- [Available Tools](#available-tools)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Community Integrations](#community-integrations)
 - [Client Configuration](#client-configuration)
-- [Available Tools](#available-tools)
 - [Multi-Project Support](#multi-project-support)
 - [Tool Window](#tool-window)
 - [Error Codes](#error-codes)
 - [Requirements](#requirements)
 - [Contributing](#contributing)
+
+## Available Tools
+
+The plugin provides **26 MCP tools** — 15 enabled by default, 11 opt-in (toggle any tool in <kbd>Settings</kbd> > <kbd>Tools</kbd> > <kbd>Index MCP Server</kbd>). The matrix below shows per-language support and test status; for parameters, examples, and return shapes, see **[USAGE.md](USAGE.md)**.
+
+**Legend:**
+- **✅** supported & tested
+- **⚠️** should work, not tested
+- **⛔** not supported
+
+**Navigation & search**
+
+| Tool | Java | Kotlin | Python | JS | TS | Go | PHP | Rust |
+|------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| `ide_find_usages` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_find_definition` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_find_class` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_find_symbol` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_find_file` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_search_text` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+**Hierarchy & structure**
+
+| Tool | Java | Kotlin | Python | JS | TS | Go | PHP | Rust |
+|------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| `ide_type_hierarchy` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_call_hierarchy` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_find_implementations` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_find_super_methods` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_file_structure` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+**Analysis**
+
+| Tool | Java | Kotlin | Python | JS | TS | Go | PHP | Rust |
+|------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| `ide_diagnostics` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+**Refactoring**
+
+| Tool | Java | Kotlin | Python | JS | TS | Go | PHP | Rust |
+|------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| `ide_refactor_rename` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_move_file` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_reformat_code` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_optimize_imports` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_refactor_safe_delete` | ⚠️ | ⚠️ | ⛔ | ⛔ | ⛔ | ⛔ | ⛔ | ⛔ |
+| `ide_convert_java_to_kotlin` | ⚠️ | ⛔ | ⛔ | ⛔ | ⛔ | ⛔ | ⛔ | ⛔ |
+
+**Project & editor** — language-agnostic (operate on the project/IDE, not language-specific code)
+
+| Tool | Java | Kotlin | Python | JS | TS | Go | PHP | Rust |
+|------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| `ide_index_status` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_install_plugin` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_restart` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_sync_files` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_build_project` | ✅ | ✅ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_read_file` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_get_active_file` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_open_file` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+> **Notes:**
+> - `ide_refactor_safe_delete` and `ide_convert_java_to_kotlin` require the Java plugin; refactoring tools are supported but not yet live-tested here (⚠️).
+> - `ide_build_project` does a real build on JVM projects (Java/Kotlin, via JPS — ✅). It's build-system-driven (JPS/Gradle/Maven), so on non-JVM projects with no such build it returns trivial success without compiling — those stay ⚠️.
+> - `ide_search_text` is backed by the IDE's word index, so language keywords (e.g. Kotlin `fun`) may not be matched even though identifiers and most words are.
 
 ## Installation
 
@@ -234,71 +299,6 @@ Each JetBrains IDE has a unique default port and server name to allow running mu
 >
 > **Note**: The full IDE port list (including Aqua, DataSpell, and Rider) is documented in [ARCHITECTURE.md](ARCHITECTURE.md#ide-specific-defaults). Rider has a port entry but is currently marked incompatible in the plugin manifest and is not supported.
 
-## Available Tools
-
-The plugin provides **26 MCP tools** — 15 enabled by default, 11 opt-in (toggle any tool in <kbd>Settings</kbd> > <kbd>Tools</kbd> > <kbd>Index MCP Server</kbd>). The matrix below shows per-language support and test status; for parameters, examples, and return shapes, see **[USAGE.md](USAGE.md)**.
-
-**Legend:**
-- **✅** supported & tested
-- **⚠️** should work, not tested
-- **⛔** not supported
-
-**Navigation & search**
-
-| Tool | Java | Kotlin | Python | JS | TS | Go | PHP | Rust |
-|------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| `ide_find_usages` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `ide_find_definition` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `ide_find_class` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `ide_find_symbol` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `ide_find_file` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `ide_search_text` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-
-**Hierarchy & structure**
-
-| Tool | Java | Kotlin | Python | JS | TS | Go | PHP | Rust |
-|------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| `ide_type_hierarchy` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `ide_call_hierarchy` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `ide_find_implementations` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `ide_find_super_methods` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `ide_file_structure` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-
-**Analysis**
-
-| Tool | Java | Kotlin | Python | JS | TS | Go | PHP | Rust |
-|------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| `ide_diagnostics` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-
-**Refactoring**
-
-| Tool | Java | Kotlin | Python | JS | TS | Go | PHP | Rust |
-|------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| `ide_refactor_rename` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
-| `ide_move_file` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
-| `ide_reformat_code` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
-| `ide_optimize_imports` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
-| `ide_refactor_safe_delete` | ⚠️ | ⚠️ | ⛔ | ⛔ | ⛔ | ⛔ | ⛔ | ⛔ |
-| `ide_convert_java_to_kotlin` | ⚠️ | ⛔ | ⛔ | ⛔ | ⛔ | ⛔ | ⛔ | ⛔ |
-
-**Project & editor** — language-agnostic (operate on the project/IDE, not language-specific code)
-
-| Tool | Java | Kotlin | Python | JS | TS | Go | PHP | Rust |
-|------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
-| `ide_index_status` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `ide_install_plugin` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `ide_restart` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `ide_sync_files` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `ide_build_project` | ✅ | ✅ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
-| `ide_read_file` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `ide_get_active_file` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `ide_open_file` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-
-> **Notes:**
-> - `ide_refactor_safe_delete` and `ide_convert_java_to_kotlin` require the Java plugin; refactoring tools are supported but not yet live-tested here (⚠️).
-> - `ide_build_project` does a real build on JVM projects (Java/Kotlin, via JPS — ✅). It's build-system-driven (JPS/Gradle/Maven), so on non-JVM projects with no such build it returns trivial success without compiling — those stay ⚠️.
-> - `ide_search_text` is backed by the IDE's word index, so language keywords (e.g. Kotlin `fun`) may not be matched even though identifiers and most words are.
-
 ## Multi-Project Support
 
 When multiple projects are open in a single IDE window, you must specify which project to use with the `project_path` parameter:
@@ -425,10 +425,6 @@ Configure the plugin at <kbd>Settings</kbd> > <kbd>Tools</kbd> > <kbd>Index MCP 
 - DataGrip
 
 > The plugin uses standard IntelliJ Platform APIs and should work on any IntelliJ-based IDE, but has only been tested on the IDEs listed above.
-
-## Architecture
-
-For design details, transport model, and internals, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Contributing
 
