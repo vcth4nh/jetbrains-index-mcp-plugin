@@ -38,7 +38,7 @@ The IDE Index MCP server exposes JetBrains IDE indexing and refactoring capabili
 | Find interface implementations | `ide_find_implementations` | Never - grep can't resolve type relationships |
 | Delete a symbol safely | `ide_refactor_safe_delete` | Never - manual deletion misses usages |
 | Find what a method overrides | `ide_find_super_methods` | Never - no equivalent |
-| Read file content | Built-in Read tool | `ide_read_file` only for library/jar sources |
+| Read file content | `ide_read_file` only for library/jar sources | Built-in Read tool |
 | Find text with regex | `Grep` | IDE search_text doesn't support regex |
 
 ## Pre-Flight Check
@@ -84,6 +84,7 @@ Omit `paths` to sync the entire project.
 1. `ide_find_class` - classes by name (exact by default; `fuzzySearch: true` for CamelCase: `USvc` finds `UserService`)
 2. `ide_find_file` - files by name
 3. `ide_search_text` - exact word occurrences across project
+4. `ide_find_symbol` - methods, fields, functions, and other symbols by name *(disabled by default; enable in Settings → Tools → Index MCP Server)*
 
 ### "I need to refactor"
 1. `ide_refactor_rename` - rename symbol + all references atomically

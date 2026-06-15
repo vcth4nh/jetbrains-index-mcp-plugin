@@ -52,7 +52,7 @@ without re-blessing.
 1. Bump `pluginVersion` in `gradle.properties`.
 2. `./gradlew buildPlugin` and install the resulting ZIP into each IDE
    (Settings → Plugins → ⚙ → Install Plugin from Disk…).
-3. Restart each IDE (or use the in-IDE plugin reload).
+3. Restart each IDE. (The plugin is not dynamically reloadable — a full restart is required after reinstall.)
 4. Re-open every fixture; wait for indexing to finish.
 5. Run the harness:
 

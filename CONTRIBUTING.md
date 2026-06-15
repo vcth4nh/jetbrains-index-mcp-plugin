@@ -14,7 +14,7 @@ How to work on the IDE Index MCP Server plugin: tech stack, build/run, dev loop,
 ## Technology Stack
 - **Language**: Kotlin (JVM 21)
 - **Build System**: Gradle 9.0 with Kotlin DSL
-- **IDE Platform**: IntelliJ IDEA 2025.1+ (platformType = IC)
+- **IDE Platform**: IntelliJ IDEA 2025.3+ (platformType = IC)
 - **HTTP Server**: Ktor CIO 2.3.12 (embedded, configurable port)
 - **Protocol**: Model Context Protocol (MCP) — 2025-11-25 (default), negotiated down to 2025-03-26 or 2024-11-05
 
@@ -38,8 +38,8 @@ The IntelliJ Platform maintains separate Document (text) and PSI (parsed structu
 When files are modified externally (e.g., by AI coding tools), PSI may not immediately reflect
 the changes. This can cause search APIs to miss references in newly created files.
 
-**Solution**: `AbstractMcpTool` automatically refreshes the VFS and commits documents
-before executing any tool. This ensures PSI is synchronized with external file changes.
+**Solution**: Call `ide_sync_files` after external file changes, or enable "Sync external file changes" in Settings.
+`AbstractMcpTool.execute()` only refreshes the VFS/PSI automatically when **both** `requiresPsiSync` is true for that tool **and** `syncExternalChanges` is enabled in settings — the setting defaults to false, so automatic sync is off by default.
 
 **User Setting**: "Sync external file changes before operations" (Settings → MCP Server)
 - **Disabled** (default): Best performance, suitable for most use cases
@@ -47,7 +47,7 @@ before executing any tool. This ensures PSI is synchronized with external file c
 
 **For tool developers**:
 - Extend `AbstractMcpTool` and implement `doExecute()` (not `execute()`)
-- PSI synchronization happens automatically before `doExecute()` is called
+- PSI synchronization runs before `doExecute()` only when `requiresPsiSync` is true **and** `syncExternalChanges` is enabled in settings
 - To opt-out (for tools that don't use PSI), override:
   ```kotlin
   override val requiresPsiSync: Boolean = false
@@ -198,18 +198,22 @@ Tests are split into two categories to optimize execution time:
 ### Running Tests
 
 ```bash
-# Run all tests
+# Run all tests (unit + platform) — this is what CI runs
 ./gradlew test
 
-# Run only fast unit tests (recommended for quick feedback)
+# Run only fast unit tests — recommended locally and required for AI agents (see CLAUDE.md)
 ./gradlew test --tests "*UnitTest*"
 
-# Run only platform tests
+# Run only platform tests (requires IntelliJ Platform init; do NOT run these as an AI agent)
 ./gradlew test --tests "*Test" --tests "!*UnitTest*"
 
 # Run specific test class
 ./gradlew test --tests "McpPluginUnitTest"
 ```
+
+> **AI agents (Claude, Codex, etc.)**: run only `./gradlew test --tests "*UnitTest*"`. Never run platform tests (`*Test`) locally — CI handles those.
+
+> **Live-test harness**: For tool-behavior changes, also run the snapshot regression suite in `live-test/` against real running IDEs. See [live-test/README.md](live-test/README.md) for instructions. The harness is not part of `./gradlew test` and requires running IDEs.
 
 ### Test Data
 - Place test fixtures in `src/test/testData/`
@@ -247,7 +251,7 @@ Every PR **must** include:
 3. Follow existing code patterns and use `SchemaBuilder` for new tool schemas
 4. Add tests for new functionality
 5. Update the docs ([ARCHITECTURE.md](ARCHITECTURE.md) for design/structure, this file for process) for any structural or architectural changes
-6. Run `./gradlew test` to verify all tests pass (do NOT run platform tests yourself)
+6. Run `./gradlew test --tests "*UnitTest*"` to verify unit tests pass. Do NOT run platform tests yourself (CI runs `./gradlew test` which includes them). For tool-behavior changes, also run the live-test harness — see [live-test/README.md](live-test/README.md).
 
 ---
 
