@@ -291,7 +291,7 @@ The plugin provides **26 MCP tools** — 15 enabled by default, 11 opt-in (toggl
 | `ide_get_active_file` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
 | `ide_open_file` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
 
-> `ide_find_implementations` works in Go (verified live) but isn't in the snapshot suite yet. `ide_refactor_safe_delete` and `ide_convert_java_to_kotlin` require the Java plugin. Project & editor tools are language-agnostic; `index_status` / `install_plugin` / `restart` are exercised on every IDE by the test harness.
+> `ide_find_implementations` works in Go (verified live) but isn't in the snapshot suite yet. `ide_refactor_safe_delete` and `ide_convert_java_to_kotlin` require the Java plugin. Most Project & editor tools are language-agnostic; `index_status` / `install_plugin` / `restart` are exercised on every IDE by the test harness. `ide_build_project` is build-system-driven (JPS/Gradle/Maven), not language-driven — on a project with no IDE-driven build system it returns trivial success without compiling, so its ⚠️ marks tool reachability, not that a real build occurs.
 
 ## Multi-Project Support
 
