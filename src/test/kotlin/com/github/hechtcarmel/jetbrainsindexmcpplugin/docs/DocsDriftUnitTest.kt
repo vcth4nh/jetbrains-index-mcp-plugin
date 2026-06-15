@@ -148,6 +148,35 @@ class DocsDriftUnitTest : TestCase() {
         assertTrue(problems.joinToString("\n"), problems.isEmpty())
     }
 
+    fun testUsageDocumentsEverySchemaParam() {
+        // COMMON: params documented in a shared section of USAGE.md that are not repeated in
+        // per-tool tables, so their absence from a tool's per-tool section is expected.
+        //
+        // Only "project_path" qualifies: USAGE.md has a dedicated "Common Parameters" section
+        // (before the per-tool headings) that documents it as applying to *all* tools, and
+        // indeed every tool schema includes it.  The "Position Parameters" subsection documents
+        // file/line/column, but those are NOT present in every tool's schema (e.g.
+        // ide_index_status, ide_build_project, ide_restart have no positional params), so they
+        // cannot be excluded — the per-tool section for tools that *do* have them must list them.
+        val COMMON = setOf("project_path")
+
+        val usage = read("USAGE.md")
+        val byName = allToolInstances().associateBy { it.name }
+        val sections = headingToken.findAll(usage).toList()
+        val problems = mutableListOf<String>()
+        for (i in sections.indices) {
+            val name = sections[i].groupValues[1]
+            val tool = byName[name] ?: continue
+            val start = sections[i].range.last + 1
+            val end = if (i + 1 < sections.size) sections[i + 1].range.first else usage.length
+            val body = usage.substring(start, end)
+            val documented = paramRow.findAll(body).map { it.groupValues[1] }.toSet()
+            val missing = schemaProps(tool) - documented - COMMON
+            if (missing.isNotEmpty()) problems += "$name missing documented params: $missing"
+        }
+        assertTrue(problems.joinToString("\n"), problems.isEmpty())
+    }
+
     fun testToolsReferenceHasReturnsPerTool() {
         val ref = readSkill("references/tools-reference.md")
         val sections = headingToken.findAll(ref).toList()
