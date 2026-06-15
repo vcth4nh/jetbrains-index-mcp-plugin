@@ -78,14 +78,14 @@ Perfect for AI-assisted development workflows where accuracy and safety matter.
 ## Table of Contents
 
 - [Available Tools](#available-tools)
+- [Requirements](#requirements)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
-- [Community Integrations](#community-integrations)
 - [Client Configuration](#client-configuration)
 - [Multi-Project Support](#multi-project-support)
 - [Tool Window](#tool-window)
 - [Error Codes](#error-codes)
-- [Requirements](#requirements)
+- [Community Integrations](#community-integrations)
 - [Contributing](#contributing)
 
 ## Available Tools
@@ -153,6 +153,30 @@ The plugin provides **26 MCP tools** — 15 enabled by default, 11 opt-in (toggl
 > - `ide_build_project` does a real build on JVM projects (Java/Kotlin, via JPS — ✅). It's build-system-driven (JPS/Gradle/Maven), so on non-JVM projects with no such build it returns trivial success without compiling — those stay ⚠️.
 > - `ide_search_text` is backed by the IDE's word index, so language keywords (e.g. Kotlin `fun`) may not be matched even though identifiers and most words are.
 
+## Requirements
+
+- **JetBrains IDE** 2025.3 or later (any IDE based on IntelliJ Platform)
+- **JVM** 21 or later
+- **MCP Protocol** 2025-11-25 (primary Streamable HTTP, negotiated; 2025-03-26 / 2024-11-05 also supported)
+
+### Supported IDEs
+
+**Fully Tested:**
+- IntelliJ IDEA (Community/Ultimate)
+- Android Studio
+- PyCharm (Community/Professional)
+- WebStorm
+- GoLand
+- RustRover
+- PhpStorm
+
+**May Work (Untested):**
+- RubyMine
+- CLion
+- DataGrip
+
+> The plugin uses standard IntelliJ Platform APIs and should work on any IntelliJ-based IDE, but has only been tested on the IDEs listed above.
+
 ## Installation
 
 ### Using the IDE built-in plugin system
@@ -189,12 +213,6 @@ The easiest way to configure your AI assistant:
    - **Install Now** - For Claude Code CLI and Codex CLI: Runs the installation command automatically
    - **Copy Configuration** - For other clients: Copies the JSON config to your clipboard
 4. For "Copy Configuration" clients, paste the config into the appropriate config file
-
-## Community Integrations
-
-- [opencode-jetbrains-index](https://github.com/ineersa/opencode-jetbrains-index) - a third-party integration for OpenCode that uses this plugin
-
-> **Disclaimer**: This repository is not maintained by me. Please use its own issue tracker for integration-specific issues and support.
 
 ## Client Configuration
 
@@ -402,29 +420,11 @@ Configure the plugin at <kbd>Settings</kbd> > <kbd>Tools</kbd> > <kbd>Index MCP 
 | Disabled Tools | 11 tools | Per-tool enable/disable toggles. Some tools are disabled by default to keep the tool list focused |
 | Response Format | `JSON` | Format for tool result text content block: `JSON` (default) mirrors the structured JSON; `TOON` converts it to a compact text-object notation for older clients |
 
-## Requirements
+## Community Integrations
 
-- **JetBrains IDE** 2025.3 or later (any IDE based on IntelliJ Platform)
-- **JVM** 21 or later
-- **MCP Protocol** 2025-11-25 (primary Streamable HTTP, negotiated; 2025-03-26 / 2024-11-05 also supported)
+- [opencode-jetbrains-index](https://github.com/ineersa/opencode-jetbrains-index) - a third-party integration for OpenCode that uses this plugin
 
-### Supported IDEs
-
-**Fully Tested:**
-- IntelliJ IDEA (Community/Ultimate)
-- Android Studio
-- PyCharm (Community/Professional)
-- WebStorm
-- GoLand
-- RustRover
-- PhpStorm
-
-**May Work (Untested):**
-- RubyMine
-- CLion
-- DataGrip
-
-> The plugin uses standard IntelliJ Platform APIs and should work on any IntelliJ-based IDE, but has only been tested on the IDEs listed above.
+> **Disclaimer**: This repository is not maintained by me. Please use its own issue tracker for integration-specific issues and support.
 
 ## Contributing
 
