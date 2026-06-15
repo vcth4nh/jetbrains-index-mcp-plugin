@@ -376,10 +376,12 @@ Searches for text using the IDE's pre-built word index. Significantly faster tha
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `query` | string | Yes | Exact word to search for (not a pattern/regex) |
+| `query` | string | Yes* | Exact word to search for (not a pattern/regex). Required for a fresh search; ignored when `cursor` is provided. |
 | `context` | string | No | Where to search: `"code"`, `"comments"`, `"strings"`, or `"all"` (default) |
 | `caseSensitive` | boolean | No | Case sensitive search (default: true) |
-| `limit` | integer | No | Maximum results (default: 100, max: 500) |
+| `cursor` | string | No | Pagination cursor from a previous response. When provided, returns the next page; search parameters are ignored. |
+| `pageSize` | integer | No | Results per page (default: 100, max: 500) |
+| `limit` | integer | No | Deprecated alias for `pageSize` (default: 100, max: 500) |
 
 **Example Request:**
 
@@ -439,11 +441,11 @@ File problems are collected through explicit daemon analysis, so they do not dep
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `file` | string | Yes | Path to the file relative to project root |
-| `line` | integer | No | 1-based line number for intention lookup (default: 1) |
-| `column` | integer | No | 1-based column number for intention lookup (default: 1) |
-| `startLine` | integer | No | Filter problems to start from this line |
-| `endLine` | integer | No | Filter problems to end at this line |
+| `file` | string | No | Path to the file relative to project root. Optional — enables per-file code analysis when provided. At least one of `file`, `includeBuildErrors`, or `includeTestResults` must be active. |
+| `line` | integer | No | 1-based line number for intention lookup (default: 1). Requires `file`. |
+| `column` | integer | No | 1-based column number for intention lookup (default: 1). Requires `file`. |
+| `startLine` | integer | No | Filter problems to start from this line. Requires `file`. |
+| `endLine` | integer | No | Filter problems to end at this line. Requires `file`. |
 | `includeBuildErrors` | boolean | No | Include errors/warnings from the last build (default: `false`) |
 | `includeTestResults` | boolean | No | Include test results from open test run tabs (default: `false`) |
 | `severity` | string | No | Filter diagnostics by `all`, `errors`, or `warnings` (default: `all`) |
@@ -806,12 +808,13 @@ Searches for code symbols (classes, interfaces, methods, fields, and functions) 
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `query` | string | Yes | Search pattern. Matching follows IntelliJ's Go to Symbol popup. |
+| `query` | string | Yes* | Search pattern. Required for a fresh search; ignored when `cursor` is provided. |
 | `scope` | string | No | Built-in search scope. One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 | `language` | string | No | Filter by language (e.g., `"Kotlin"`, `"Java"`). Case-insensitive |
-| `limit` | integer | No | Deprecated alias for `pageSize` (default: 25, max: 500) |
+| `fuzzySearch` | boolean | No | When `true`, use the IDE's Go to Symbol fuzzy matching (camelCase + substring). When `false` (default), match the symbol name exactly, case-insensitively. |
 | `cursor` | string | No | Pagination cursor from a previous response |
 | `pageSize` | integer | No | Number of results per page (default: 25, max: 500) |
+| `limit` | integer | No | Deprecated alias for `pageSize` (default: 25, max: 500) |
 
 **Example Request:**
 
@@ -836,7 +839,7 @@ Searches for code symbols (classes, interfaces, methods, fields, and functions) 
     "name": "ide_find_symbol",
     "arguments": {
       "query": "USvc",
-      "scope": "project_and_libraries",
+      "fuzzySearch": true,
       "pageSize": 50
     }
   }
@@ -1029,14 +1032,18 @@ Renames a symbol and updates all references across the project. This tool uses I
 - Following naming conventions
 - Refactoring code structure
 
+**Two modes:**
+- **Symbol rename**: provide `file` + `line` + `column` + `newName`. Renames the symbol at the caret and all its references.
+- **File rename**: provide `file` + `newName`, omit `line`/`column`. Works for all file types including binary files and Android resource files (updates XML references across the project).
+
 **Parameters:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `file` | string | Yes | Path to the file containing the symbol |
-| `line` | integer | Yes | 1-based line number |
-| `column` | integer | Yes | 1-based column number |
-| `newName` | string | Yes | The new name for the symbol |
+| `file` | string | Yes | Path to the file relative to project root |
+| `line` | integer | No | 1-based line number. Required for symbol rename; omit for file rename. |
+| `column` | integer | No | 1-based column number. Required for symbol rename; omit for file rename. |
+| `newName` | string | Yes | The new name for the symbol or file. For file renames, include the file extension (e.g., `"new_name.webp"`). |
 | `overrideStrategy` | string | No | How to handle overriding methods: `"rename_base"` (default), `"rename_only_current"`, or `"ask"` |
 | `relatedRenamingStrategy` | string | No | How to handle automatic renaming of related symbols: `"all"` (default), `"none"`, `"accessors_and_tests"`, or `"ask"` |
 
@@ -1086,6 +1093,21 @@ Renames a symbol and updates all references across the project. This tool uses I
       "line": 25,
       "column": 21,
       "newName": "getFullName"
+    }
+  }
+}
+```
+
+**Example Request (file rename):**
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "ide_refactor_rename",
+    "arguments": {
+      "file": "src/main/res/drawable/ic_launcher.webp",
+      "newName": "ic_app_icon.webp"
     }
   }
 }
@@ -1269,10 +1291,12 @@ Retrieves the complete type hierarchy for a class or interface.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `file` | string | No* | Path to the file relative to project root |
-| `line` | integer | No* | 1-based line number |
-| `column` | integer | No* | 1-based column number |
+| `line` | integer | No* | 1-based line number. Required if using `file`. |
+| `column` | integer | No* | 1-based column number. Required if using `file`. |
 | `className` | string | No* | Fully qualified class name (alternative to position) |
-| `scope` | string | No | Built-in search scope. One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
+| `direction` | string | No | Which direction to traverse: `"supertypes"` (ancestors), `"subtypes"` (descendants), or `"both"` (default). `"both"` returns the union of the supertypes and subtypes walks. |
+| `maxDepth` | integer | No | How many levels deep to traverse (default: 5, max: 20) |
+| `scope` | string | No | Hierarchy scope. One of `all` (default), `production`, `test`. (`production` = production sources only — empty in projects without production roots.) |
 
 *Either `file`/`line`/`column` OR `className` must be provided.
 
@@ -1301,7 +1325,7 @@ Retrieves the complete type hierarchy for a class or interface.
     "name": "ide_type_hierarchy",
     "arguments": {
       "className": "java.util.ArrayList",
-      "scope": "project_and_libraries"
+      "direction": "supertypes"
     }
   }
 }
@@ -1385,7 +1409,7 @@ Analyzes method call relationships to find callers or callees.
 | `column` | integer | Yes | 1-based column number. |
 | `direction` | string | Yes | `"callers"` or `"callees"` |
 | `maxDepth` | integer | No | How many levels deep to traverse (default: 7, max: 20) |
-| `scope` | string | No | Built-in search scope. One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
+| `scope` | string | No | Hierarchy scope. One of `all` (default), `production`, `test`, `this_class`, `this_module`. (`production` = production sources only.) |
 
 **Example Request:**
 
@@ -1614,6 +1638,8 @@ Get the hierarchical structure of a source file, similar to the IDE's Structure 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `file` | string | Yes | Path to the file relative to project root |
+| `show` | array of strings | No | Optional list of filter category names to show. Omit to use language defaults. Per-language values (* = on by default): python: `fields`*, `inherited`; java: `anonymous_classes`, `fields`*, `inherited`, `lambdas`*, `non_public`*; kotlin: `inherited`, `non_public`*, `properties`*; javascript/typescript: `fields`*, `inherited`, `inherited_from_object`*; php: `anonymous_classes`, `inherited`, `lambdas`*, `constants`*, `includes`*, `private_members`*, `properties`*, `protected_members`*; go: `package_structure`*, `private_members`*; rust: `macro_expanded`. |
+| `sort` | string | No | Optional sort order. One of `"visibility"` (groups public/exported before non-public). Default: declaration order. No-op for Python and JS/TS. |
 
 **Example Request:**
 
@@ -1732,23 +1758,30 @@ Convert one or more Java files to Kotlin using IntelliJ's built-in J2K (Java-to-
 
 ### ide_refactor_safe_delete
 
-Safely deletes an element, first checking for usages.
+Safely deletes a symbol or file, first checking for usages.
+
+**Two modes:**
+- **Symbol delete** (`target_type="symbol"`, default): deletes the symbol at the given position. Requires `file`, `line`, and `column`.
+- **File delete** (`target_type="file"`): deletes the entire file if no symbols have external usages. Requires `file` only; internal call chains don't block deletion.
+
+If usages exist and `force=false`, returns the blocking usage list instead of deleting.
 
 **Use when:**
 - Removing unused code
 - Cleaning up dead code
-- Safely removing methods or classes
+- Safely removing methods, classes, or entire files
 
 **Parameters:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `file` | string | Yes | Path to the file |
-| `line` | integer | Yes | 1-based line number |
-| `column` | integer | Yes | 1-based column number |
+| `file` | string | Yes | Path to the file relative to project root |
+| `target_type` | string | No | What to delete: `"symbol"` (default, requires `line`+`column`) or `"file"` (deletes entire file if no external usages) |
+| `line` | integer | No | 1-based line number. Required when `target_type="symbol"` (the default). |
+| `column` | integer | No | 1-based column number. Required when `target_type="symbol"` (the default). |
 | `force` | boolean | No | Force deletion even if usages exist (default: false) |
 
-**Example Request:**
+**Example Request (symbol delete):**
 
 ```json
 {
@@ -1759,6 +1792,21 @@ Safely deletes an element, first checking for usages.
       "file": "src/main/java/com/example/LegacyHelper.java",
       "line": 8,
       "column": 14
+    }
+  }
+}
+```
+
+**Example Request (file delete):**
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "ide_refactor_safe_delete",
+    "arguments": {
+      "file": "src/main/java/com/example/OldUtil.java",
+      "target_type": "file"
     }
   }
 }
