@@ -279,7 +279,7 @@ Symbol search across all languages drives IntelliJ's headless "Go to Symbol" pop
 - Wraps `GotoSymbolModel2` + `ChooseByNameModelEx` — the same APIs as IntelliJ's own Ctrl+Alt+Shift+N popup
 - Inherits the IDE's parallel execution, dumb-mode safety, cancellation, proximity-aware sorting, and qualified-query support (e.g. `BasicSolver.run`)
 - `FindSymbolTool` owns the over-fetch loop and converts NavigationItems to wire-format `SymbolData` via `SymbolDataConverter`
-- `SymbolDataConverter` delegates `kind` classification to `LanguageServiceRegistry.getKind()` and qualified names to `QualifiedNameUtil`
+- `SymbolDataConverter` delegates `kind` classification to `LanguageServices.getKind()` and qualified names to `QualifiedNameUtil`
 - Supports language filtering (e.g., `languageFilter = setOf("Java", "Kotlin")`)
 
 ## Pagination
