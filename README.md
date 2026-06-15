@@ -291,7 +291,13 @@ The plugin provides **26 MCP tools** — 15 enabled by default, 11 opt-in (toggl
 | `ide_get_active_file` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
 | `ide_open_file` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
 
-> `ide_find_implementations` works in Go (verified live) but isn't in the snapshot suite yet. `ide_refactor_safe_delete` and `ide_convert_java_to_kotlin` require the Java plugin. Most Project & editor tools are language-agnostic; `index_status` / `install_plugin` / `restart` are exercised on every IDE by the test harness. `ide_build_project` is build-system-driven (JPS/Gradle/Maven), not language-driven — on a project with no IDE-driven build system it returns trivial success without compiling, so its ⚠️ marks tool reachability, not that a real build occurs.
+> **Notes:**
+> - `ide_find_implementations` works in Go (verified live) but isn't in the snapshot suite yet.
+> - `ide_refactor_safe_delete` and `ide_convert_java_to_kotlin` require the Java plugin.
+> - Most Project & editor tools are language-agnostic; `index_status` / `install_plugin` / `restart` are exercised on every IDE by the test harness.
+> - `ide_build_project` is build-system-driven (JPS/Gradle/Maven), not language-driven — on a project with no IDE-driven build system it returns trivial success without compiling, so its ⚠️ marks tool reachability, not that a real build occurs.
+> - `ide_find_file` works across all languages, but a bare `*.ext` wildcard may return nothing — pass a name fragment instead (e.g. `*Super.java`). Tracked in [#32](https://github.com/vcth4nh/jetbrains-index-mcp-plugin/issues/32).
+> - `ide_search_text` is backed by the IDE's word index, so language keywords (e.g. Kotlin `fun`) may not be matched even though identifiers and most words are.
 
 ## Multi-Project Support
 
