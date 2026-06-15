@@ -9,7 +9,7 @@ A JetBrains IDE plugin that exposes an **MCP (Model Context Protocol) server**, 
 **Fully tested**: IntelliJ IDEA, PyCharm, WebStorm, GoLand, RustRover, Android Studio, PhpStorm
 **May work** (untested): RubyMine, CLion, DataGrip
 
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/hechtcarmel)
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/vcth4nh)
 
 <!-- Plugin description -->
 **IDE Index MCP Server** provides AI coding assistants with access to the IDE's powerful code intelligence features through the Model Context Protocol (MCP).

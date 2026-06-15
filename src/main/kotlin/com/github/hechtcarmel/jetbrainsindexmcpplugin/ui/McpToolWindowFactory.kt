@@ -110,7 +110,7 @@ class McpToolWindowFactory : ToolWindowFactory, DumbAware {
                 McpIcons.BuyMeACoffee,
                 McpBundle.message("footer.buymeacoffee"),
                 McpBundle.message("footer.buymeacoffee.tooltip"),
-                "https://buymeacoffee.com/hechtcarmel"
+                "https://buymeacoffee.com/vcth4nh"
             ))
             add(createToolbarSeparator())
             add(skillButton)
