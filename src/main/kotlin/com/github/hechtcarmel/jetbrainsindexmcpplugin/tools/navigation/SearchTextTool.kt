@@ -47,23 +47,22 @@ class SearchTextTool : AbstractMcpTool() {
     override val name = ToolNames.SEARCH_TEXT
 
     override val description = """
-        Search for text using IDE's word index. Significantly faster than file scanning for exact word matches.
+        Search for an exact word across the project using the IDE's pre-built word index — O(1) lookup,
+        much faster than file scanning. Use for quick literal sweeps when you don't need semantic
+        resolution. Prefer ide_find_usages when you need semantic accuracy (aliases, overrides,
+        generics); prefer Grep/external tools when you need regex.
 
-        Uses a pre-built word index for O(1) lookups instead of scanning all files.
+        Supports context filtering: search only in code, comments, or string literals.
 
-        Context filtering: search only in code, comments, or string literals.
+        Returns: file paths, 1-based line/column, context snippets, and context type (CODE,
+        COMMENT, STRING_LITERAL). Paginated — pass the returned cursor for the next page.
 
-        Returns: matching locations with file, line, column, context snippet, and context type.
-
-        Supports pagination: first call returns results + nextCursor. Pass cursor to get the next page.
-        Parameters: query (required for fresh search), context (optional: "code", "comments", "strings", "all"), caseSensitive (optional, default: true), pageSize (optional, default: 100, max: 500), cursor (for pagination, replaces search params; project_path may still be required).
-
-        Example: {"query": "ConfigManager"} or {"query": "TODO", "context": "comments"}
+        Gotchas: exact word match only — no wildcards or regex. Requires smart mode.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
         .projectPath()
-        .stringProperty(ParamNames.QUERY, "Exact word to search for (not a pattern/regex). Required for fresh search, ignored when cursor is provided.")
+        .stringProperty(ParamNames.QUERY, "Exact word to search for (no wildcards or regex). Required for fresh search; ignored when cursor is provided.")
         .enumProperty(ParamNames.CONTEXT, "Where to search: \"code\", \"comments\", \"strings\", \"all\". Default: \"all\".", listOf("code", "comments", "strings", "all"))
         .booleanProperty(ParamNames.CASE_SENSITIVE, "Case sensitive search. Default: true.")
         .intProperty(ParamNames.LIMIT, "Maximum results per page (deprecated, use pageSize). Default: $DEFAULT_PAGE_SIZE, max: $MAX_PAGE_SIZE.")

@@ -28,6 +28,9 @@ These tools work in every supported JetBrains IDE:
 | `ide_refactor_rename` | Rename symbol with reference updates (all languages) | Enabled |
 | `ide_move_file` | Move file to new directory with IDE-aware move semantics | Enabled |
 | `ide_reformat_code` | Reformat code using project code style | Disabled |
+| `ide_optimize_imports` | Remove unused imports and organize remaining imports | Disabled |
+| `ide_install_plugin` | Install a locally built plugin `.zip` into this IDE (dev loop) | Disabled |
+| `ide_restart` | Restart this IDE (pair with `ide_install_plugin`) | Disabled |
 
 ### Extended Tools (Language-Aware)
 
@@ -37,9 +40,9 @@ These tools activate based on available language plugins:
 |------|-------------|-----------|
 | `ide_type_hierarchy` | Get type inheritance hierarchy | Java, Kotlin, Python, JS/TS, Go, PHP, Rust |
 | `ide_call_hierarchy` | Analyze method call relationships | Java, Kotlin, Python, JS/TS, Go, PHP, Rust |
-| `ide_find_implementations` | Find interface implementations | Java, Kotlin, Python, JS/TS, PHP, Rust |
+| `ide_find_implementations` | Find interface implementations | Java, Kotlin, Python, JS/TS, Go, PHP, Rust |
 | `ide_find_super_methods` | Find overridden methods | Java, Kotlin, Python, JS/TS, PHP, Go, Rust |
-| `ide_file_structure` | Hierarchical file structure *(disabled by default)* | Java, Kotlin, Python, JS/TS, Markdown |
+| `ide_file_structure` | Hierarchical file structure *(disabled by default)* | Java, Kotlin, Python, JS/TS, Go, PHP, Rust, Markdown |
 
 ### Java-Specific Refactoring Tools
 
@@ -64,10 +67,13 @@ These tools activate based on available language plugins:
   - [ide_index_status](#ide_index_status)
   - [ide_sync_files](#ide_sync_files)
   - [ide_build_project](#ide_build_project)
+  - [ide_install_plugin](#ide_install_plugin)
+  - [ide_restart](#ide_restart)
   - [ide_read_file](#ide_read_file)
   - [ide_get_active_file](#ide_get_active_file)
   - [ide_open_file](#ide_open_file)
 - [Refactoring Tools](#refactoring-tools)
+  - [ide_optimize_imports](#ide_optimize_imports)
   - [ide_refactor_rename](#ide_refactor_rename)
   - [ide_move_file](#ide_move_file)
   - [ide_reformat_code](#ide_reformat_code)
@@ -102,21 +108,6 @@ Most tools operate on a specific location in code and require these parameters:
 | `line` | integer | 1-based line number |
 | `column` | integer | 1-based column number. For dotted expressions like `json.dumps()` or `os.path.join()`, point to the member token (`dumps`, `join`) when targeting the member definition. |
 
-### Symbol Reference Parameters
-
-Some tools support identifying the target element by fully qualified symbol reference instead of file position. The following parameters are available as an alternative to `file` + `line` + `column`:
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `language` | string | Language of the symbol (e.g., `"Java"`). Required when using `symbol`. Unsupported languages are rejected at runtime; use `file` + `line` + `column` for languages without symbol-reference support. |
-| `symbol` | string | Fully qualified symbol reference. Format: `com.example.ClassName`, `com.example.ClassName#memberName`. |
-
-**Important:** The two parameter groups are **mutually exclusive** — provide either `file` + `line` + `column` OR `language` + `symbol`, not both.
-
-**Supported languages:** Java only today. Unsupported languages return an explicit error listing the currently supported symbol-reference languages.
-
-**Tools that support symbol references:** `ide_find_usages`, `ide_find_definition`, `ide_call_hierarchy`, `ide_find_implementations`, `ide_find_super_methods`.
-
 ---
 
 ## Universal Tools
@@ -132,23 +123,19 @@ Finds all references to a symbol across the entire project using IntelliJ's sema
 - Understanding code dependencies
 - Preparing for refactoring
 
-**Target (mutually exclusive):** `file` + `line` + `column` OR `language` + `symbol`
-
 **Parameters:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `file` | string | Conditional | Project-relative file path, or a dependency/library absolute path or `jar://` URL previously returned by the plugin. Required for position-based lookup. |
-| `line` | integer | Conditional | 1-based line number. Required for position-based lookup. |
-| `column` | integer | Conditional | 1-based column number. Required for position-based lookup. |
-| `language` | string | Conditional | Language of the symbol (e.g., `"Java"`). Required for symbol-based lookup. |
-| `symbol` | string | Conditional | Fully qualified symbol reference. Required for symbol-based lookup. |
+| `file` | string | Yes | Project-relative file path, or a dependency/library absolute path or `jar://` URL previously returned by the plugin. |
+| `line` | integer | Yes | 1-based line number. |
+| `column` | integer | Yes | 1-based column number. |
 | `scope` | string | No | Built-in search scope. One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 | `maxResults` | integer | No | Deprecated alias for `pageSize` (default: 100, max: 500) |
 | `cursor` | string | No | Pagination cursor from a previous response |
 | `pageSize` | integer | No | Number of results per page (default: 100, max: 500) |
 
-**Example Request (position-based):**
+**Example Request:**
 
 ```json
 {
@@ -164,22 +151,6 @@ Finds all references to a symbol across the entire project using IntelliJ's sema
 }
 ```
 
-**Example Request (symbol-based):**
-
-```json
-{
-  "method": "tools/call",
-  "params": {
-    "name": "ide_find_usages",
-    "arguments": {
-      "language": "Java",
-      "symbol": "com.example.UserService#findUser(String)",
-      "scope": "project_and_libraries"
-    }
-  }
-}
-```
-
 **Example Response:**
 
 ```json
@@ -189,17 +160,17 @@ Finds all references to a symbol across the entire project using IntelliJ's sema
       "file": "src/main/java/com/example/UserController.java",
       "line": 42,
       "column": 15,
-      "context": "userService.findUser(id)",
-      "type": "METHOD_CALL",
-      "astPath": ["UserController", "getUser"]
+      "preview": "userService.findUser(id)",
+      "usageType": "METHOD_CALL",
+      "enclosingScope": ["UserController", "getUser"]
     },
     {
       "file": "src/test/java/com/example/UserServiceTest.java",
       "line": 28,
       "column": 10,
-      "context": "service.findUser(\"test\")",
-      "type": "METHOD_CALL",
-      "astPath": ["UserServiceTest", "testFindUser"]
+      "preview": "service.findUser(\"test\")",
+      "usageType": "METHOD_CALL",
+      "enclosingScope": ["UserServiceTest", "testFindUser"]
     }
   ],
   "totalCount": 2,
@@ -231,20 +202,15 @@ Finds the definition/declaration location of a symbol at a given source location
 - Understanding where a method, class, variable, or field is declared
 - Looking up the original definition from a usage site
 
-**Target (mutually exclusive):** `file` + `line` + `column` OR `language` + `symbol`
-
 **Parameters:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `file` | string | Conditional | Project-relative file path, or a dependency/library absolute path or `jar://` URL previously returned by the plugin. Required for position-based lookup. |
-| `line` | integer | Conditional | 1-based line number. Required for position-based lookup. |
-| `column` | integer | Conditional | 1-based column number. Required for position-based lookup. |
-| `language` | string | Conditional | Language of the symbol (e.g., `"Java"`). Required for symbol-based lookup. |
-| `symbol` | string | Conditional | Fully qualified symbol reference. Required for symbol-based lookup. |
-| `maxPreviewLines` | integer | No | Limit `fullElementPreview` output size (default: 50, max: 500) |
+| `file` | string | Yes | Project-relative file path, or a dependency/library absolute path or `jar://` URL previously returned by the plugin. |
+| `line` | integer | Yes | 1-based line number. |
+| `column` | integer | Yes | 1-based column number. |
 
-**Example Request (position-based):**
+**Example Request:**
 
 ```json
 {
@@ -260,21 +226,6 @@ Finds the definition/declaration location of a symbol at a given source location
 }
 ```
 
-**Example Request (symbol-based):**
-
-```json
-{
-  "method": "tools/call",
-  "params": {
-    "name": "ide_find_definition",
-    "arguments": {
-      "language": "Java",
-      "symbol": "com.example.UserService#findUser(String)"
-    }
-  }
-}
-```
-
 **Example Response:**
 
 ```json
@@ -282,9 +233,11 @@ Finds the definition/declaration location of a symbol at a given source location
   "file": "src/main/java/com/example/UserService.java",
   "line": 15,
   "column": 17,
+  "name": "findUser",
+  "kind": "METHOD",
   "preview": "14:     \n15:     public User findUser(String id) {\n16:         return userRepository.findById(id);\n17:     }",
-  "symbolName": "findUser",
-  "astPath": ["UserService"]
+  "qualifiedName": "com.example.UserService.findUser",
+  "enclosingScope": ["UserService"]
 }
 ```
 
@@ -313,7 +266,7 @@ Searches for classes and interfaces by name using the IDE's class index.
 | `query` | string | Yes | Search pattern |
 | `scope` | string | No | Built-in search scope. One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 | `language` | string | No | Filter by language (e.g., `"Kotlin"`, `"Java"`, `"Python"`). Case-insensitive |
-| `matchMode` | string | No | `"substring"` (default), `"prefix"`, or `"exact"` |
+| `fuzzySearch` | boolean | No | `false` (default) = exact, case-insensitive name match; `true` = IDE camelCase/substring matching (`USvc` → `UserService`) |
 | `limit` | integer | No | Deprecated alias for `pageSize` (default: 25, max: 500) |
 | `cursor` | string | No | Pagination cursor from a previous response |
 | `pageSize` | integer | No | Number of results per page (default: 25, max: 500) |
@@ -425,11 +378,12 @@ Searches for text using the IDE's pre-built word index. Significantly faster tha
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `query` | string | Yes | Exact word to search for (not a pattern/regex) |
+| `query` | string | Yes* | Exact word to search for (not a pattern/regex). Required for a fresh search; ignored when `cursor` is provided. |
 | `context` | string | No | Where to search: `"code"`, `"comments"`, `"strings"`, or `"all"` (default) |
 | `caseSensitive` | boolean | No | Case sensitive search (default: true) |
-| `filePattern` | string | No | Glob pattern to filter files (e.g., `"*.kt"`, `"*.gradle.kts"`) |
-| `limit` | integer | No | Maximum results (default: 100, max: 500) |
+| `cursor` | string | No | Pagination cursor from a previous response. When provided, returns the next page; search parameters are ignored. |
+| `pageSize` | integer | No | Results per page (default: 100, max: 500) |
+| `limit` | integer | No | Deprecated alias for `pageSize` (default: 100, max: 500) |
 
 **Example Request:**
 
@@ -440,8 +394,7 @@ Searches for text using the IDE's pre-built word index. Significantly faster tha
     "name": "ide_search_text",
     "arguments": {
       "query": "TODO",
-      "context": "comments",
-      "filePattern": "*.kt"
+      "context": "comments"
     }
   }
 }
@@ -490,11 +443,11 @@ File problems are collected through explicit daemon analysis, so they do not dep
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `file` | string | Yes | Path to the file relative to project root |
-| `line` | integer | No | 1-based line number for intention lookup (default: 1) |
-| `column` | integer | No | 1-based column number for intention lookup (default: 1) |
-| `startLine` | integer | No | Filter problems to start from this line |
-| `endLine` | integer | No | Filter problems to end at this line |
+| `file` | string | No | Path to the file relative to project root. Optional — enables per-file code analysis when provided. At least one of `file`, `includeBuildErrors`, or `includeTestResults` must be active. |
+| `line` | integer | No | 1-based line number for intention lookup (default: 1). Requires `file`. |
+| `column` | integer | No | 1-based column number for intention lookup (default: 1). Requires `file`. |
+| `startLine` | integer | No | Filter problems to start from this line. Requires `file`. |
+| `endLine` | integer | No | Filter problems to end at this line. Requires `file`. |
 | `includeBuildErrors` | boolean | No | Include errors/warnings from the last build (default: `false`) |
 | `includeTestResults` | boolean | No | Include test results from open test run tabs (default: `false`) |
 | `severity` | string | No | Filter diagnostics by `all`, `errors`, or `warnings` (default: `all`) |
@@ -587,9 +540,8 @@ Checks if the IDE is in dumb mode (indexing) or smart mode.
 ```json
 {
   "isDumbMode": false,
-  "isSmartMode": true,
   "isIndexing": false,
-  "projectName": "my-application"
+  "indexingProgress": null
 }
 ```
 
@@ -676,7 +628,7 @@ Build the project using the IDE's build system (supports JPS, Gradle, Maven).
   "warnings": 2,
   "buildMessages": [
     {
-      "severity": "ERROR",
+      "category": "ERROR",
       "message": "Unresolved reference: fooBar",
       "file": "src/main/kotlin/com/example/App.kt",
       "line": 15,
@@ -857,12 +809,13 @@ Searches for code symbols (classes, interfaces, methods, fields, and functions) 
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `query` | string | Yes | Search pattern. Matching follows IntelliJ's Go to Symbol popup. |
+| `query` | string | Yes* | Search pattern. Required for a fresh search; ignored when `cursor` is provided. |
 | `scope` | string | No | Built-in search scope. One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 | `language` | string | No | Filter by language (e.g., `"Kotlin"`, `"Java"`). Case-insensitive |
-| `limit` | integer | No | Deprecated alias for `pageSize` (default: 25, max: 500) |
+| `fuzzySearch` | boolean | No | When `true`, use the IDE's Go to Symbol fuzzy matching (camelCase + substring). When `false` (default), match the symbol name exactly, case-insensitively. |
 | `cursor` | string | No | Pagination cursor from a previous response |
 | `pageSize` | integer | No | Number of results per page (default: 25, max: 500) |
+| `limit` | integer | No | Deprecated alias for `pageSize` (default: 25, max: 500) |
 
 **Example Request:**
 
@@ -887,7 +840,7 @@ Searches for code symbols (classes, interfaces, methods, fields, and functions) 
     "name": "ide_find_symbol",
     "arguments": {
       "query": "USvc",
-      "scope": "project_and_libraries",
+      "fuzzySearch": true,
       "pageSize": 50
     }
   }
@@ -905,8 +858,7 @@ Searches for code symbols (classes, interfaces, methods, fields, and functions) 
       "kind": "INTERFACE",
       "file": "src/main/java/com/example/service/UserService.java",
       "line": 12,
-      "column": 18,
-      "containerName": null
+      "column": 18
     },
     {
       "name": "UserServiceImpl",
@@ -914,8 +866,7 @@ Searches for code symbols (classes, interfaces, methods, fields, and functions) 
       "kind": "CLASS",
       "file": "src/main/java/com/example/service/UserServiceImpl.java",
       "line": 15,
-      "column": 14,
-      "containerName": null
+      "column": 14
     },
     {
       "name": "findUser",
@@ -923,8 +874,7 @@ Searches for code symbols (classes, interfaces, methods, fields, and functions) 
       "kind": "METHOD",
       "file": "src/main/java/com/example/service/UserService.java",
       "line": 18,
-      "column": 10,
-      "containerName": "UserService"
+      "column": 10
     }
   ],
   "totalCount": 3,
@@ -950,9 +900,117 @@ For Markdown heading outlines, use `ide_file_structure`.
 
 ---
 
+### ide_install_plugin
+
+> **Default**: Disabled - enable in Settings > Tools > Index MCP Server
+
+Install a locally built plugin distribution (`.zip`) into THIS IDE's custom plugins directory, replacing any existing copy of the same plugin. Used as half of the local plugin dev loop: build → `ide_install_plugin` → `ide_restart`.
+
+The new code only takes effect after an IDE restart — call `ide_restart` afterward.
+
+**Use when:**
+- Deploying a freshly built plugin zip to the running IDE during development
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `path` | string | No | Path to the plugin `.zip`. Absolute, or relative to the project root. Default: newest `*.zip` in `<project>/build/distributions/`. |
+
+**Example Request:**
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "ide_install_plugin",
+    "arguments": {}
+  }
+}
+```
+
+**Returns**: `{ "installed": true, "source": "/abs/path/plugin.zip", "pluginDir": "/abs/path/plugins/myplugin", "pluginId": "com.example.plugin", "pluginVersion": "1.0.0", "restartRequired": true, "message": "…" }`
+
+> **Disabled by default.** Enable in Settings > Tools > Index MCP Server.
+
+---
+
+### ide_restart
+
+> **Default**: Disabled - enable in Settings > Tools > Index MCP Server
+
+Restart THIS IDE. Use after `ide_install_plugin` to load a freshly installed plugin build.
+
+The restart is scheduled after this tool's response is flushed (default 2 s delay) so the MCP client receives the result before the connection drops. In remote-dev / serverMode the backend relaunches and the thin client reconnects automatically.
+
+**Use when:**
+- Loading a freshly installed plugin build (pair with `ide_install_plugin`)
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `delaySeconds` | integer | No | Seconds to wait before restarting (lets the response flush). Default: 2. Range: 0–60. |
+
+**Example Request:**
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "ide_restart",
+    "arguments": {
+      "delaySeconds": 5
+    }
+  }
+}
+```
+
+**Returns**: `{ "restarting": true, "delaySeconds": 5, "message": "IDE will restart in 5s. …" }`
+
+> **Disabled by default.** Enable in Settings > Tools > Index MCP Server.
+
+---
+
 ## Refactoring Tools
 
 > **Note**: All refactoring tools modify source files. Changes can be undone with Ctrl/Cmd+Z.
+
+### ide_optimize_imports
+
+> **Default**: Disabled - enable in Settings > Tools > Index MCP Server
+
+Optimize imports in a file: remove unused imports and organize remaining imports according to project code style. Equivalent to the IDE's "Optimize Imports" action (<kbd>Ctrl+Alt+O</kbd> / <kbd>Cmd+Opt+O</kbd>). Does NOT reformat code. Supports undo (Ctrl/Cmd+Z).
+
+**Use when:**
+- Removing unused imports after editing or refactoring
+- Organizing imports without changing any formatting
+
+**Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `file` | string | Yes | File path relative to project root |
+
+**Example Request:**
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "ide_optimize_imports",
+    "arguments": {
+      "file": "src/main/kotlin/com/example/UserService.kt"
+    }
+  }
+}
+```
+
+**Returns**: `{ "success": true, "affectedFiles": ["src/…"], "changesCount": 1, "message": "Optimized imports in …" }`
+
+> **Disabled by default.** Enable in Settings > Tools > Index MCP Server.
+
+---
 
 ### ide_refactor_rename (Universal - All Languages)
 
@@ -972,14 +1030,18 @@ Renames a symbol and updates all references across the project. This tool uses I
 - Following naming conventions
 - Refactoring code structure
 
+**Two modes:**
+- **Symbol rename**: provide `file` + `line` + `column` + `newName`. Renames the symbol at the caret and all its references.
+- **File rename**: provide `file` + `newName`, omit `line`/`column`. Works for all file types including binary files and Android resource files (updates XML references across the project).
+
 **Parameters:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `file` | string | Yes | Path to the file containing the symbol |
-| `line` | integer | Yes | 1-based line number |
-| `column` | integer | Yes | 1-based column number |
-| `newName` | string | Yes | The new name for the symbol |
+| `file` | string | Yes | Path to the file relative to project root |
+| `line` | integer | No | 1-based line number. Required for symbol rename; omit for file rename. |
+| `column` | integer | No | 1-based column number. Required for symbol rename; omit for file rename. |
+| `newName` | string | Yes | The new name for the symbol or file. For file renames, include the file extension (e.g., `"new_name.webp"`). |
 | `overrideStrategy` | string | No | How to handle overriding methods: `"rename_base"` (default), `"rename_only_current"`, or `"ask"` |
 | `relatedRenamingStrategy` | string | No | How to handle automatic renaming of related symbols: `"all"` (default), `"none"`, `"accessors_and_tests"`, or `"ask"` |
 
@@ -1029,6 +1091,21 @@ Renames a symbol and updates all references across the project. This tool uses I
       "line": 25,
       "column": 21,
       "newName": "getFullName"
+    }
+  }
+}
+```
+
+**Example Request (file rename):**
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "ide_refactor_rename",
+    "arguments": {
+      "file": "src/main/res/drawable/ic_launcher.webp",
+      "newName": "ic_app_icon.webp"
     }
   }
 }
@@ -1212,10 +1289,12 @@ Retrieves the complete type hierarchy for a class or interface.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `file` | string | No* | Path to the file relative to project root |
-| `line` | integer | No* | 1-based line number |
-| `column` | integer | No* | 1-based column number |
+| `line` | integer | No* | 1-based line number. Required if using `file`. |
+| `column` | integer | No* | 1-based column number. Required if using `file`. |
 | `className` | string | No* | Fully qualified class name (alternative to position) |
-| `scope` | string | No | Built-in search scope. One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
+| `direction` | string | No | Which direction to traverse: `"supertypes"` (ancestors), `"subtypes"` (descendants), or `"both"` (default). `"both"` returns the union of the supertypes and subtypes walks. |
+| `maxDepth` | integer | No | How many levels deep to traverse (default: 5, max: 20) |
+| `scope` | string | No | Hierarchy scope. One of `all` (default), `production`, `test`. (`production` = production sources only — empty in projects without production roots.) |
 
 *Either `file`/`line`/`column` OR `className` must be provided.
 
@@ -1244,7 +1323,7 @@ Retrieves the complete type hierarchy for a class or interface.
     "name": "ide_type_hierarchy",
     "arguments": {
       "className": "java.util.ArrayList",
-      "scope": "project_and_libraries"
+      "direction": "supertypes"
     }
   }
 }
@@ -1269,31 +1348,31 @@ Retrieves the complete type hierarchy for a class or interface.
 ```json
 {
   "element": {
-    "name": "com.example.UserServiceImpl",
-    "file": "src/main/java/com/example/UserServiceImpl.java",
+    "name": "UserServiceImpl",
+    "qualifiedName": "com.example.UserServiceImpl",
     "kind": "CLASS",
-    "language": "Java"
+    "file": "src/main/java/com/example/UserServiceImpl.java"
   },
   "supertypes": [
     {
-      "name": "com.example.UserService",
-      "file": "src/main/java/com/example/UserService.java",
+      "name": "UserService",
+      "qualifiedName": "com.example.UserService",
       "kind": "INTERFACE",
-      "language": "Java"
+      "file": "src/main/java/com/example/UserService.java"
     },
     {
-      "name": "com.example.BaseService",
-      "file": "src/main/java/com/example/BaseService.java",
+      "name": "BaseService",
+      "qualifiedName": "com.example.BaseService",
       "kind": "ABSTRACT_CLASS",
-      "language": "Java"
+      "file": "src/main/java/com/example/BaseService.java"
     }
   ],
   "subtypes": [
     {
-      "name": "com.example.AdminUserServiceImpl",
-      "file": "src/main/java/com/example/AdminUserServiceImpl.java",
+      "name": "AdminUserServiceImpl",
+      "qualifiedName": "com.example.AdminUserServiceImpl",
       "kind": "CLASS",
-      "language": "Java"
+      "file": "src/main/java/com/example/AdminUserServiceImpl.java"
     }
   ]
 }
@@ -1319,22 +1398,18 @@ Analyzes method call relationships to find callers or callees.
 - Analyzing impact of method changes
 - Debugging to understand how a method is reached
 
-**Target (mutually exclusive):** `file` + `line` + `column` OR `language` + `symbol`
-
 **Parameters:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `file` | string | Conditional | Project-relative file path, or a dependency/library absolute path or `jar://` URL previously returned by the plugin. Required for position-based lookup. |
-| `line` | integer | Conditional | 1-based line number. Required for position-based lookup. |
-| `column` | integer | Conditional | 1-based column number. Required for position-based lookup. |
-| `language` | string | Conditional | Language of the symbol (e.g., `"Java"`). Required for symbol-based lookup. |
-| `symbol` | string | Conditional | Fully qualified symbol reference. Required for symbol-based lookup. |
+| `file` | string | Yes | Project-relative file path, or a dependency/library absolute path or `jar://` URL previously returned by the plugin. |
+| `line` | integer | Yes | 1-based line number. |
+| `column` | integer | Yes | 1-based column number. |
 | `direction` | string | Yes | `"callers"` or `"callees"` |
-| `depth` | integer | No | How deep to traverse (default: 3, max: 5) |
-| `scope` | string | No | Built-in search scope. One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
+| `maxDepth` | integer | No | How many levels deep to traverse (default: 7, max: 20) |
+| `scope` | string | No | Hierarchy scope. One of `all` (default), `production`, `test`, `this_class`, `this_module`. (`production` = production sources only.) |
 
-**Example Request (position-based):**
+**Example Request:**
 
 ```json
 {
@@ -1351,48 +1426,34 @@ Analyzes method call relationships to find callers or callees.
 }
 ```
 
-**Example Request (symbol-based):**
-
-```json
-{
-  "method": "tools/call",
-  "params": {
-    "name": "ide_call_hierarchy",
-    "arguments": {
-      "language": "Java",
-      "symbol": "com.example.UserService#validateUser(String)",
-      "direction": "callers",
-      "scope": "project_and_libraries"
-    }
-  }
-}
-```
-
 **Example Response:**
 
 ```json
 {
   "element": {
-    "name": "UserService.validateUser(String)",
+    "name": "validateUser",
+    "qualifiedName": "com.example.UserService.validateUser",
+    "kind": "METHOD",
     "file": "src/main/java/com/example/UserService.java",
     "line": 20,
-    "column": 17,
-    "language": "Java"
+    "column": 17
   },
   "calls": [
     {
-      "name": "UserController.createUser(UserRequest)",
+      "name": "createUser",
+      "qualifiedName": "com.example.UserController.createUser",
+      "kind": "METHOD",
       "file": "src/main/java/com/example/UserController.java",
       "line": 45,
-      "column": 17,
-      "language": "Java"
+      "column": 17
     },
     {
-      "name": "UserController.updateUser(String, UserRequest)",
+      "name": "updateUser",
+      "qualifiedName": "com.example.UserController.updateUser",
+      "kind": "METHOD",
       "file": "src/main/java/com/example/UserController.java",
       "line": 62,
-      "column": 17,
-      "language": "Java"
+      "column": 17
     }
   ]
 }
@@ -1404,29 +1465,25 @@ Analyzes method call relationships to find callers or callees.
 
 Finds all concrete implementations of an interface, abstract class, or abstract method.
 
-**Languages:** Java, Kotlin, Python, JS/TS, PHP, Rust (not Go — Go uses implicit interfaces).
+**Languages:** Java, Kotlin, Python, JS/TS, Go, PHP, Rust.
 
 **Use when:**
 - Locating classes that implement an interface
 - Finding classes that extend an abstract class
 - Finding all overriding methods for polymorphic behavior analysis
 
-**Target (mutually exclusive):** `file` + `line` + `column` OR `language` + `symbol`
-
 **Parameters:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `file` | string | Conditional | Project-relative file path, or a dependency/library absolute path or `jar://` URL previously returned by the plugin. Required for position-based lookup. |
-| `line` | integer | Conditional | 1-based line number. Required for position-based lookup. |
-| `column` | integer | Conditional | 1-based column number. Required for position-based lookup. |
-| `language` | string | Conditional | Language of the symbol (e.g., `"Java"`). Required for symbol-based lookup. |
-| `symbol` | string | Conditional | Fully qualified symbol reference. Required for symbol-based lookup. |
+| `file` | string | Yes | Project-relative file path, or a dependency/library absolute path or `jar://` URL previously returned by the plugin. |
+| `line` | integer | Yes | 1-based line number. |
+| `column` | integer | Yes | 1-based column number. |
 | `scope` | string | No | Built-in search scope. One of `project_files` (default), `project_and_libraries`, `project_production_files`, `project_test_files` |
 | `cursor` | string | No | Pagination cursor from a previous response |
 | `pageSize` | integer | No | Number of results per page (default: 100, max: 500) |
 
-**Example Request (position-based):**
+**Example Request:**
 
 ```json
 {
@@ -1442,36 +1499,22 @@ Finds all concrete implementations of an interface, abstract class, or abstract 
 }
 ```
 
-**Example Request (symbol-based):**
-
-```json
-{
-  "method": "tools/call",
-  "params": {
-    "name": "ide_find_implementations",
-    "arguments": {
-      "language": "Java",
-      "symbol": "com.example.Repository",
-      "scope": "project_test_files"
-    }
-  }
-}
-```
-
 **Example Response:**
 
 ```json
 {
   "implementations": [
     {
-      "name": "com.example.JpaUserRepository",
+      "name": "JpaUserRepository",
+      "qualifiedName": "com.example.JpaUserRepository",
       "file": "src/main/java/com/example/JpaUserRepository.java",
       "line": 12,
       "column": 14,
       "kind": "CLASS"
     },
     {
-      "name": "com.example.InMemoryUserRepository",
+      "name": "InMemoryUserRepository",
+      "qualifiedName": "com.example.InMemoryUserRepository",
       "file": "src/main/java/com/example/InMemoryUserRepository.java",
       "line": 8,
       "column": 14,
@@ -1504,19 +1547,15 @@ Finds the complete inheritance hierarchy for a method - all parent methods it ov
 
 **Position flexibility:** The position (line/column) can be anywhere within the method - on the name, inside the body, or on the @Override annotation. The tool automatically finds the enclosing method.
 
-**Target (mutually exclusive):** `file` + `line` + `column` OR `language` + `symbol`
-
 **Parameters:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `file` | string | Conditional | Project-relative file path, or a dependency/library absolute path or `jar://` URL previously returned by the plugin. Required for position-based lookup. |
-| `line` | integer | Conditional | 1-based line number (any line within the method). Required for position-based lookup. |
-| `column` | integer | Conditional | 1-based column number (any position within the method). Required for position-based lookup. |
-| `language` | string | Conditional | Language of the symbol (e.g., `"Java"`). Required for symbol-based lookup. |
-| `symbol` | string | Conditional | Fully qualified symbol reference. Required for symbol-based lookup. |
+| `file` | string | Yes | Project-relative file path, or a dependency/library absolute path or `jar://` URL previously returned by the plugin. |
+| `line` | integer | Yes | 1-based line number (any line within the method). |
+| `column` | integer | Yes | 1-based column number (any position within the method). |
 
-**Example Request (position-based):**
+**Example Request:**
 
 ```json
 {
@@ -1532,29 +1571,14 @@ Finds the complete inheritance hierarchy for a method - all parent methods it ov
 }
 ```
 
-**Example Request (symbol-based):**
-
-```json
-{
-  "method": "tools/call",
-  "params": {
-    "name": "ide_find_super_methods",
-    "arguments": {
-      "language": "Java",
-      "symbol": "com.example.UserServiceImpl#findUser(String)"
-    }
-  }
-}
-```
-
 **Example Response:**
 
 ```json
 {
   "method": {
     "name": "findUser",
-    "signature": "findUser(String id): User",
-    "containingClass": "com.example.UserServiceImpl",
+    "qualifiedName": "com.example.UserServiceImpl.findUser",
+    "kind": "METHOD",
     "file": "src/main/java/com/example/UserServiceImpl.java",
     "line": 25,
     "column": 17
@@ -1562,40 +1586,30 @@ Finds the complete inheritance hierarchy for a method - all parent methods it ov
   "hierarchy": [
     {
       "name": "findUser",
-      "signature": "findUser(String id): User",
-      "containingClass": "com.example.AbstractUserService",
-      "containingClassKind": "ABSTRACT_CLASS",
+      "qualifiedName": "com.example.AbstractUserService.findUser",
+      "kind": "METHOD",
       "file": "src/main/java/com/example/AbstractUserService.java",
       "line": 18,
-      "column": 17,
-      "isInterface": false,
-      "depth": 1
+      "column": 17
     },
     {
       "name": "findUser",
-      "signature": "findUser(String id): User",
-      "containingClass": "com.example.UserService",
-      "containingClassKind": "INTERFACE",
+      "qualifiedName": "com.example.UserService.findUser",
+      "kind": "METHOD",
       "file": "src/main/java/com/example/UserService.java",
       "line": 12,
-      "column": 10,
-      "isInterface": true,
-      "depth": 2
+      "column": 10
     }
-  ],
-  "totalCount": 2
+  ]
 }
 ```
 
-**Depth field:** The `depth` field indicates the level in the hierarchy:
-- `depth: 1` = immediate parent (first level up)
-- `depth: 2` = grandparent (two levels up)
-- And so on...
+**hierarchy entries** walk from the immediate parent upward; the first entry is the nearest ancestor that defines or declares the method.
 
-**containingClassKind Values:**
-- `CLASS` - Concrete class
-- `ABSTRACT_CLASS` - Abstract class
-- `INTERFACE` - Interface
+**kind Values** (for both `method` and `hierarchy` entries):
+- `METHOD` - Regular method
+- `FUNCTION` - Function (dynamic languages)
+- `FIELD` - Field or property override
 
 ---
 
@@ -1605,7 +1619,7 @@ Finds the complete inheritance hierarchy for a method - all parent methods it ov
 
 Get the hierarchical structure of a source file, similar to the IDE's Structure view (<kbd>Cmd+7</kbd> / <kbd>Alt+7</kbd>).
 
-**Languages:** Java, Kotlin, Python, JavaScript, TypeScript, Markdown.
+**Languages:** Java, Kotlin, Python, JavaScript, TypeScript, Go, PHP, Rust, Markdown.
 
 **Use when:**
 - Getting an overview of a file's classes, methods, fields, or Markdown heading outline
@@ -1617,6 +1631,8 @@ Get the hierarchical structure of a source file, similar to the IDE's Structure 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `file` | string | Yes | Path to the file relative to project root |
+| `show` | array of strings | No | Optional list of filter category names to show. Omit to use language defaults. Per-language values (* = on by default): python: `fields`*, `inherited`; java: `anonymous_classes`, `fields`*, `inherited`, `lambdas`*, `non_public`*; kotlin: `inherited`, `non_public`*, `properties`*; javascript/typescript: `fields`*, `inherited`, `inherited_from_object`*; php: `anonymous_classes`, `inherited`, `lambdas`*, `constants`*, `includes`*, `private_members`*, `properties`*, `protected_members`*; go: `package_structure`*, `private_members`*; rust: `macro_expanded`. |
+| `sort` | string | No | Optional sort order. One of `"visibility"` (groups public/exported before non-public). Default: declaration order. No-op for Python and JS/TS. |
 
 **Example Request:**
 
@@ -1735,23 +1751,30 @@ Convert one or more Java files to Kotlin using IntelliJ's built-in J2K (Java-to-
 
 ### ide_refactor_safe_delete
 
-Safely deletes an element, first checking for usages.
+Safely deletes a symbol or file, first checking for usages.
+
+**Two modes:**
+- **Symbol delete** (`target_type="symbol"`, default): deletes the symbol at the given position. Requires `file`, `line`, and `column`.
+- **File delete** (`target_type="file"`): deletes the entire file if no symbols have external usages. Requires `file` only; internal call chains don't block deletion.
+
+If usages exist and `force=false`, returns the blocking usage list instead of deleting.
 
 **Use when:**
 - Removing unused code
 - Cleaning up dead code
-- Safely removing methods or classes
+- Safely removing methods, classes, or entire files
 
 **Parameters:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `file` | string | Yes | Path to the file |
-| `line` | integer | Yes | 1-based line number |
-| `column` | integer | Yes | 1-based column number |
+| `file` | string | Yes | Path to the file relative to project root |
+| `target_type` | string | No | What to delete: `"symbol"` (default, requires `line`+`column`) or `"file"` (deletes entire file if no external usages) |
+| `line` | integer | No | 1-based line number. Required when `target_type="symbol"` (the default). |
+| `column` | integer | No | 1-based column number. Required when `target_type="symbol"` (the default). |
 | `force` | boolean | No | Force deletion even if usages exist (default: false) |
 
-**Example Request:**
+**Example Request (symbol delete):**
 
 ```json
 {
@@ -1762,6 +1785,21 @@ Safely deletes an element, first checking for usages.
       "file": "src/main/java/com/example/LegacyHelper.java",
       "line": 8,
       "column": 14
+    }
+  }
+}
+```
+
+**Example Request (file delete):**
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "ide_refactor_safe_delete",
+    "arguments": {
+      "file": "src/main/java/com/example/OldUtil.java",
+      "target_type": "file"
     }
   }
 }
@@ -1806,24 +1844,48 @@ Safely deletes an element, first checking for usages.
 | -32602 | Invalid Params | Missing or invalid parameters |
 | -32603 | Internal Error | Unexpected server error |
 
-### Custom MCP Errors
+### Tool Errors (resolved tool failures)
 
-| Code | Name | When It Occurs |
-|------|------|----------------|
-| -32001 | Index Not Ready | IDE is indexing (dumb mode) |
-| -32002 | File Not Found | Specified file doesn't exist |
-| -32003 | Symbol Not Found | No symbol at the specified position |
-| -32004 | Refactoring Conflict | Refactoring cannot be completed |
+Pre-dispatch failures (parse error, unknown method, missing params) use JSON-RPC numeric error objects. Once a tool is dispatched and fails, it returns a **normal MCP result** with `isError: true` and a structured payload:
 
-### Example Error Response
+```json
+{
+  "error": "<snake_case_code>",
+  "message": "<human-readable description>"
+}
+```
+
+Common `error` codes:
+
+| When It Occurs | Code |
+|----------------|------|
+| IDE is indexing (dumb mode) | `index_not_ready` |
+| Specified file doesn't exist | `file_not_found` |
+| No symbol at the specified position | `symbol_not_found` |
+| Refactoring cannot be completed | `refactoring_conflict` |
+| Parameter validation failed (includes a `violations` array) | `invalid_arguments` |
+| Generic tool failure | `tool_error` |
+| Unexpected server error | `internal_error` |
+| Project resolution errors | `no_project_open` / `project_not_found` / `multiple_projects_open` |
+
+### Example Tool Error Response
 
 ```json
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "error": {
-    "code": -32001,
-    "message": "IDE is in dumb mode, indexes not available. Please wait for indexing to complete."
+  "result": {
+    "isError": true,
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"error\":\"index_not_ready\",\"message\":\"IDE is in dumb mode, indexes not available. Please wait for indexing to complete.\"}"
+      }
+    ],
+    "structuredContent": {
+      "error": "index_not_ready",
+      "message": "IDE is in dumb mode, indexes not available. Please wait for indexing to complete."
+    }
   }
 }
 ```

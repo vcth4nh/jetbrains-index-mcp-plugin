@@ -9,7 +9,7 @@ A JetBrains IDE plugin that exposes an **MCP (Model Context Protocol) server**, 
 **Fully tested**: IntelliJ IDEA, PyCharm, WebStorm, GoLand, RustRover, Android Studio, PhpStorm
 **May work** (untested): RubyMine, CLion, DataGrip
 
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/hechtcarmel)
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/vcth4nh)
 
 <!-- Plugin description -->
 **IDE Index MCP Server** provides AI coding assistants with access to the IDE's powerful code intelligence features through the Model Context Protocol (MCP).
@@ -53,7 +53,7 @@ These tools activate based on installed language plugins:
 - **Rename Refactoring** - Safe renaming with automatic related element renaming (getters/setters, overriding methods) - works across ALL languages, fully headless
 - **Reformat Code** - Reformat using project code style with import optimization (disabled by default)
 - **Safe Delete** - Remove code with usage checking (Java/Kotlin only)
-- **Java to Kotlin Conversion** - Convert Java to Kotlin using Intellij's built-in converter (Java only)
+- **Java to Kotlin Conversion** - Convert Java to Kotlin using IntelliJ's built-in converter (Java only)
 
 ### Why Use This Plugin?
 
@@ -66,18 +66,116 @@ Unlike simple text-based code analysis, this plugin gives AI assistants access t
 Perfect for AI-assisted development workflows where accuracy and safety matter.
 <!-- Plugin description end -->
 
+## Documentation
+
+- **[USAGE.md](USAGE.md)** — full per-tool reference (parameters, examples, return shapes)
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — build, dev-loop, testing, PR checklist
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** — design, backing-mechanism model, internals
+- **[CHANGELOG.md](CHANGELOG.md)** — release notes and version history
+- **[Agent skill](src/main/resources/skill/ide-index-mcp/SKILL.md)** — runtime guidance for AI agents on tool selection and conventions
+- **[Live-test harness](live-test/README.md)** — snapshot regression suite for verifying tool behavior against real IDEs
+
 ## Table of Contents
 
+- [Available Tools](#available-tools)
+- [Requirements](#requirements)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
-- [Community Integrations](#community-integrations)
 - [Client Configuration](#client-configuration)
-- [Available Tools](#available-tools)
 - [Multi-Project Support](#multi-project-support)
 - [Tool Window](#tool-window)
 - [Error Codes](#error-codes)
-- [Requirements](#requirements)
+- [Community Integrations](#community-integrations)
 - [Contributing](#contributing)
+
+## Available Tools
+
+The plugin provides **26 MCP tools** — 15 enabled by default, 11 opt-in (toggle any tool in <kbd>Settings</kbd> > <kbd>Tools</kbd> > <kbd>Index MCP Server</kbd>). The matrix below shows per-language support and test status; for parameters, examples, and return shapes, see **[USAGE.md](USAGE.md)**.
+
+**Legend:**
+- **✅** supported & tested
+- **⚠️** should work, not tested
+- **⛔** not supported
+
+**Navigation & search**
+
+| Tool | Java | Kotlin | Python | JS | TS | Go | PHP | Rust |
+|------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| `ide_find_usages` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_find_definition` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_find_class` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_find_symbol` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_find_file` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_search_text` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+**Hierarchy & structure**
+
+| Tool | Java | Kotlin | Python | JS | TS | Go | PHP | Rust |
+|------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| `ide_type_hierarchy` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_call_hierarchy` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_find_implementations` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_find_super_methods` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_file_structure` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+**Analysis**
+
+| Tool | Java | Kotlin | Python | JS | TS | Go | PHP | Rust |
+|------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| `ide_diagnostics` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+**Refactoring**
+
+| Tool | Java | Kotlin | Python | JS | TS | Go | PHP | Rust |
+|------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| `ide_refactor_rename` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_move_file` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_reformat_code` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_optimize_imports` | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_refactor_safe_delete` | ⚠️ | ⚠️ | ⛔ | ⛔ | ⛔ | ⛔ | ⛔ | ⛔ |
+| `ide_convert_java_to_kotlin` | ⚠️ | ⛔ | ⛔ | ⛔ | ⛔ | ⛔ | ⛔ | ⛔ |
+
+**Project & editor** — language-agnostic (operate on the project/IDE, not language-specific code)
+
+| Tool | Java | Kotlin | Python | JS | TS | Go | PHP | Rust |
+|------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| `ide_index_status` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_install_plugin` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_restart` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_sync_files` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_build_project` | ✅ | ✅ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| `ide_read_file` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_get_active_file` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ide_open_file` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+> **Notes:**
+> - `ide_refactor_safe_delete` and `ide_convert_java_to_kotlin` require the Java plugin; refactoring tools are supported but not yet live-tested here (⚠️).
+> - `ide_build_project` does a real build on JVM projects (Java/Kotlin, via JPS — ✅). It's build-system-driven (JPS/Gradle/Maven), so on non-JVM projects with no such build it returns trivial success without compiling — those stay ⚠️.
+> - `ide_search_text` is backed by the IDE's word index, so language keywords (e.g. Kotlin `fun`) may not be matched even though identifiers and most words are.
+
+## Requirements
+
+- **JetBrains IDE** 2025.3 or later (any IDE based on IntelliJ Platform)
+- **JVM** 21 or later
+- **MCP Protocol** 2025-11-25 (primary Streamable HTTP, negotiated; 2025-03-26 / 2024-11-05 also supported)
+
+### Supported IDEs
+
+**Fully Tested:**
+- IntelliJ IDEA (Community/Ultimate)
+- Android Studio
+- PyCharm (Community/Professional)
+- WebStorm
+- GoLand
+- RustRover
+- PhpStorm
+
+**May Work (Untested):**
+- RubyMine
+- CLion
+- DataGrip
+
+> The plugin uses standard IntelliJ Platform APIs and should work on any IntelliJ-based IDE, but has only been tested on the IDEs listed above.
 
 ## Installation
 
@@ -115,12 +213,6 @@ The easiest way to configure your AI assistant:
    - **Install Now** - For Claude Code CLI and Codex CLI: Runs the installation command automatically
    - **Copy Configuration** - For other clients: Copies the JSON config to your clipboard
 4. For "Copy Configuration" clients, paste the config into the appropriate config file
-
-## Community Integrations
-
-- [opencode-jetbrains-index](https://github.com/ineersa/opencode-jetbrains-index) - a third-party integration for OpenCode that uses this plugin
-
-> **Disclaimer**: This repository is not maintained by me. Please use its own issue tracker for integration-specific issues and support.
 
 ## Client Configuration
 
@@ -222,80 +314,8 @@ Each JetBrains IDE has a unique default port and server name to allow running mu
 | DataGrip | `datagrip-index` | 29179 |
 
 > **Tip**: Use the "Install on Coding Agents" button in the tool window - it automatically uses the correct server name and port for your IDE.
-
-## Available Tools
-
-The plugin provides **21 MCP tools** organized by availability. Tools marked *(disabled by default)* can be enabled in <kbd>Settings</kbd> > <kbd>Tools</kbd> > <kbd>Index MCP Server</kbd>.
-
-### Universal Tools
-
-These tools work in all supported JetBrains IDEs.
-
-| Tool | Description |
-|------|-------------|
-| `ide_find_usages` | Find all references to a symbol across the entire project |
-| `ide_find_definition` | Find the definition/declaration location of a symbol |
-| `ide_find_class` | Search for classes/interfaces by name; exact by default, `fuzzySearch: true` for camelCase/substring matching |
-| `ide_find_file` | Search for files by name using IDE's file index |
-| `ide_find_symbol` | Search for symbols (classes, methods, fields, functions) by name with IntelliJ Go to Symbol matching *(disabled by default)* |
-| `ide_search_text` | Text search using IDE's pre-built word index with context filtering |
-| `ide_diagnostics` | Analyze file problems with fresh editor diagnostics for open files or public batch diagnostics for closed files, plus optional build/test results; intentions are best-effort |
-| `ide_index_status` | Check if the IDE is in dumb mode or smart mode |
-| `ide_sync_files` | Force sync IDE's virtual file system and PSI cache with external file changes |
-| `ide_build_project` | Build project using IDE's build system (JPS, Gradle, Maven) with structured errors *(disabled by default)* |
-| `ide_read_file` | Read file content by path or qualified name, including library/jar sources *(disabled by default)* |
-| `ide_get_active_file` | Get the currently active file(s) in the editor with cursor position *(disabled by default)* |
-| `ide_open_file` | Open a file in the editor with optional line/column navigation *(disabled by default)* |
-| `ide_refactor_rename` | Rename a symbol and update all references across the project (all languages) |
-| `ide_move_file` | Move a file to a new directory, applying language-aware reference/package updates when the IDE provides a semantic move backend |
-| `ide_reformat_code` | Reformat code using project code style with import optimization *(disabled by default)* |
-
-### Extended Tools (Language-Aware)
-
-These tools activate based on available language plugins:
-
-| Tool | Description | Languages |
-|------|-------------|-----------|
-| `ide_type_hierarchy` | Get the complete type hierarchy (supertypes and subtypes) | Java, Kotlin, Python, JS/TS, Go, PHP, Rust |
-| `ide_call_hierarchy` | Analyze method call relationships (callers or callees) | Java, Kotlin, Python, JS/TS, Go, PHP, Rust |
-| `ide_find_implementations` | Find all implementations of an interface or abstract method | Java, Kotlin, Python, JS/TS, PHP, Rust |
-| `ide_find_super_methods` | Find the full inheritance hierarchy of methods that a method overrides/implements | Java, Kotlin, Python, JS/TS, PHP, Go, Rust |
-| `ide_file_structure` | Get hierarchical file structure (similar to IDE's Structure view) *(disabled by default)* | Java, Kotlin, Python, JS/TS, Markdown |
-
-### Java-Specific Refactoring Tools
-
-| Tool | Description |
-|------|-------------|
-| `ide_convert_java_to_kotlin` | Convert Java files to Kotlin using IntelliJ's built-in converter *(disabled by default, requires Java + Kotlin plugins)* |
-| `ide_refactor_safe_delete` | Safely delete an element, checking for usages first (Java/Kotlin only) |
-
-> **Note**: Refactoring tools modify source files. All changes support undo via <kbd>Ctrl/Cmd+Z</kbd>.
-
-### Tool Availability by IDE
-
-**Fully Tested:**
-
-| IDE | Universal | Navigation | Refactoring |
-|-----|-----------|------------|-------------|
-| IntelliJ IDEA | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat + safe delete + Java→Kotlin |
-| Android Studio | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat + safe delete + Java→Kotlin |
-| PyCharm | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat |
-| WebStorm | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat |
-| GoLand | ✓ 14 tools | ✓ 5 tools | ✓ rename + reformat |
-| RustRover | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat |
-| PhpStorm | ✓ 14 tools | ✓ 6 tools | ✓ rename + reformat |
-
-**May Work (Untested):**
-
-| IDE | Universal | Navigation | Refactoring |
-|-----|-----------|------------|-------------|
-| RubyMine | ✓ 14 tools | ✓ 2 Markdown tools | ✓ rename + reformat |
-| CLion | ✓ 14 tools | ✓ 2 Markdown tools | ✓ rename + reformat |
-| DataGrip | ✓ 14 tools | ✓ 2 Markdown tools | ✓ rename + reformat |
-
-> **Note**: Navigation tools activate when language plugins are present. Markdown adds heading search and file-structure support when the bundled Markdown plugin is enabled. Go does not expose `ide_find_implementations` (use `ide_find_class` for Go interface implementations). The rename and reformat tools work across all languages. `ide_convert_java_to_kotlin` is available only in IntelliJ IDEA and Android Studio, requires both Java and Kotlin plugins, and is disabled by default.
-
-For detailed tool documentation with parameters and examples, see [USAGE.md](USAGE.md).
+>
+> **Note**: The full IDE port list (including Aqua, DataSpell, and Rider) is documented in [ARCHITECTURE.md](ARCHITECTURE.md#ide-specific-defaults). Rider has a port entry but is currently marked incompatible in the plugin manifest and is not supported.
 
 ## Multi-Project Support
 
@@ -362,14 +382,29 @@ The plugin adds an "Index MCP Server" tool window (bottom panel) that shows:
 | -32602 | Invalid Params | Invalid or missing parameters |
 | -32603 | Internal Error | Unexpected internal error |
 
-### Custom MCP Errors
+### Tool Errors (resolved tool failures)
 
-| Code | Name | Description |
-|------|------|-------------|
-| -32001 | Index Not Ready | IDE is in dumb mode (indexing in progress) |
-| -32002 | File Not Found | Specified file does not exist |
-| -32003 | Symbol Not Found | No symbol found at the specified position |
-| -32004 | Refactoring Conflict | Refactoring cannot be completed (e.g., name conflict) |
+Pre-dispatch failures (parse error, unknown method, missing params) use JSON-RPC numeric error objects. Once a tool is dispatched and fails, it returns a **normal MCP result** with `isError: true` and a structured payload:
+
+```json
+{
+  "error": "<snake_case_code>",
+  "message": "<human-readable description>"
+}
+```
+
+Common `error` codes:
+
+| Code | When It Occurs |
+|------|----------------|
+| `index_not_ready` | IDE is in dumb mode (indexing in progress) |
+| `file_not_found` | Specified file does not exist |
+| `symbol_not_found` | No symbol found at the specified position |
+| `refactoring_conflict` | Refactoring cannot be completed (e.g., name conflict) |
+| `invalid_arguments` | Parameter validation failed (includes a `violations` array) |
+| `tool_error` | Generic tool failure |
+| `internal_error` | Unexpected server error |
+| `no_project_open` / `project_not_found` / `multiple_projects_open` | Project resolution errors |
 
 ## Settings
 
@@ -382,91 +417,18 @@ Configure the plugin at <kbd>Settings</kbd> > <kbd>Tools</kbd> > <kbd>Index MCP 
 | Max History Size | 100 | Maximum number of commands to keep in history |
 | Project List in Error Responses | Expanded | Controls `available_projects` detail for invalid/missing `project_path` errors. `Expanded` includes workspace sub-projects; `Compact` returns only top-level project roots |
 | Sync External Changes | false | Sync external file changes before operations (**WARNING: significant performance impact**) |
-| Disabled Tools | 7 tools | Per-tool enable/disable toggles. Some tools are disabled by default to keep the tool list focused |
+| Disabled Tools | 11 tools | Per-tool enable/disable toggles. Some tools are disabled by default to keep the tool list focused |
+| Response Format | `JSON` | Format for tool result text content block: `JSON` (default) mirrors the structured JSON; `TOON` converts it to a compact text-object notation for older clients |
 
-## Requirements
+## Community Integrations
 
-- **JetBrains IDE** 2025.1 or later (any IDE based on IntelliJ Platform)
-- **JVM** 21 or later
-- **MCP Protocol** 2025-11-25 (primary Streamable HTTP, negotiated; 2025-03-26 / 2024-11-05 also supported)
+- [opencode-jetbrains-index](https://github.com/ineersa/opencode-jetbrains-index) - a third-party integration for OpenCode that uses this plugin
 
-### Supported IDEs
-
-**Fully Tested:**
-- IntelliJ IDEA (Community/Ultimate)
-- Android Studio
-- PyCharm (Community/Professional)
-- WebStorm
-- GoLand
-- RustRover
-- PhpStorm
-
-**May Work (Untested):**
-- RubyMine
-- CLion
-- DataGrip
-
-> The plugin uses standard IntelliJ Platform APIs and should work on any IntelliJ-based IDE, but has only been tested on the IDEs listed above.
-
-## Architecture
-
-The plugin runs a **custom embedded Ktor CIO HTTP server** with **dual MCP transports**:
-
-### Streamable HTTP Transport (Primary, MCP 2025-11-25)
-
-```
-AI Assistant ──────► POST /index-mcp/streamable-http (initialize or request)
-                     ◄── JSON-RPC response or HTTP 202 Accepted
-             ──────► POST /index-mcp/streamable-http (follow-up requests/notifications)
-                     ◄── JSON-RPC response or HTTP 202 Accepted
-```
-
-The plugin uses stateless Streamable HTTP for the primary MCP transport. It does not
-issue `Mcp-Session-Id` headers, does not require session resumption, and does not
-implement or advertise authentication capabilities.
-
-### Legacy SSE Transport (MCP Inspector, older clients)
-
-```
-AI Assistant ──────► GET /index-mcp/sse              (establish SSE stream)
-                     ◄── event: endpoint             (receive POST URL with sessionId)
-             ──────► POST /index-mcp?sessionId=x     (JSON-RPC requests)
-                     ◄── HTTP 202 Accepted
-                     ◄── event: message              (JSON-RPC response via SSE)
-```
-
-This dual approach:
-- **Primary MCP transport** - Streamable HTTP per MCP `2025-11-25` (negotiated; `2025-03-26` / `2024-11-05` also supported)
-- **MCP Inspector compatible** - Legacy SSE transport per MCP `2024-11-05`
-- **Configurable port** - IDE-specific default port, changeable in settings
-- Works with any MCP-compatible client
-- Single server instance across all open projects
+> **Disclaimer**: This repository is not maintained by me. Please use its own issue tracker for integration-specific issues and support.
 
 ## Contributing
 
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests: `./gradlew test`
-5. Submit a pull request
-
-### Development Setup
-
-```bash
-# Build the plugin
-./gradlew build
-
-# Run IDE with plugin installed
-./gradlew runIde
-
-# Run tests
-./gradlew test
-
-# Run plugin verification
-./gradlew runPluginVerifier
-```
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for build instructions, the dev loop, testing guidelines, and the PR checklist.
 
 ## License
 

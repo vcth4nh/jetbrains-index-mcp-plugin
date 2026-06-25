@@ -81,26 +81,19 @@ class ConvertJavaToKotlinTool : AbstractRefactoringTool() {
     override val name = "ide_convert_java_to_kotlin"
 
     override val description = """
-        Convert Java files to Kotlin using IntelliJ's built-in converter.
+        Convert Java source files to Kotlin using IntelliJ's built-in J2K converter. Use when
+        migrating Java code to Kotlin; this is the same converter the IDE runs when you paste Java
+        into a .kt file or use Code → Convert Java File to Kotlin. Prefer this over manual
+        translation — the IDE converter handles generics, lambdas, properties, and null-safety
+        annotations automatically.
 
-        The converter automatically handles:
-        - Classes, interfaces, enums, annotations → Kotlin equivalents
-        - Methods → functions with Kotlin syntax
-        - Fields → properties with getters/setters
-        - Java 8+ features (lambdas, streams) → Kotlin idioms
-        - Imports and code formatting
+        Returns: per-file status (CONVERTED / SKIPPED / FAILED), paths to created .kt files,
+        line counts, and whether the original .java was deleted.
 
-        Some advanced constructs may need manual adjustment after conversion.
-
-        Parameters:
-        - files: Java files to convert (required)
-
-        Returns: List of created .kt files, conversion warnings, success status.
-
-        Note: Requires both Java and Kotlin plugins. The converter automatically formats
-        and optimizes imports. Original Java files are deleted after successful conversion.
-
-        Example: {"files": ["src/Main.java"]}
+        Gotchas: disabled by default — must be enabled in Settings → Index MCP Server. Requires
+        both Java and Kotlin plugins. Original .java files are deleted after successful conversion.
+        Some advanced constructs (annotations processors, complex generics) may need manual
+        adjustment.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()

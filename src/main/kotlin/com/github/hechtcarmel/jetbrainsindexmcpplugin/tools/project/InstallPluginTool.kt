@@ -46,15 +46,17 @@ class InstallPluginTool : AbstractMcpTool() {
     override val name = ToolNames.INSTALL_PLUGIN
 
     override val description = """
-        Install a plugin distribution (.zip) into THIS IDE's custom plugins directory, replacing any existing copy of the same plugin. The new code takes effect only after an IDE restart — call ide_restart afterward.
+        Install a locally built plugin .zip into this IDE's custom plugins directory, replacing any
+        existing copy. Use as the first half of the dev loop: build → install → ide_restart. The new
+        code does NOT take effect until the IDE restarts — always follow with ide_restart.
 
-        Intended for the local plugin dev loop: build the plugin, install the freshly built zip, restart.
+        When path is omitted, picks the newest *.zip in <project>/build/distributions/ automatically.
 
-        Parameters: project_path (optional), path (optional). When path is omitted, the newest *.zip in <project>/build/distributions/ is used. path may be absolute or relative to the project root.
+        Returns: source zip path, installed plugin directory, detected pluginId/pluginVersion
+        (best-effort from META-INF/plugin.xml), restartRequired (always true).
 
-        Returns: source zip, unpacked plugin directory, detected pluginId/pluginVersion (best-effort), restartRequired (always true).
-
-        Example: {} or {"path": "build/distributions/jetbrains-index-mcp-plugin-<version>.zip"}
+        Gotchas: disabled by default — must be enabled in Settings → Index MCP Server. Plugin is
+        not dynamically reloadable; restart is mandatory.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()

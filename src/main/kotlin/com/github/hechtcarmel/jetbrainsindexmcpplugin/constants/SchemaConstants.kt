@@ -17,10 +17,10 @@ object SchemaConstants {
     const val TYPE_ARRAY = "array"
 
     // Common parameter descriptions
-    const val DESC_PROJECT_PATH = "Absolute path to the project root. Required when multiple projects are open. For workspace projects, use the sub-project path."
+    const val DESC_PROJECT_PATH = "Absolute path to the project root. Required only when multiple projects are open."
     const val DESC_FILE = "Path to the file relative to project root"
     const val DESC_LINE = "1-based line number"
-    const val DESC_COLUMN = "1-based column number"
+    const val DESC_COLUMN = "1-based column number — point it at the symbol's name, not whitespace or punctuation. For a dotted expression like json.dumps(), put it on the member token (dumps) to resolve the member rather than the receiver."
     const val DESC_START_LINE = "1-based start line number"
     const val DESC_END_LINE = "1-based end line number"
     const val DESC_START_COLUMN = "1-based start column number"

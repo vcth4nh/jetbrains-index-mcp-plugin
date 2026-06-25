@@ -45,32 +45,19 @@ class RenameSymbolTool : AbstractMcpTool() {
     override val name = "ide_refactor_rename"
 
     override val description = """
-        Rename a symbol or file and update all references across the project. Use instead of find-and-replace for safe, semantic renaming that handles all usages correctly. Supports undo (Ctrl+Z).
+        Rename a symbol or file and update all references across the project. Use instead of
+        find-and-replace for safe, semantic renaming that handles imports, overrides, getters/setters,
+        and related test classes automatically. Supports undo (Ctrl+Z).
 
-        Two modes:
-        - **Symbol rename** (file + line + column + newName): Rename a symbol at a specific position.
-        - **File rename** (file + newName, WITHOUT line/column): Rename the file itself. Works for all file types including binary files (images, etc.). Especially useful for Android resource files (.webp, .png, .xml in res/) where it updates all resource references across the project.
+        Two modes: symbol rename (file + line + column + newName) and file rename (file + newName,
+        omit line/column). File rename works for all file types including binaries and Android
+        resource files (updates XML references across the project).
 
-        Automatically renames related elements: getters/setters, overriding methods, constructor parameters ↔ fields, test classes.
+        Returns: list of affected files and total change count.
 
-        When renaming a method that overrides a base method, the `overrideStrategy` parameter controls behavior:
-        - "rename_base" (default): Automatically renames the base method and all overrides. No dialog shown.
-        - "rename_only_current": Renames only the current method, leaving the base and other overrides unchanged.
-        - "ask": Shows the IDE's built-in dialog to let the user choose interactively.
-
-        The `relatedRenamingStrategy` parameter controls automatic renaming of related symbols (e.g., same-named properties on unrelated classes, getters/setters, test classes, variables):
-        - "all" (default): Automatically rename all related symbols. Current behavior.
-        - "none": Rename only the targeted symbol. Skip all automatic related renames.
-        - "accessors_and_tests": Only rename getters/setters and test classes/methods. Skip variables, inheritors, overloads, and parameters on unrelated classes.
-        - "ask": Show the IDE dialog for each related rename for interactive choice.
-
-        Returns: affected files list and change count. Modifies source files.
-
-        Parameters: file + newName (required). line + column (optional — omit for file rename). overrideStrategy + relatedRenamingStrategy (optional).
-
-        Examples:
-        - Symbol rename: {"file": "src/UserService.java", "line": 15, "column": 18, "newName": "CustomerService"}
-        - File rename: {"file": "res/mipmap-hdpi/ic_launcher.webp", "newName": "ic_app_icon.webp"}
+        Gotchas: requires smart mode. For plain renaming without related-element cascade, set
+        relatedRenamingStrategy=none. The overrideStrategy parameter controls base-method behavior
+        when renaming an override; default rename_base renames the root and all overrides.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()

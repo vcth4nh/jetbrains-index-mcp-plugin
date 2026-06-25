@@ -10,3 +10,11 @@ tmp
 .claude
 docs/superpowers
 local.properties
+
+# generated scratch (decompile logs, dependency cache, eclipse metadata, live-test stderr)
+logs
+cache
+.classpath
+.project
+.settings
+live-test/run_*stderr*.txt

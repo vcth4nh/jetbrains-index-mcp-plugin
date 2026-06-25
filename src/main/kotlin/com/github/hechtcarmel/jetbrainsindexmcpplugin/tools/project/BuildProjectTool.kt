@@ -43,17 +43,17 @@ class BuildProjectTool : AbstractMcpTool() {
     override val name = ToolNames.BUILD_PROJECT
 
     override val description = """
-        Build the project using the IDE's build system (supports JPS, Gradle, Maven).
-        Use after making code changes to check for compilation errors.
+        Build a project (JPS, Gradle, Maven) and return the results. Use after code changes
+        to verify compilation; prefer ide_diagnostics when you want diagnostics without triggering
+        a new build.
 
-        Returns: success status, error/warning counts, and structured build messages with file locations.
-        Note: errors/warnings are null when no compiler messages were captured (e.g. no-op incremental build where nothing was recompiled, or build system without compiler message integration). null does NOT mean 0.
+        Returns: success status, error/warning counts, and structured build messages with file
+        locations. Note: error/warning counts are null (not 0) when the build system produced no
+        compiler messages (e.g. no-op incremental build or unsupported build system).
 
-        When project_path points to a workspace sub-project, that module and its dependencies are built.
-
-        Parameters: project_path (optional), rebuild (optional, default false), includeRawOutput (optional, default false), timeoutSeconds (optional, must be positive).
-
-        Example: {} or {"rebuild": true} or {"includeRawOutput": true, "timeoutSeconds": 120}
+        Gotchas: disabled by default — must be enabled in Settings → Index MCP Server. When
+        project_path points to a workspace sub-project, only that module and its dependencies are
+        built. Project must be trusted (IDE trust prompt).
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()

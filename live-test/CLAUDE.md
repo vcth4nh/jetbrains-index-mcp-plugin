@@ -111,8 +111,9 @@ stable tokens before diffing. Currently Linux-only patterns:
 
 When running on a new host (macOS, Windows, non-Toolbox install, SDKMAN/asdf
 JDK), library paths will leak through the catch-all as `${HOME}/...` and
-cause diffs. Extend `LIBRARY_PATH_SUBS` with the new prefix family — see the
-HIGH finding in `live-test-review-2.md` for the list.
+cause diffs. Extend `LIBRARY_PATH_SUBS` in `run.py` with the new prefix
+family (e.g. the JDK install path, Toolbox path, or language-specific stdlib
+path for that host).
 
 ## Fixture-edit safety
 

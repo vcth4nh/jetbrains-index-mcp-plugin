@@ -4,6 +4,25 @@
 
 ## [Unreleased]
 
+## [5.0.2] - 2026-06-09
+
+### Fixed
+- Docs advertised a removed `language`/`symbol` symbol-reference target (deleted in v5.0.0); the strict
+  argument validator rejected it. Removed from USAGE.md and the agent tools-reference. Also fixed other
+  stale params (`matchMode`→`fuzzySearch`, `depth`→`maxDepth`, removed `filePattern`/`maxPreviewLines`).
+
+### Changed
+- Reorganized docs by audience: new CONTRIBUTING.md (process) + ARCHITECTURE.md (design); CLAUDE.md
+  thinned to agent rules + pointers. Rewrote the 26 MCP tool descriptions for tool-selection signal
+  (params now deferred to the JSON schema). tools-reference.md reframed around return-shapes.
+
+### Added
+- DocsDriftUnitTest: a pure unit test pinning the doc tool catalog + params to code (ToolNames,
+  McpSettings, tool schemas) so the docs can't silently drift again.
+
+### Removed
+- Six stray review/audit markdown files accidentally committed in the 5.0.1 fix.
+
 ## [5.0.1] - 2026-06-08
 
 ### Fixed
@@ -135,7 +154,7 @@ response shapes changed. Read **Breaking** before upgrading.
 
 ## [4.10.5] - 2026-04-15
 ### Changed
-- Relaxed IDE compatability requirements to 2025.3+ build, to support Android Studio which doesn't have 2026 yet 
+- Relaxed IDE compatibility requirements to 2025.3+ build, to support Android Studio which doesn't have 2026 yet
 
 ## [4.10.4] - 2026-04-12
 ### Fixed
@@ -218,7 +237,7 @@ response shapes changed. Read **Breaking** before upgrading.
 
 ## [4.4.1] - 2026-03-19
 ### Fixed
-- **2026.1 compatability issues** 
+- **2026.1 compatibility issues**
 
 ## [4.4.0] - 2026-03-18
 ### Added
@@ -249,7 +268,7 @@ response shapes changed. Read **Breaking** before upgrading.
 
 ### Fixed
 - **Fixed exception introduced in 4.0.0 that could occur when `ide_sync_files` was used after external file changes**
-- **Fixed contructor param renaming forcing modal popup**
+- **Fixed constructor param renaming forcing modal popup**
 
 ## [4.0.0] - 2026-03-11
 

@@ -18,13 +18,14 @@ class GetActiveFileTool : AbstractMcpTool() {
     override val name = ToolNames.GET_ACTIVE_FILE
 
     override val description = """
-        Get the currently active file(s) open in the IDE editor. Returns information about all visible editors including split panes.
+        Get the file(s) currently visible in the IDE editor — all visible tabs including split
+        panes. Use when you need to know what the user is looking at or to anchor subsequent
+        operations to the current cursor position.
 
-        Returns: list of active files with path, cursor position (line, column), selected text (if any), and language. Empty list when no editors are open.
+        Returns: list of active files with project-relative path, cursor line/column, selected
+        text (if any), and file type. Returns an empty list when no editors are open.
 
-        Parameters: project_path (optional, only needed with multiple projects open).
-
-        Example: {}
+        Gotchas: disabled by default — must be enabled in Settings → Index MCP Server.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()

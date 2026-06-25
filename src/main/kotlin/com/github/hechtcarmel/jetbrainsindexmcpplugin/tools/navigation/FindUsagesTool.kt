@@ -56,21 +56,20 @@ class FindUsagesTool : AbstractMcpTool() {
     override val name = ToolNames.FIND_USAGES
 
     override val description = """
-        Find all references to a symbol across the project. Use when you need to understand how a class, method, field, or variable is used before modifying or removing it.
+        Find every reference to a symbol across the project — semantic, not text. Prefer this over
+        ide_search_text for usages: it resolves through imports, aliases, overrides, and generics
+        that text search misses. Put the caret on the symbol name (file + line + column).
 
-        Returns: file paths, line numbers, context snippets, and reference types (method_call, field_access, import, etc.).
+        Returns: file paths, 1-based positions, context snippets, and reference kinds
+        (method_call, field_access, import, …). Paginated — pass the returned cursor for the next page.
 
-        Supports pagination: first call returns results + nextCursor. Pass cursor to get the next page.
-
-        Parameters: file + line + column (required for fresh search, ignored when cursor is provided), scope (optional, default: "project_files"; supported: project_files, project_and_libraries, project_production_files, project_test_files), pageSize (optional, default: 100, max: 500), cursor (pagination cursor from a previous response).
-
-        Example: {"file": "src/UserService.java", "line": 25, "column": 18}
-        Example: {"file": "src/UserService.java", "line": 25, "column": 18, "scope": "project_and_libraries"}
+        Gotchas: requires smart mode (not indexing). For a quick literal word sweep use ide_search_text;
+        for "who calls this" as a tree use ide_call_hierarchy.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
         .projectPath()
-        .file(required = false, description = "Project-relative file path, or a dependency/library absolute path or jar:// URL previously returned by the plugin. Required for fresh search.")
+        .file(required = false, description = "Project-relative file path, or a dependency/library absolute path or jar:// URL previously returned by the plugin. Required for fresh search; ignored when cursor is provided.")
         .lineAndColumn(required = false)
         .scopeProperty("Search scope. Default: project_files.")
         .intProperty("maxResults", "Maximum results per page (deprecated, use pageSize). Default: $DEFAULT_MAX_RESULTS, max: $MAX_PAGE_SIZE.")

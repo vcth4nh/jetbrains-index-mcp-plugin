@@ -5,9 +5,7 @@ description: >
   TRIGGER: When ANY of these MCP tools are available in the current session: ide_find_usages,
   ide_find_definition, ide_find_class, ide_find_file, ide_search_text, ide_diagnostics,
   ide_index_status, ide_sync_files, ide_refactor_rename, ide_move_file, ide_type_hierarchy,
-  ide_call_hierarchy, ide_find_implementations, ide_find_symbol, ide_find_super_methods,
-  ide_file_structure, ide_refactor_safe_delete, ide_reformat_code, ide_build_project,
-  ide_read_file, ide_get_active_file, ide_open_file.
+  ide_call_hierarchy, ide_find_implementations, ide_find_super_methods, ide_refactor_safe_delete.
   Use when performing code navigation (find usages, go to definition, find class),
   code analysis (diagnostics, type hierarchy, call hierarchy),
   refactoring (rename, move, safe delete, reformat),
@@ -40,7 +38,7 @@ The IDE Index MCP server exposes JetBrains IDE indexing and refactoring capabili
 | Find interface implementations | `ide_find_implementations` | Never - grep can't resolve type relationships |
 | Delete a symbol safely | `ide_refactor_safe_delete` | Never - manual deletion misses usages |
 | Find what a method overrides | `ide_find_super_methods` | Never - no equivalent |
-| Read file content | Built-in Read tool | `ide_read_file` only for library/jar sources |
+| Read file content | `ide_read_file` only for library/jar sources | Built-in Read tool |
 | Find text with regex | `Grep` | IDE search_text doesn't support regex |
 
 ## Pre-Flight Check
@@ -63,12 +61,16 @@ If you created or modified files outside the IDE (via Write/Edit tools) and an I
 
 Omit `paths` to sync the entire project.
 
+## Pagination
+
+`ide_find_usages`, `ide_find_class`, `ide_find_file`, `ide_search_text`, `ide_find_implementations`, and `ide_find_symbol` return paginated results. The first response carries `nextCursor` and `hasMore` (`truncated` mirrors `hasMore`). To fetch the next page, call the **same tool** again with `cursor: "<nextCursor>"` — on a cursor call the search arguments (query, file/line/column, scope) are ignored; only `cursor`, `pageSize`, and `project_path` are read. Stop when `hasMore` is `false`.
+
 ## Parameter Rules
 
 1. **Line and column are 1-based** (first line = 1, first column = 1)
 2. **Project file paths are relative** to project root (e.g., `src/main/java/App.java`, NOT absolute paths). If an IDE tool returns a dependency/library file, keep the returned absolute path or `jar://` URL unchanged when passing it back to read-only navigation tools or `ide_read_file`
 3. **Column must point to the symbol name**, not whitespace or punctuation. For `public void myMethod()`, column should land on `m` of `myMethod`. For dotted expressions like `json.dumps()` or `os.path.join()`, put the column on the member token (`dumps`, `join`) when you want the member definition rather than the module/package.
-4. **project_path is only needed** for multi-project workspaces. Omit for single-project setups. When needed, use the absolute path to the project root.
+4. **project_path is only needed** for multi-project workspaces. Omit for single-project setups. When needed, use the absolute path to the project root — for a workspace with sub-projects, pass the sub-project's root, not the workspace root.
 5. **Use search scope intentionally**: `ide_find_usages`, `ide_find_implementations`, `ide_find_class`, `ide_find_file`, and `ide_find_symbol` accept `scope`. Use `project_files` for the default project-only view, `project_and_libraries` when dependency code matters, `project_production_files` to stay out of tests, and `project_test_files` when you want test-only results. The hierarchy tools `ide_type_hierarchy` and `ide_call_hierarchy` use the IDE's native hierarchy scope instead: `all` (default), `production`, `test` (plus `this_class` and `this_module` for `ide_call_hierarchy`).
 
 ## Tool Selection by Task
@@ -86,6 +88,7 @@ Omit `paths` to sync the entire project.
 1. `ide_find_class` - classes by name (exact by default; `fuzzySearch: true` for CamelCase: `USvc` finds `UserService`)
 2. `ide_find_file` - files by name
 3. `ide_search_text` - exact word occurrences across project
+4. `ide_find_symbol` - methods, fields, functions, and other symbols by name *(disabled by default; enable in Settings → Tools → Index MCP Server)*
 
 ### "I need to refactor"
 1. `ide_refactor_rename` - rename symbol + all references atomically
@@ -125,12 +128,10 @@ Omit `paths` to sync the entire project.
 
 10. **Using `ide_find_class` for methods/functions**: It searches classes only. Use `ide_search_text` for a quick word lookup.
 
-## Disabled-by-Default Tools
+## Tool Availability
 
-These tools exist but are disabled by default. If you get "tool not found", they need to be enabled in IDE settings (Settings > Tools > Index MCP Server):
+`tools/list` is authoritative for what's callable in this session — any tool can be enabled or disabled in Settings → Tools → Index MCP Server. If a capability you need is documented (here or in [references/tools-reference.md](references/tools-reference.md)) but missing from `tools/list`, it's been disabled in this config: tell the user which tool to enable instead of falling back to a worse approach.
 
-`ide_build_project`, `ide_file_structure`, `ide_find_symbol`, `ide_read_file`, `ide_get_active_file`, `ide_open_file`, `ide_reformat_code`
+## Return Shapes and Tool Selection
 
-## Detailed Tool Parameters
-
-For complete parameter reference with types, defaults, and return formats, see [tools-reference.md](references/tools-reference.md).
+For return shapes and tool selection guidance, see [tools-reference.md](references/tools-reference.md).

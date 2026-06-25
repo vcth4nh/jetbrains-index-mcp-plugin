@@ -24,13 +24,19 @@ class FindSuperMethodsTool : AbstractMcpTool() {
     override val name = ToolNames.FIND_SUPER_METHODS
 
     override val description = """
-        Navigate UP the hierarchy from a code element — what it overrides, implements, or extends. Mirrors the IDE's "Go to Super" (Ctrl+U). Anchor on a method (→ super-methods, full transitive chain), a class/interface/struct/trait (→ direct supertypes), a lambda (→ the single abstract method it implements), or a field/constant (→ the overridden member).
+        Navigate UP the hierarchy from a code element — the IDE's Go to Super (Ctrl+U). Use when you
+        need what a method overrides, what interfaces a class/type extends, or what abstract method a
+        lambda implements. Prefer this over ide_type_hierarchy when you only need the direct super
+        of a single element (cheaper); use ide_type_hierarchy for the full ancestor tree.
 
-        Languages: Java, Kotlin, Python, JavaScript, TypeScript, PHP, Go (a method → the interface methods it satisfies; a type → the interfaces it satisfies), Rust (trait fn/const/type alias the impl satisfies).
+        Anchor on: a method (→ super-methods, transitive chain), a class/interface/struct/trait
+        (→ direct supertypes), a lambda (→ the SAM it implements), or a field/constant (→ overridden
+        member).
 
-        Returns: the matching supers with file locations (line/column), qualified names, and element kinds. Empty when the element has no super.
+        Returns: the source element info and the matching super(s) with file locations, qualified
+        names, and kinds. Empty hierarchy when the element has no super.
 
-        Example: {"file": "src/UserServiceImpl.java", "line": 25, "column": 10}
+        Gotchas: requires smart mode. Languages: Java, Kotlin, Python, JS/TS, PHP, Go, Rust.
     """.trimIndent()
 
     override val inputSchema: JsonObject = SchemaBuilder.tool()
