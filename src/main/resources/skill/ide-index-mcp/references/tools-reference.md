@@ -1,8 +1,9 @@
 # IDE Index MCP - Tools Reference
 
-This reference documents **return shapes and tool selection** for all IDE MCP tools.
-Parameters are provided by the live JSON schema in `tools/list` — consult that payload
-for parameter names, types, defaults, and enum values.
+This reference documents **return shapes and tool selection** for the IDE MCP tools enabled by
+default. Parameters are provided by the live JSON schema in `tools/list` — consult that payload
+for parameter names, types, defaults, and enum values. The remaining tools are listed under
+**Other tools** at the end.
 
 **Path conventions**: file paths for project files are relative to the project root;
 library/dependency paths returned by the plugin (absolute paths or `jar://` URLs) must
@@ -17,8 +18,7 @@ Find all usages of a symbol (semantic, not text search).
 
 **Returns**: `{ usages: [{ file, line, column, preview, usageType, enclosingScope }], totalCount, truncated, nextCursor?, hasMore, totalCollected, offset, pageSize, stale }`
 
-`truncated` mirrors `hasMore`; when `hasMore` is `true`, pass `nextCursor` to fetch the next page.
-`usageType` values: `METHOD_CALL`, `FIELD_ACCESS`, `IMPORT`, `PARAMETER`, `VARIABLE`, `REFERENCE`.
+`usageType` values: `METHOD_CALL`, `FIELD_ACCESS`, `IMPORT`, `PARAMETER`, `VARIABLE`, `REFERENCE`. Paginated (see Pagination in SKILL.md).
 
 ### ide_find_definition
 Go to where a symbol is defined.
@@ -57,14 +57,6 @@ Find implementations of interfaces, abstract classes, or abstract methods.
 
 **Languages**: Java, Kotlin, Python, JS/TS, Go, PHP, Rust.
 
-### ide_find_symbol (disabled by default)
-Search for any code symbol (classes, methods, fields, functions) by name.
-
-**Returns**: `{ symbols: [{name, qualifiedName, kind, file, line, column}], totalCount, query }`
-
-**Languages**: Java, Kotlin, Python, JS/TS, Go, PHP, Rust, plus other IDE-supplied symbol contributors where available.
-Project results use relative paths; dependency/library results may use absolute paths or `jar://` URLs.
-
 ### ide_find_super_methods
 Find parent methods that a given method overrides or implements.
 
@@ -86,20 +78,6 @@ Build call tree showing who calls a method or what a method calls.
 **Returns**: `{ element: {name, qualifiedName?, enclosingScope?, kind, file, line, column}, calls: [{name, qualifiedName?, enclosingScope?, kind, file, line, column, children?: [...]}] }`
 
 **Languages**: Java, Kotlin, Python, JS/TS, Go, PHP, Rust.
-
-### ide_file_structure (disabled by default)
-Get hierarchical file structure like IDE's Structure panel.
-
-**Returns**: `{ file, language, structure }` (formatted tree with types, modifiers, signatures, line numbers)
-
-**Languages**: Java, Kotlin, Python, JS/TS, Go, PHP, Rust, Markdown.
-
-### ide_read_file (disabled by default)
-Read file content by path or qualified name, including library/jar sources.
-
-**Returns**: `{ file, content, language, lineCount, startLine?, endLine?, isLibraryFile }`
-
-Provide either `file` or `qualifiedName`.
 
 ---
 
@@ -138,24 +116,6 @@ Delete a symbol or file, checking for usages first.
 
 **Availability**: IntelliJ IDEA, Android Studio (requires Java plugin).
 
-### ide_reformat_code (disabled by default)
-Reformat code per project style (.editorconfig, IDE settings). Equivalent to Ctrl+Alt+L / Cmd+Opt+L.
-
-**Returns**: `{ success, affectedFiles, changesCount, message }`
-
-### ide_optimize_imports (disabled by default)
-Remove unused imports and organize them without reformatting code (Ctrl+Alt+O equivalent).
-
-**Returns**: `{ success, affectedFiles, changesCount, message }`
-
-### ide_convert_java_to_kotlin (disabled by default)
-Convert Java files to Kotlin using IntelliJ's built-in J2K converter.
-
-**Returns**: `{ files: [{requestedPath, status, kotlinFile?, linesConverted?, javaFileDeleted?, reason?}], summary: {totalRequested, converted, skipped, failed} }`
-
-`status` values: `CONVERTED`, `SKIPPED`, `FAILED`. Success fields (`kotlinFile`, `linesConverted`, `javaFileDeleted`) are set only when `status == CONVERTED`; `reason` is set only when `status != CONVERTED`.
-**Availability**: IntelliJ IDEA, Android Studio (requires both Java and Kotlin plugins).
-
 ---
 
 ## Project Tools
@@ -174,37 +134,13 @@ Force sync IDE's virtual file system with external file changes.
 
 Call when files were created or modified outside the IDE and search tools miss them.
 
-### ide_build_project (disabled by default)
-Build project using IDE's build system (JPS, Gradle, Maven).
-
-**Returns**: `{ success, aborted, errors?, warnings?, buildMessages: [{category, message, file?, line?, column?}], truncated, rawOutput?, durationMs }`
-
-`errors`/`warnings` are `null` when no messages were captured (not 0).
-
-### ide_install_plugin (disabled by default)
-Install a locally built plugin distribution (`.zip`) into this IDE's custom plugins directory.
-
-**Returns**: `{ installed, source, pluginDir, pluginId?, pluginVersion?, restartRequired, message }`
-
-Always reports `restartRequired: true`. Pair with `ide_restart`.
-
-### ide_restart (disabled by default)
-Restart this IDE, scheduled after the response is flushed.
-
-**Returns**: `{ restarting, delaySeconds, message }`
-
-Used with `ide_install_plugin` for the local plugin dev loop.
-
 ---
 
-## Editor Tools
+## Other tools
 
-### ide_get_active_file (disabled by default)
-Get currently active file(s) in editor with cursor position and selection.
-
-**Returns**: `{ activeFiles: [{file, line?, column?, selectedText?, hasSelection, language?}] }`
-
-### ide_open_file (disabled by default)
-Open a file in the editor with optional navigation.
-
-**Returns**: `{ file, opened, message }`
+The full tool set also includes `ide_find_symbol`, `ide_file_structure`, `ide_read_file`,
+`ide_reformat_code`, `ide_optimize_imports`, `ide_convert_java_to_kotlin`, `ide_build_project`,
+`ide_install_plugin`, `ide_restart`, `ide_open_file`, and `ide_get_active_file`. Any tool can be
+enabled or disabled in **Settings → Tools → Index MCP Server**, so `tools/list` is the source of
+truth for what is callable right now. If a tool documented here is missing from `tools/list`, it is
+disabled in this configuration — ask the user to enable it rather than falling back to a worse approach.
