@@ -1,3 +1,13 @@
+> # ⚠️ This repository has moved
+>
+> This project has been rebranded to **IdeSense** and now lives as a standalone repository:
+>
+> ### ➡️ https://github.com/vcth4nh/idesense
+>
+> This fork is **archived (read-only)**. Please use the new repository for installation, issues, and contributions — all open issues here were migrated there.
+
+---
+
 # IDE Index MCP Server
 
 ![Build](https://github.com/hechtcarmel/jetbrains-index-mcp-plugin/workflows/Build/badge.svg)
